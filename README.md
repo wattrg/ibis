@@ -27,7 +27,7 @@ make install
 ```
 mkdir build
 cd build
-cmake .. -DKokkos_ROOT=../kokkos_inst
+cmake ..
 make
 ```
 

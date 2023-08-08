@@ -7,6 +7,7 @@ add_subdirectory(src/util)
 add_subdirectory(src/include/doctest)
 
 set(Kokkos_DIR "../kokkos_inst/lib/cmake/Kokkos")
+set(Kokkos_ROOT "../kokkos_inst")
 find_package(Kokkos REQUIRED)
 
 add_executable(${PROJECT_NAME} src/main.cpp)
