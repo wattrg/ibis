@@ -6,6 +6,6 @@ GasStates::GasStates(int n) {
 }
 
 GasStates::~GasStates() {
-    delete _pressure;
-    delete _temp;
+    delete[] _pressure;
+    delete[] _temp;
 }
