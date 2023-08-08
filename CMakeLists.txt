@@ -6,11 +6,15 @@ add_subdirectory(src/gas)
 add_subdirectory(src/util)
 add_subdirectory(src/include/doctest)
 
+set(Kokkos_DIR "../kokkos_inst/lib/cmake/Kokkos")
+find_package(Kokkos REQUIRED)
+
 add_executable(${PROJECT_NAME} src/main.cpp)
 target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_17)
 target_include_directories(${PROJECT_NAME} PRIVATE src/include)
 target_link_libraries(${PROJECT_NAME} PUBLIC gas)
 target_link_libraries(${PROJECT_NAME} PUBLIC util)
+target_link_libraries(${PROJECT_NAME} PUBLIC Kokkos::kokkos)
 target_link_libraries(${PROJECT_NAME} PRIVATE doctest)
 
 enable_testing()
