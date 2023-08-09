@@ -1,8 +1,8 @@
 #include <iostream>
 #include <Kokkos_Core.hpp>
-#include "gas/gas.h"
+#include "gas/gas_state.h"
 
-typedef Kokkos::View<double*[3]> Field;
+typedef Kokkos::View<double*[3]> FieldTest;
 
 int main(int argc, char* argv[]) {
     Kokkos::initialize(argc, argv);
@@ -22,7 +22,7 @@ int main(int argc, char* argv[]) {
 
     {
         // play around with a views
-        Field a ("A", n);
+        FieldTest a ("A", n);
         Kokkos::parallel_for("View", n, KOKKOS_LAMBDA (const int i) {
             a(i, 0) = 1.0 * i;
             a(i, 1) = 1.0 * i * i;
@@ -35,8 +35,10 @@ int main(int argc, char* argv[]) {
         printf("Result: %f\n", view_sum);
     }
 
-    GasStates gs = GasStates(5);
-    std::cout << "Built some gas states!" << std::endl;
+    {
+        GasStates gs = GasStates(5);
+        std::cout << "Built some gas states!" << std::endl;
+    }
 
     Kokkos::finalize();
     return 0;

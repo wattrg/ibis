@@ -1,25 +1,21 @@
 #ifndef VECTOR3_H
 #define VECTOR3_H
 
+#include <Kokkos_Core.hpp>
 #include "field.h"
 
-struct Vector3 {
-public:
-    Vector3(int n);
-    ~Vector3();
-   
-    inline int length() {return _length;}
-    inline double* x() {return _x;}
-    inline double* y() {return _y;}
-    inline double* z() {return _z;}
+namespace Aeolus {
 
-    void dot(Vector3 &other, Field &result);
-    
-private:
-    int _length;
-    double *_x;
-    double *_y;
-    double *_z;
-};
+typedef Kokkos::View<double*[3]> Vector3;
+
+void dot(Vector3 &a, Vector3 &b, Field &result);
+void add(Vector3 &a, Vector3 &b, Vector3 &result);
+void subtract(Vector3 &a, Vector3 &b, Vector3 &result);
+void cross(Vector3 &a, Vector3 &b, Vector3 &result);
+void scale_in_place(Vector3 &a, double factor);
+void length(Vector3 &a, Field &len);
+void normalise(Vector3 &a);
+
+}
 
 #endif

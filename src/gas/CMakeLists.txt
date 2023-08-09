@@ -1,1 +1,5 @@
-add_library(gas STATIC gas.cpp)
+set(Kokkos_DIR "../../../kokkos_inst/lib/cmake/Kokkos")
+set(Kokkos_ROOT "../../../kokkos_inst")
+find_package(Kokkos REQUIRED)
+add_library(gas STATIC gas_state.cpp)
+target_link_libraries(gas PUBLIC Kokkos::kokkos)

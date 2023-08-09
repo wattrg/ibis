@@ -17,6 +17,7 @@ target_link_libraries(${PROJECT_NAME} PUBLIC gas)
 target_link_libraries(${PROJECT_NAME} PUBLIC util)
 target_link_libraries(${PROJECT_NAME} PUBLIC Kokkos::kokkos)
 target_link_libraries(${PROJECT_NAME} PRIVATE doctest)
+target_compile_options(${PROJECT_NAME} PRIVATE -Wall -Wextra -Wpedantic -Werror)
 
 enable_testing()
 add_test(NAME util_unittest COMMAND src/util/util_unittest)
