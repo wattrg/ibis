@@ -1,7 +1,7 @@
 #ifndef GAS_H
 #define GAS_H
 
-#include "../util/field.h"
+#include "../util/src/field.h"
 
 struct GasStates {
 public:

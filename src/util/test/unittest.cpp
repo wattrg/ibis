@@ -1,6 +1,6 @@
 #define DOCTEST_CONFIG_IMPLEMENT
 
-#include "../include/doctest/doctest/doctest.h"
+#include <doctest/doctest.h>
 #include <Kokkos_Core.hpp>
 
 int main(int argc, char* argv[]) {

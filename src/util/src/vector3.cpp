@@ -2,11 +2,11 @@
 #include <cassert>
 #include "vector3.h"
 
-#include "../include/doctest/doctest/doctest.h"
+#include <doctest/doctest.h>
 
 using namespace Aeolus;
 
-void Aeolus::dot(Vector3 &a, Vector3 &b, Field &result) {
+void Aeolus::dot(Vector3s &a, Vector3s &b, Field &result) {
     assert((a.extent(0) == b.extent(0)) && (b.extent(0) == result.extent(0)));
     
     Kokkos::parallel_for("vector3 dot product", a.extent(0), KOKKOS_LAMBDA(const int i){
@@ -14,54 +14,54 @@ void Aeolus::dot(Vector3 &a, Vector3 &b, Field &result) {
     });
 }
 
-void Aeolus::add(Vector3 &a, Vector3 &b, Vector3 &result) {
+void Aeolus::add(Vector3s &a, Vector3s &b, Vector3s &result) {
     assert((a.extent(0) == b.extent(0)) && (b.extent(0) == result.extent(0)));
 
-    Kokkos::parallel_for("Vector3 add", a.extent(0), KOKKOS_LAMBDA(const int i){
+    Kokkos::parallel_for("Vector3s add", a.extent(0), KOKKOS_LAMBDA(const int i){
         result(i,0) = a(i,0) + b(i,0);
         result(i,1) = a(i,1) + b(i,1);
         result(i,2) = a(i,2) + b(i,2);
     });
 }
 
-void Aeolus::subtract(Vector3 &a, Vector3 &b, Vector3 &result) {
+void Aeolus::subtract(Vector3s &a, Vector3s &b, Vector3s &result) {
     assert((a.extent(0) == b.extent(0)) && (b.extent(0) == result.extent(0)));
 
-    Kokkos::parallel_for("Vector3 subtract", a.extent(0), KOKKOS_LAMBDA(const int i) {
+    Kokkos::parallel_for("Vector3s subtract", a.extent(0), KOKKOS_LAMBDA(const int i) {
         result(i,0) = a(i,0) - b(i,0);
         result(i,1) = a(i,1) - b(i,1);
         result(i,2) = a(i,2) - b(i,2);
     });
 }
 
-void Aeolus::cross(Vector3 &a, Vector3 &b, Vector3 &result) {
+void Aeolus::cross(Vector3s &a, Vector3s &b, Vector3s &result) {
     assert((a.extent(0) == b.extent(0)) && (b.extent(0) == result.extent(0)));
 
-    Kokkos::parallel_for("Vector3 cross", a.extent(0), KOKKOS_LAMBDA(const int i) {
+    Kokkos::parallel_for("Vector3s cross", a.extent(0), KOKKOS_LAMBDA(const int i) {
         result(i,0) = a(i,1)*b(i,2) - a(i,2)*b(i,1);
         result(i,1) = a(i,2)*b(i,0) - a(i,0)*b(i,2);
         result(i,2) = a(i,0)*b(i,1) - a(i,1)*b(i,0);
     });
 }
 
-void Aeolus::scale_in_place(Vector3 &a, double factor) {
-    Kokkos::parallel_for("Vector3 scale", a.extent(0), KOKKOS_LAMBDA(const int i) {
+void Aeolus::scale_in_place(Vector3s &a, double factor) {
+    Kokkos::parallel_for("Vector3s scale", a.extent(0), KOKKOS_LAMBDA(const int i) {
         a(i, 0) *= factor;
         a(i, 1) *= factor;
         a(i, 2) *= factor;
     });
 }
 
-void Aeolus::length(Vector3 &a, Field &len) {
+void Aeolus::length(Vector3s &a, Field &len) {
     assert(a.extent(0) == len.extent(0));
 
-    Kokkos::parallel_for("Vector3 length", a.extent(0), KOKKOS_LAMBDA(const int i) {
+    Kokkos::parallel_for("Vector3s length", a.extent(0), KOKKOS_LAMBDA(const int i) {
         len(i) = sqrt(a(i,0)*a(i,0) + a(i,1)*a(i,1) + a(i,2)*a(i,2));
     });
 }
 
-void Aeolus::normalise(Vector3 &a) {
-    Kokkos::parallel_for("Vector3 normalise", a.extent(0), KOKKOS_LAMBDA(const int i) {
+void Aeolus::normalise(Vector3s &a) {
+    Kokkos::parallel_for("Vector3s normalise", a.extent(0), KOKKOS_LAMBDA(const int i) {
         double length_inv = 1./sqrt(a(i,0)*a(i,0) + a(i,1)*a(i,1) + a(i,2)*a(i,2));
         a(i,0) *= length_inv;
         a(i,1) *= length_inv;
@@ -71,8 +71,8 @@ void Aeolus::normalise(Vector3 &a) {
 
 TEST_CASE("Vector Dot Product") {
     int n = 10;
-    Aeolus::Vector3 a ("a", n);
-    Aeolus::Vector3 b ("b", n);
+    Aeolus::Vector3s a ("a", n);
+    Aeolus::Vector3s b ("b", n);
     Aeolus::Field result ("result", n);
     Aeolus::Field expected ("expected", n);
     
@@ -97,12 +97,12 @@ TEST_CASE("Vector Dot Product") {
     }
 }
 
-TEST_CASE("Vector3 Add") {
+TEST_CASE("Vector3s Add") {
     int n = 20;
-    Aeolus::Vector3 a ("a", n);
-    Aeolus::Vector3 b ("b", n);
-    Aeolus::Vector3 result ("result", n);
-    Aeolus::Vector3 expected ("expected", n);
+    Aeolus::Vector3s a ("a", n);
+    Aeolus::Vector3s b ("b", n);
+    Aeolus::Vector3s result ("result", n);
+    Aeolus::Vector3s expected ("expected", n);
     
     // set some data
     for (int i = 0; i < n; i++) {
@@ -129,12 +129,12 @@ TEST_CASE("Vector3 Add") {
     }
 }
 
-TEST_CASE("Vector3 subtract") {
+TEST_CASE("Vector3s subtract") {
     int n = 20;
-    Aeolus::Vector3 a ("a", n);
-    Aeolus::Vector3 b ("b", n);
-    Aeolus::Vector3 result ("result", n);
-    Aeolus::Vector3 expected ("expected", n);
+    Aeolus::Vector3s a ("a", n);
+    Aeolus::Vector3s b ("b", n);
+    Aeolus::Vector3s result ("result", n);
+    Aeolus::Vector3s expected ("expected", n);
     
     // set some data
     for (int i = 0; i < n; i++) {
@@ -161,12 +161,12 @@ TEST_CASE("Vector3 subtract") {
     }
 }
 
-TEST_CASE("Vector3 cross") {
+TEST_CASE("Vector3s cross") {
     int n = 20;
-    Aeolus::Vector3 a ("a", n);
-    Aeolus::Vector3 b ("b", n);
-    Aeolus::Vector3 result ("result", n);
-    Aeolus::Vector3 expected ("expected", n);
+    Aeolus::Vector3s a ("a", n);
+    Aeolus::Vector3s b ("b", n);
+    Aeolus::Vector3s result ("result", n);
+    Aeolus::Vector3s expected ("expected", n);
     
     // set some data
     for (int i = 0; i < n; i++) {
@@ -193,9 +193,9 @@ TEST_CASE("Vector3 cross") {
     }
 }
 
-TEST_CASE("Vector3 scale_in_place") {
+TEST_CASE("Vector3s scale_in_place") {
     int n = 20;
-    Aeolus::Vector3 a ("a", n);
+    Aeolus::Vector3s a ("a", n);
     double factor = 2.0;
 
     for (int i = 0; i < n; i++){
@@ -213,9 +213,9 @@ TEST_CASE("Vector3 scale_in_place") {
     }
 }
 
-TEST_CASE("Vector3 length") {
+TEST_CASE("Vector3s length") {
     int n = 20;
-    Aeolus::Vector3 a ("a", n);
+    Aeolus::Vector3s a ("a", n);
     Aeolus::Field len ("length", n);
     Aeolus::Field expected ("expected", n);
 
@@ -234,9 +234,9 @@ TEST_CASE("Vector3 length") {
     }
 }
 
-TEST_CASE("Vector3 normalise") {
+TEST_CASE("Vector3s normalise") {
     int n = 20;
-    Aeolus::Vector3 a ("a", n);
+    Aeolus::Vector3s a ("a", n);
 
     for (int i = 0; i < n; i++){
         a(i, 0) = 1.0 * i + 1.0;
