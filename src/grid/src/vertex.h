@@ -26,7 +26,7 @@ public:
     
     // Vertices(std::vector<Vertex<T>> vertices);
 
-    void set_vertex_position(int vertex_id, Aeolus::Vector3<T> pos){
+    void set_vertex_position(int vertex_id, Aeolus::Vector3<T> &pos){
         _positions(vertex_id, 0) = pos.x;
         _positions(vertex_id, 1) = pos.y;
         _positions(vertex_id, 2) = pos.z;

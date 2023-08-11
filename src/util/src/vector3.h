@@ -2,7 +2,7 @@
 #define VECTOR3_H
 
 #include <Kokkos_Core.hpp>
-#include <cmath>
+#include <Kokkos_MathematicalFunctions.hpp>
 #include "field.h"
 
 namespace Aeolus {

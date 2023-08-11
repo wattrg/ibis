@@ -118,7 +118,7 @@ ElemIO read_su2_element(std::string line) {
         line = line.substr(pos+1, std::string::npos);
         vertex_ids.push_back(vertex);
     }
-    return ElemIO(vertex_ids, type);
+    return ElemIO(vertex_ids, type, FaceOrder::Vtk);
 }
 
 Aeolus::Vector3<double> read_vertex(std::string line, int dim) {
@@ -203,6 +203,40 @@ void GridIO::_read_su2_grid(std::ifstream & grid_file) {
     }
 }
 
+std::vector<ElemIO> vtk_face_order(std::vector<int> ids, ElemType type) {
+    switch (type) {
+        case ElemType::Line:
+            return std::vector<ElemIO> {
+                ElemIO({ids[0], ids[1]}, ElemType::Line, FaceOrder::Vtk)
+            };
+        case ElemType::Tri:
+            return std::vector<ElemIO> {
+                ElemIO({ids[0], ids[1]}, ElemType::Line, FaceOrder::Vtk),
+                ElemIO({ids[1], ids[2]}, ElemType::Line, FaceOrder::Vtk),
+                ElemIO({ids[2], ids[3]}, ElemType::Line, FaceOrder::Vtk),
+            };
+        case ElemType::Quad:
+            return std::vector<ElemIO> {
+                ElemIO({ids[0], ids[1]}, ElemType::Line, FaceOrder::Vtk),
+                ElemIO({ids[1], ids[2]}, ElemType::Line, FaceOrder::Vtk),
+                ElemIO({ids[2], ids[3]}, ElemType::Line, FaceOrder::Vtk),
+                ElemIO({ids[2], ids[3]}, ElemType::Line, FaceOrder::Vtk),
+                ElemIO({ids[3], ids[4]}, ElemType::Line, FaceOrder::Vtk),
+            };
+        default:
+            throw new std::runtime_error("Unreachable");
+    }    
+}
+
+std::vector<ElemIO> ElemIO::interfaces() const {
+    switch (_face_order) {
+        case FaceOrder::Vtk:
+            return vtk_face_order(_vertex_ids, _cell_type); 
+        default:
+            throw new std::runtime_error("Unreachable");
+    }
+}
+
 TEST_CASE("trim whitespace") {
     std::string test1 = " hello world    ";
     std::string test2 = "hello world";
@@ -279,13 +313,13 @@ TEST_CASE("get_next_line") {
 
 TEST_CASE("read_su2_element") {
     std::string line = "9 0 1 5 4";
-    CHECK(read_su2_element(line) == ElemIO({0, 1, 5, 4}, ElemType::Quad));
+    CHECK(read_su2_element(line) == ElemIO({0, 1, 5, 4}, ElemType::Quad, FaceOrder::Vtk));
 
     line = "3 3 34";
-    CHECK(read_su2_element(line) == ElemIO({3, 34}, ElemType::Line));
+    CHECK(read_su2_element(line) == ElemIO({3, 34}, ElemType::Line, FaceOrder::Vtk));
 
     line = "5 1 39 23";
-    CHECK(read_su2_element(line) == ElemIO({1, 39, 23}, ElemType::Tri));
+    CHECK(read_su2_element(line) == ElemIO({1, 39, 23}, ElemType::Tri, FaceOrder::Vtk));
 }
 
 TEST_CASE("read_vetex") {
@@ -303,9 +337,9 @@ TEST_CASE("read_su2_boundary_marker") {
 
     std::pair<std::string, std::vector<ElemIO>> result {
         "slip_wall", {
-            ElemIO({12, 13}, ElemType::Line), 
-            ElemIO({13, 14, 16}, ElemType::Tri), 
-            ElemIO({14, 15, 16, 1}, ElemType::Quad)
+            ElemIO({12, 13}, ElemType::Line, FaceOrder::Vtk), 
+            ElemIO({13, 14, 16}, ElemType::Tri, FaceOrder::Vtk), 
+            ElemIO({14, 15, 16, 1}, ElemType::Quad, FaceOrder::Vtk)
         } 
     };
 
@@ -334,22 +368,22 @@ TEST_CASE("read_su2_grid") {
     };
 
     std::vector<ElemIO> cells {
-        ElemIO({0, 1, 5, 4}, ElemType::Quad),
-        ElemIO({1, 2, 6, 5}, ElemType::Quad),
-        ElemIO({2, 3, 7, 6}, ElemType::Quad),
-        ElemIO({4, 5, 9, 8}, ElemType::Quad),
-        ElemIO({5, 6, 10, 9}, ElemType::Quad),
-        ElemIO({6, 7, 11, 10}, ElemType::Quad),
-        ElemIO({8, 9, 13, 12}, ElemType::Quad),
-        ElemIO({9, 10, 14, 13}, ElemType::Quad),
-        ElemIO({10, 11, 15, 14}, ElemType::Quad),
+        ElemIO({0, 1, 5, 4}, ElemType::Quad, FaceOrder::Vtk),
+        ElemIO({1, 2, 6, 5}, ElemType::Quad, FaceOrder::Vtk),
+        ElemIO({2, 3, 7, 6}, ElemType::Quad, FaceOrder::Vtk),
+        ElemIO({4, 5, 9, 8}, ElemType::Quad, FaceOrder::Vtk),
+        ElemIO({5, 6, 10, 9}, ElemType::Quad, FaceOrder::Vtk),
+        ElemIO({6, 7, 11, 10}, ElemType::Quad, FaceOrder::Vtk),
+        ElemIO({8, 9, 13, 12}, ElemType::Quad, FaceOrder::Vtk),
+        ElemIO({9, 10, 14, 13}, ElemType::Quad, FaceOrder::Vtk),
+        ElemIO({10, 11, 15, 14}, ElemType::Quad, FaceOrder::Vtk),
     };
 
     std::unordered_map<std::string, std::vector<ElemIO>> bcs {
-        {"slip_wall_bottom", {ElemIO({0,1}, ElemType::Line), ElemIO({1,2}, ElemType::Line), ElemIO({2,3}, ElemType::Line)}},
-        {"outflow", {ElemIO({3,7}, ElemType::Line), ElemIO({7,11}, ElemType::Line), ElemIO({11, 15}, ElemType::Line)}},
-        {"slip_wall_top", {ElemIO({12,13}, ElemType::Line), ElemIO({13,14}, ElemType::Line), ElemIO({14,15}, ElemType::Line)}},
-        {"inflow", {ElemIO({0,4}, ElemType::Line), ElemIO({4,8}, ElemType::Line), ElemIO({8,12}, ElemType::Line)}}
+        {"slip_wall_bottom", {ElemIO({0,1}, ElemType::Line, FaceOrder::Vtk), ElemIO({1,2}, ElemType::Line, FaceOrder::Vtk), ElemIO({2,3}, ElemType::Line, FaceOrder::Vtk)}},
+        {"outflow", {ElemIO({3,7}, ElemType::Line, FaceOrder::Vtk), ElemIO({7,11}, ElemType::Line, FaceOrder::Vtk), ElemIO({11, 15}, ElemType::Line, FaceOrder::Vtk)}},
+        {"slip_wall_top", {ElemIO({12,13}, ElemType::Line, FaceOrder::Vtk), ElemIO({13,14}, ElemType::Line, FaceOrder::Vtk), ElemIO({14,15}, ElemType::Line, FaceOrder::Vtk)}},
+        {"inflow", {ElemIO({0,4}, ElemType::Line, FaceOrder::Vtk), ElemIO({4,8}, ElemType::Line, FaceOrder::Vtk), ElemIO({8,12}, ElemType::Line, FaceOrder::Vtk)}}
     };
 
     GridIO grid_io_expected = GridIO(vertices, cells, bcs);
