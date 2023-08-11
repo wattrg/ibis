@@ -220,7 +220,6 @@ std::vector<ElemIO> vtk_face_order(std::vector<int> ids, ElemType type) {
                 ElemIO({ids[0], ids[1]}, ElemType::Line, FaceOrder::Vtk),
                 ElemIO({ids[1], ids[2]}, ElemType::Line, FaceOrder::Vtk),
                 ElemIO({ids[2], ids[3]}, ElemType::Line, FaceOrder::Vtk),
-                ElemIO({ids[2], ids[3]}, ElemType::Line, FaceOrder::Vtk),
                 ElemIO({ids[3], ids[4]}, ElemType::Line, FaceOrder::Vtk),
             };
         default:

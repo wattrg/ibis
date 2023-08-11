@@ -63,8 +63,12 @@ public:
     }
 
     std::vector<Vertex<double>> vertices() const {return _vertices;}
+
     std::vector<ElemIO> cells() const {return _cells;}
-    std::unordered_map<std::string, std::vector<ElemIO>> bcs() const {return _bcs;}
+
+    std::unordered_map<std::string, std::vector<ElemIO>> bcs() const {
+        return _bcs;
+    }
     
 private:
     std::vector<Vertex<double>> _vertices {};
