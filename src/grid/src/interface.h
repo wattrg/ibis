@@ -28,7 +28,7 @@ struct InterfaceLookup {
 public:
     InterfaceLookup();
 
-    void insert(std::vector<int> vertex_ids);
+    int insert(std::vector<int> vertex_ids);
     bool contains(std::vector<int> vertex_ids);
     int id(std::vector<int> vertex_ids); 
 

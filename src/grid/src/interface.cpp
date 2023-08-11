@@ -6,9 +6,14 @@ InterfaceLookup::InterfaceLookup() {
     _hash_map = std::unordered_map<std::string, int> {};
 }
 
-void InterfaceLookup::insert(std::vector<int> vertex_ids) {
+int InterfaceLookup::insert(std::vector<int> vertex_ids) {
     std::string hash = _hash(vertex_ids);
-    _hash_map.insert({hash, _hash_map.size()});
+    if (_contains(hash)){
+        return _hash_map[hash];
+    }
+    int id = _hash_map.size();
+    _hash_map.insert({hash, id});
+    return id;
 }
 
 bool InterfaceLookup::contains(std::vector<int> vertex_ids) {
