@@ -33,10 +33,20 @@ struct ElemIO {
 
 struct GridIO {
 public:
+    GridIO(std::vector<Vertex<double>> vertices, std::vector<ElemIO> cells, 
+           std::unordered_map<std::string, std::vector<ElemIO>> bcs) : 
+        _vertices(vertices), _cells(cells), _bcs(bcs){}
+
     GridIO(std::string file_name);
+
+    bool operator == (const GridIO &other) const {
+        return (_vertices == other._vertices) && 
+               (_cells == other._cells) &&
+               (_bcs == other._bcs);
+    }
     
 private:
-    std::vector<Vertex> _vertices {};
+    std::vector<Vertex<double>> _vertices {};
     std::vector<ElemIO> _cells {};
     std::unordered_map<std::string, std::vector<ElemIO>> _bcs;
 

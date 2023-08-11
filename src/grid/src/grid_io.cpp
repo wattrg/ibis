@@ -121,7 +121,7 @@ ElemIO read_su2_element(std::string line) {
     return ElemIO(vertex_ids, type);
 }
 
-Aeolus::Vector3 read_vertex(std::string line, int dim) {
+Aeolus::Vector3<double> read_vertex(std::string line, int dim) {
     if (dim == 2) {
         int sep = line.find(" ");
         double x = std::stod(line.substr(0, sep));
@@ -218,6 +218,7 @@ TEST_CASE("starts_with") {
     std::string test1 = "NELEM= 5";
     CHECK(starts_with(test1, "NELEM") == true);
     CHECK(starts_with(test1, "asdf") == false);
+    CHECK(starts_with(test1, "5") == false);
 }
 
 TEST_CASE("read string") {
@@ -298,10 +299,60 @@ TEST_CASE("read_vetex") {
 TEST_CASE("read_su2_boundary_marker") {
     std::string line;
     std::ifstream file ("../src/grid/test/boundary_test.txt");
-    std::pair<std::string, std::vector<ElemIO>> result {
-        "slip_wall", {ElemIO({12, 13}, ElemType::Line), {ElemIO({13, 14, 16}, ElemType::Tri)}, {ElemIO({14, 15, 16, 1}, ElemType::Quad)}} 
-    };
     get_next_line(file, line);
+
+    std::pair<std::string, std::vector<ElemIO>> result {
+        "slip_wall", {
+            ElemIO({12, 13}, ElemType::Line), 
+            ElemIO({13, 14, 16}, ElemType::Tri), 
+            ElemIO({14, 15, 16, 1}, ElemType::Quad)
+        } 
+    };
+
     CHECK(read_su2_boundary_marker(file, line) == result);
     file.close();
+}
+
+TEST_CASE("read_su2_grid") {
+    std::vector<Vertex<double>> vertices {
+        Vertex(Aeolus::Vector3(0.0, 0.0, 0.0)),
+        Vertex(Aeolus::Vector3(1.0, 0.0, 0.0)),
+        Vertex(Aeolus::Vector3(2.0, 0.0, 0.0)),
+        Vertex(Aeolus::Vector3(3.0, 0.0, 0.0)),
+        Vertex(Aeolus::Vector3(0.0, 1.0, 0.0)),
+        Vertex(Aeolus::Vector3(1.0, 1.0, 0.0)),
+        Vertex(Aeolus::Vector3(2.0, 1.0, 0.0)),
+        Vertex(Aeolus::Vector3(3.0, 1.0, 0.0)),
+        Vertex(Aeolus::Vector3(0.0, 2.0, 0.0)),
+        Vertex(Aeolus::Vector3(1.0, 2.0, 0.0)),
+        Vertex(Aeolus::Vector3(2.0, 2.0, 0.0)),
+        Vertex(Aeolus::Vector3(3.0, 2.0, 0.0)),
+        Vertex(Aeolus::Vector3(0.0, 3.0, 0.0)),
+        Vertex(Aeolus::Vector3(1.0, 3.0, 0.0)),
+        Vertex(Aeolus::Vector3(2.0, 3.0, 0.0)),
+        Vertex(Aeolus::Vector3(3.0, 3.0, 0.0))
+    };
+
+    std::vector<ElemIO> cells {
+        ElemIO({0, 1, 5, 4}, ElemType::Quad),
+        ElemIO({1, 2, 6, 5}, ElemType::Quad),
+        ElemIO({2, 3, 7, 6}, ElemType::Quad),
+        ElemIO({4, 5, 9, 8}, ElemType::Quad),
+        ElemIO({5, 6, 10, 9}, ElemType::Quad),
+        ElemIO({6, 7, 11, 10}, ElemType::Quad),
+        ElemIO({8, 9, 13, 12}, ElemType::Quad),
+        ElemIO({9, 10, 14, 13}, ElemType::Quad),
+        ElemIO({10, 11, 15, 14}, ElemType::Quad),
+    };
+
+    std::unordered_map<std::string, std::vector<ElemIO>> bcs {
+        {"slip_wall_bottom", {ElemIO({0,1}, ElemType::Line), ElemIO({1,2}, ElemType::Line), ElemIO({2,3}, ElemType::Line)}},
+        {"outflow", {ElemIO({3,7}, ElemType::Line), ElemIO({7,11}, ElemType::Line), ElemIO({11, 15}, ElemType::Line)}},
+        {"slip_wall_top", {ElemIO({12,13}, ElemType::Line), ElemIO({13,14}, ElemType::Line), ElemIO({14,15}, ElemType::Line)}},
+        {"inflow", {ElemIO({0,4}, ElemType::Line), ElemIO({4,8}, ElemType::Line), ElemIO({8,12}, ElemType::Line)}}
+    };
+
+    GridIO grid_io_expected = GridIO(vertices, cells, bcs);
+    GridIO grid_io ("../src/grid/test/grid.su2");
+    CHECK(grid_io == grid_io_expected);
 }

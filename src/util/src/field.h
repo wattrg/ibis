@@ -5,7 +5,8 @@
 
 namespace Aeolus {
 
-typedef Kokkos::View<double*> Field;
+template <typename T>
+using Field = Kokkos::View<T*>;
 
 }
 

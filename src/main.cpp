@@ -1,6 +1,6 @@
 #include <iostream>
 #include <Kokkos_Core.hpp>
-#include "gas/gas_state.h"
+#include "gas/src/gas_state.h"
 
 typedef Kokkos::View<double*[3]> FieldTest;
 
@@ -36,7 +36,7 @@ int main(int argc, char* argv[]) {
     }
 
     {
-        GasStates gs = GasStates(5);
+        GasStates<double> gs = GasStates<double>(5);
         std::cout << "Built some gas states!" << std::endl;
     }
 
