@@ -8,6 +8,10 @@
 
 template <typename T>
 struct Interfaces {
+public:
+    Interfaces () {}
+
+    Interfaces(IdConstructor ids) : _vertex_ids(Id(ids)) {}
 
 private:
     // the id's of the vertices forming each interface

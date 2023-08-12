@@ -18,6 +18,9 @@ enum class ElemType {
     Line,
     Tri,
     Quad,
+    Hex,
+    Wedge,
+    Pyramid,
 };
 
 enum class FaceOrder {

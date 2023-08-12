@@ -26,7 +26,7 @@ GridFileType file_type_from_name(std::string file_name) {
     throw new std::runtime_error("Unknown grid file type");
 }
 
-ElemType elem_type_from_su2_type(int su2_type) {
+ElemType elem_type_from_vtk_type(int su2_type) {
     switch (su2_type) {
         case 3:
             return ElemType::Line;
@@ -34,6 +34,12 @@ ElemType elem_type_from_su2_type(int su2_type) {
             return ElemType::Tri; 
         case 9:
             return ElemType::Quad;
+        case 12:
+            return ElemType::Hex;
+        case 13:
+            return ElemType::Wedge;
+        case 14:
+            return ElemType::Pyramid;
         default:
             std::cerr << "Unknown su2 cell type: " << su2_type << std::endl;
             throw new std::runtime_error("");
@@ -48,6 +54,12 @@ int number_vertices_from_elem_type(ElemType type) {
             return 3;
         case ElemType::Quad:
             return 4;
+        case ElemType::Hex:
+            return 8;
+        case ElemType::Wedge:
+            return 6;
+        case ElemType::Pyramid:
+            return 5;
         default:
             throw new std::runtime_error("");
     }
@@ -108,7 +120,7 @@ bool get_next_line(std::ifstream &grid_file, std::string &line) {
 ElemIO read_su2_element(std::string line) {
     int pos = line.find(" ");
     int type_int = std::stoi(line.substr(0, pos));
-    ElemType type = elem_type_from_su2_type(type_int);
+    ElemType type = elem_type_from_vtk_type(type_int);
     int n_vertices = number_vertices_from_elem_type(type);
     line = line.substr(pos+1, std::string::npos);
     std::vector<int> vertex_ids{};
@@ -222,6 +234,31 @@ std::vector<ElemIO> vtk_face_order(std::vector<int> ids, ElemType type) {
                 ElemIO({ids[2], ids[3]}, ElemType::Line, FaceOrder::Vtk),
                 ElemIO({ids[3], ids[4]}, ElemType::Line, FaceOrder::Vtk),
             };
+        case ElemType::Hex:
+            return std::vector<ElemIO> {
+                ElemIO({ids[0], ids[2], ids[3], ids[1]}, ElemType::Quad, FaceOrder::Vtk),
+                ElemIO({ids[0], ids[1], ids[5], ids[4]}, ElemType::Quad, FaceOrder::Vtk),
+                ElemIO({ids[4], ids[5], ids[7], ids[6]}, ElemType::Quad, FaceOrder::Vtk),
+                ElemIO({ids[2], ids[6], ids[7], ids[3]}, ElemType::Quad, FaceOrder::Vtk),
+                ElemIO({ids[0], ids[4], ids[6], ids[2]}, ElemType::Quad, FaceOrder::Vtk),
+                ElemIO({ids[1], ids[3], ids[7], ids[6]}, ElemType::Quad, FaceOrder::Vtk)
+            };
+        case ElemType::Wedge:
+            return std::vector<ElemIO> {
+                ElemIO({ids[0], ids[1], ids[2]}, ElemType::Tri, FaceOrder::Vtk),
+                ElemIO({ids[3], ids[5], ids[4]}, ElemType::Tri, FaceOrder::Vtk),
+                ElemIO({ids[1], ids[4], ids[5], ids[2]}, ElemType::Quad, FaceOrder::Vtk),
+                ElemIO({ids[0], ids[2], ids[5], ids[3]}, ElemType::Quad, FaceOrder::Vtk),
+                ElemIO({ids[0], ids[3], ids[4], ids[1]}, ElemType::Quad, FaceOrder::Vtk)
+            };
+        case ElemType::Pyramid:
+            return std::vector<ElemIO> {
+                ElemIO({ids[0], ids[3], ids[2], ids[1]}, ElemType::Quad, FaceOrder::Vtk),
+                ElemIO({ids[2], ids[3], ids[4]}, ElemType::Tri, FaceOrder::Vtk),
+                ElemIO({ids[0], ids[4], ids[3]}, ElemType::Tri, FaceOrder::Vtk),
+                ElemIO({ids[0], ids[1], ids[4]}, ElemType::Tri, FaceOrder::Vtk),
+                ElemIO({ids[1], ids[2], ids[4]}, ElemType::Tri, FaceOrder::Vtk)
+            };
         default:
             throw new std::runtime_error("Unreachable");
     }    
@@ -272,8 +309,8 @@ TEST_CASE("file type from name") {
 }
 
 TEST_CASE("elem_type_from_su2_type") {
-    CHECK(elem_type_from_su2_type(3) == ElemType::Line);
-    CHECK(elem_type_from_su2_type(9) == ElemType::Quad);
+    CHECK(elem_type_from_vtk_type(3) == ElemType::Line);
+    CHECK(elem_type_from_vtk_type(9) == ElemType::Quad);
 }
 
 TEST_CASE("number_vertices_from_elem_type") {

@@ -20,8 +20,10 @@ private:
 template <typename T>
 struct Vertices {
 public:
+    Vertices () {}
+
     Vertices(int num_vertices) {
-        _positions = Aeolus::Vector3s("vertices", num_vertices);
+        _positions = Aeolus::Vector3s<T>("vertices", num_vertices);
     }
     
     // Vertices(std::vector<Vertex<T>> vertices);

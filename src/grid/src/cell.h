@@ -7,6 +7,10 @@
 template <typename T>
 struct Cells {
 public:
+    Cells () {}
+
+    Cells(Id vertices, Id interfaces) 
+        : _interface_ids(interfaces), _vertex_ids(vertices) {}
 
 private:
     Id _interface_ids;
