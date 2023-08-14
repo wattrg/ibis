@@ -33,7 +33,12 @@ public:
         _positions(vertex_id, 1) = pos.y;
         _positions(vertex_id, 2) = pos.z;
     }
+
     Aeolus::Vector3s<T> &positions() {return _positions;}
+
+    bool operator == (const Vertices &other) const {
+        return _positions == other._positions;
+    }
 
 private:
     Aeolus::Vector3s<T> _positions;

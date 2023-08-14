@@ -68,6 +68,10 @@ int number_vertices_from_elem_type(ElemType type) {
 GridIO::GridIO(std::string file_name) {
     GridFileType type = file_type_from_name(file_name); 
     std::ifstream grid_file(file_name);
+    if (!grid_file) {
+        std::cerr << "Could not find " << file_name << std::endl;
+        throw new std::runtime_error("File not found");
+    }
     switch (type) {
         case GridFileType::Su2:
             _read_su2_grid(grid_file);
@@ -225,14 +229,14 @@ std::vector<ElemIO> vtk_face_order(std::vector<int> ids, ElemType type) {
             return std::vector<ElemIO> {
                 ElemIO({ids[0], ids[1]}, ElemType::Line, FaceOrder::Vtk),
                 ElemIO({ids[1], ids[2]}, ElemType::Line, FaceOrder::Vtk),
-                ElemIO({ids[2], ids[3]}, ElemType::Line, FaceOrder::Vtk),
+                ElemIO({ids[2], ids[0]}, ElemType::Line, FaceOrder::Vtk),
             };
         case ElemType::Quad:
             return std::vector<ElemIO> {
                 ElemIO({ids[0], ids[1]}, ElemType::Line, FaceOrder::Vtk),
                 ElemIO({ids[1], ids[2]}, ElemType::Line, FaceOrder::Vtk),
                 ElemIO({ids[2], ids[3]}, ElemType::Line, FaceOrder::Vtk),
-                ElemIO({ids[3], ids[4]}, ElemType::Line, FaceOrder::Vtk),
+                ElemIO({ids[3], ids[0]}, ElemType::Line, FaceOrder::Vtk),
             };
         case ElemType::Hex:
             return std::vector<ElemIO> {
@@ -416,10 +420,38 @@ TEST_CASE("read_su2_grid") {
     };
 
     std::unordered_map<std::string, std::vector<ElemIO>> bcs {
-        {"slip_wall_bottom", {ElemIO({0,1}, ElemType::Line, FaceOrder::Vtk), ElemIO({1,2}, ElemType::Line, FaceOrder::Vtk), ElemIO({2,3}, ElemType::Line, FaceOrder::Vtk)}},
-        {"outflow", {ElemIO({3,7}, ElemType::Line, FaceOrder::Vtk), ElemIO({7,11}, ElemType::Line, FaceOrder::Vtk), ElemIO({11, 15}, ElemType::Line, FaceOrder::Vtk)}},
-        {"slip_wall_top", {ElemIO({12,13}, ElemType::Line, FaceOrder::Vtk), ElemIO({13,14}, ElemType::Line, FaceOrder::Vtk), ElemIO({14,15}, ElemType::Line, FaceOrder::Vtk)}},
-        {"inflow", {ElemIO({0,4}, ElemType::Line, FaceOrder::Vtk), ElemIO({4,8}, ElemType::Line, FaceOrder::Vtk), ElemIO({8,12}, ElemType::Line, FaceOrder::Vtk)}}
+        {
+            "slip_wall_bottom", 
+            {
+                ElemIO({0,1}, ElemType::Line, FaceOrder::Vtk), 
+                ElemIO({1,2}, ElemType::Line, FaceOrder::Vtk), 
+                ElemIO({2,3}, ElemType::Line, FaceOrder::Vtk)
+            }
+        },
+        {
+            "outflow", 
+            {
+                ElemIO({3,7}, ElemType::Line, FaceOrder::Vtk), 
+                ElemIO({7,11}, ElemType::Line, FaceOrder::Vtk), 
+                ElemIO({11, 15}, ElemType::Line, FaceOrder::Vtk)
+            }
+        },
+        {
+            "slip_wall_top", 
+            {
+                ElemIO({12,13}, ElemType::Line, FaceOrder::Vtk), 
+                ElemIO({13,14}, ElemType::Line, FaceOrder::Vtk), 
+                ElemIO({14,15}, ElemType::Line, FaceOrder::Vtk)
+            }
+        },
+        {
+            "inflow", 
+            {
+                ElemIO({0,4}, ElemType::Line, FaceOrder::Vtk), 
+                ElemIO({4,8}, ElemType::Line, FaceOrder::Vtk), 
+                ElemIO({8,12}, ElemType::Line, FaceOrder::Vtk)
+            }
+        }
     };
 
     GridIO grid_io_expected = GridIO(vertices, cells, bcs);

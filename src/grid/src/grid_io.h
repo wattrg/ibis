@@ -29,7 +29,7 @@ enum class FaceOrder {
 
 struct ElemIO {
     ElemIO(std::vector<int> ids, ElemType type, FaceOrder face_order) 
-        : _cell_type(type), _vertex_ids(ids), _face_order(face_order)
+        : _vertex_ids(ids), _cell_type(type), _face_order(face_order)
     {}
 
     bool operator == (const ElemIO &other) const {

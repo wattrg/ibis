@@ -12,7 +12,7 @@ public:
     }
 
     void push_back(std::vector<int> ids) {
-        for (int i = 0; i < ids.size(); i++) {
+        for (unsigned int i = 0; i < ids.size(); i++) {
             _ids.push_back(ids[i]);
         }
         _offsets.push_back(_offsets.back() + ids.size());
@@ -46,6 +46,18 @@ public:
         int first = _offsets(i);
         int last = _offsets(i+1);
         return Kokkos::subview(_ids, std::make_pair(first, last));
+    }
+
+    inline int size() const {return _offsets.extent(0)-1;}
+
+    bool operator == (const Id &other) const {
+        for (unsigned int i = 0; i < _ids.extent(0); i++) {
+            if (_ids(i) != other._ids(i)) return false;
+        }
+        for (unsigned int i = 0; i < _offsets.extent(0); i++) {
+            if (_offsets(i) != other._offsets(i)) return false;
+        }
+        return true;
     }
 
 private:
