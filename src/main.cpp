@@ -38,6 +38,7 @@ int main(int argc, char* argv[]) {
     {
         GasStates<double> gs = GasStates<double>(5);
         std::cout << "Built some gas states!" << std::endl;
+        printf("initial gs energy = %f\n", gs.energy(2));
     }
 
     Kokkos::finalize();

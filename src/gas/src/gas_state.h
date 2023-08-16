@@ -15,6 +15,7 @@ public:
     }
 
     inline T& rho(const int cell_i) const {return _data(cell_i, _rho_idx);}
+
     inline T& rho(const int cell_i) {return _data(cell_i, _rho_idx);}
 
     inline T& pressure(const int cell_i) const {return _data(cell_i, _pressure_idx);}

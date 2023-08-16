@@ -3,10 +3,12 @@ cmake_minimum_required(VERSION 3.22.1)
 project(aeolus)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+set(CMAKE_CXX_COMPILER clang++)
 
 add_subdirectory(src/gas)
 add_subdirectory(src/util)
 add_subdirectory(src/grid)
+add_subdirectory(src/finite_volume)
 add_subdirectory(src/include/doctest)
 
 set(Kokkos_DIR "../kokkos_inst/lib/cmake/Kokkos")
@@ -21,7 +23,7 @@ target_link_libraries(${PROJECT_NAME} PUBLIC util)
 target_link_libraries(${PROJECT_NAME} PUBLIC grid)
 target_link_libraries(${PROJECT_NAME} PUBLIC Kokkos::kokkos)
 target_link_libraries(${PROJECT_NAME} PRIVATE doctest)
-target_compile_options(${PROJECT_NAME} PRIVATE -Wall -Wextra -Wpedantic -Werror)
+target_compile_options(${PROJECT_NAME} PRIVATE -Wall -Wextra -Wpedantic)
 
 enable_testing()
 add_test(NAME util_unittest COMMAND src/util/util_unittest)

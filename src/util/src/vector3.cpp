@@ -3,6 +3,7 @@
 #include "vector3.h"
 
 #include <doctest/doctest.h>
+#include <Kokkos_MathematicalFunctions.hpp>
 
 
 TEST_CASE("Vector Dot Product") {

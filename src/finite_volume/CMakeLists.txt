@@ -1,0 +1,14 @@
+set(Kokkos_DIR "../../../kokkos_inst/lib/cmake/Kokkos")
+set(Kokkos_ROOT "../../../kokkos_inst")
+find_package(Kokkos REQUIRED)
+
+# add_library(finite_volume STATIC)
+# target_link_libraries(grid PUBLIC Kokkos::kokkos)
+# target_link_libraries(grid PRIVATE doctest)
+# target_link_libraries(grid PRIVATE util)
+#
+# add_executable(grid_unittest test/unittest.cpp src/grid_io.cpp src/grid.cpp src/interface.cpp)
+# target_compile_options(grid_unittest PRIVATE -Wall -Wextra -Wpedantic -Werror -g)
+# target_link_libraries(grid_unittest PRIVATE util)
+# target_link_libraries(grid_unittest PRIVATE doctest)
+# target_link_libraries(grid_unittest PRIVATE Kokkos::kokkos)
