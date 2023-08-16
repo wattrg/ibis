@@ -3,13 +3,12 @@ cmake_minimum_required(VERSION 3.22.1)
 project(ibis)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
-set(CMAKE_CXX_COMPILER clang++)
 
 add_subdirectory(src/gas)
 add_subdirectory(src/util)
 add_subdirectory(src/grid)
 add_subdirectory(src/finite_volume)
-add_subdirectory(src/include/doctest)
+add_subdirectory(extern/doctest)
 
 set(Kokkos_DIR "../kokkos_inst/lib/cmake/Kokkos")
 set(Kokkos_ROOT "../kokkos_inst")
