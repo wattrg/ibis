@@ -3,23 +3,23 @@
 
 TEST_CASE("build grid block") {
     Vertices<double> vertices(16);
-    std::vector<Aeolus::Vector3<double>> vertex_pos {
-        Aeolus::Vector3<double>(0.0, 0.0, 0.0),
-        Aeolus::Vector3<double>(1.0, 0.0, 0.0),
-        Aeolus::Vector3<double>(2.0, 0.0, 0.0),
-        Aeolus::Vector3<double>(3.0, 0.0, 0.0),
-        Aeolus::Vector3<double>(0.0, 1.0, 0.0),
-        Aeolus::Vector3<double>(1.0, 1.0, 0.0),
-        Aeolus::Vector3<double>(2.0, 1.0, 0.0),
-        Aeolus::Vector3<double>(3.0, 1.0, 0.0),
-        Aeolus::Vector3<double>(0.0, 2.0, 0.0),
-        Aeolus::Vector3<double>(1.0, 2.0, 0.0),
-        Aeolus::Vector3<double>(2.0, 2.0, 0.0),
-        Aeolus::Vector3<double>(3.0, 2.0, 0.0),
-        Aeolus::Vector3<double>(0.0, 3.0, 0.0),
-        Aeolus::Vector3<double>(1.0, 3.0, 0.0),
-        Aeolus::Vector3<double>(2.0, 3.0, 0.0),
-        Aeolus::Vector3<double>(3.0, 3.0, 0.0)
+    std::vector<Vector3<double>> vertex_pos {
+        Vector3<double>(0.0, 0.0, 0.0),
+        Vector3<double>(1.0, 0.0, 0.0),
+        Vector3<double>(2.0, 0.0, 0.0),
+        Vector3<double>(3.0, 0.0, 0.0),
+        Vector3<double>(0.0, 1.0, 0.0),
+        Vector3<double>(1.0, 1.0, 0.0),
+        Vector3<double>(2.0, 1.0, 0.0),
+        Vector3<double>(3.0, 1.0, 0.0),
+        Vector3<double>(0.0, 2.0, 0.0),
+        Vector3<double>(1.0, 2.0, 0.0),
+        Vector3<double>(2.0, 2.0, 0.0),
+        Vector3<double>(3.0, 2.0, 0.0),
+        Vector3<double>(0.0, 3.0, 0.0),
+        Vector3<double>(1.0, 3.0, 0.0),
+        Vector3<double>(2.0, 3.0, 0.0),
+        Vector3<double>(3.0, 3.0, 0.0)
     };
     for (int i = 0; i < 16; i++) {
         vertices.set_vertex_position(i, vertex_pos[i]);

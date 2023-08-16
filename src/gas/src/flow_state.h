@@ -8,10 +8,10 @@ template <typename T>
 struct FlowStates{
 public:
     FlowStates(int n) 
-        : gas(GasStates<T>(n)), vel(Aeolus::Vector3s<T>(n)) {}
+        : gas(GasStates<T>(n)), vel(Vector3s<T>(n)) {}
     
     GasStates<T> gas;
-    Aeolus::Vector3s<T> vel;
+    Vector3s<T> vel;
 };
 
 #endif

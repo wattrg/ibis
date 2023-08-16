@@ -45,8 +45,8 @@ public:
 private:
     Id _interface_ids;
     Id _vertex_ids;
-    Aeolus::Field<T> _volume;
-    Aeolus::Field<int> _outsign;
+    Field<T> _volume;
+    Field<int> _outsign;
 };
 
 #endif

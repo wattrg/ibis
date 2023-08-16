@@ -42,11 +42,11 @@ public:
     }
 
     inline Id &vertex_ids() {return _vertex_ids;}
-    inline Aeolus::Field<T> &area() const {return _area;}
-    inline Aeolus::Field<T> &norm() const {return _norm;}
-    inline Aeolus::Field<T> &tan1() const {return _tan1;}
-    inline Aeolus::Field<T> &tan2() const {return _tan2;}
-    inline Aeolus::Vector3s<T> &centre() const {return _centre;}
+    inline Field<T> &area() const {return _area;}
+    inline Field<T> &norm() const {return _norm;}
+    inline Field<T> &tan1() const {return _tan1;}
+    inline Field<T> &tan2() const {return _tan2;}
+    inline Vector3s<T> &centre() const {return _centre;}
 
     inline int size() const {return _vertex_ids.size();}
 
@@ -55,11 +55,11 @@ private:
     Id _vertex_ids;
 
     // geometric data
-    Aeolus::Field<T> _area; 
-    Aeolus::Vector3s<T> _norm;
-    Aeolus::Vector3s<T> _tan1;
-    Aeolus::Vector3s<T> _tan2;
-    Aeolus::Vector3s<T> _centre;
+    Field<T> _area; 
+    Vector3s<T> _norm;
+    Vector3s<T> _tan1;
+    Vector3s<T> _tan2;
+    Vector3s<T> _centre;
 };
 
 

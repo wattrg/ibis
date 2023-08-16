@@ -8,10 +8,10 @@
 
 TEST_CASE("Vector Dot Product") {
     int n = 10;
-    Aeolus::Vector3s<double> a ("a", n);
-    Aeolus::Vector3s<double> b ("b", n);
-    Aeolus::Field<double> result ("result", n);
-    Aeolus::Field<double> expected ("expected", n);
+    Vector3s<double> a ("a", n);
+    Vector3s<double> b ("b", n);
+    Field<double> result ("result", n);
+    Field<double> expected ("expected", n);
     
     // set some data
     for (int i = 0; i < n; i++) {
@@ -26,7 +26,7 @@ TEST_CASE("Vector Dot Product") {
         expected(i) = a(i,0)*b(i,0) + a(i,1)*b(i,1) + a(i,2)*b(i,2);
     }
 
-    Aeolus::dot(a, b, result);
+    dot(a, b, result);
 
     // check the results are correct
     for (int i = 0; i < n; i++) {
@@ -36,10 +36,10 @@ TEST_CASE("Vector Dot Product") {
 
 TEST_CASE("Vector3s Add") {
     int n = 20;
-    Aeolus::Vector3s<double> a ("a", n);
-    Aeolus::Vector3s<double> b ("b", n);
-    Aeolus::Vector3s<double> result ("result", n);
-    Aeolus::Vector3s<double> expected ("expected", n);
+    Vector3s<double> a ("a", n);
+    Vector3s<double> b ("b", n);
+    Vector3s<double> result ("result", n);
+    Vector3s<double> expected ("expected", n);
     
     // set some data
     for (int i = 0; i < n; i++) {
@@ -56,7 +56,7 @@ TEST_CASE("Vector3s Add") {
         expected(i,2) = a(i,2) + b(i,2);
     }
 
-    Aeolus::add(a, b, result);
+    add(a, b, result);
 
     // check the results are correct
     for (int i = 0; i < n; i++) {
@@ -68,10 +68,10 @@ TEST_CASE("Vector3s Add") {
 
 TEST_CASE("Vector3s subtract") {
     int n = 20;
-    Aeolus::Vector3s<double> a ("a", n);
-    Aeolus::Vector3s<double> b ("b", n);
-    Aeolus::Vector3s<double> result ("result", n);
-    Aeolus::Vector3s<double> expected ("expected", n);
+    Vector3s<double> a ("a", n);
+    Vector3s<double> b ("b", n);
+    Vector3s<double> result ("result", n);
+    Vector3s<double> expected ("expected", n);
     
     // set some data
     for (int i = 0; i < n; i++) {
@@ -88,7 +88,7 @@ TEST_CASE("Vector3s subtract") {
         expected(i,2) = a(i,2) - b(i,2);
     }
 
-    Aeolus::subtract(a, b, result);
+    subtract(a, b, result);
 
     // check the results are correct
     for (int i = 0; i < n; i++) {
@@ -100,10 +100,10 @@ TEST_CASE("Vector3s subtract") {
 
 TEST_CASE("Vector3s cross") {
     int n = 20;
-    Aeolus::Vector3s<double> a ("a", n);
-    Aeolus::Vector3s<double> b ("b", n);
-    Aeolus::Vector3s<double> result ("result", n);
-    Aeolus::Vector3s<double> expected ("expected", n);
+    Vector3s<double> a ("a", n);
+    Vector3s<double> b ("b", n);
+    Vector3s<double> result ("result", n);
+    Vector3s<double> expected ("expected", n);
     
     // set some data
     for (int i = 0; i < n; i++) {
@@ -120,7 +120,7 @@ TEST_CASE("Vector3s cross") {
         expected(i,2) = a(i,0)*b(i,1) - a(i,1)*b(i,0);
     }
 
-    Aeolus::cross(a, b, result);
+    cross(a, b, result);
 
     // check the results are correct
     for (int i = 0; i < n; i++) {
@@ -132,7 +132,7 @@ TEST_CASE("Vector3s cross") {
 
 TEST_CASE("Vector3s scale_in_place") {
     int n = 20;
-    Aeolus::Vector3s<double> a ("a", n);
+    Vector3s<double> a ("a", n);
     double factor = 2.0;
 
     for (int i = 0; i < n; i++){
@@ -141,7 +141,7 @@ TEST_CASE("Vector3s scale_in_place") {
         a(i, 2) = 3.0 * i;
     }
 
-    Aeolus::scale_in_place(a, factor);
+    scale_in_place(a, factor);
 
     for (int i = 0; i < n; i++){
         CHECK(fabs(a(i, 0) - 2.0 * i) < 1e-8);
@@ -152,9 +152,9 @@ TEST_CASE("Vector3s scale_in_place") {
 
 TEST_CASE("Vector3s length") {
     int n = 20;
-    Aeolus::Vector3s<double> a ("a", n);
-    Aeolus::Field<double> len ("length", n);
-    Aeolus::Field<double> expected ("expected", n);
+    Vector3s<double> a ("a", n);
+    Field<double> len ("length", n);
+    Field<double> expected ("expected", n);
 
     for (int i = 0; i < n; i++){
         a(i, 0) = 1.0 * i;
@@ -164,7 +164,7 @@ TEST_CASE("Vector3s length") {
         expected(i) = sqrt(a(i,0)*a(i,0) + a(i,1)*a(i,1) + a(i,2)*a(i,2));
     }
 
-    Aeolus::length(a, len);
+    length(a, len);
 
     for (int i = 0; i < n; i++){
         CHECK(fabs(len(i) - expected(i)) < 1e-8);
@@ -173,7 +173,7 @@ TEST_CASE("Vector3s length") {
 
 TEST_CASE("Vector3s normalise") {
     int n = 20;
-    Aeolus::Vector3s<double> a ("a", n);
+    Vector3s<double> a ("a", n);
 
     for (int i = 0; i < n; i++){
         a(i, 0) = 1.0 * i + 1.0;
@@ -181,7 +181,7 @@ TEST_CASE("Vector3s normalise") {
         a(i, 2) = 3.0 * i;
     }
 
-    Aeolus::normalise(a);
+    normalise(a);
 
     for (int i = 0; i < n; i++){
         double length_inv = sqrt((i+1.0)*(i+1.0) + 4.0*i*i + 9.0*i*i);

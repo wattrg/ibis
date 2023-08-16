@@ -137,12 +137,12 @@ ElemIO read_su2_element(std::string line) {
     return ElemIO(vertex_ids, type, FaceOrder::Vtk);
 }
 
-Aeolus::Vector3<double> read_vertex(std::string line, int dim) {
+Vector3<double> read_vertex(std::string line, int dim) {
     if (dim == 2) {
         int sep = line.find(" ");
         double x = std::stod(line.substr(0, sep));
         double y = std::stod(line.substr(sep));
-        return Aeolus::Vector3(x, y, 0.0);
+        return Vector3(x, y, 0.0);
     }
     else if (dim == 3) {
         int sep = line.find(" ");
@@ -155,7 +155,7 @@ Aeolus::Vector3<double> read_vertex(std::string line, int dim) {
 
         sep = line.find(" ");
         double z = std::stod(line.substr(0, sep));
-        return Aeolus::Vector3(x, y, z);
+        return Vector3(x, y, z);
     }
     else {
         std::cerr << "Invalid number of dimensions in su2 file: "
@@ -364,10 +364,10 @@ TEST_CASE("read_su2_element") {
 
 TEST_CASE("read_vetex") {
     std::string line = "1.0 2.0";
-    CHECK(read_vertex(line, 2) == Aeolus::Vector3(1.0, 2.0, 0.0));
+    CHECK(read_vertex(line, 2) == Vector3(1.0, 2.0, 0.0));
 
     line = "12.0 0.5 3.4";
-    CHECK(read_vertex(line, 3) == Aeolus::Vector3(12.0, 0.5, 3.4));
+    CHECK(read_vertex(line, 3) == Vector3(12.0, 0.5, 3.4));
 }
 
 TEST_CASE("read_su2_boundary_marker") {
@@ -389,22 +389,22 @@ TEST_CASE("read_su2_boundary_marker") {
 
 TEST_CASE("read_su2_grid") {
     std::vector<Vertex<double>> vertices {
-        Vertex(Aeolus::Vector3(0.0, 0.0, 0.0)),
-        Vertex(Aeolus::Vector3(1.0, 0.0, 0.0)),
-        Vertex(Aeolus::Vector3(2.0, 0.0, 0.0)),
-        Vertex(Aeolus::Vector3(3.0, 0.0, 0.0)),
-        Vertex(Aeolus::Vector3(0.0, 1.0, 0.0)),
-        Vertex(Aeolus::Vector3(1.0, 1.0, 0.0)),
-        Vertex(Aeolus::Vector3(2.0, 1.0, 0.0)),
-        Vertex(Aeolus::Vector3(3.0, 1.0, 0.0)),
-        Vertex(Aeolus::Vector3(0.0, 2.0, 0.0)),
-        Vertex(Aeolus::Vector3(1.0, 2.0, 0.0)),
-        Vertex(Aeolus::Vector3(2.0, 2.0, 0.0)),
-        Vertex(Aeolus::Vector3(3.0, 2.0, 0.0)),
-        Vertex(Aeolus::Vector3(0.0, 3.0, 0.0)),
-        Vertex(Aeolus::Vector3(1.0, 3.0, 0.0)),
-        Vertex(Aeolus::Vector3(2.0, 3.0, 0.0)),
-        Vertex(Aeolus::Vector3(3.0, 3.0, 0.0))
+        Vertex(Vector3(0.0, 0.0, 0.0)),
+        Vertex(Vector3(1.0, 0.0, 0.0)),
+        Vertex(Vector3(2.0, 0.0, 0.0)),
+        Vertex(Vector3(3.0, 0.0, 0.0)),
+        Vertex(Vector3(0.0, 1.0, 0.0)),
+        Vertex(Vector3(1.0, 1.0, 0.0)),
+        Vertex(Vector3(2.0, 1.0, 0.0)),
+        Vertex(Vector3(3.0, 1.0, 0.0)),
+        Vertex(Vector3(0.0, 2.0, 0.0)),
+        Vertex(Vector3(1.0, 2.0, 0.0)),
+        Vertex(Vector3(2.0, 2.0, 0.0)),
+        Vertex(Vector3(3.0, 2.0, 0.0)),
+        Vertex(Vector3(0.0, 3.0, 0.0)),
+        Vertex(Vector3(1.0, 3.0, 0.0)),
+        Vertex(Vector3(2.0, 3.0, 0.0)),
+        Vertex(Vector3(3.0, 3.0, 0.0))
     };
 
     std::vector<ElemIO> cells {

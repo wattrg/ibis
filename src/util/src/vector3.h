@@ -5,7 +5,6 @@
 #include <Kokkos_MathematicalFunctions.hpp>
 #include "field.h"
 
-namespace Aeolus {
 
 // A collection of vectors with 3 components
 // template <typename T>
@@ -129,7 +128,5 @@ struct Vector3 {
                (std::fabs(z - other.z) < 1e-14);
     }
 };
-
-}
 
 #endif

@@ -4,10 +4,6 @@
 #include <Kokkos_Core.hpp>
 #include <Kokkos_MathematicalFunctions.hpp>
 
-namespace Aeolus {
-
-// template <typename T>
-// using Field = Kokkos::View<T*>;
 
 template <typename T>
 struct Field {
@@ -34,6 +30,5 @@ private:
     Kokkos::View<T*> _view;
 };
 
-}
 
 #endif
