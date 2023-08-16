@@ -1,9 +1,9 @@
-# aeolus
+# ibis
 A soon-to-be CFD solver.
 
 ## Installation
 ### Dependancies
-To build `aeolus`, you will need to have:
+To build `ibis`, you will need to have:
   1. A c++ compiler
   2. cmake
   3. Kokkos
@@ -22,7 +22,7 @@ make install
 ```
 
 ## build
-`aeolus` uses `cmake`. To compile `aeolus` on linux:
+`ibis` uses `cmake`. To compile `ibis` on linux:
 
 ```
 mkdir build
@@ -31,4 +31,4 @@ cmake ..
 make
 ```
 
-This will compile the executable. You can run it with `./aeolus`
+This will compile the executable. You can run it with `./ibis`

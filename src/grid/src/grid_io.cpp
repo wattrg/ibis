@@ -19,7 +19,7 @@ GridFileType file_type_from_name(std::string file_name) {
     if (ext == "su2") {
         return GridFileType::Su2;
     }
-    if (ext == "aeolus") {
+    if (ext == "ibis") {
         return GridFileType::Native;
     }
     std::cerr << "Unknown grid file type: " << ext << std::endl;
@@ -309,7 +309,7 @@ TEST_CASE("read int") {
 
 TEST_CASE("file type from name") {
     CHECK(file_type_from_name("grid.su2") == GridFileType::Su2);
-    CHECK(file_type_from_name("grid.aeolus") == GridFileType::Native);
+    CHECK(file_type_from_name("grid.ibis") == GridFileType::Native);
 }
 
 TEST_CASE("elem_type_from_su2_type") {
