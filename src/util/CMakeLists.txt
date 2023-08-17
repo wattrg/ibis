@@ -1,6 +1,3 @@
-set(Kokkos_DIR "../../../kokkos_inst/lib/cmake/Kokkos")
-set(Kokkos_ROOT "../../../kokkos_inst")
-find_package(Kokkos REQUIRED)
 add_library(util STATIC src/vector3.cpp src/id.cpp)
 target_link_libraries(util PUBLIC Kokkos::kokkos)
 target_link_libraries(util PRIVATE doctest)

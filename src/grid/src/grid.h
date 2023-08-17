@@ -48,6 +48,8 @@ public:
 
         _interfaces = Interfaces<T>(interface_vertices);
         _cells = Cells<T>(cell_vertices, cell_interface_ids);
+
+        // compute_geometric_data();
     } 
 
     GridBlock(std::string file_name) : GridBlock<T>(GridIO(file_name)) {}
@@ -60,6 +62,16 @@ public:
                (_interfaces == other._interfaces) &&
                (_cells == other._cells);
     }
+
+    void compute_interface_directions();
+    void compute_interface_areas();
+    void compute_cell_volumes();
+
+    // void compute_geometric_data() {
+    //     compute_interface_directions();
+    //     compute_interface_areas();
+    //     compute_cell_volumes();
+    // }
 
 public:
     Vertices<T> _vertices;

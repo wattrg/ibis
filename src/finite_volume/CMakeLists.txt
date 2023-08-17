@@ -1,7 +1,3 @@
-set(Kokkos_DIR "../../../kokkos_inst/lib/cmake/Kokkos")
-set(Kokkos_ROOT "../../../kokkos_inst")
-find_package(Kokkos REQUIRED)
-
 # add_library(finite_volume STATIC)
 # target_link_libraries(grid PUBLIC Kokkos::kokkos)
 # target_link_libraries(grid PRIVATE doctest)
