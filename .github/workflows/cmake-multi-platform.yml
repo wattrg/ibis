@@ -23,13 +23,10 @@ jobs:
       #
       # To add more build types (Release, Debug, RelWithDebInfo, etc.) customize the build_type list.
       matrix:
-        os: [ubuntu-latest, windows-latest]
+        os: [ubuntu-latest, macos-latest]
         build_type: [Debug, Release]
-        c_compiler: [gcc, clang, cl]
+        c_compiler: [gcc, clang]
         include:
-          - os: windows-latest
-            c_compiler: cl
-            cpp_compiler: cl
           - os: ubuntu-latest
             c_compiler: gcc
             cpp_compiler: g++
@@ -53,6 +50,21 @@ jobs:
       shell: bash
       run: |
         echo "build-output-dir=${{ github.workspace }}/build" >> "$GITHUB_OUTPUT"
+
+    - name: Checkout Kokkos
+      uses: actions/checkout@v3
+      with:
+        repository: Kokkos/Kokkos
+        path: kokkos
+
+    - name: Install Kokkos
+      working-directory: kokkos
+      run : |
+        mkdir build
+        cd build
+        cmake -DCMAKE_INSTALL_PREFIX=../../kokkos_inst -DCMAKE_CXX_COMPILER=${{ matrix.cpp_compiler }}
+        make install
+
 
     - name: Configure CMake
       # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
