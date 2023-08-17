@@ -21,6 +21,8 @@ target_link_libraries(${PROJECT_NAME} PUBLIC Kokkos::kokkos)
 target_link_libraries(${PROJECT_NAME} PRIVATE doctest)
 target_compile_options(${PROJECT_NAME} PRIVATE -Wall -Wextra -Wpedantic)
 
+install(TARGETS ${PROJECT_NAME} DESTINATION bin)
+
 enable_testing()
 add_test(NAME util_unittest COMMAND src/util/util_unittest)
 add_test(NAME grid_unittest COMMAND src/grid/grid_unittest)
