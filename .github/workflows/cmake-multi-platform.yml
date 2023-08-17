@@ -62,7 +62,7 @@ jobs:
       run : |
         mkdir build
         cd build
-        cmake -DCMAKE_INSTALL_PREFIX=../../kokkos_inst -DCMAKE_CXX_COMPILER=${{ matrix.cpp_compiler }}
+        cmake .. -DCMAKE_INSTALL_PREFIX=../../kokkos_inst -DCMAKE_CXX_COMPILER=${{ matrix.cpp_compiler }}
         make install
 
 
