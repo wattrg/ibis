@@ -13,7 +13,7 @@ To build `ibis`, you will need to have:
 ```
 mkdir build
 cd build
-cmake .. -DKokkos_ENABLE_ARCH=ON -DCMAKE_INSTALL_PREFIX=../inst
+cmake .. -DKokkos_ENABLE_ARCH=ON
 make
 ```
 
