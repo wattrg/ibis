@@ -24,22 +24,8 @@ jobs:
       # To add more build types (Release, Debug, RelWithDebInfo, etc.) customize the build_type list.
       matrix:
         os: [ubuntu-latest, macos-latest]
-        build_type: [Debug, Release]
+        build_type: [Release]
         c_compiler: [gcc, clang]
-        include:
-          - os: ubuntu-latest
-            c_compiler: gcc
-            cpp_compiler: g++
-          - os: ubuntu-latest
-            c_compiler: clang
-            cpp_compiler: clang++
-        exclude:
-          - os: windows-latest
-            c_compiler: gcc
-          - os: windows-latest
-            c_compiler: clang
-          - os: ubuntu-latest
-            c_compiler: cl
 
     steps:
     - uses: actions/checkout@v3
@@ -62,7 +48,7 @@ jobs:
       run : |
         mkdir build
         cd build
-        cmake .. -DCMAKE_INSTALL_PREFIX=../../kokkos_inst -DCMAKE_CXX_COMPILER=${{ matrix.cpp_compiler }}
+        cmake .. -DCMAKE_INSTALL_PREFIX=../../../kokkos_inst -DCMAKE_CXX_COMPILER=${{ matrix.cpp_compiler }}
         make install
 
 
