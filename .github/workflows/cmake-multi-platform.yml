@@ -37,21 +37,6 @@ jobs:
       run: |
         echo "build-output-dir=${{ github.workspace }}/build" >> "$GITHUB_OUTPUT"
 
-    - name: Checkout Kokkos
-      uses: actions/checkout@v3
-      with:
-        repository: Kokkos/Kokkos
-        path: kokkos
-
-    - name: Install Kokkos
-      working-directory: kokkos
-      run : |
-        mkdir build
-        cd build
-        cmake .. -DCMAKE_INSTALL_PREFIX=../../../kokkos_inst -DCMAKE_CXX_COMPILER=${{ matrix.cpp_compiler }}
-        make install
-
-
     - name: Configure CMake
       # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
       # See https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html?highlight=cmake_build_type

@@ -9,10 +9,7 @@ add_subdirectory(src/util)
 add_subdirectory(src/grid)
 add_subdirectory(src/finite_volume)
 add_subdirectory(extern/doctest)
-
-set(Kokkos_DIR "../kokkos_inst/lib/cmake/Kokkos")
-set(Kokkos_ROOT "../kokkos_inst")
-find_package(Kokkos REQUIRED)
+add_subdirectory(extern/kokkos)
 
 add_executable(${PROJECT_NAME} src/main.cpp)
 target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_20)

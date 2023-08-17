@@ -6,20 +6,6 @@ A soon-to-be CFD solver.
 To build `ibis`, you will need to have:
   1. A c++ compiler
   2. cmake
-  3. Kokkos
-
-#### Install Kokkos
-To install Kokkos:
-
-```
-git clone git@github.com:kokkos/kokkos.git
-mkdir kokkos_inst
-cd kokkos
-mkdir build
-cd build
-cmake .. -DCMAKE_INSTALL_PREFIX=../../kokkos_inst
-make install
-```
 
 ## build
 `ibis` uses `cmake`. To compile `ibis` on linux:
@@ -27,8 +13,10 @@ make install
 ```
 mkdir build
 cd build
-cmake ..
+cmake .. -DKokkos_ENABLE_ARCH=ON
 make
 ```
+
+where `ARCH` refers to the architecture to build for. For example, `ARCH` could be `OPENMP`, `CUDA`, or `HIP`.
 
 This will compile the executable. You can run it with `./ibis`
