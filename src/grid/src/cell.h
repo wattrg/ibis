@@ -3,6 +3,7 @@
 
 #include "../../util/src/id.h"
 #include "../../util/src/field.h"
+#include "grid_io.h"
 
 template <typename T> struct Cells;
 
@@ -24,8 +25,14 @@ struct Cells {
 public:
     Cells () {}
 
-    Cells(Id vertices, Id interfaces) 
-        : _interface_ids(interfaces), _vertex_ids(vertices) {}
+    Cells(Id vertices, Id interfaces, std::vector<ElemType> shapes) 
+        : _interface_ids(interfaces), _vertex_ids(vertices) 
+    {
+        _shape = Field<ElemType>("shape", shapes.size());
+        for (unsigned int i = 0; i < shapes.size(); i++) {
+            _shape(i) = shapes[i]; 
+        }
+    }
 
     bool operator == (const Cells &other) const {
         return (_interface_ids == other._interface_ids) &&
@@ -42,9 +49,12 @@ public:
 
     inline int size() const {return _interface_ids.size();}
 
+    void compute_volumes();
+
 private:
     Id _interface_ids;
     Id _vertex_ids;
+    Field<ElemType> _shape;
     Field<T> _volume;
     Field<int> _outsign;
 };

@@ -25,8 +25,10 @@ public:
 
         // begin to assemble the interfaces and cells
         std::vector<ElemIO> cells = grid_io.cells();
+        std::vector<ElemType> cell_shapes {};
         for (unsigned int cell_i = 0; cell_i < cells.size(); cell_i++) {
             cell_vertices.push_back(cells[cell_i].vertex_ids()); 
+            cell_shapes.push_back(cells[cell_i].cell_type());
 
             std::vector<ElemIO> cell_interfaces = cells[cell_i].interfaces(); 
             std::vector<int> cell_face_ids {};
@@ -47,7 +49,7 @@ public:
         } 
 
         _interfaces = Interfaces<T>(interface_vertices);
-        _cells = Cells<T>(cell_vertices, cell_interface_ids);
+        _cells = Cells<T>(cell_vertices, cell_interface_ids, cell_shapes);
 
         // compute_geometric_data();
     } 
@@ -63,14 +65,8 @@ public:
                (_cells == other._cells);
     }
 
-    void compute_interface_directions();
-    void compute_interface_areas();
-    void compute_cell_volumes();
-
     // void compute_geometric_data() {
-    //     compute_interface_directions();
-    //     compute_interface_areas();
-    //     compute_cell_volumes();
+    //     _cells.compute_volumes();
     // }
 
 public:

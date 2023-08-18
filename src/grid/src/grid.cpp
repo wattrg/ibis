@@ -1,5 +1,6 @@
 #include <doctest/doctest.h>
 #include "grid.h"
+#include "grid_io.h"
 
 TEST_CASE("build grid block") {
     Vertices<double> vertices(16);
@@ -88,9 +89,21 @@ TEST_CASE("build grid block") {
     for (int i = 0; i < 9; i++) {
         cell_vertex_id_constructor.push_back(cell_vertex_ids_raw[i]);
     }
-    Cells<double> cells (cell_vertex_id_constructor, cell_interface_id_constructor);
+    std::vector<ElemType> cell_shapes {
+        ElemType::Quad,
+        ElemType::Quad,
+        ElemType::Quad,
+        ElemType::Quad,
+        ElemType::Quad,
+        ElemType::Quad,
+        ElemType::Quad,
+        ElemType::Quad,
+        ElemType::Quad,
+    };
+
+    Cells<double> cells (cell_vertex_id_constructor, cell_interface_id_constructor, cell_shapes);
 
     GridBlock<double> expected = GridBlock<double>(vertices, interfaces, cells);
     GridBlock<double> block = GridBlock<double>("../src/grid/test/grid.su2");
-    CHECK(block._interfaces == expected._interfaces);
+    CHECK(block == expected);
 }
