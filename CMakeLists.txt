@@ -12,7 +12,7 @@ add_subdirectory(src/finite_volume)
 add_subdirectory(extern/doctest)
 add_subdirectory(extern/kokkos)
 
-add_executable(${PROJECT_NAME} src/main.cpp)
+add_executable(${PROJECT_NAME} src/ibis/src/main.cpp)
 target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_20)
 target_include_directories(${PROJECT_NAME} PRIVATE src/include)
 target_link_libraries(${PROJECT_NAME} PUBLIC gas)
