@@ -35,6 +35,13 @@ public:
     }
 
     Vector3s<T> &positions() {return _positions;}
+    Vector3s<T> &positions() const {return _positions;}
+
+    T& position(int i, int coordinate) {return _positions(i, coordinate);}
+    T& position(int i, int coordinate) const {return _positions(i, coordinate);}
+
+    Vector3View<T> position(int i) {return Vector3View<T>(i, &_positions);}
+    Vector3View<T> position(int i) const {return Vector3View<T>(i, &_positions);}
 
     bool operator == (const Vertices &other) const {
         return _positions == other._positions;

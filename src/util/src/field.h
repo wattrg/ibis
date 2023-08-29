@@ -21,7 +21,7 @@ public:
     inline bool operator == (const Field &other) const {
         assert(this->size() == other.size());
         for (int i = 0; this->size(); i++) {
-            if (fabs(_view(i) - other._view(i)) > 1e-14) return false;
+            if (Kokkos::fabs(_view(i) - other._view(i)) > 1e-14) return false;
         }
         return true;
     }

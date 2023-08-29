@@ -102,3 +102,116 @@ TEST_CASE("interface look up") {
     CHECK(x.id(std::vector<int> {3, 7}) == 8);
     CHECK(x.id(std::vector<int> {7, 6}) == 9);
 }
+
+TEST_CASE("Interface Geometry") {
+    Vertices<double> vertices(16);
+    std::vector<Vector3<double>> vertex_pos {
+        Vector3<double>(0.0, 0.0, 0.0),
+        Vector3<double>(1.0, 0.0, 0.0),
+        Vector3<double>(2.0, 0.0, 0.0),
+        Vector3<double>(3.0, 0.0, 0.0),
+        Vector3<double>(0.0, 1.0, 0.0),
+        Vector3<double>(1.0, 1.0, 0.0),
+        Vector3<double>(2.0, 1.0, 0.0),
+        Vector3<double>(3.0, 1.0, 0.0),
+        Vector3<double>(0.0, 2.0, 0.0),
+        Vector3<double>(1.0, 2.0, 0.0),
+        Vector3<double>(2.0, 2.0, 0.0),
+        Vector3<double>(3.0, 2.0, 0.0),
+        Vector3<double>(0.0, 3.0, 0.0),
+        Vector3<double>(1.0, 3.0, 0.0),
+        Vector3<double>(2.0, 3.0, 0.0),
+        Vector3<double>(3.0, 3.0, 0.0)
+    };
+    for (int i = 0; i < 16; i++) {
+        vertices.set_vertex_position(i, vertex_pos[i]);
+    }
+
+    std::vector<std::vector<int>> interface_id_list {
+        {0, 1},
+        {1, 5},
+        {5, 4},
+        {4, 0},
+        {1, 2},
+        {2, 6},
+        {6, 5},
+        {2, 3},
+        {3, 7},
+        {7, 6},
+        {5, 9},
+        {9, 8},
+        {8, 4},
+        {6, 10},
+        {10, 9},
+        {7, 11},
+        {11, 10},
+        {9, 13},
+        {13, 12},
+        {12, 8},
+        {10, 14},
+        {14, 13},
+        {11, 15},
+        {15, 14}
+    };
+    std::vector<ElemType> shapes = {
+        ElemType::Line,
+        ElemType::Line,
+        ElemType::Line,
+        ElemType::Line,
+        ElemType::Line,
+        ElemType::Line,
+        ElemType::Line,
+        ElemType::Line,
+        ElemType::Line,
+        ElemType::Line,
+        ElemType::Line,
+        ElemType::Line,
+        ElemType::Line,
+        ElemType::Line,
+        ElemType::Line,
+        ElemType::Line,
+        ElemType::Line,
+        ElemType::Line,
+        ElemType::Line,
+        ElemType::Line,
+        ElemType::Line,
+        ElemType::Line,
+        ElemType::Line,
+        ElemType::Line,
+    };
+    IdConstructor interface_id_constructor;
+    for (unsigned int i = 0; i < interface_id_list.size(); i++){
+        interface_id_constructor.push_back(interface_id_list[i]); 
+    }
+    Interfaces<double> interfaces (interface_id_constructor, shapes);
+    interfaces.compute_areas(vertices);
+    interfaces.compute_orientations(vertices);
+
+    for (unsigned int i = 0; i < shapes.size(); i++){
+        CHECK(Kokkos::abs(interfaces.area(i) - 1.0) < 1e-14);
+    }
+
+    CHECK(Kokkos::abs(interfaces.norm(0).x() - +0.0) < 1e-14);
+    CHECK(Kokkos::abs(interfaces.norm(0).y() - -1.0) < 1e-14);
+    CHECK(Kokkos::abs(interfaces.norm(0).z() - +0.0) < 1e-14);
+
+    CHECK(Kokkos::abs(interfaces.norm(1).x() - +1.0) < 1e-14);
+    CHECK(Kokkos::abs(interfaces.norm(1).y() - +0.0) < 1e-14);
+    CHECK(Kokkos::abs(interfaces.norm(1).z() - +0.0) < 1e-14);
+
+    CHECK(Kokkos::abs(interfaces.norm(2).x() - +0.0) < 1e-14);
+    CHECK(Kokkos::abs(interfaces.norm(2).y() - +1.0) < 1e-14);
+    CHECK(Kokkos::abs(interfaces.norm(2).z() - +0.0) < 1e-14);
+
+    CHECK(Kokkos::abs(interfaces.norm(3).x() - -1.0) < 1e-14);
+    CHECK(Kokkos::abs(interfaces.norm(3).y() - +0.0) < 1e-14);
+    CHECK(Kokkos::abs(interfaces.norm(3).z() - +0.0) < 1e-14);
+
+    CHECK(Kokkos::abs(interfaces.norm(4).x() - +0.0) < 1e-14);
+    CHECK(Kokkos::abs(interfaces.norm(4).y() - -1.0) < 1e-14);
+    CHECK(Kokkos::abs(interfaces.norm(4).z() - +0.0) < 1e-14);
+
+    CHECK(Kokkos::abs(interfaces.norm(5).x() - +1.0) < 1e-14);
+    CHECK(Kokkos::abs(interfaces.norm(5).y() - +0.0) < 1e-14);
+    CHECK(Kokkos::abs(interfaces.norm(5).z() - +0.0) < 1e-14);
+}

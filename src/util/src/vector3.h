@@ -5,10 +5,27 @@
 #include <Kokkos_MathematicalFunctions.hpp>
 #include "field.h"
 
+template <typename T>
+struct Vector3s;
 
-// A collection of vectors with 3 components
-// template <typename T>
-// using Vector3s = Kokkos::View<T*[3]>;
+template <typename T>
+struct Vector3View {
+public:
+    Vector3View(int index, Vector3s<T> * vectors) : _index(index), _vectors(vectors) {}
+    
+    T & x() const {return _vectors(_index, 0);}
+    T & x() {return (*_vectors)(_index, 0);}
+
+    T & y() const {return _vectors(_index, 1);}
+    T & y() {return (*_vectors)(_index, 1);}
+
+    T & z() const {return _vectors(_index, 2);}
+    T & z() {return (*_vectors)(_index, 2);}
+
+private:
+    int _index;
+    Vector3s<T> *_vectors;
+};
 
 template <typename T>
 struct Vector3s {
@@ -25,6 +42,14 @@ public:
 
     inline T& operator() (const int i, const int j) const {
         return _view(i, j);
+    }
+
+    inline Vector3View<T> operator[] (const int i) {
+        return Vector3View<T> (i, this);
+    }
+
+    inline Vector3View<T> operator[] (const int i) const {
+        return Vector3View<T> (i, this);
     }
 
     inline int size() const {return _view.extent(0);}

@@ -5,6 +5,7 @@
 #include <doctest/doctest.h>
 #include <Kokkos_MathematicalFunctions.hpp>
 
+#define VEC3_TOL 1e-15
 
 TEST_CASE("Vector Dot Product") {
     int n = 10;
@@ -30,7 +31,7 @@ TEST_CASE("Vector Dot Product") {
 
     // check the results are correct
     for (int i = 0; i < n; i++) {
-        CHECK(fabs(expected(i) < result(i)) < 1e-8);
+        CHECK(Kokkos::fabs(expected(i) < result(i)) < VEC3_TOL);
     }
 }
 
@@ -60,9 +61,9 @@ TEST_CASE("Vector3s Add") {
 
     // check the results are correct
     for (int i = 0; i < n; i++) {
-        CHECK(fabs(expected(i,0) - result(i,0)) < 1e-8);
-        CHECK(fabs(expected(i,1) - result(i,1)) < 1e-8);
-        CHECK(fabs(expected(i,2) - result(i,2)) < 1e-8);
+        CHECK(Kokkos::fabs(expected(i,0) - result(i,0)) < VEC3_TOL);
+        CHECK(Kokkos::fabs(expected(i,1) - result(i,1)) < VEC3_TOL);
+        CHECK(Kokkos::fabs(expected(i,2) - result(i,2)) < VEC3_TOL);
     }
 }
 
@@ -92,9 +93,9 @@ TEST_CASE("Vector3s subtract") {
 
     // check the results are correct
     for (int i = 0; i < n; i++) {
-        CHECK(fabs(expected(i,0) - result(i,0)) < 1e-8);
-        CHECK(fabs(expected(i,1) - result(i,1)) < 1e-8);
-        CHECK(fabs(expected(i,2) - result(i,2)) < 1e-8);
+        CHECK(Kokkos::fabs(expected(i,0) - result(i,0)) < VEC3_TOL);
+        CHECK(Kokkos::fabs(expected(i,1) - result(i,1)) < VEC3_TOL);
+        CHECK(Kokkos::fabs(expected(i,2) - result(i,2)) < VEC3_TOL);
     }
 }
 
@@ -124,9 +125,9 @@ TEST_CASE("Vector3s cross") {
 
     // check the results are correct
     for (int i = 0; i < n; i++) {
-        CHECK(fabs(expected(i,0) - result(i,0)) < 1e-8);
-        CHECK(fabs(expected(i,1) - result(i,1)) < 1e-8);
-        CHECK(fabs(expected(i,2) - result(i,2)) < 1e-8);
+        CHECK(Kokkos::fabs(expected(i,0) - result(i,0)) < VEC3_TOL);
+        CHECK(Kokkos::fabs(expected(i,1) - result(i,1)) < VEC3_TOL);
+        CHECK(Kokkos::fabs(expected(i,2) - result(i,2)) < VEC3_TOL);
     }
 }
 
@@ -144,9 +145,9 @@ TEST_CASE("Vector3s scale_in_place") {
     scale_in_place(a, factor);
 
     for (int i = 0; i < n; i++){
-        CHECK(fabs(a(i, 0) - 2.0 * i) < 1e-8);
-        CHECK(fabs(a(i, 1) - 4.0 * i) < 1e-8);
-        CHECK(fabs(a(i, 2) - 6.0 * i) < 1e-8);
+        CHECK(Kokkos::fabs(a(i, 0) - 2.0 * i) < VEC3_TOL);
+        CHECK(Kokkos::fabs(a(i, 1) - 4.0 * i) < VEC3_TOL);
+        CHECK(Kokkos::fabs(a(i, 2) - 6.0 * i) < VEC3_TOL);
     }
 }
 
@@ -167,7 +168,7 @@ TEST_CASE("Vector3s length") {
     length(a, len);
 
     for (int i = 0; i < n; i++){
-        CHECK(fabs(len(i) - expected(i)) < 1e-8);
+        CHECK(Kokkos::fabs(len(i) - expected(i)) < VEC3_TOL);
     }
 }
 
@@ -185,8 +186,8 @@ TEST_CASE("Vector3s normalise") {
 
     for (int i = 0; i < n; i++){
         double length_inv = sqrt((i+1.0)*(i+1.0) + 4.0*i*i + 9.0*i*i);
-        CHECK(fabs(a(i,0) - 1.0 * (i+1.0) / length_inv) < 1e-8);
-        CHECK(fabs(a(i,1) - 2.0 * i / length_inv) < 1e-8);
-        CHECK(fabs(a(i,2) - 3.0 * i / length_inv) < 1e-8);
+        CHECK(Kokkos::fabs(a(i,0) - 1.0 * (i+1.0) / length_inv) < VEC3_TOL);
+        CHECK(Kokkos::fabs(a(i,1) - 2.0 * i / length_inv) < VEC3_TOL);
+        CHECK(Kokkos::fabs(a(i,2) - 3.0 * i / length_inv) < VEC3_TOL);
     }
 }

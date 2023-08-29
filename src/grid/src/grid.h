@@ -26,6 +26,7 @@ public:
         // begin to assemble the interfaces and cells
         std::vector<ElemIO> cells = grid_io.cells();
         std::vector<ElemType> cell_shapes {};
+        std::vector<ElemType> interface_shapes{};
         for (unsigned int cell_i = 0; cell_i < cells.size(); cell_i++) {
             cell_vertices.push_back(cells[cell_i].vertex_ids()); 
             cell_shapes.push_back(cells[cell_i].cell_type());
@@ -38,20 +39,20 @@ public:
                 // if this interface already exists, we use the existing one
                 // if the interface doesn't exist, we make a new one
                 int face_id = interfaces.id(face_vertices);
-
                 if (face_id == -1){
                     face_id = interfaces.insert(face_vertices);
                     interface_vertices.push_back(face_vertices);
+                    interface_shapes.push_back(cell_interfaces[face_i].cell_type());
                 }
                 cell_face_ids.push_back(face_id);
             }
             cell_interface_ids.push_back(cell_face_ids);
         } 
 
-        _interfaces = Interfaces<T>(interface_vertices);
+        _interfaces = Interfaces<T>(interface_vertices, interface_shapes);
         _cells = Cells<T>(cell_vertices, cell_interface_ids, cell_shapes);
 
-        // compute_geometric_data();
+        compute_geometric_data();
     } 
 
     GridBlock(std::string file_name) : GridBlock<T>(GridIO(file_name)) {}
@@ -65,9 +66,11 @@ public:
                (_cells == other._cells);
     }
 
-    // void compute_geometric_data() {
-    //     _cells.compute_volumes();
-    // }
+    void compute_geometric_data() {
+        _cells.compute_volumes(_vertices);
+        _interfaces.compute_areas(_vertices);
+        _interfaces.compute_orientations(_vertices);
+    }
 
 public:
     Vertices<T> _vertices;

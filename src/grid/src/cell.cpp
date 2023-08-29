@@ -1,8 +1,8 @@
 #include <doctest/doctest.h>
-#include "grid.h"
-#include "grid_io.h"
+#include "cell.h"
+#include "interface.h"
 
-TEST_CASE("build grid block") {
+TEST_CASE("cell volume") {
     Vertices<double> vertices(16);
     std::vector<Vector3<double>> vertex_pos {
         Vector3<double>(0.0, 0.0, 0.0),
@@ -52,6 +52,10 @@ TEST_CASE("build grid block") {
         {11, 15},
         {15, 14}
     };
+    IdConstructor interface_id_constructor;
+    for (unsigned int i = 0; i < interface_id_list.size(); i++){
+        interface_id_constructor.push_back(interface_id_list[i]); 
+    }
     std::vector<ElemType> shapes = {
         ElemType::Line,
         ElemType::Line,
@@ -78,10 +82,6 @@ TEST_CASE("build grid block") {
         ElemType::Line,
         ElemType::Line,
     };
-    IdConstructor interface_id_constructor;
-    for (unsigned int i = 0; i < interface_id_list.size(); i++){
-        interface_id_constructor.push_back(interface_id_list[i]); 
-    }
     Interfaces<double> interfaces (interface_id_constructor, shapes);
 
     std::vector<std::vector<int>> cell_interfaces_list {
@@ -129,7 +129,9 @@ TEST_CASE("build grid block") {
 
     Cells<double> cells (cell_vertex_id_constructor, cell_interface_id_constructor, cell_shapes);
 
-    GridBlock<double> expected = GridBlock<double>(vertices, interfaces, cells);
-    GridBlock<double> block = GridBlock<double>("../src/grid/test/grid.su2");
-    CHECK(block == expected);
+    cells.compute_volumes(vertices);
+
+    for (int i = 0; i < cells.size(); i++) {
+        CHECK(Kokkos::fabs(cells.volume(i) - 1.0) < 1e-14);
+    }
 }
