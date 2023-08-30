@@ -3,8 +3,12 @@
 # target_link_libraries(grid PRIVATE doctest)
 # target_link_libraries(grid PRIVATE util)
 #
-# add_executable(grid_unittest test/unittest.cpp src/grid_io.cpp src/grid.cpp src/interface.cpp)
-# target_compile_options(grid_unittest PRIVATE -Wall -Wextra -Wpedantic -Werror -g)
-# target_link_libraries(grid_unittest PRIVATE util)
-# target_link_libraries(grid_unittest PRIVATE doctest)
-# target_link_libraries(grid_unittest PRIVATE Kokkos::kokkos)
+add_executable(
+	finite_volume_unittest 
+	test/unittest.cpp 
+	src/flux.cpp 
+)
+target_compile_options(finite_volume_unittest PRIVATE -Wall -Wextra -Wpedantic -Werror -g)
+target_link_libraries(finite_volume_unittest PRIVATE util)
+target_link_libraries(finite_volume_unittest PRIVATE doctest)
+target_link_libraries(finite_volume_unittest PRIVATE Kokkos::kokkos)

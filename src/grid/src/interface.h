@@ -58,6 +58,10 @@ public:
     inline T& area(int i) const {return _area(i);}
     inline T& area(int i) {return _area(i);}
 
+    inline Vector3s<T> norm() {return _norm;}
+    inline Vector3s<T> tan1() {return _tan1;}
+    inline Vector3s<T> tan2() {return _tan2;}
+
     inline Vector3View<T> norm(const int i) {
         return Vector3View(i, &_norm);
     } 

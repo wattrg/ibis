@@ -14,18 +14,23 @@ public:
         _energy = _momentum + dim;
     }
 
-    T& mass(int cell_i) const {return _cq(cell_i, _mass);}
-    T& mass(int cell_i) {return _cq(cell_i, _mass);}
+    unsigned int size() const {return _cq.extent(0);}
+    unsigned int n_conserved() const {return _cq.extent(1);}
 
-    T& momentum(int cell_i, int direction) const {
-        return _cq(cell_i, _momentum+direction);
-    }
-    T& momentum(int cell_i, int direction) {
-        return _cq(cell_i, _momentum+direction);
-    }
+    inline T& mass(int cell_i) const {return _cq(cell_i, _mass);}
+    inline T& mass(int cell_i) {return _cq(cell_i, _mass);}
 
-    T& energy(int cell_i) const {return _cq(cell_i, _energy);}
-    T& energy(int cell_i) {return _cq(cell_i, _energy);}
+    inline T& momentum_x(int cell_i) const {return _cq(cell_i, _momentum+0);}
+    inline T& momentum_x(int cell_i) {return _cq(cell_i, _momentum+0);}
+
+    inline T& momentum_y(int cell_i) const {return _cq(cell_i, _momentum+1);}
+    inline T& momentum_y(int cell_i) {return _cq(cell_i, _momentum+1);}
+
+    inline T& momentum_z(int cell_i) const {return _cq(cell_i, _momentum+2);}
+    inline T& momentum_z(int cell_i) {return _cq(cell_i, _momentum+2);}
+
+    inline T& energy(int cell_i) const {return _cq(cell_i, _energy);}
+    inline T& energy(int cell_i) {return _cq(cell_i, _energy);}
 
 private:
     Kokkos::View<T**> _cq;

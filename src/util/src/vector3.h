@@ -3,6 +3,7 @@
 
 #include <Kokkos_Core.hpp>
 #include <Kokkos_MathematicalFunctions.hpp>
+#include "Kokkos_Macros.hpp"
 #include "field.h"
 
 template <typename T>
@@ -13,14 +14,14 @@ struct Vector3View {
 public:
     Vector3View(int index, Vector3s<T> * vectors) : _index(index), _vectors(vectors) {}
     
-    T & x() const {return _vectors(_index, 0);}
-    T & x() {return (*_vectors)(_index, 0);}
+    inline T & x() const {return _vectors(_index, 0);}
+    inline T & x() {return (*_vectors)(_index, 0);}
 
-    T & y() const {return _vectors(_index, 1);}
-    T & y() {return (*_vectors)(_index, 1);}
+    inline T & y() const {return _vectors(_index, 1);}
+    inline T & y() {return (*_vectors)(_index, 1);}
 
-    T & z() const {return _vectors(_index, 2);}
-    T & z() {return (*_vectors)(_index, 2);}
+    inline T & z() const {return _vectors(_index, 2);}
+    inline T & z() {return (*_vectors)(_index, 2);}
 
 private:
     int _index;
@@ -141,6 +142,31 @@ void normalise(Vector3s<T> &a) {
     });
 }
 
+template <typename T>
+void transform_to_local_frame(Vector3s<T>& a, const Vector3s<T>& norm, 
+                              const Vector3s<T>& tan1, const Vector3s<T> tan2)
+{
+    Kokkos::parallel_for("Vector3s::transform_to_local_frame", a.size(), KOKKOS_LAMBDA(const int i){
+        T x = a(i, 0)*norm(i, 0) + a(i, 1)*norm(i, 1) + a(i, 2)*norm(i, 2);
+        T y = a(i, 0)*tan1(i, 0) + a(i, 1)*tan1(i, 1) + a(i, 2)*tan1(i, 2);
+        T z = a(i, 0)*tan2(i, 0) + a(i, 1)*tan2(i, 1) + a(i, 2)*tan2(i, 2);
+        a(i, 0) = x;
+        a(i, 1) = y;
+        a(i, 2) = z;
+    });
+}
+
+template <typename T>
+void transform_to_global_frame(Vector3s<T>& a, const Vector3s<T>& norm, 
+                               const Vector3s<T>& tan1, const Vector3s<T>& tan2)
+{
+    Kokkos::parallel_for("Vector3s::transform_to_global_frame", a.size(), KOKKOS_LAMBDA(const int i){
+        T x = a(i, 0)*norm(i, 0) + a(i, 1)*tan1(i, 0) + a(i, 2)*tan2(i, 0);
+        T y = a(i, 0)*norm(i, 1) + a(i, 1)*tan1(i, 1) + a(i, 2)*tan2(i, 1);
+        T z = a(i, 0)*norm(i, 2) + a(i, 1)*tan1(i, 2) + a(i, 2)*tan2(i, 2);
+    });
+}
+
 // A single vector with 3 components
 template <typename T>
 struct Vector3 {
@@ -153,5 +179,6 @@ struct Vector3 {
                (std::fabs(z - other.z) < 1e-14);
     }
 };
+
 
 #endif

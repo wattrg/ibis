@@ -72,6 +72,10 @@ public:
         _interfaces.compute_orientations(_vertices);
     }
 
+    Vertices<T>& vertices() {return _vertices;}
+    Interfaces<T>& interfaces() {return _interfaces;}
+    Cells<T>& cells() {return _cells;}
+
 public:
     Vertices<T> _vertices;
     Interfaces<T> _interfaces;

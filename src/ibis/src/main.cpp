@@ -4,7 +4,7 @@
 
 typedef Kokkos::View<double*[3]> FieldTest;
 
-int main(int argc, char* argv[]) {
+int test(int argc, char* argv[]) {
     Kokkos::initialize(argc, argv);
 
     // write hello a few times
