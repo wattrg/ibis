@@ -1,6 +1,7 @@
 #include <iostream>
 #include <Kokkos_Core.hpp>
 #include "../../gas/src/gas_state.h"
+#include "ibis_version_info.h"
 
 typedef Kokkos::View<double*[3]> FieldTest;
 
@@ -43,4 +44,17 @@ int test(int argc, char* argv[]) {
 
     Kokkos::finalize();
     return 0;
+}
+
+void print_header() {
+    std::cout << "ibis" << std::endl;
+    std::cout << "git branch: " << Ibis::GIT_BRANCH << std::endl;
+    std::cout << "git commit: " << Ibis::GIT_COMMIT_HASH 
+                                    << "-" << Ibis::GIT_CLEAN_STATUS << std::endl;
+    std::cout << "revision date: " << Ibis::GIT_COMMIT_DATE << std::endl;
+    std::cout << "build date:    " << Ibis::IBIS_BUILD_DATE << std::endl;
+}
+
+int main(int argc, char* argv[]) {
+    print_header(); 
 }

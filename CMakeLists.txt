@@ -2,6 +2,10 @@ cmake_minimum_required(VERSION 3.22.1)
 
 project(ibis)
 
+INCLUDE(${CMAKE_CURRENT_SOURCE_DIR}/cmake/build_env_info.cmake)
+check_git_setup()
+
+
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_INSTALL_PREFIX "../inst")
 
@@ -12,15 +16,16 @@ add_subdirectory(src/finite_volume)
 add_subdirectory(extern/doctest)
 add_subdirectory(extern/kokkos)
 
-add_executable(${PROJECT_NAME} src/ibis/src/main.cpp)
-target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_20)
-target_include_directories(${PROJECT_NAME} PRIVATE src/include)
-target_link_libraries(${PROJECT_NAME} PUBLIC gas)
-target_link_libraries(${PROJECT_NAME} PUBLIC util)
-target_link_libraries(${PROJECT_NAME} PUBLIC grid)
-target_link_libraries(${PROJECT_NAME} PUBLIC Kokkos::kokkos)
-target_link_libraries(${PROJECT_NAME} PRIVATE doctest)
-target_compile_options(${PROJECT_NAME} PRIVATE -Wall -Wextra -Wpedantic)
+add_executable(ibis src/ibis/src/main.cpp)
+target_compile_features(ibis PRIVATE cxx_std_20)
+target_include_directories(ibis PRIVATE src/include)
+target_link_libraries(ibis PUBLIC gas)
+target_link_libraries(ibis PUBLIC util)
+target_link_libraries(ibis PUBLIC grid)
+target_link_libraries(ibis PUBLIC Kokkos::kokkos)
+target_link_libraries(ibis PRIVATE doctest)
+target_link_libraries(ibis PRIVATE ibis_git_version)
+target_compile_options(ibis PRIVATE -Wall -Wextra -Wpedantic)
 
 install(TARGETS ${PROJECT_NAME} DESTINATION bin)
 
