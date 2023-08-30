@@ -112,7 +112,7 @@ FUNCTION(check_git_setup)
 
   add_library(ibis_git_version ${CMAKE_BINARY_DIR}/generated/ibis_version_info.cpp)
   target_include_directories(ibis_git_version PUBLIC ${CMAKE_BINARY_DIR}/generated)
-  target_compile_features(impl_git_version PRIVATE cxx_raw_string_literals)
+  target_compile_features(ibis_git_version PRIVATE cxx_raw_string_literals)
   add_dependencies(ibis_git_version IbisAlwaysCheckGit)
 
   check_git_version()
