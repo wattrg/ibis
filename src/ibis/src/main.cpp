@@ -3,51 +3,20 @@
 #include "../../gas/src/gas_state.h"
 #include "ibis_version_info.h"
 
-typedef Kokkos::View<double*[3]> FieldTest;
+#include "commands/prep.h"
 
-int test(int argc, char* argv[]) {
-    Kokkos::initialize(argc, argv);
 
-    // write hello a few times
-    Kokkos::parallel_for("Hello world", 15, KOKKOS_LAMBDA (const int i){
-        printf("Hello from i = %i\n", i);
-    });
+static std::string HELP = 
+    "ibis usage:\n"
+    "ibis command [options]\n"
+    "\n"
+    "Available commands:\n"
+    "    help: write this help message\n"
+    "    prep [filename]: prepare a simulation given a python input script\n";
 
-    // add up square numbers in parallel
-    int sum = 0;
-    const int n = 10;
-    Kokkos::parallel_reduce("reduction", n, KOKKOS_LAMBDA (const int i, int& lsum) {
-        lsum += i*i;
-    }, sum);
-    printf("The sum of the first %i square numbers is %i\n", n-1, sum);
-
-    {
-        // play around with a views
-        FieldTest a ("A", n);
-        Kokkos::parallel_for("View", n, KOKKOS_LAMBDA (const int i) {
-            a(i, 0) = 1.0 * i;
-            a(i, 1) = 1.0 * i * i;
-            a(i, 2) = 1.0 * i * i * i;
-        });
-        double view_sum = 0.0;
-        Kokkos::parallel_reduce ("Reduction", n, KOKKOS_LAMBDA (const int i, double& update) {
-            update += a(i, 0) * a(i,1) / (a(i,2) + 0.1);
-        }, view_sum);
-        printf("Result: %f\n", view_sum);
-    }
-
-    {
-        GasStates<double> gs = GasStates<double>(5);
-        std::cout << "Built some gas states!" << std::endl;
-        printf("initial gs energy = %f\n", gs.energy(2));
-    }
-
-    Kokkos::finalize();
-    return 0;
-}
 
 void print_header() {
-    std::cout << "ibis" << std::endl;
+    std::cout << "ibis - cfd solver" << std::endl;
     std::cout << "git branch: " << Ibis::GIT_BRANCH << std::endl;
     std::cout << "git commit: " << Ibis::GIT_COMMIT_HASH 
                                     << "-" << Ibis::GIT_CLEAN_STATUS << std::endl;
@@ -57,4 +26,62 @@ void print_header() {
 
 int main(int argc, char* argv[]) {
     print_header(); 
+
+    if (argc < 2) {
+        std::cerr << "Not enough arguments provided\n";
+        std::cerr << HELP;
+        return 1;
+    }
+    
+    if (std::string(argv[1]) == "prep") {
+        return prep(argc, argv); 
+    }
 }
+
+
+
+
+
+
+// typedef Kokkos::View<double*[3]> FieldTest;
+// int test(int argc, char* argv[]) {
+//     Kokkos::initialize(argc, argv);
+//
+//     // write hello a few times
+//     Kokkos::parallel_for("Hello world", 15, KOKKOS_LAMBDA (const int i){
+//         printf("Hello from i = %i\n", i);
+//     });
+//
+//     // add up square numbers in parallel
+//     int sum = 0;
+//     const int n = 10;
+//     Kokkos::parallel_reduce("reduction", n, KOKKOS_LAMBDA (const int i, int& lsum) {
+//         lsum += i*i;
+//     }, sum);
+//     printf("The sum of the first %i square numbers is %i\n", n-1, sum);
+//
+//     {
+//         // play around with a views
+//         FieldTest a ("A", n);
+//         Kokkos::parallel_for("View", n, KOKKOS_LAMBDA (const int i) {
+//             a(i, 0) = 1.0 * i;
+//             a(i, 1) = 1.0 * i * i;
+//             a(i, 2) = 1.0 * i * i * i;
+//         });
+//         double view_sum = 0.0;
+//         Kokkos::parallel_reduce ("Reduction", n, KOKKOS_LAMBDA (const int i, double& update) {
+//             update += a(i, 0) * a(i,1) / (a(i,2) + 0.1);
+//         }, view_sum);
+//         printf("Result: %f\n", view_sum);
+//     }
+//
+//     {
+//         GasStates<double> gs = GasStates<double>(5);
+//         std::cout << "Built some gas states!" << std::endl;
+//         printf("initial gs energy = %f\n", gs.energy(2));
+//     }
+//
+//     Kokkos::finalize();
+//     return 0;
+// }
+//
