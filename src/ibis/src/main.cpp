@@ -19,7 +19,7 @@ void print_header() {
     std::cout << "ibis - cfd solver" << std::endl;
     std::cout << "git branch: " << Ibis::GIT_BRANCH << std::endl;
     std::cout << "git commit: " << Ibis::GIT_COMMIT_HASH 
-                                    << "-" << Ibis::GIT_CLEAN_STATUS << std::endl;
+                                << "-" << Ibis::GIT_CLEAN_STATUS << std::endl;
     std::cout << "revision date: " << Ibis::GIT_COMMIT_DATE << std::endl;
     std::cout << "build date:    " << Ibis::IBIS_BUILD_DATE << std::endl;
 }

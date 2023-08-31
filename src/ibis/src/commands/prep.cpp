@@ -1,18 +1,10 @@
 #define PY_SSIZE_T_CLEAN
 #include <Python.h>
 #include <iostream>
-#include <sstream>
+#include <fstream>
+#include <cstdlib>
 #include "prep.h"
-#include "prep_py.h"
 
-
-std::string bytes_to_string(uint8_t str[], unsigned size) {
-    std::stringstream result;
-    for (unsigned i = 0; i < size; i++) {
-        result << str[i];
-    }
-    return result.str();
-}
 
 int prep(int argc, char* argv[]) {
     wchar_t *program = Py_DecodeLocale(argv[0], NULL);
@@ -26,7 +18,7 @@ int prep(int argc, char* argv[]) {
         return 1;
     }
 
-    std::string prep_script = bytes_to_string(prep_py_data, prep_py_size);
+    std::string prep_path = std::string(std::getenv("IBIS")) + "/lib";
 
     Py_SetProgramName(program);
     Py_Initialize();
@@ -37,27 +29,20 @@ int prep(int argc, char* argv[]) {
         return 1;
     }
 
-    // Define code in the newly created module
-    PyObject* py_compiled_prep = Py_CompileString(prep_script.c_str(), "", Py_file_input);
-    if (py_compiled_prep == NULL) {
-        std::cerr << "Failed to compile prep.py\n";
-        return 1;
-    }
+    PyRun_SimpleString("import sys");
+    std::string import_string = "sys.path.append('" + prep_path + "')";
+    PyRun_SimpleString(import_string.c_str());
 
-    PyObject *prep_module = PyImport_ExecCodeModule("prep", py_compiled_prep);
-    
+    PyObject* prep_module = PyImport_ImportModule("prep");
     if (prep_module == NULL) {
         std::cerr << "Failed to import prep.py" << std::endl;
-        Py_DECREF(py_compiled_prep);
         return 1;
     }
-
     
     PyObject *py_prep_main = PyObject_GetAttrString(prep_module, "main");
     if (py_prep_main == NULL) {
         std::cerr << "Failed to find main function in prep.py\n";
         Py_DECREF(prep_module);
-        Py_DECREF(py_compiled_prep);
         return 1;
     }
 
@@ -68,7 +53,6 @@ int prep(int argc, char* argv[]) {
     Py_DECREF(py_prep_main);
     Py_DECREF(prep_module);
     Py_DECREF(main_args);
-    Py_DECREF(py_compiled_prep);
     
     Py_Finalize();
     return 0;
