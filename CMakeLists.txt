@@ -30,6 +30,7 @@ target_compile_options(ibis PRIVATE -Wall -Wextra -Wpedantic)
 
 install(TARGETS ${PROJECT_NAME} DESTINATION bin)
 install(FILES src/ibis/src/commands/prep.py DESTINATION lib)
+install(DIRECTORY resources DESTINATION .)
 
 enable_testing()
 add_test(NAME util_unittest COMMAND src/util/util_unittest)
