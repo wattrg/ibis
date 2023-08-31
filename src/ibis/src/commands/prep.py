@@ -28,14 +28,13 @@ class ConvectiveFlux:
             setattr(self, key, json_data[key])
         self.flux_calculator = string_to_flux_calculator(self.flux_calculator)
 
-    def _check_values(self):
+    def validate(self):
         if type(self.flux_calculator) != FluxCalculator:
             self.flux_calculator = string_to_flux_calculator(self.flux_calculator)
         if self.reconstruction_order not in (1, 2):
             raise Exception(f"reconstruction order {self.reconstruction_order} not supported")
 
     def as_dict(self):
-        self._check_values()
         dictionary = {}
         for key in self._json_values:
             if key == "flux_calculator":
@@ -50,17 +49,31 @@ class Config:
     def __init__(self):
         self.convective_flux = ConvectiveFlux()
 
-    def write(self, directory, file_name):
-        if not os.path.exists(directory):
-            os.mkdir(directory)
+    def validate(self):
+        for setting in self.__slots__:
+            getattr(self, setting).validate()
 
+    def write(self, directory, file_name):
         json_values = {}
-        json_values["convective_flux"] = self.convective_flux.as_dict()
+        for setting in self.__slots__:
+            json_values[setting] = getattr(self, setting).as_dict()
+
         with open(f"{directory}/{file_name}", "w") as f:
             json.dump(json_values, f, indent=4)
 
 
 def main(file_name):
+    # make the config directory
+    directories = read_defaults("directories.json")
+    config_dir = directories["config_dir"]
+    config_status = directories["config_status"]
+    if not os.path.exists(config_dir):
+        os.mkdir(config_dir)
+
+    # write a file saying the config is incomplete
+    with open(f"{config_dir}/{config_status}", "w") as status:
+        status.write("False")
+
     config = Config()
     namespace = {
         "config": config,
@@ -68,8 +81,12 @@ def main(file_name):
         "FluxCalculator": FluxCalculator
     }
 
-    directories = read_defaults("directories.json")
     with open(file_name, "r") as f:
         exec(f.read(), namespace)
+
+    config.validate()
     config.write(directories["config_dir"], directories["config_file"])
+
+    with open(f"{config_dir}/{config_status}", "w") as status:
+        status.write("True")
 
