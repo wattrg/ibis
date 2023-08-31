@@ -43,7 +43,8 @@ class Config:
 def main(file_name):
     config = Config()
     namespace = {
-        "config": Config,
+        "config": config,
+        "ConvectiveFlux": ConvectiveFlux,
     }
     directories = read_defaults("directories.json")
 
