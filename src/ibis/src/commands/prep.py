@@ -4,6 +4,11 @@ from enum import Enum
 
 IBIS = os.environ.get("IBIS")
 
+validation_errors = []
+
+class ValidationException(Exception):
+    pass
+
 def read_defaults(file_name):
     with open(f"{IBIS}/resources/defaults/{file_name}", "r") as defaults:
         defaults = json.load(defaults)
@@ -15,7 +20,7 @@ class FluxCalculator(Enum):
 def string_to_flux_calculator(string):
     if string == FluxCalculator.Hanel.value:
         return FluxCalculator.Hanel
-    raise Exception(f"Unknown flux calculator {string}")
+    validation_errors.append(ValidationException(f"Unknown flux calculator {string}"))
 
 class ConvectiveFlux:
     _json_values = ["flux_calculator", "reconstruction_order"]
@@ -32,7 +37,7 @@ class ConvectiveFlux:
         if type(self.flux_calculator) != FluxCalculator:
             self.flux_calculator = string_to_flux_calculator(self.flux_calculator)
         if self.reconstruction_order not in (1, 2):
-            raise Exception(f"reconstruction order {self.reconstruction_order} not supported")
+            validation_errors.append(ValidationException(f"reconstruction order {self.reconstruction_order} not supported"))
 
     def as_dict(self):
         dictionary = {}
@@ -48,10 +53,12 @@ class Config:
 
     def __init__(self):
         self.convective_flux = ConvectiveFlux()
-
+    
     def validate(self):
         for setting in self.__slots__:
             getattr(self, setting).validate()
+        if validation_errors:
+            raise ValidationException(validation_errors)
 
     def write(self, directory, file_name):
         json_values = {}
