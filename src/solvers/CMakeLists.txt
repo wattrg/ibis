@@ -1,0 +1,5 @@
+add_library(runge_kutta STATIC src/runge_kutta.cpp src/solver.cpp)
+target_link_libraries(runge_kutta PUBLIC Kokkos::kokkos)
+target_link_libraries(grid PRIVATE doctest)
+target_link_libraries(grid PRIVATE util)
+target_include_directories(runge_kutta PUBLIC ${CMAKE_SOURCE_DIR}/src)
