@@ -4,11 +4,13 @@
 #include <iostream>
 #include <string.h>
 
-struct Solver {
+class Solver {
 public:
     int solve();
 
 protected:
+    virtual int initialise()=0;
+    virtual int finalise()=0;
     virtual int take_step()=0;
     virtual bool print_this_step()=0;
     virtual bool plot_this_step()=0;
@@ -18,7 +20,7 @@ protected:
     virtual void print_stop_reason()=0;
 
 private:
-    unsigned int _max_step = 0;
+    unsigned int max_step_ = 0;
 };
 
 #endif

@@ -4,33 +4,44 @@
 #include <Kokkos_Core.hpp>
 
 template <typename T>
-struct GasStates {
+class GasStates {
 public:
     GasStates(int n) {
-        _rho_idx = 0;
-        _pressure_idx = 1;
-        _temp_idx = 2;
-        _energy_idx = 3;
-        _data = Kokkos::View<T**> ("GasStates", n, 4);
+        rho_idx_ = 0;
+        pressure_idx_ = 1;
+        temp_idx_ = 2;
+        energy_idx_ = 3;
+        data_ = Kokkos::View<T**> ("GasStates", n, 4);
     }
 
-    inline T& rho(const int cell_i) const {return _data(cell_i, _rho_idx);}
+    KOKKOS_FORCEINLINE_FUNCTION 
+    T& rho(const int cell_i) const {return data_(cell_i, rho_idx_);}
 
-    inline T& rho(const int cell_i) {return _data(cell_i, _rho_idx);}
+    KOKKOS_FORCEINLINE_FUNCTION 
+    T& rho(const int cell_i) {return data_(cell_i, rho_idx_);}
 
-    inline T& pressure(const int cell_i) const {return _data(cell_i, _pressure_idx);}
-    inline T& pressure(const int cell_i) {return _data(cell_i, _pressure_idx);}
+    KOKKOS_FORCEINLINE_FUNCTION
+    T& pressure(const int cell_i) const {return data_(cell_i, pressure_idx_);}
 
-    inline T& temp(const int cell_i) const {return _data(cell_i, _temp_idx);}
-    inline T& temp(const int cell_i) {return _data(cell_i, _temp_idx);}
+    KOKKOS_FORCEINLINE_FUNCTION
+    T& pressure(const int cell_i) {return data_(cell_i, pressure_idx_);}
 
-    inline T& energy(const int cell_i) const {return _data(cell_i, _energy_idx);}
-    inline T& energy(const int cell_i) {return _data(cell_i, _energy_idx);}
+    KOKKOS_FORCEINLINE_FUNCTION
+    T& temp(const int cell_i) const {return data_(cell_i, temp_idx_);}
+
+    KOKKOS_FORCEINLINE_FUNCTION
+    T& temp(const int cell_i) {return data_(cell_i, temp_idx_);}
+
+    KOKKOS_FORCEINLINE_FUNCTION
+    T& energy(const int cell_i) const {return data_(cell_i, energy_idx_);}
+
+    KOKKOS_FORCEINLINE_FUNCTION
+    T& energy(const int cell_i) {return data_(cell_i, energy_idx_);}
 
 
 private:
-    Kokkos::View<T**> _data;
-    int _rho_idx, _pressure_idx, _temp_idx, _energy_idx;
+    Kokkos::View<T**> data_;
+    int rho_idx_, pressure_idx_, temp_idx_, energy_idx_;
 };
 
 #endif

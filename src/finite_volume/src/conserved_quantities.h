@@ -1,40 +1,56 @@
 #ifndef CONSERVED_QUANTITIES_H
 #define CONSERVED_QUANTITIES_H
 
+#include "Kokkos_Macros.hpp"
 #include <Kokkos_Core.hpp>
 
 template <typename T>
-struct ConservedQuantities {
+class ConservedQuantities {
 public:
     ConservedQuantities(unsigned int n, unsigned int dim)
-        : _cq(Kokkos::View<T**>("ConservedQuantities", n, dim+2))
+        : cq_(Kokkos::View<T**>("ConservedQuantities", n, dim+2))
     {
-        _mass = 0;
-        _momentum = 1;
-        _energy = _momentum + dim;
+        mass_idx_ = 0;
+        momentum_idx_ = 1;
+        energy_idx_ = momentum_idx_ + dim;
     }
 
-    unsigned int size() const {return _cq.extent(0);}
-    unsigned int n_conserved() const {return _cq.extent(1);}
+    unsigned int size() const {return cq_.extent(0);}
+    unsigned int n_conserved() const {return cq_.extent(1);}
 
-    inline T& mass(int cell_i) const {return _cq(cell_i, _mass);}
-    inline T& mass(int cell_i) {return _cq(cell_i, _mass);}
+    KOKKOS_FORCEINLINE_FUNCTION
+    T& mass(int cell_i) const {return cq_(cell_i, mass_idx_);}
+    
+    KOKKOS_FORCEINLINE_FUNCTION
+    T& mass(int cell_i) {return cq_(cell_i, mass_idx_);}
 
-    inline T& momentum_x(int cell_i) const {return _cq(cell_i, _momentum+0);}
-    inline T& momentum_x(int cell_i) {return _cq(cell_i, _momentum+0);}
+    KOKKOS_FORCEINLINE_FUNCTION
+    T& momentum_x(int cell_i) const {return cq_(cell_i, momentum_idx_+0);}
 
-    inline T& momentum_y(int cell_i) const {return _cq(cell_i, _momentum+1);}
-    inline T& momentum_y(int cell_i) {return _cq(cell_i, _momentum+1);}
+    KOKKOS_FORCEINLINE_FUNCTION
+    T& momentum_x(int cell_i) {return cq_(cell_i, momentum_idx_+0);}
 
-    inline T& momentum_z(int cell_i) const {return _cq(cell_i, _momentum+2);}
-    inline T& momentum_z(int cell_i) {return _cq(cell_i, _momentum+2);}
+    KOKKOS_FORCEINLINE_FUNCTION
+    T& momentum_y(int cell_i) const {return cq_(cell_i, momentum_idx_+1);}
 
-    inline T& energy(int cell_i) const {return _cq(cell_i, _energy);}
-    inline T& energy(int cell_i) {return _cq(cell_i, _energy);}
+    KOKKOS_FORCEINLINE_FUNCTION 
+    T& momentum_y(int cell_i) {return cq_(cell_i, momentum_idx_+1);}
+
+    KOKKOS_FORCEINLINE_FUNCTION 
+    T& momentum_z(int cell_i) const {return cq_(cell_i, momentum_idx_+2);}
+
+    KOKKOS_FORCEINLINE_FUNCTION 
+    T& momentum_z(int cell_i) {return cq_(cell_i, momentum_idx_+2);}
+
+    KOKKOS_FORCEINLINE_FUNCTION
+    T& energy(int cell_i) const {return cq_(cell_i, energy_idx_);}
+
+    KOKKOS_FORCEINLINE_FUNCTION
+    T& energy(int cell_i) {return cq_(cell_i, energy_idx_);}
 
 private:
-    Kokkos::View<T**> _cq;
-    unsigned int _mass, _momentum, _energy;
+    Kokkos::View<T**> cq_;
+    unsigned int mass_idx_, momentum_idx_, energy_idx_;
 };
 
 #endif

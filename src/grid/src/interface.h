@@ -16,8 +16,8 @@ public:
     InterfaceView(Interfaces<T> *interfaces, int id) 
         : _interfaces(interfaces), _id(id) {}
 
-    inline auto vertex_ids() {return _interfaces->vertex_ids()[_id];}
-    inline T& area() const {return _interfaces->area(_id);}
+    KOKKOS_FORCEINLINE_FUNCTION auto vertex_ids() {return _interfaces->vertex_ids()[_id];}
+    KOKKOS_FORCEINLINE_FUNCTION T& area() const {return _interfaces->area(_id);}
 
 private:
     Interfaces<T> * _interfaces;
@@ -30,65 +30,86 @@ public:
     Interfaces () {}
 
     Interfaces(IdConstructor ids, std::vector<ElemType> shapes) 
-        : _vertex_ids(Id(ids)) 
+        : m_vertex_ids(Id(ids)) 
     {
-        _shape = Field<ElemType>("Interface::shape", shapes.size());
+        shape_ = Field<ElemType>("Interface::shape", shapes.size());
         for (unsigned int i = 0; i < shapes.size(); i++) {
-            _shape(i) = shapes[i];
+            shape_(i) = shapes[i];
         }
 
-        _norm = Vector3s<T>("Interface::norm", shapes.size());
-        _tan1 = Vector3s<T>("Interface::tan1", shapes.size());
-        _tan2 = Vector3s<T>("Interface::tan2", shapes.size());
-        _area = Field<T>("Interface::area", shapes.size());
+        norm_ = Vector3s<T>("Interface::norm", shapes.size());
+        tan1_ = Vector3s<T>("Interface::tan1", shapes.size());
+        tan2_ = Vector3s<T>("Interface::tan2", shapes.size());
+        area_ = Field<T>("Interface::area", shapes.size());
     }
 
     bool operator == (const Interfaces &other) const {
-        return _vertex_ids == other._vertex_ids;
+        return m_vertex_ids == other.m_vertex_ids;
     }
 
-    inline InterfaceView<T> operator[] (const int i) {
+    KOKKOS_FORCEINLINE_FUNCTION InterfaceView<T> operator[] (const int i) {
         assert(i < size());
         return InterfaceView<T>(this, i);
     }
 
-    inline Id &vertex_ids() {return _vertex_ids;}
+    KOKKOS_FORCEINLINE_FUNCTION 
+    Id &vertex_ids() {return m_vertex_ids;}
 
-    inline Field<T> &area() const {return _area;}
-    inline T& area(int i) const {return _area(i);}
-    inline T& area(int i) {return _area(i);}
+    KOKKOS_FORCEINLINE_FUNCTION
+    Field<T> &area() const {return area_;}
 
-    inline Vector3s<T> norm() {return _norm;}
-    inline Vector3s<T> tan1() {return _tan1;}
-    inline Vector3s<T> tan2() {return _tan2;}
+    KOKKOS_FORCEINLINE_FUNCTION
+    T& area(int i) const {return area_(i);}
 
-    inline Vector3View<T> norm(const int i) {
-        return Vector3View(i, &_norm);
+    KOKKOS_FORCEINLINE_FUNCTION
+    T& area(int i) {return area_(i);}
+
+    KOKKOS_FORCEINLINE_FUNCTION
+    Vector3s<T> norm() {return norm_;}
+
+    KOKKOS_FORCEINLINE_FUNCTION
+    Vector3s<T> tan1() {return tan1_;}
+
+    KOKKOS_FORCEINLINE_FUNCTION
+    Vector3s<T> tan2() {return tan2_;}
+
+    KOKKOS_FORCEINLINE_FUNCTION
+    Vector3View<T> norm(const int i) {
+        return Vector3View(i, &norm_);
     } 
-    inline Vector3View<T> norm(const int i) const {
-        return Vector3View(i, &_norm);
+
+    KOKKOS_FORCEINLINE_FUNCTION
+    Vector3View<T> norm(const int i) const {
+        return Vector3View(i, &norm_);
     } 
 
-    inline Vector3View<T> &tan1(const int i) {
-        return Vector3View(i, &_tan1);
-    }
-    inline Vector3View<T> &tan1(const int i) const {
-        return Vector3View(i, &_tan1);
+    KOKKOS_FORCEINLINE_FUNCTION
+    Vector3View<T> &tan1(const int i) {
+        return Vector3View(i, &tan1_);
     }
 
-    inline Vector3View<T> &tan2(const int i) {
-        return Vector3View(i, &_tan2);
-    }
-    inline Vector3View<T> &tan2(const int i) const {
-        return Vector3View(i, &_tan2);
+    KOKKOS_FORCEINLINE_FUNCTION
+    Vector3View<T> &tan1(const int i) const {
+        return Vector3View(i, &tan1_);
     }
 
-    inline int size() const {return _vertex_ids.size();}
+    KOKKOS_FORCEINLINE_FUNCTION
+    Vector3View<T> &tan2(const int i) {
+        return Vector3View(i, &tan2_);
+    }
+
+    KOKKOS_FORCEINLINE_FUNCTION
+    Vector3View<T> &tan2(const int i) const {
+        return Vector3View(i, &tan2_);
+    }
+
+    KOKKOS_FORCEINLINE_FUNCTION
+    int size() const {return m_vertex_ids.size();}
 
     void compute_orientations(Vertices<T> vertices) {
         // set the face tangents in parallel
-        Kokkos::parallel_for("Interfaces::compute_orientations", _norm.size(), KOKKOS_LAMBDA (const int i){
-            auto vertex_ids = _vertex_ids[i];
+        Kokkos::parallel_for("Interfaces::compute_orientations", norm_.size(), KOKKOS_LAMBDA (const int i){
+            auto vertex_ids = m_vertex_ids[i];
             T x0 = vertices.position(vertex_ids(0), 0);
             T x1 = vertices.position(vertex_ids(1), 0);
             T y0 = vertices.position(vertex_ids(0), 1);
@@ -96,16 +117,16 @@ public:
             T z0 = vertices.position(vertex_ids(0), 2);
             T z1 = vertices.position(vertex_ids(1), 2);
             T ilength = 1./Kokkos::sqrt((x1-x0)*(x1-x0) + (y1-y0)*(y1-y0) + (z1-z0));
-            _tan1(i, 0) = ilength * (x1 - x0);
-            _tan1(i, 1) = ilength * (y1 - y0);
-            _tan1(i, 2) = ilength * (z1 - z0);
+            tan1_(i, 0) = ilength * (x1 - x0);
+            tan1_(i, 1) = ilength * (y1 - y0);
+            tan1_(i, 2) = ilength * (z1 - z0);
 
-            switch (_shape(i)) {
+            switch (shape_(i)) {
                 case ElemType::Line: {
-                    auto vertex_ids = _vertex_ids[i];
-                    _tan2(i, 0) = 0.0;
-                    _tan2(i, 1) = 0.0;
-                    _tan2(i, 2) = 1.0;
+                    auto vertex_ids = m_vertex_ids[i];
+                    tan2_(i, 0) = 0.0;
+                    tan2_(i, 1) = 0.0;
+                    tan2_(i, 2) = 1.0;
                     break;
                 }
                 case ElemType::Tri: 
@@ -118,23 +139,23 @@ public:
         });
 
         // the face normal is the cross product of the tangents
-        cross(_tan1, _tan2, _norm);
+        cross(tan1_, tan2_, norm_);
     }
 
     void compute_areas(Vertices<T> vertices) {
-        Kokkos::parallel_for("Interfaces::compute_areas", _area.size(), KOKKOS_LAMBDA (const int i) {
-            switch (_shape(i)) {
+        Kokkos::parallel_for("Interfaces::compute_areas", area_.size(), KOKKOS_LAMBDA (const int i) {
+            switch (shape_(i)) {
                 case ElemType::Line: {
-                    auto vertex_ids = _vertex_ids[i];
+                    auto vertex_ids = m_vertex_ids[i];
                     T x1 = vertices.position(vertex_ids(0), 0);
                     T x2 = vertices.position(vertex_ids(1), 0);
                     T y1 = vertices.position(vertex_ids(0), 1);
                     T y2 = vertices.position(vertex_ids(1), 1);
-                    _area(i) = Kokkos::sqrt((x2-x1)*(x2-x1) + (y2-y1)*(y2-y1));
+                    area_(i) = Kokkos::sqrt((x2-x1)*(x2-x1) + (y2-y1)*(y2-y1));
                     break;
                 }
                 case ElemType::Tri: {
-                    auto vertex_ids = _vertex_ids[i];
+                    auto vertex_ids = m_vertex_ids[i];
                     T x1 = vertices.position(vertex_ids(0), 0);
                     T x2 = vertices.position(vertex_ids(1), 0);
                     T x3 = vertices.position(vertex_ids(2), 0);
@@ -142,11 +163,11 @@ public:
                     T y2 = vertices.position(vertex_ids(1), 1);
                     T y3 = vertices.position(vertex_ids(2), 1);
                     T area = 0.5*Kokkos::fabs(x1*(y2-y3) + x2*(y3-y1) + x3*(y1-y2));
-                    _area(i) = area;
+                    area_(i) = area;
                     break;
                 }
                 case ElemType::Quad: {
-                    auto vertex_ids = _vertex_ids[i];
+                    auto vertex_ids = m_vertex_ids[i];
                     T x1 = vertices.position(vertex_ids(0), 0);
                     T x2 = vertices.position(vertex_ids(1), 0);
                     T x3 = vertices.position(vertex_ids(2), 0);
@@ -156,7 +177,7 @@ public:
                     T y3 = vertices.position(vertex_ids(2), 1);
                     T y4 = vertices.position(vertex_ids(3), 1);
                     T area = x1*y2 + x2*y3 + x3*y4 + x4*y1 - x2*y1 - x3*y2 - x4*y3 - x1*y4;
-                    _area(i) = 0.5 * Kokkos::fabs(area);
+                    area_(i) = 0.5 * Kokkos::fabs(area);
                     break;
                 }
                 case ElemType::Hex: {
@@ -174,15 +195,15 @@ public:
 
 private:
     // the id's of the vertices forming each interface
-    Id _vertex_ids;
+    Id m_vertex_ids;
 
     // geometric data
-    Field<T> _area;
-    Field<ElemType> _shape;
-    Vector3s<T> _norm;
-    Vector3s<T> _tan1;
-    Vector3s<T> _tan2;
-    Vector3s<T> _centre;
+    Field<T> area_;
+    Field<ElemType> shape_;
+    Vector3s<T> norm_;
+    Vector3s<T> tan1_;
+    Vector3s<T> tan2_;
+    Vector3s<T> centre_;
 };
 
 
@@ -198,10 +219,10 @@ public:
     int id(std::vector<int> vertex_ids); 
 
 private:
-    std::unordered_map<std::string, int> _hash_map;
+    std::unordered_map<std::string, int> hash_map_;
 
-    std::string _hash(std::vector<int> vertex_ids);
-    bool _contains(std::string hash);
+    std::string hash_vertex_ids(std::vector<int> vertex_ids);
+    bool contains_hash(std::string hash);
 };
 
 #endif

@@ -6,7 +6,7 @@
 add_executable(
 	finite_volume_unittest 
 	test/unittest.cpp 
-	src/flux.cpp 
+	src/flux_calc.cpp 
 )
 target_compile_options(finite_volume_unittest PRIVATE -Wall -Wextra -Wpedantic -Werror -g)
 target_link_libraries(finite_volume_unittest PRIVATE util)

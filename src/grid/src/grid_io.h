@@ -29,24 +29,24 @@ enum class FaceOrder {
 
 struct ElemIO {
     ElemIO(std::vector<int> ids, ElemType type, FaceOrder face_order) 
-        : _vertex_ids(ids), _cell_type(type), _face_order(face_order)
+        : vertex_ids_(ids), cell_type_(type), face_order_(face_order)
     {}
 
     bool operator == (const ElemIO &other) const {
-        return (_vertex_ids == other._vertex_ids) && 
-               (_cell_type == other._cell_type);
+        return (vertex_ids_ == other.vertex_ids_) && 
+               (cell_type_ == other.cell_type_);
     }
 
-    std::vector<int> vertex_ids () const {return _vertex_ids;}
+    std::vector<int> vertex_ids () const {return vertex_ids_;}
 
-    ElemType cell_type () const {return _cell_type;}
+    ElemType cell_type () const {return cell_type_;}
 
     std::vector<ElemIO> interfaces() const;
 
 private:
-    std::vector<int> _vertex_ids {};
-    ElemType _cell_type;
-    FaceOrder _face_order;
+    std::vector<int> vertex_ids_ {};
+    ElemType cell_type_;
+    FaceOrder face_order_;
 };
 
 struct GridIO {
@@ -55,28 +55,28 @@ public:
            std::vector<ElemIO> cells, 
            std::unordered_map<std::string, 
            std::vector<ElemIO>> bcs) : 
-        _vertices(vertices), _cells(cells), _bcs(bcs){}
+        vertices_(vertices), cells_(cells), bcs_(bcs){}
 
     GridIO(std::string file_name);
 
     bool operator == (const GridIO &other) const {
-        return (_vertices == other._vertices) && 
-               (_cells == other._cells) &&
-               (_bcs == other._bcs);
+        return (vertices_ == other.vertices_) && 
+               (cells_ == other.cells_) &&
+               (bcs_ == other.bcs_);
     }
 
-    std::vector<Vertex<double>> vertices() const {return _vertices;}
+    std::vector<Vertex<double>> vertices() const {return vertices_;}
 
-    std::vector<ElemIO> cells() const {return _cells;}
+    std::vector<ElemIO> cells() const {return cells_;}
 
     std::unordered_map<std::string, std::vector<ElemIO>> bcs() const {
-        return _bcs;
+        return bcs_;
     }
     
 private:
-    std::vector<Vertex<double>> _vertices {};
-    std::vector<ElemIO> _cells {};
-    std::unordered_map<std::string, std::vector<ElemIO>> _bcs;
+    std::vector<Vertex<double>> vertices_ {};
+    std::vector<ElemIO> cells_ {};
+    std::unordered_map<std::string, std::vector<ElemIO>> bcs_;
 
     void _read_su2_grid(std::ifstream & grid_file);
 };

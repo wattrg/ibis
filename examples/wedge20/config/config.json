@@ -1,6 +1,0 @@
-{
-    "convective_flux": {
-        "flux_calculator": "hanel",
-        "reconstruction_order": 1
-    }
-}

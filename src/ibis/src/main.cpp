@@ -4,6 +4,7 @@
 #include "ibis_version_info.h"
 
 #include "commands/prep.h"
+#include "commands/clean.h"
 
 
 static std::string HELP = 
@@ -35,6 +36,10 @@ int main(int argc, char* argv[]) {
     
     if (std::string(argv[1]) == "prep") {
         return prep(argc, argv); 
+    }
+
+    if (std::string(argv[1]) == "clean") {
+        return clean(argc, argv);
     }
 }
 

@@ -12,9 +12,9 @@ public:
     GridBlock(const GridIO &grid_io){
         // set the positions of the vertices
         std::vector<Vertex<double>> vertices = grid_io.vertices();
-        _vertices = Vertices<T>(vertices.size());
+        vertices_ = Vertices<T>(vertices.size());
         for (unsigned int i = 0; i < vertices.size(); i++) {
-            _vertices.set_vertex_position(i, vertices[i].pos());
+            vertices_.set_vertex_position(i, vertices[i].pos());
         }
 
         // some objects to assist in constructing the grid
@@ -49,8 +49,8 @@ public:
             cell_interface_ids.push_back(cell_face_ids);
         } 
 
-        _interfaces = Interfaces<T>(interface_vertices, interface_shapes);
-        _cells = Cells<T>(cell_vertices, cell_interface_ids, cell_shapes);
+        interfaces_ = Interfaces<T>(interface_vertices, interface_shapes);
+        cells_ = Cells<T>(cell_vertices, cell_interface_ids, cell_shapes);
 
         compute_geometric_data();
     } 
@@ -58,28 +58,28 @@ public:
     GridBlock(std::string file_name) : GridBlock<T>(GridIO(file_name)) {}
 
     GridBlock(Vertices<T> vertices, Interfaces<T> interfaces, Cells<T> cells) 
-        : _vertices(vertices), _interfaces(interfaces), _cells(cells) {}
+        : vertices_(vertices), interfaces_(interfaces), cells_(cells) {}
 
     bool operator == (const GridBlock &other) const {
-        return (_vertices == other._vertices) &&
-               (_interfaces == other._interfaces) &&
-               (_cells == other._cells);
+        return (vertices_ == other.vertices_) &&
+               (interfaces_ == other.interfaces_) &&
+               (cells_ == other.cells_);
     }
 
     void compute_geometric_data() {
-        _cells.compute_volumes(_vertices);
-        _interfaces.compute_areas(_vertices);
-        _interfaces.compute_orientations(_vertices);
+        cells_.compute_volumes(vertices_);
+        interfaces_.compute_areas(vertices_);
+        interfaces_.compute_orientations(vertices_);
     }
 
-    Vertices<T>& vertices() {return _vertices;}
-    Interfaces<T>& interfaces() {return _interfaces;}
-    Cells<T>& cells() {return _cells;}
+    Vertices<T>& vertices() {return vertices_;}
+    Interfaces<T>& interfaces() {return interfaces_;}
+    Cells<T>& cells() {return cells_;}
 
 public:
-    Vertices<T> _vertices;
-    Interfaces<T> _interfaces;
-    Cells<T> _cells;
+    Vertices<T> vertices_;
+    Interfaces<T> interfaces_;
+    Cells<T> cells_;
 };
 
 #endif

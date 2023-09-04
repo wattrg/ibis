@@ -2,9 +2,9 @@
 #include "solver.h"
 
 int Solver::solve() {
-    std::cout << "Begining solve" << std::endl;
+    initialise();
     
-    for (unsigned int step = 0; step < _max_step; step++) {
+    for (unsigned int step = 0; step < max_step_; step++) {
         take_step();
 
         if (print_this_step()) {
@@ -20,4 +20,8 @@ int Solver::solve() {
             break;
         }
     }
+
+    finalise();
+
+    return 0;
 }

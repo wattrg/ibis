@@ -3,17 +3,13 @@ import os
 import shutil
 from enum import Enum
 
-IBIS = os.environ.get("IBIS")
+from ibis_py_utils import read_defaults
 
 validation_errors = []
 
 class ValidationException(Exception):
     pass
 
-def read_defaults(file_name):
-    with open(f"{IBIS}/resources/defaults/{file_name}", "r") as defaults:
-        defaults = json.load(defaults)
-    return defaults
 
 class FluxCalculator(Enum):
     Hanel = "hanel"
@@ -102,7 +98,7 @@ class Config:
 
         # write the grid files
         grid_directory = directories["grid_dir"]
-        self.grid.write(f"{config_directory}/{grid_directory}")
+        self.grid.write(f"{grid_directory}")
 
 
 def main(file_name):

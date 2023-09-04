@@ -6,28 +6,34 @@
 
 
 template <typename T>
-struct Field {
+class Field {
 public:
     Field() {}
 
     Field(std::string description, int n) {
-        _view = Kokkos::View<T*> (description, n);        
+        view_ = Kokkos::View<T*> (description, n);        
     }
 
-    inline T& operator() (const int i) {return _view(i);}
-    inline T& operator() (const int i) const {return _view(i);}
-    inline int size() const {return _view.extent(0);}
+    KOKKOS_FORCEINLINE_FUNCTION
+    T& operator() (const int i) {return view_(i);}
 
-    inline bool operator == (const Field &other) const {
+    KOKKOS_FORCEINLINE_FUNCTION
+    T& operator() (const int i) const {return view_(i);}
+
+    KOKKOS_FORCEINLINE_FUNCTION
+    int size() const {return view_.extent(0);}
+
+    KOKKOS_FORCEINLINE_FUNCTION
+    bool operator == (const Field &other) const {
         assert(this->size() == other.size());
         for (int i = 0; this->size(); i++) {
-            if (Kokkos::fabs(_view(i) - other._view(i)) > 1e-14) return false;
+            if (Kokkos::fabs(view_(i) - other.view_(i)) > 1e-14) return false;
         }
         return true;
     }
 
 private:
-    Kokkos::View<T*> _view;
+    Kokkos::View<T*> view_;
 };
 
 

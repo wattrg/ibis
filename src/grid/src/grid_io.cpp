@@ -197,7 +197,7 @@ void GridIO::_read_su2_grid(std::ifstream & grid_file) {
             n_vertices = read_int(line);
             for (int vtx_i = 0; vtx_i < n_vertices; vtx_i++){
                 get_next_line(grid_file, line);
-                _vertices.push_back(read_vertex(line, dimensions));
+                vertices_.push_back(read_vertex(line, dimensions));
             }
         }
 
@@ -205,7 +205,7 @@ void GridIO::_read_su2_grid(std::ifstream & grid_file) {
             n_cells = read_int(line); 
             for (int cell_i = 0; cell_i < n_cells; cell_i++) {
                 get_next_line(grid_file, line);
-                _cells.push_back(read_su2_element(line));
+                cells_.push_back(read_su2_element(line));
             }
         }
 
@@ -213,7 +213,7 @@ void GridIO::_read_su2_grid(std::ifstream & grid_file) {
             n_mark = read_int(line); 
             for (int mark_i = 0; mark_i < n_mark; mark_i++) {
                 get_next_line(grid_file, line);
-                _bcs.insert(read_su2_boundary_marker(grid_file, line)); 
+                bcs_.insert(read_su2_boundary_marker(grid_file, line)); 
             }
         }
     }
@@ -269,9 +269,9 @@ std::vector<ElemIO> vtk_face_order(std::vector<int> ids, ElemType type) {
 }
 
 std::vector<ElemIO> ElemIO::interfaces() const {
-    switch (_face_order) {
+    switch (face_order_) {
         case FaceOrder::Vtk:
-            return vtk_face_order(_vertex_ids, _cell_type); 
+            return vtk_face_order(vertex_ids_, cell_type_); 
         default:
             throw new std::runtime_error("Unreachable");
     }
