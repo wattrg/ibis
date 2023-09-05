@@ -1,4 +1,5 @@
 #include <iostream>
+#include <string>
 #include <Kokkos_Core.hpp>
 #include "../../gas/src/gas_state.h"
 #include "ibis_version_info.h"
@@ -33,13 +34,20 @@ int main(int argc, char* argv[]) {
         std::cerr << HELP;
         return 1;
     }
+
+    std::string command = argv[1];
     
-    if (std::string(argv[1]) == "prep") {
+    if (command == "prep") {
         return prep(argc, argv); 
     }
 
-    if (std::string(argv[1]) == "clean") {
+    else if (command == "clean") {
         return clean(argc, argv);
+    }
+
+    else {
+        std::cerr << "Unknown command: " << command << std::endl;
+        std::cerr << "For help, use `ibis help`" << std::endl;
     }
 }
 
