@@ -32,11 +32,11 @@ private:
     unsigned int reconstruction_order;
 
     // methods
-    apply_pre_reconstruction_bc();
-    reconstruct(FlowStates<T>& flow_states, unsigned int reconstruction_order){}
-    compute_flux();
-    apply_post_convective_flux_bc(){}
-    apply_pre_spatial_deriv(){}
+    void apply_pre_reconstruction_bc();
+    void reconstruct(FlowStates<T>& flow_states, unsigned int reconstruction_order){}
+    void compute_flux();
+    void apply_post_convective_flux_bc(){}
+    void apply_pre_spatial_deriv(){}
 
 };
 
