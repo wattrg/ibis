@@ -5,10 +5,26 @@
 #include "../../util/src/vector3.h"
 
 template <typename T>
+struct FlowState{
+public:
+    FlowState(GasState<T> gs, Vector3<T> vel)
+        : gas_state(gs), velocity(vel) {}
+    
+
+    GasState<T> gas_state;
+    Vector3<T> velocity;
+};
+
+template <typename T>
 struct FlowStates{
 public:
     FlowStates(int n) 
         : gas(GasStates<T>(n)), vel(Vector3s<T>(n)) {}
+
+    void copy_flow_state(const FlowState<T>& fs, const int i) {
+        gas.copy_gas_state(fs.gas_state, i);
+        vel.copy_vector(fs.velocity, i);
+    }
     
     GasStates<T> gas;
     Vector3s<T> vel;

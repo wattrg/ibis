@@ -1,7 +1,19 @@
 #ifndef GAS_H
 #define GAS_H
 
+#include "Kokkos_Macros.hpp"
 #include <Kokkos_Core.hpp>
+
+template <typename T>
+struct GasState {
+public:
+    GasState() {}
+
+    T rho;
+    T pressure;
+    T temp;
+    T energy;
+};
 
 template <typename T>
 class GasStates {
@@ -38,6 +50,13 @@ public:
     KOKKOS_FORCEINLINE_FUNCTION
     T& energy(const int cell_i) {return data_(cell_i, energy_idx_);}
 
+    KOKKOS_INLINE_FUNCTION
+    void copy_gas_state(const GasState<T>& gs, const int i) {
+        rho(i) = gs.rho;
+        pressure(i) = gs.pressure;
+        temp(i) = gs.temp;
+        energy(i) = gs.energy;
+    }
 
 private:
     Kokkos::View<T**> data_;

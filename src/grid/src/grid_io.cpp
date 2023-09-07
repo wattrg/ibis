@@ -183,21 +183,20 @@ void GridIO::_read_su2_grid(std::ifstream & grid_file) {
     // a section heading, we read that section. If we come across
     // a line we don't know what to do with, we just ignore it.
     std::string line;
-    int dimensions;
     int n_vertices;
     int n_cells;
     int n_mark;
     while (get_next_line(grid_file, line)) {
 
         if (starts_with(line, "NDIME")){
-            dimensions = read_int(line); 
+            dim_ = read_int(line); 
         } 
 
         else if (starts_with(line, "NPOIN")) {
             n_vertices = read_int(line);
             for (int vtx_i = 0; vtx_i < n_vertices; vtx_i++){
                 get_next_line(grid_file, line);
-                vertices_.push_back(read_vertex(line, dimensions));
+                vertices_.push_back(read_vertex(line, dim_));
             }
         }
 

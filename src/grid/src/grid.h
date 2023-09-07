@@ -10,6 +10,8 @@ template <typename T>
 struct GridBlock {
 public:
     GridBlock(const GridIO &grid_io){
+        dim_ = grid_io.dim();
+
         // set the positions of the vertices
         std::vector<Vertex<double>> vertices = grid_io.vertices();
         vertices_ = Vertices<T>(vertices.size());
@@ -73,13 +75,23 @@ public:
     }
 
     Vertices<T>& vertices() {return vertices_;}
-    Interfaces<T>& interfaces() {return interfaces_;}
-    Cells<T>& cells() {return cells_;}
+    int num_vertices() const {return vertices_.size();}
 
-public:
+    Interfaces<T>& interfaces() {return interfaces_;}
+    int num_interfaces() const {return interfaces_.size();}
+
+    Cells<T>& cells() {return cells_;}
+    int num_cells() const {return cells_.size();}
+
+
+    int dim() const {return dim_;}
+
+private:
     Vertices<T> vertices_;
     Interfaces<T> interfaces_;
     Cells<T> cells_;
+    Cells<T> ghost_;
+    int dim_;
 };
 
 #endif

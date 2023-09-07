@@ -4,6 +4,8 @@
 #include <iostream>
 #include <string.h>
 
+#include "../../finite_volume/src/finite_volume.h"
+
 class Solver {
 public:
     int solve();

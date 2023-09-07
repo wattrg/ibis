@@ -6,6 +6,19 @@
 #include "Kokkos_Macros.hpp"
 #include "field.h"
 
+// A single vector with 3 components
+template <typename T>
+struct Vector3 {
+    Vector3(T x, T y, T z) : x(x), y(y), z(z) {}
+    T x, y, z;
+
+    bool operator == (const Vector3 &other) const {
+        return (std::fabs(x - other.x) < 1e-14) &&
+               (std::fabs(y - other.y) < 1e-14) &&
+               (std::fabs(z - other.z) < 1e-14);
+    }
+};
+
 template <typename T>
 struct Vector3s;
 
@@ -34,42 +47,74 @@ public:
     Vector3s() {}
 
     Vector3s(std::string description, int n) {
-        _view = Kokkos::View<T*[3]>(description, n);
+        view_ = Kokkos::View<T*[3]>(description, n);
     }
 
-    inline T& operator() (const int i, const int j) {
-        return _view(i, j); 
+    KOKKOS_FORCEINLINE_FUNCTION
+    T& operator() (const int i, const int j) {
+        return view_(i, j); 
     }
 
-    inline T& operator() (const int i, const int j) const {
-        return _view(i, j);
+    KOKKOS_FORCEINLINE_FUNCTION 
+    T& operator() (const int i, const int j) const {
+        return view_(i, j);
     }
 
-    inline Vector3View<T> operator[] (const int i) {
+    KOKKOS_FORCEINLINE_FUNCTION
+    Vector3View<T> operator[] (const int i) {
         return Vector3View<T> (i, this);
     }
 
-    inline Vector3View<T> operator[] (const int i) const {
+    KOKKOS_FORCEINLINE_FUNCTION
+    Vector3View<T> operator[] (const int i) const {
         return Vector3View<T> (i, this);
     }
 
-    inline int size() const {return _view.extent(0);}
+    KOKKOS_FORCEINLINE_FUNCTION
+    T& x(const int i) {return view_(i, 0);}
 
-    inline bool operator == (const Vector3s &other) const {
+    KOKKOS_FORCEINLINE_FUNCTION
+    T& x(const int i) const {return view_(i, 0);}
+
+    KOKKOS_FORCEINLINE_FUNCTION
+    T& y(const int i) {return view_(i, 1);}
+
+    KOKKOS_FORCEINLINE_FUNCTION
+    T& y(const int i) const {return view_(i, 1);}
+
+    KOKKOS_FORCEINLINE_FUNCTION
+    T& z(const int i) {return view_(i, 2);}
+
+    KOKKOS_FORCEINLINE_FUNCTION
+    T& z(const int i) const {return view_(i, 2);}
+
+    KOKKOS_FORCEINLINE_FUNCTION
+    void copy_vector(const Vector3<T>& vector, const int i) {
+        x(i) = vector.x;
+        y(i) = vector.y;
+        z(i) = vector.z;
+    }
+
+    KOKKOS_FORCEINLINE_FUNCTION 
+    int size() const {return view_.extent(0);}
+
+    KOKKOS_FORCEINLINE_FUNCTION
+    bool operator == (const Vector3s &other) const {
         if (this->size() != other.size()) {
             return false;
         }
 
         for (int i = 0; i < this->size(); i++) {
-            if (fabs(_view(i, 0) - other._view(i, 0)) > 1e-14)  return false;
-            if (fabs(_view(i, 1) - other._view(i, 1)) > 1e-14)  return false;
-            if (fabs(_view(i, 2) - other._view(i, 2)) > 1e-14)  return false;
+            if (fabs(view_(i, 0) - other.view_(i, 0)) > 1e-14)  return false;
+            if (fabs(view_(i, 1) - other.view_(i, 1)) > 1e-14)  return false;
+            if (fabs(view_(i, 2) - other.view_(i, 2)) > 1e-14)  return false;
         }
         return true;
     }
 
+
 private:
-    Kokkos::View<T*[3]> _view;
+    Kokkos::View<T*[3]> view_;
 };
 
 template <typename T>
@@ -167,18 +212,6 @@ void transform_to_global_frame(Vector3s<T>& a, const Vector3s<T>& norm,
     });
 }
 
-// A single vector with 3 components
-template <typename T>
-struct Vector3 {
-    Vector3(T x, T y, T z) : x(x), y(y), z(z) {}
-    T x, y, z;
-
-    bool operator == (const Vector3 &other) const {
-        return (std::fabs(x - other.x) < 1e-14) &&
-               (std::fabs(y - other.y) < 1e-14) &&
-               (std::fabs(z - other.z) < 1e-14);
-    }
-};
 
 
 #endif

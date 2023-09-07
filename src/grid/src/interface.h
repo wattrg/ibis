@@ -197,6 +197,10 @@ private:
     // the id's of the vertices forming each interface
     Id m_vertex_ids;
 
+    // the cells to the left/right of the interface
+    Field<int> left_cells_;
+    Field<int> right_cells;
+
     // geometric data
     Field<T> area_;
     Field<ElemType> shape_;

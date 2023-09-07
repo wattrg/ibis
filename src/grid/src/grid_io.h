@@ -72,11 +72,14 @@ public:
     std::unordered_map<std::string, std::vector<ElemIO>> bcs() const {
         return bcs_;
     }
+
+    int dim() const {return dim_;}
     
 private:
     std::vector<Vertex<double>> vertices_ {};
     std::vector<ElemIO> cells_ {};
     std::unordered_map<std::string, std::vector<ElemIO>> bcs_;
+    int dim_;
 
     void _read_su2_grid(std::ifstream & grid_file);
 };
