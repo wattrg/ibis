@@ -1,7 +1,5 @@
-add_library(grid STATIC src/grid.cpp src/grid_io.cpp src/vertex.cpp src/interface.cpp)
-target_link_libraries(grid PUBLIC Kokkos::kokkos)
-target_link_libraries(grid PRIVATE doctest)
-target_link_libraries(grid PRIVATE util)
+add_library(grid STATIC src/grid_io.cpp src/vertex.cpp src/interface.cpp)
+target_link_libraries(grid PUBLIC Kokkos::kokkos doctest util)
 
 add_executable(
 	grid_unittest 

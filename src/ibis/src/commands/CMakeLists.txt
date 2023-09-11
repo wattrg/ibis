@@ -6,6 +6,11 @@ target_link_libraries(prep PRIVATE Python::Python)
 add_library(ibis_clean STATIC clean.cpp)
 target_link_libraries(ibis_clean PRIVATE Python::Python)
 
+add_library(run STATIC run.cpp)
+target_link_libraries(run PUBLIC Kokkos::kokkos doctest grid)
+target_include_directories(run PRIVATE ${CMAKE_SOURCE_DIR}/extern/json/single_include)
+
+
 add_custom_command(
 	TARGET prep POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy

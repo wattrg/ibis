@@ -25,6 +25,8 @@ public:
         gas.copy_gas_state(fs.gas_state, i);
         vel.copy_vector(fs.velocity, i);
     }
+
+    unsigned int number_flow_states() const {return gas.size();}
     
     GasStates<T> gas;
     Vector3s<T> vel;

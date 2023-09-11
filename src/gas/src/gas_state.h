@@ -58,6 +58,9 @@ public:
         energy(i) = gs.energy;
     }
 
+    KOKKOS_INLINE_FUNCTION
+    int size() const {return data_.extent(0);}
+
 private:
     Kokkos::View<T**> data_;
     int rho_idx_, pressure_idx_, temp_idx_, energy_idx_;

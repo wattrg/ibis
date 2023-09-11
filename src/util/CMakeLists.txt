@@ -1,6 +1,6 @@
 add_library(util STATIC src/vector3.cpp src/id.cpp)
 target_link_libraries(util PUBLIC Kokkos::kokkos)
-target_link_libraries(util PRIVATE doctest)
+target_link_libraries(util PUBLIC doctest)
 target_compile_options(util PUBLIC -Wall -Wextra -Wpedantic -g)
 
 add_executable(util_unittest test/unittest.cpp src/vector3.cpp src/id.cpp)

@@ -32,8 +32,12 @@ private:
     // ghost cells
     FlowStates<T> ghost_;
 
-    // boundary condition
+    // boundary conditions
+    // NOTE: these will become vectors of these properties. 
+    // But for the moment, I'm just using a single boundary 
+    // condition to make sure everything else works
     SupersonicInflow<T> bc_;
+    Field<int> bc_interfaces_;
 
     // configuration
     unsigned int dim;

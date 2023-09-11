@@ -1,11 +1,13 @@
 #include <iostream>
 #include <string>
-#include <Kokkos_Core.hpp>
-#include "../../gas/src/gas_state.h"
-#include "ibis_version_info.h"
 
+#define DOCTEST_CONFIG_IMPLEMENT
+#include <doctest/doctest.h>
+
+#include "ibis_version_info.h"
 #include "commands/prep.h"
 #include "commands/clean.h"
+#include "commands/run.h"
 
 
 static std::string HELP = 
@@ -14,7 +16,10 @@ static std::string HELP =
     "\n"
     "Available commands:\n"
     "    help: write this help message\n"
-    "    prep [filename]: prepare a simulation given a python input script\n";
+    "    prep [filename]: prepare a simulation given a python input script\n"
+    "    run: run a simulation"
+    "    clean: clean a directory of generated files";
+
 
 
 void print_header() {
@@ -29,6 +34,8 @@ void print_header() {
 int main(int argc, char* argv[]) {
     print_header(); 
 
+    doctest::Context ctx;
+
     if (argc < 2) {
         std::cerr << "Not enough arguments provided\n";
         std::cerr << HELP;
@@ -37,12 +44,21 @@ int main(int argc, char* argv[]) {
 
     std::string command = argv[1];
     
-    if (command == "prep") {
+    if (command == "help") {
+        std::cout << HELP;
+        return 0;
+    }
+
+    else if (command == "prep") {
         return prep(argc, argv); 
     }
 
     else if (command == "clean") {
         return clean(argc, argv);
+    }
+
+    else if (command == "run") {
+        return run(argc, argv);
     }
 
     else {
@@ -55,7 +71,7 @@ int main(int argc, char* argv[]) {
 
 
 
-
+  
 // typedef Kokkos::View<double*[3]> FieldTest;
 // int test(int argc, char* argv[]) {
 //     Kokkos::initialize(argc, argv);
