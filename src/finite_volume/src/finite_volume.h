@@ -45,10 +45,10 @@ private:
 
     // methods
     void apply_pre_reconstruction_bc();
-    void reconstruct(FlowStates<T>& flow_states, unsigned int order){}
+    void reconstruct(FlowStates<T>& flow_states, unsigned int order);
     void compute_flux();
-    void apply_post_convective_flux_bc(){}
-    void apply_pre_spatial_deriv(){}
+    void apply_post_convective_flux_bc();
+    void apply_pre_spatial_deriv();
 
 };
 

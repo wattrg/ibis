@@ -1,6 +1,7 @@
 import json
 import os
 import shutil
+import traceback
 from enum import Enum
 
 from ibis_py_utils import read_defaults
@@ -14,10 +15,18 @@ class ValidationException(Exception):
 class FluxCalculator(Enum):
     Hanel = "hanel"
 
+class Solver(Enum):
+    RungeKutta = "runge_kutta"
+
 def string_to_flux_calculator(string):
     if string == FluxCalculator.Hanel.value:
         return FluxCalculator.Hanel
     validation_errors.append(ValidationException(f"Unknown flux calculator {string}"))
+
+def string_to_solver(string):
+    if string == Solver.RungeKutta.value:
+        return Solver.RungeKutta
+    validation_errors.append(ValidationException(f"Unknown solver {string}"))
 
 class ConvectiveFlux:
     _json_values = ["flux_calculator", "reconstruction_order"]
@@ -67,13 +76,42 @@ class Grid:
         for i, file in enumerate(self._blocks):
             shutil.copy(file, f"{grid_directory}/block_{i:04}.su2")
 
+
+class RungeKutta:
+    _json_values = ["cfl"]
+    _defaults_file = "runge_kutta.json"
+    _name = Solver.RungeKutta.value
+    __slots__ = _json_values
+
+    def __init__(self):
+        json_data = read_defaults(self._defaults_file)
+        for key in self._json_values:
+            setattr(self, key, json_data[key])
+
+    def as_dict(self):
+        dictionary = {"name": self._name}
+        for key in self._json_values:
+            dictionary[key] = getattr(self, key)
+        return dictionary
+
+    def validate(self):
+        return
+
+def make_default_solver():
+    default_solver_name = read_defaults("config.json")["solver"] 
+    default_solver = string_to_solver(default_solver_name)
+    if default_solver == Solver.RungeKutta:
+        return RungeKutta()
+    validation_errors.append(ValidationException(f"Unknown default solver {default_solver_name}"))
+
 class Config:
-    _json_values = ["convective_flux"]
+    _json_values = ["convective_flux", "solver"]
     __slots__ = _json_values + ["grid"]
 
     def __init__(self):
         self.convective_flux = ConvectiveFlux()
         self.grid = Grid()
+        self.solver = make_default_solver()
     
     def validate(self):
         for setting in self.__slots__:
@@ -120,11 +158,14 @@ def main(file_name):
         "ConvectiveFlux": ConvectiveFlux,
         "FluxCalculator": FluxCalculator,
         "Grid": Grid,
+        "Solver": Solver,
+        "RungeKutta": RungeKutta,
     }
 
     # run the user supplied script
     with open(file_name, "r") as f:
         exec(f.read(), namespace)
+
 
     # validate the configuration supplied by the user, and hopefully write
     # the configuration to file.
@@ -132,3 +173,5 @@ def main(file_name):
     config.write(directories)
     with open(f"{config_dir}/{config_status}", "w") as status:
         status.write("True")
+
+    return 0

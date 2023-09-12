@@ -1,5 +1,8 @@
 #include <iostream>
+#include <nlohmann/json.hpp>
 #include "solver.h"
+
+using json = nlohmann::json;
 
 int Solver::solve() {
     initialise();
@@ -24,4 +27,9 @@ int Solver::solve() {
     finalise();
 
     return 0;
+}
+
+Solver * make_solver(json solver_config) {
+    (void) solver_config;
+    return NULL;
 }

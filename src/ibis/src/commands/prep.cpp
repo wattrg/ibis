@@ -35,20 +35,29 @@ int prep(int argc, char* argv[]) {
 
     PyObject* prep_module = PyImport_ImportModule("prep");
     if (prep_module == NULL) {
-        std::cerr << "Failed to import prep.py" << std::endl;
+        PyErr_Print();
+        // std::cerr << "Failed to import prep.py" << std::endl;
         return 1;
     }
     
     PyObject *py_prep_main = PyObject_GetAttrString(prep_module, "main");
     if (py_prep_main == NULL) {
-        std::cerr << "Failed to find main function in prep.py\n";
+        // std::cerr << "Failed to find main function in prep.py\n";
+        PyErr_Print();
         Py_DECREF(prep_module);
         return 1;
     }
 
     PyObject* main_args = PyTuple_New(1);
     PyTuple_SetItem(main_args, 0, prep_script_name);
-    PyObject_CallObject(py_prep_main, main_args);
+    PyObject *py_main_result = PyObject_CallObject(py_prep_main, main_args);
+    if (py_main_result == NULL) {
+        PyErr_Print();
+        Py_DECREF(prep_module);
+        Py_DECREF(py_prep_main);
+        Py_DECREF(main_args);
+        return 1;
+    }
     
     Py_DECREF(py_prep_main);
     Py_DECREF(prep_module);

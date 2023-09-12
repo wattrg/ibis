@@ -3,8 +3,10 @@
 
 #include <iostream>
 #include <string.h>
-
+#include <nlohmann/json.hpp>
 #include "../../finite_volume/src/finite_volume.h"
+
+using json = nlohmann::json;
 
 class Solver {
 public:
@@ -24,5 +26,7 @@ protected:
 private:
     unsigned int max_step_ = 0;
 };
+
+Solver * make_solver(json solver_config);
 
 #endif

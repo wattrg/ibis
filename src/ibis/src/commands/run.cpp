@@ -31,9 +31,8 @@ json read_config(json& directories) {
 }
 
 GridBlock<double> read_grid(json& directories) {
-    std::string grid_dir = directories.at("grid");
+    std::string grid_dir = directories.at("grid_dir");
     std::string grid_file = grid_dir + "/" + "block_0000.su2";
-    std::cout << grid_file << std::endl;
     return GridBlock<double> (grid_file);
 }
 
@@ -42,8 +41,9 @@ int run(int argc, char* argv[]) {
     json config = read_config(directories);
     Kokkos::initialize(argc, argv);
     
-    GridBlock<double> read_grid(directories);
-    
+    {
+        GridBlock<double> grid = read_grid(directories);
+    }
     
     Kokkos::finalize();
     return 0;
