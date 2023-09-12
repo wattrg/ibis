@@ -33,7 +33,7 @@ int FVIO<double>::write(FlowStates<double>& flow_state, double time) {
 
     std::filesystem::create_directory(directory_name);
 
-    int result;
+    int result = 0;
     switch (format_) {
         case FlowFormat::Native:
             result = write_native(directory_name, flow_state);
