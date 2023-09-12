@@ -13,8 +13,8 @@ public:
     FiniteVolume();
 
     FiniteVolume(const GridBlock<T>& grid)
-        : left_(FlowStates<T>("Left", grid.num_interfaces())),
-          right_(FlowStates<T>("Right", grid.num_interfaces())),
+        : left_(FlowStates<T>(grid.num_interfaces())),
+          right_(FlowStates<T>(grid.num_interfaces())),
           flux_(ConservedQuantities<T>(grid.num_interfaces(), grid.dim()))
     {}
 
@@ -30,14 +30,14 @@ private:
     ConservedQuantities<double> flux_;
 
     // ghost cells
-    FlowStates<T> ghost_;
+    // FlowStates<T> ghost_;
 
     // boundary conditions
     // NOTE: these will become vectors of these properties. 
     // But for the moment, I'm just using a single boundary 
     // condition to make sure everything else works
-    SupersonicInflow<T> bc_;
-    Field<int> bc_interfaces_;
+    // SupersonicInflow<T> bc_;
+    // Field<int> bc_interfaces_;
 
     // configuration
     unsigned int dim;

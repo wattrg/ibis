@@ -5,6 +5,7 @@
 
 #include "run.h"
 #include "../../../grid/src/grid.h"
+#include "../../../solvers/src/solver.h"
 
 using json = nlohmann::json;
 
@@ -43,6 +44,8 @@ int run(int argc, char* argv[]) {
     
     {
         GridBlock<double> grid = read_grid(directories);
+        Solver * solver = make_solver(config.at("solver"), grid);
+        delete solver;
     }
     
     Kokkos::finalize();

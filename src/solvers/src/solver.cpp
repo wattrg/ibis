@@ -2,6 +2,8 @@
 #include <nlohmann/json.hpp>
 #include "solver.h"
 
+#include "runge_kutta.h"
+
 using json = nlohmann::json;
 
 int Solver::solve() {
@@ -18,7 +20,7 @@ int Solver::solve() {
             plot_solution();
         }
 
-        if (stop()) {
+        if (stop_now()) {
             print_stop_reason();
             break;
         }
@@ -29,7 +31,10 @@ int Solver::solve() {
     return 0;
 }
 
-Solver * make_solver(json solver_config) {
-    (void) solver_config;
+Solver * make_solver(json solver_config, GridBlock<double> grid) {
+    std::string solver_name = solver_config.at("name");
+    if (solver_name == "runge_kutta") {
+        return new RungeKutta(solver_config, grid);
+    }
     return NULL;
 }

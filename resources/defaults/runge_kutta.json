@@ -1,3 +1,8 @@
 {
-    "cfl": 0.5
+    "cfl": 0.5,
+    "max_time": 1e-3,
+    "max_step": 100,
+    "print_frequency": 20,
+    "plot_frequency": 1e-3,
+    "plot_every_n_steps": 20
 }

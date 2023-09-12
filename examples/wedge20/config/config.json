@@ -5,6 +5,11 @@
     },
     "solver": {
         "name": "runge_kutta",
-        "cfl": 0.5
+        "cfl": 0.5,
+        "max_time": 0.001,
+        "max_step": 100,
+        "print_frequency": 20,
+        "plot_frequency": 0.001,
+        "plot_every_n_steps": 20
     }
 }

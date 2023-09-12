@@ -78,7 +78,8 @@ class Grid:
 
 
 class RungeKutta:
-    _json_values = ["cfl"]
+    _json_values = ["cfl", "max_time", "max_step", "print_frequency", "plot_frequency",
+                    "plot_every_n_steps"]
     _defaults_file = "runge_kutta.json"
     _name = Solver.RungeKutta.value
     __slots__ = _json_values

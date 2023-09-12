@@ -50,6 +50,10 @@ public:
         view_ = Kokkos::View<T*[3]>(description, n);
     }
 
+    Vector3s(int n) {
+        view_ = Kokkos::View<T*[3]>("Vector3s", n);
+    }
+
     KOKKOS_FORCEINLINE_FUNCTION
     T& operator() (const int i, const int j) {
         return view_(i, j); 
