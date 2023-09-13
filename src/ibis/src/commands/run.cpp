@@ -45,6 +45,7 @@ int run(int argc, char* argv[]) {
     {
         GridBlock<double> grid = read_grid(directories);
         Solver * solver = make_solver(config.at("solver"), grid);
+        solver->solve();
         delete solver;
     }
     

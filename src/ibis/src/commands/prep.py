@@ -1,10 +1,9 @@
 import json
 import os
 import shutil
-import traceback
 from enum import Enum
 
-from ibis_py_utils import read_defaults
+from ibis_py_utils import read_defaults, FlowState
 
 validation_errors = []
 
@@ -58,35 +57,120 @@ class ConvectiveFlux:
                 dictionary[key] = getattr(self, key)
         return dictionary
 
-class Grid:
-    def __init__(self):
-        self._blocks = []
 
-    def add_block(self, file_name):
-        self._blocks.append(file_name)
+class Block:
+    def __init__(self, file_name, initial_condition, boundaries):
+        self._initial_condition = initial_condition
+        self._block = file_name
+        self.number_cells = 0
+        self.number_vertices = 0
+        self.boundaries = boundaries
+        self._read_file(file_name)
+
+    def _read_file(self, file_name):
+        extension = file_name.split(".")[-1]
+        if extension == "su2":
+            self._read_su2_grid(file_name)
+        else:
+            raise Exception(f"Unknown grid format: {extension}")
+
+    def _read_su2_grid(self, file_name):
+        with open(file_name, "r") as f:
+            for line in f:
+                line = line.strip()
+                if line.startswith("NDIME"):
+                    self.dim = int(line.split("=")[-1].strip())
+                elif line.startswith("NPOIN"):
+                    self.number_vertices = int(line.split("=")[-1].strip())
+                elif line.startswith("NELEM"):
+                    self.number_cells = int(line.split("=")[-1].strip())
+                elif line.startswith("NMARK"):
+                    self.number_boundaries = int(line.split("=")[-1].strip())
 
     def validate(self):
-        if not self._blocks:
-            validation_errors.append(ValidationException("No grid blocks specified"))
+        if not self._block:
+            validation_errors.append(
+                ValidationException("No grid blocks specified")
+            )
 
-    def write(self, grid_directory):
+    def write(self, grid_directory, flow_directory):
         if not os.path.exists(grid_directory):
             os.mkdir(grid_directory)
+        if not os.path.exists(flow_directory):
+            os.mkdir(flow_directory)
+        ic_path = f"{flow_directory}/0000"
+        if not os.path.exists(ic_path):
+            os.mkdir(ic_path)
 
-        for i, file in enumerate(self._blocks):
-            shutil.copy(file, f"{grid_directory}/block_{i:04}.su2")
+        # write the grid
+        shutil.copy(self._block, f"{grid_directory}/block_{0:04}.su2")
+        
+        # write the initial condition
+        ic_directory = f"{flow_directory}/{0:04}"
+        temp = open(f"{ic_directory}/T", "w")
+        pressure = open(f"{ic_directory}/p", "w")
+        vx = open(f"{ic_directory}/vx", "w")
+        vy = open(f"{ic_directory}/vy", "w")
+        if self.dim == 3:
+            vz = open(f"{ic_directory}/vz", "w")
+
+        if type(self._initial_condition) == FlowState:
+            for _ in range(self.number_cells):
+                temp.write(str(self._initial_condition.T) + "\n")
+                pressure.write(str(self._initial_condition.p) + "\n")
+                vx.write(str(self._initial_condition.vx) + "\n")
+                vy.write(str(self._initial_condition.vy) + "\n")
+                if self.dim == 3:
+                    vz.write(str(self._initial_condition.vz) + "\n")
+
+        temp.close()
+        pressure.close()
+        vx.close()
+        vy.close()
+        if self.dim == 3:
+            vz.close()
+
+    def as_dict(self):
+        dictionary = {"boundaries": {}}
+        for key in self.boundaries:
+            dictionary["boundaries"][key] = self.boundaries[key].as_dict()
+        return dictionary
+
+class BoundaryCondition:
+    def __init__(self, pre_reconstruction):
+        self._pre_reconstruction = pre_reconstruction
+
+    def as_dict(self):
+        dictionary = {}
+        pre_reco_dict = []
+        for pre_reco in self._pre_reconstruction:
+            pre_reco_dict.append(pre_reco.as_dict())
+        dictionary["pre_reconstruction"] = pre_reco_dict
+        return dictionary
+
+class FlowStateCopy:
+    def __init__(self, flow_state):
+        self.flow_state = flow_state
+
+    def as_dict(self):
+        return {"type": "flow_state_copy", "flow_state": self.flow_state.as_dict()}
+
+def supersonic_inflow(inflow):
+    return BoundaryCondition(
+        pre_reconstruction=[FlowStateCopy(inflow)]
+    )
 
 
 class RungeKutta:
-    _json_values = ["cfl", "max_time", "max_step", "print_frequency", "plot_frequency",
-                    "plot_every_n_steps"]
+    _json_values = ["cfl", "max_time", "max_step", "print_frequency", 
+                    "plot_frequency", "plot_every_n_steps"]
     _defaults_file = "runge_kutta.json"
     _name = Solver.RungeKutta.value
     __slots__ = _json_values
 
     def __init__(self):
         json_data = read_defaults(self._defaults_file)
-        for key in self._json_values:
+        for key in json_data:
             setattr(self, key, json_data[key])
 
     def as_dict(self):
@@ -103,15 +187,16 @@ def make_default_solver():
     default_solver = string_to_solver(default_solver_name)
     if default_solver == Solver.RungeKutta:
         return RungeKutta()
-    validation_errors.append(ValidationException(f"Unknown default solver {default_solver_name}"))
+    validation_errors.append(
+        ValidationException(f"Unknown default solver {default_solver_name}")
+    )
 
 class Config:
-    _json_values = ["convective_flux", "solver"]
-    __slots__ = _json_values + ["grid"]
+    _json_values = ["convective_flux", "solver", "grid"]
+    __slots__ = _json_values
 
     def __init__(self):
         self.convective_flux = ConvectiveFlux()
-        self.grid = Grid()
         self.solver = make_default_solver()
     
     def validate(self):
@@ -137,7 +222,8 @@ class Config:
 
         # write the grid files
         grid_directory = directories["grid_dir"]
-        self.grid.write(f"{grid_directory}")
+        flow_directory = directories["flow_dir"]
+        self.grid.write(grid_directory, flow_directory)
 
 
 def main(file_name):
@@ -158,9 +244,11 @@ def main(file_name):
         "config": config,
         "ConvectiveFlux": ConvectiveFlux,
         "FluxCalculator": FluxCalculator,
-        "Grid": Grid,
+        "Block": Block,
         "Solver": Solver,
+        "FlowState": FlowState,
         "RungeKutta": RungeKutta,
+        "SupersonicInflow": supersonic_inflow
     }
 
     # run the user supplied script
@@ -174,5 +262,3 @@ def main(file_name):
     config.write(directories)
     with open(f"{config_dir}/{config_status}", "w") as status:
         status.write("True")
-
-    return 0

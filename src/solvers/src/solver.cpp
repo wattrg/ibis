@@ -8,24 +8,24 @@ using json = nlohmann::json;
 
 int Solver::solve() {
     initialise();
-    
+    std::cout << "Beginning solve" << std::endl; 
     for (unsigned int step = 0; step < max_step_; step++) {
         take_step();
 
-        if (print_this_step()) {
-            print_progress();
+        if (print_this_step(step)) {
+            print_progress(step);
         }
 
-        if (plot_this_step()) {
-            plot_solution();
+        if (plot_this_step(step)) {
+            plot_solution(step);
         }
 
-        if (stop_now()) {
-            print_stop_reason();
+        if (stop_now(step)) {
+            std::string reason = stop_reason(step);
+            std::cout << "STOPPING: " << reason << std::endl;
             break;
         }
     }
-
     finalise();
 
     return 0;

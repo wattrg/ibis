@@ -18,10 +18,10 @@ public:
 private:
     // configuration
     double max_time_;
-    int max_step_;
-    int print_frequency_;
+    unsigned int max_step_;
+    unsigned int print_frequency_;
     double plot_frequency_;
-    double plot_every_n_steps_;
+    int plot_every_n_steps_;
     double cfl_;
 
 private:
@@ -35,12 +35,12 @@ private:
     int initialise();
     int finalise();
     int take_step();
-    bool print_this_step();
-    bool plot_this_step();
-    int plot_solution();
-    int print_progress();
-    void print_stop_reason();
-    bool stop_now();
+    bool print_this_step(unsigned int step);
+    bool plot_this_step(unsigned int step);
+    int plot_solution(unsigned int step);
+    int print_progress(unsigned int step);
+    std::string stop_reason(unsigned int step);
+    bool stop_now(unsigned int step);
 
 private:
     // memory

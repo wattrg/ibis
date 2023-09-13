@@ -2,5 +2,6 @@
     "config_dir": "config",
     "config_file": "config.json",
     "config_status": "config_status",
-    "grid_dir": "grid"
+    "grid_dir": "grid",
+    "flow_dir": "flow"
 }

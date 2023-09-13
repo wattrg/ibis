@@ -21,20 +21,20 @@ int clean(int argc, char* argv[]) {
 
     PyObject* clean_module = PyImport_ImportModule("clean");
     if (clean_module == NULL) {
-        std::cerr << "Failed to import clean.py" << std::endl;
+        PyErr_Print();
         return 1;
     }
     
     PyObject *py_clean_main = PyObject_GetAttrString(clean_module, "main");
     if (py_clean_main == NULL) {
-        std::cerr << "Failed to find main function in prep.py\n";
+        PyErr_Print();
         Py_DECREF(clean_module);
         return 1;
     }
 
     PyObject* main_result = PyObject_CallObject(py_clean_main, NULL);
     if (main_result == NULL) {
-        std::cerr << "Failed to execute main function in post.py\n"; 
+        PyErr_Print();
     }
     
     Py_DECREF(py_clean_main);

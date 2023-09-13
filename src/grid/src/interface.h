@@ -68,6 +68,9 @@ public:
     Vector3s<T> norm() {return norm_;}
 
     KOKKOS_FORCEINLINE_FUNCTION
+    Vector3s<T> norm() const {return norm_;}
+
+    KOKKOS_FORCEINLINE_FUNCTION
     Vector3s<T> tan1() {return tan1_;}
 
     KOKKOS_FORCEINLINE_FUNCTION
