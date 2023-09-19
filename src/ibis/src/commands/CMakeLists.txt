@@ -7,7 +7,16 @@ add_library(ibis_clean STATIC clean.cpp)
 target_link_libraries(ibis_clean PRIVATE Python::Python)
 
 add_library(run STATIC run.cpp)
-target_link_libraries(run PUBLIC Kokkos::kokkos doctest grid runge_kutta solver nlohmann_json::nlohmann_json)
+target_link_libraries(
+        run PUBLIC 
+        Kokkos::kokkos 
+        doctest 
+        grid 
+        runge_kutta 
+        solver 
+        nlohmann_json::nlohmann_json
+        gas
+)
 
 
 add_custom_command(

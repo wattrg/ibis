@@ -20,13 +20,14 @@ public:
 template <typename T>
 struct FlowStates{
 public:
-    FlowStates(int n) 
-        : gas(GasStates<T>(n)), vel(Vector3s<T>(n)) {}
+    FlowStates(int n) ;
+        // : gas(GasStates<T>(n)), vel(Vector3s<T>(n)) {}
 
-    void copy_flow_state(const FlowState<T>& fs, const int i) {
-        gas.copy_gas_state(fs.gas_state, i);
-        vel.copy_vector(fs.velocity, i);
-    }
+    void copy_flow_state(const FlowState<T>& fs, const int i);
+    // {
+    //     gas.copy_gas_state(fs.gas_state, i);
+    //     vel.copy_vector(fs.velocity, i);
+    // }
 
     unsigned int number_flow_states() const {return gas.size();}
 

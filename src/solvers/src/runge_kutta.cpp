@@ -5,7 +5,7 @@ RungeKutta::~RungeKutta() {}
 
 RungeKutta::RungeKutta(json config, std::string grid_dir, std::string flow_dir) 
     : Solver(grid_dir, flow_dir),
-      grid_(GridBlock<double>(grid_dir)), 
+      grid_(GridBlock<double>(grid_dir + "/block_0000.su2")), 
       flow_(FlowStates<double>(grid_.num_cells())),
       conserved_quantities_(ConservedQuantities<double>(grid_.num_cells(), grid_.dim())),
       dUdt_(ConservedQuantities<double>(grid_.num_cells(), grid_.dim())),
