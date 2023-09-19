@@ -6,6 +6,9 @@
 
 using json = nlohmann::json;
 
+Solver::Solver(std::string grid_dir, std::string flow_dir) 
+    : grid_dir_(grid_dir), flow_dir_(flow_dir) {}
+
 int Solver::solve() {
     initialise();
     std::cout << "Beginning solve" << std::endl; 
@@ -31,10 +34,10 @@ int Solver::solve() {
     return 0;
 }
 
-Solver * make_solver(json solver_config, GridBlock<double> grid) {
+Solver * make_solver(json solver_config, std::string grid_dir, std::string flow_dir) {
     std::string solver_name = solver_config.at("name");
     if (solver_name == "runge_kutta") {
-        return new RungeKutta(solver_config, grid);
+        return new RungeKutta(solver_config, grid_dir, flow_dir);
     }
     return NULL;
 }

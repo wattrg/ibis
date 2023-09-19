@@ -40,11 +40,13 @@ GridBlock<double> read_grid(json& directories) {
 int run(int argc, char* argv[]) {
     json directories = read_directories();
     json config = read_config(directories);
+    std::string grid_dir = directories.at("grid_dir");
+    std::string flow_dir = directories.at("flow_dir");
     Kokkos::initialize(argc, argv);
     
     {
-        GridBlock<double> grid = read_grid(directories);
-        Solver * solver = make_solver(config.at("solver"), grid);
+        // GridBlock<double> grid = read_grid(directories);
+        Solver * solver = make_solver(config.at("solver"), grid_dir, flow_dir);
         solver->solve();
         delete solver;
     }

@@ -1,13 +1,15 @@
 #include "runge_kutta.h"
+#include "solver.h"
 
 RungeKutta::~RungeKutta() {}
 
-RungeKutta::RungeKutta(json config, GridBlock<double> grid) 
-    : grid_(grid), 
-      flow_(FlowStates<double>(grid.num_cells())),
-      conserved_quantities_(ConservedQuantities<double>(grid.num_cells(), grid.dim())),
-      dUdt_(ConservedQuantities<double>(grid.num_cells(), grid.dim())),
-      fv_(FiniteVolume<double>(grid))
+RungeKutta::RungeKutta(json config, std::string grid_dir, std::string flow_dir) 
+    : Solver(grid_dir, flow_dir),
+      grid_(GridBlock<double>(grid_dir)), 
+      flow_(FlowStates<double>(grid_.num_cells())),
+      conserved_quantities_(ConservedQuantities<double>(grid_.num_cells(), grid_.dim())),
+      dUdt_(ConservedQuantities<double>(grid_.num_cells(), grid_.dim())),
+      fv_(FiniteVolume<double>(grid_))
 {
     t_ = 0.0;
     max_time_ = config.at("max_time");
@@ -20,12 +22,11 @@ RungeKutta::RungeKutta(json config, GridBlock<double> grid)
     time_since_last_plot_ = 0.0;
     n_solutions_ = 0;
     t_ = 0.0;
-
 }
 
 int RungeKutta::initialise() {
     std::cout << "Initialising runge kutta solver... ";
-    // read initial condition
+    read_initial_condition(flow_, flow_dir_);
     std::cout << "done" << std::endl;
     return 0;
 }

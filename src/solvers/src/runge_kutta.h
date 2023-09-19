@@ -12,7 +12,7 @@
 
 class RungeKutta : public Solver {
 public:
-    RungeKutta(json config, GridBlock<double> grid);
+    RungeKutta(json config, std::string grid_dir, std::string flow_dir);
     virtual ~RungeKutta();
 
 private:
@@ -23,6 +23,8 @@ private:
     double plot_frequency_;
     int plot_every_n_steps_;
     double cfl_;
+    std::string grid_dir_;
+    std::string flow_dir_;
 
 private:
     // progress

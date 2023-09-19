@@ -7,6 +7,7 @@
 #include "../../util/src/vector3.h"
 #include "grid_io.h"
 #include "vertex.h"
+#include "cell.h"
 
 template <typename T> struct Interfaces;
 
@@ -30,17 +31,26 @@ public:
     Interfaces () {}
 
     Interfaces(IdConstructor ids, std::vector<ElemType> shapes) 
-        : m_vertex_ids(Id(ids)) 
+        : m_vertex_ids(Id(ids)), size_(m_vertex_ids.size())
     {
         shape_ = Field<ElemType>("Interface::shape", shapes.size());
-        for (unsigned int i = 0; i < shapes.size(); i++) {
+        for (unsigned int i = 0; i < size_; i++) {
             shape_(i) = shapes[i];
         }
 
-        norm_ = Vector3s<T>("Interface::norm", shapes.size());
-        tan1_ = Vector3s<T>("Interface::tan1", shapes.size());
-        tan2_ = Vector3s<T>("Interface::tan2", shapes.size());
-        area_ = Field<T>("Interface::area", shapes.size());
+        norm_ = Vector3s<T>("Interface::norm", size_);
+        tan1_ = Vector3s<T>("Interface::tan1", size_);
+        tan2_ = Vector3s<T>("Interface::tan2", size_);
+        area_ = Field<T>("Interface::area", size_);
+
+        // set left and right cells to -1 to indicate they haven't
+        // been connected up to any cells yet
+        left_cells_ = Field<int>("Interface::left", size_);
+        right_cells_ = Field<int>("Interface::right", size_);
+        for (int i = 0; i < size_; i++) {
+            left_cells_(i) = -1;
+            right_cells_(i) = -1;
+        }
     }
 
     bool operator == (const Interfaces &other) const {
@@ -196,13 +206,29 @@ public:
         });
     }
 
+    void compute_connectivity(const Vertices<T>& vertices, const Cells<T>& cells){
+        (void) vertices;
+        Id& face_ids = cells.interface_ids();
+        for (int cell_i = 0; cell_i < cells.size(); cell_i++){
+            auto cell_face_ids = face_ids[cell_i];
+            for (int face_idx = 0; face_idx < cell_face_ids.size(); face_idx++){
+                int face_id = cell_face_ids(face_idx);
+                
+                if (left_cells_(face_id) == -1 || right_cells_(face_id) == -1) {
+                    // 
+                } 
+            }
+        }    
+    }
+
 private:
+    int size_;
     // the id's of the vertices forming each interface
     Id m_vertex_ids;
 
     // the cells to the left/right of the interface
     Field<int> left_cells_;
-    Field<int> right_cells;
+    Field<int> right_cells_;
 
     // geometric data
     Field<T> area_;

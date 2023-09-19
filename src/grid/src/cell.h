@@ -39,6 +39,7 @@ public:
         }
 
         volume_ = Field<T>("Cell::Volume", shapes.size());
+        centroid_ = Vector3s<T>("Cell::centroids", shapes.size());
     }
 
     bool operator == (const Cells &other) const {
@@ -53,17 +54,42 @@ public:
     }
 
     KOKKOS_FORCEINLINE_FUNCTION
-    Id &vertex_ids() {return vertex_ids_;}
+    const Id &vertex_ids() const {return vertex_ids_;}
 
     KOKKOS_FORCEINLINE_FUNCTION
-    Id &interface_ids() {return interface_ids_;}
+    const Id &interface_ids() const {return interface_ids_;}
 
     KOKKOS_FORCEINLINE_FUNCTION
     int size() const {return interface_ids_.size();}
 
-    T & volume(const int i) const {return volume_(i);}
+    KOKKOS_FORCEINLINE_FUNCTION
+    const T& volume(const int i) const {return volume_(i);}
 
-    void compute_volumes(Vertices<T> vertices) {
+    const Vector3s<T>& centroids() const {return centroid_;}
+
+    void compute_centroids(const Vertices<T>& vertices){
+        // for the moment, we're using the arithmatic average
+        // of the points as the centroid. For cells that aren't
+        // nicely shaped, this could be a very bad approximation
+        Kokkos::parallel_for("Cells::compute_centroid", volume_.size(), KOKKOS_LAMBDA(const int i) {
+            auto cell_vertices = vertex_ids_[i];
+            int n_vertices = cell_vertices.size();
+            T x = 0.0;
+            T y = 0.0;
+            T z = 0.0;
+            for (int v_idx = 0; v_idx < n_vertices; v_idx++) {
+                int vertex_id = cell_vertices(v_idx);
+                x += vertices.positions().x(vertex_id); 
+                y += vertices.positions().y(vertex_id);
+                z += vertices.positions().z(vertex_id);
+            }
+            centroid_.x(i) = x / n_vertices;
+            centroid_.y(i) = y / n_vertices;
+            centroid_.z(i) = z / n_vertices;
+        });
+    }
+
+    void compute_volumes(const Vertices<T>& vertices) {
         // TODO: It would be nicer to move each case in the switch 
         // to a function sitting somewhere else to keep the amount
         // of code in this method down, and avoid duplication with
@@ -76,26 +102,26 @@ public:
                     break;
                 case ElemType::Tri: {
                     auto vertex_ids = vertex_ids_[i];
-                    T x1 = vertices.position(vertex_ids(0), 0);
-                    T x2 = vertices.position(vertex_ids(1), 0);
-                    T x3 = vertices.position(vertex_ids(2), 0);
-                    T y1 = vertices.position(vertex_ids(0), 1);
-                    T y2 = vertices.position(vertex_ids(1), 1);
-                    T y3 = vertices.position(vertex_ids(2), 1);
+                    T x1 = vertices.positions().x(vertex_ids(0));
+                    T x2 = vertices.positions().x(vertex_ids(1));
+                    T x3 = vertices.positions().x(vertex_ids(2));
+                    T y1 = vertices.positions().y(vertex_ids(0));
+                    T y2 = vertices.positions().y(vertex_ids(1));
+                    T y3 = vertices.positions().y(vertex_ids(2));
                     T area = x1*(y2-y3) + x2*(y3-y1) + x3*(y1-y2);
                     volume_(i) = 0.5 * Kokkos::fabs(area);
                     break;
                 }
                 case ElemType::Quad: {
                     auto vertex_ids = vertex_ids_[i];
-                    T x1 = vertices.position(vertex_ids(0), 0);
-                    T x2 = vertices.position(vertex_ids(1), 0);
-                    T x3 = vertices.position(vertex_ids(2), 0);
-                    T x4 = vertices.position(vertex_ids(3), 0);
-                    T y1 = vertices.position(vertex_ids(0), 1);
-                    T y2 = vertices.position(vertex_ids(1), 1);
-                    T y3 = vertices.position(vertex_ids(2), 1);
-                    T y4 = vertices.position(vertex_ids(3), 1);
+                    T x1 = vertices.positions().x(vertex_ids(0));
+                    T x2 = vertices.positions().x(vertex_ids(1));
+                    T x3 = vertices.positions().x(vertex_ids(2));
+                    T x4 = vertices.positions().x(vertex_ids(3));
+                    T y1 = vertices.positions().y(vertex_ids(0));
+                    T y2 = vertices.positions().y(vertex_ids(1));
+                    T y3 = vertices.positions().y(vertex_ids(2));
+                    T y4 = vertices.positions().y(vertex_ids(3));
                     T area = x1*y2 + x2*y3 + x3*y4 + x4*y1 - 
                                  x2*y1 - x3*y2 - x4*y3 - x1*y4;
                     volume_(i) = 0.5 * Kokkos::fabs(area);
@@ -120,6 +146,7 @@ private:
     Field<ElemType> shape_;
     Field<T> volume_;
     Field<int> outsign_;
+    Vector3s<T> centroid_;
 };
 
 #endif

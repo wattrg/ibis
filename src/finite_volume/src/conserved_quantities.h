@@ -1,6 +1,8 @@
 #ifndef CONSERVED_QUANTITIES_H
 #define CONSERVED_QUANTITIES_H
 
+#include "Kokkos_Macros.hpp"
+#include "../../gas/src/flow_state.h"
 #include <Kokkos_Core.hpp>
 
 template <typename T>
@@ -16,8 +18,8 @@ public:
 
     unsigned int size() const {return cq_.extent(0);}
     unsigned int n_conserved() const {return cq_.extent(1);}
+    int dim() const {return dim_;}
 
-    KOKKOS_FUNCTION
     void apply_time_derivative(const ConservedQuantities<T>& dudt, double dt) {
         Kokkos::parallel_for("CQ::update_cq", num_values_, KOKKOS_LAMBDA(const int i){
             mass(i) += dudt.mass(i) * dt;
@@ -29,6 +31,7 @@ public:
             energy(i) += dudt.energy(i) * dt;
         });
     }
+
 
     KOKKOS_FORCEINLINE_FUNCTION
     T& mass(int cell_i) const {return cq_(cell_i, mass_idx_);}

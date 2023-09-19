@@ -1,6 +1,8 @@
 #ifndef FLOW_STATE_H
 #define FLOW_STATE_H
 
+#include <Kokkos_Core.hpp>
+#include "../../finite_volume/src/conserved_quantities.h"
 #include "gas_state.h"
 #include "../../util/src/vector3.h"
 
@@ -27,6 +29,7 @@ public:
     }
 
     unsigned int number_flow_states() const {return gas.size();}
+
     
     GasStates<T> gas;
     Vector3s<T> vel;

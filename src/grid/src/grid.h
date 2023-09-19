@@ -55,6 +55,7 @@ public:
         cells_ = Cells<T>(cell_vertices, cell_interface_ids, cell_shapes);
 
         compute_geometric_data();
+        compute_interface_connectivity_();
     } 
 
     GridBlock(std::string file_name) : GridBlock<T>(GridIO(file_name)) {}
@@ -70,19 +71,22 @@ public:
 
     void compute_geometric_data() {
         cells_.compute_volumes(vertices_);
+        cells_.compute_centroids(vertices_);
         interfaces_.compute_areas(vertices_);
         interfaces_.compute_orientations(vertices_);
     }
 
     Vertices<T>& vertices() {return vertices_;}
+    const Vertices<T>& vertices() const {return vertices_;}
     int num_vertices() const {return vertices_.size();}
 
     Interfaces<T>& interfaces() {return interfaces_;}
+    const Interfaces<T>& interfaces() const {return interfaces_;}
     int num_interfaces() const {return interfaces_.size();}
 
     Cells<T>& cells() {return cells_;}
+    const Cells<T>& cells() const {return cells_;}
     int num_cells() const {return cells_.size();}
-
 
     int dim() const {return dim_;}
 
@@ -92,6 +96,10 @@ private:
     Cells<T> cells_;
     Cells<T> ghost_;
     int dim_;
+
+    void compute_interface_connectivity_(){
+        interfaces_.compute_connectivity(vertices_, cells_);
+    }
 };
 
 #endif

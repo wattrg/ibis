@@ -35,7 +35,7 @@ public:
     }
 
     Vector3s<T> &positions() {return _positions;}
-    Vector3s<T> &positions() const {return _positions;}
+    const Vector3s<T> &positions() const {return  _positions;}
 
     T& position(int i, int coordinate) {return _positions(i, coordinate);}
     T& position(int i, int coordinate) const {return _positions(i, coordinate);}

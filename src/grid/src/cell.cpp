@@ -2,7 +2,13 @@
 #include "cell.h"
 #include "interface.h"
 
-TEST_CASE("cell volume") {
+struct CellInfo {
+    Vertices<double> vertices;
+    Interfaces<double> interfaces;
+    Cells<double> cells;
+};
+
+CellInfo generate_cells() {
     Vertices<double> vertices(16);
     std::vector<Vector3<double>> vertex_pos {
         Vector3<double>(0.0, 0.0, 0.0),
@@ -128,10 +134,36 @@ TEST_CASE("cell volume") {
     };
 
     Cells<double> cells (cell_vertex_id_constructor, cell_interface_id_constructor, cell_shapes);
+    CellInfo info;
+    info.vertices = vertices;
+    info.interfaces = interfaces;
+    info.cells = cells;
+    return info;
+}
 
+TEST_CASE("cell volume") {
+    CellInfo info = generate_cells();
+    Cells<double> cells = info.cells;
+    Vertices<double> vertices = info.vertices;
     cells.compute_volumes(vertices);
 
     for (int i = 0; i < cells.size(); i++) {
         CHECK(Kokkos::fabs(cells.volume(i) - 1.0) < 1e-14);
+    }
+}
+
+TEST_CASE("cell_centre") {
+    CellInfo info = generate_cells();
+    Cells<double> cells = info.cells;
+    Vertices<double> vertices = info.vertices;
+
+    cells.compute_centroids(vertices);
+
+    std::vector<double> x_values = {0.5, 1.5, 2.5, 0.5, 1.5, 2.5, 0.5, 1.5, 2.5};
+    std::vector<double> y_values = {0.5, 0.5, 0.5, 1.5, 1.5, 1.5, 2.5, 2.5, 2.5};
+
+    for (int i = 0; i < cells.size(); i++) {
+        CHECK(Kokkos::fabs(cells.centroids().x(i) - x_values[i]) < 1e-14);
+        CHECK(Kokkos::fabs(cells.centroids().y(i) - y_values[i]) < 1e-14);
     }
 }
