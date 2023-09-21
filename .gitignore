@@ -2,3 +2,7 @@ build
 inst
 .cache
 compile_commands.json
+examples/**/flow
+examples/**/grid
+examples/**/config
+examples/**/log
