@@ -8,6 +8,7 @@ check_git_setup()
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_INSTALL_PREFIX "../inst")
+set (CMAKE_CXX_STANDARD 17)
 
 add_subdirectory(src/gas)
 add_subdirectory(src/util)
@@ -23,7 +24,6 @@ add_subdirectory(extern/spdlog)
 
 add_executable(ibis src/ibis/src/main.cpp)
 target_include_directories(ibis PUBLIC ${CMAKE_SOURCE_DIR}/src)
-target_compile_features(ibis PRIVATE cxx_std_20)
 target_link_libraries(
 	ibis 
 	PUBLIC 
