@@ -26,7 +26,8 @@
                             "vz": 0.0
                         }
                     }
-                ]
+                ],
+                "ghost_cells": true
             }
         }
     }

@@ -18,6 +18,8 @@ public:
 template <typename T>
 class GasStates {
 public:
+    GasStates(){}
+
     GasStates(int n) {
         rho_idx_ = 0;
         pressure_idx_ = 1;

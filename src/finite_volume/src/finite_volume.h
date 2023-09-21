@@ -11,7 +11,7 @@
 template <typename T>
 class FiniteVolume {
 public:
-    FiniteVolume();
+    FiniteVolume(){}
 
     FiniteVolume(const GridBlock<T>& grid);
 

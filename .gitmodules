@@ -7,3 +7,6 @@
 [submodule "extern/json"]
 	path = extern/json
 	url = git@github.com:nlohmann/json.git
+[submodule "extern/spdlog"]
+	path = extern/spdlog
+	url = git@github.com:gabime/spdlog.git

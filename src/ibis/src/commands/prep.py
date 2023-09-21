@@ -137,8 +137,9 @@ class Block:
         return dictionary
 
 class BoundaryCondition:
-    def __init__(self, pre_reconstruction):
+    def __init__(self, pre_reconstruction, ghost_cells=True):
         self._pre_reconstruction = pre_reconstruction
+        self.ghost_cells = ghost_cells
 
     def as_dict(self):
         dictionary = {}
@@ -146,6 +147,7 @@ class BoundaryCondition:
         for pre_reco in self._pre_reconstruction:
             pre_reco_dict.append(pre_reco.as_dict())
         dictionary["pre_reconstruction"] = pre_reco_dict
+        dictionary["ghost_cells"] = self.ghost_cells
         return dictionary
 
 class FlowStateCopy:

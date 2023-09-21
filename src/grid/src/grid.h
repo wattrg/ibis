@@ -1,17 +1,23 @@
 #ifndef GRID_H
 #define GRID_H
 
+#include <nlohmann/json.hpp>
 #include "grid_io.h"
 #include "../../util/src/id.h"
 #include "interface.h"
 #include "cell.h"
 
+using json = nlohmann::json;
+
 template <typename T>
 class GridBlock {
 public:
-    GridBlock(const GridIO &grid_io);
+    GridBlock() {}
 
-    GridBlock(std::string file_name) : GridBlock<T>(GridIO(file_name)) {}
+    GridBlock(const GridIO &grid_io, json boundaries);
+
+    GridBlock(std::string file_name, json boundaries) 
+        : GridBlock<T>(GridIO(file_name), boundaries) {}
 
     GridBlock(Vertices<T> vertices, Interfaces<T> interfaces, Cells<T> cells) 
         : vertices_(vertices), interfaces_(interfaces), cells_(cells) {}
@@ -22,12 +28,7 @@ public:
                (cells_ == other.cells_);
     }
 
-    void compute_geometric_data() {
-        cells_.compute_volumes(vertices_);
-        cells_.compute_centroids(vertices_);
-        interfaces_.compute_areas(vertices_);
-        interfaces_.compute_orientations(vertices_);
-    }
+    void compute_geometric_data();
 
     Vertices<T>& vertices() {return vertices_;}
     const Vertices<T>& vertices() const {return vertices_;}
@@ -47,7 +48,6 @@ private:
     Vertices<T> vertices_;
     Interfaces<T> interfaces_;
     Cells<T> cells_;
-    Cells<T> ghost_;
     int dim_;
 
     // void compute_interface_connectivity_(){

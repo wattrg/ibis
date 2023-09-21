@@ -3,7 +3,7 @@
 #include "grid_io.h"
 
 template <typename T>
-GridBlock<T>::GridBlock(const GridIO& grid_io){
+GridBlock<T>::GridBlock(const GridIO& grid_io, json boundaries){
     dim_ = grid_io.dim();
 
     // set the positions of the vertices
@@ -51,6 +51,14 @@ GridBlock<T>::GridBlock(const GridIO& grid_io){
     compute_geometric_data();
     // compute_interface_connectivity_();
 } 
+
+template <typename T>
+void GridBlock<T>::compute_geometric_data() {
+    cells_.compute_volumes(vertices_);
+    cells_.compute_centroids(vertices_);
+    interfaces_.compute_areas(vertices_);
+    interfaces_.compute_orientations(vertices_);
+}
 
 template class GridBlock<double>;
 
@@ -182,6 +190,7 @@ TEST_CASE("build grid block") {
     Cells<double> cells (cell_vertex_id_constructor, cell_interface_id_constructor, cell_shapes);
 
     GridBlock<double> expected = GridBlock<double>(vertices, interfaces, cells);
-    GridBlock<double> block = GridBlock<double>("../src/grid/test/grid.su2");
+    json boundaries {};
+    GridBlock<double> block = GridBlock<double>("../src/grid/test/grid.su2", boundaries);
     CHECK(block == expected);
 }

@@ -3,18 +3,19 @@
 #include <iostream>
 #include <fstream>
 #include <cstdlib>
+#include <spdlog/spdlog.h>
 #include "prep.h"
 
 
 int prep(int argc, char* argv[]) {
     wchar_t *program = Py_DecodeLocale(argv[0], NULL);
     if (program == NULL) {
-        std::cerr << "ibis prep unable to decode program name" << std::endl;
+        spdlog::error("ibis prep unable to decode program name");
         return 1;
     }
 
     if (argc < 3) {
-        std::cerr << "Please provide the file to prepare\n";
+        spdlog::error("No job file provided");
         return 1;
     }
 
@@ -25,7 +26,7 @@ int prep(int argc, char* argv[]) {
 
     PyObject* prep_script_name = PyUnicode_FromString(argv[2]);
     if (prep_script_name == NULL) {
-        std::cerr << "Failed to interpret the name of the preparation script\n";
+        spdlog::error("Failed to interpret the name of the preparation script");
         return 1;
     }
 

@@ -15,23 +15,29 @@ add_subdirectory(src/grid)
 add_subdirectory(src/finite_volume)
 add_subdirectory(src/ibis/src/commands)
 add_subdirectory(src/solvers)
+
 add_subdirectory(extern/doctest)
 add_subdirectory(extern/kokkos)
 add_subdirectory(extern/json)
+add_subdirectory(extern/spdlog)
 
 add_executable(ibis src/ibis/src/main.cpp)
 target_include_directories(ibis PUBLIC ${CMAKE_SOURCE_DIR}/src)
-target_link_libraries(ibis PUBLIC prep)
-target_link_libraries(ibis PUBLIC run)
-target_link_libraries(ibis PUBLIC ibis_clean)
 target_compile_features(ibis PRIVATE cxx_std_20)
-target_link_libraries(ibis PUBLIC gas)
-target_link_libraries(ibis PUBLIC util)
-target_link_libraries(ibis PUBLIC grid)
-# target_link_libraries(ibis PUBLIC Kokkos::kokkos)
-target_link_libraries(ibis PUBLIC doctest)
-target_link_libraries(ibis PRIVATE ibis_git_version)
-target_compile_options(ibis PRIVATE -Wall -Wextra -Wpedantic)
+target_link_libraries(
+	ibis 
+	PUBLIC 
+	prep 
+	run 
+	ibis_clean 
+	gas 
+	util 
+	grid 
+	doctest 
+	ibis_git_version 
+	spdlog::spdlog
+)
+target_compile_options(ibis PUBLIC -Werror -Wall -Wextra -Wpedantic)
 
 install(TARGETS ${PROJECT_NAME} DESTINATION bin)
 install(FILES src/ibis/src/commands/prep.py DESTINATION lib)

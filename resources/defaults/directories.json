@@ -3,5 +3,6 @@
     "config_file": "config.json",
     "config_status": "config_status",
     "grid_dir": "grid",
-    "flow_dir": "flow"
+    "flow_dir": "flow",
+    "log_dir": "log"
 }

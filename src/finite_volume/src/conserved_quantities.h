@@ -8,6 +8,8 @@
 template <typename T>
 class ConservedQuantities {
 public:
+    ConservedQuantities(){}
+
     ConservedQuantities(unsigned int n, unsigned int dim)
         : cq_(Kokkos::View<T**>("ConservedQuantities", n, dim+2)), num_values_(n), dim_(dim)
     {

@@ -8,7 +8,14 @@ add_library(
 	src/cell.cpp
 )
 
-target_link_libraries(grid PUBLIC Kokkos::kokkos doctest util)
+target_link_libraries(
+	grid 
+	PUBLIC 
+	Kokkos::kokkos 
+	doctest 
+	util
+	nlohmann_json::nlohmann_json
+)
 
 add_executable(
 	grid_unittest 
@@ -20,6 +27,11 @@ add_executable(
 	src/vertex.cpp
 )
 target_compile_options(grid_unittest PRIVATE -Wall -Wextra -Wpedantic -g)
-target_link_libraries(grid_unittest PRIVATE util)
-target_link_libraries(grid_unittest PRIVATE doctest)
-target_link_libraries(grid_unittest PRIVATE Kokkos::kokkos)
+target_link_libraries(
+	grid_unittest 
+	PRIVATE 
+	util 
+	doctest 
+	Kokkos::kokkos 
+	nlohmann_json::nlohmann_json
+)

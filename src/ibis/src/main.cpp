@@ -1,8 +1,13 @@
 #include <iostream>
 #include <string>
+#include <vector>
 
 #define DOCTEST_CONFIG_IMPLEMENT
 #include <doctest/doctest.h>
+
+#include <spdlog/spdlog.h>
+#include <spdlog/sinks/stdout_color_sinks.h>
+#include <spdlog/sinks/basic_file_sink.h>
 
 #include "ibis_version_info.h"
 #include "commands/prep.h"
@@ -23,22 +28,32 @@ static std::string HELP =
 
 
 void print_header() {
-    std::cout << "ibis - cfd solver" << std::endl;
-    std::cout << "git branch: " << Ibis::GIT_BRANCH << std::endl;
-    std::cout << "git commit: " << Ibis::GIT_COMMIT_HASH 
-                                << "-" << Ibis::GIT_CLEAN_STATUS << std::endl;
-    std::cout << "revision date: " << Ibis::GIT_COMMIT_DATE << std::endl;
-    std::cout << "build date:    " << Ibis::IBIS_BUILD_DATE << std::endl;
+    spdlog::info("ibis - cfd solver");
+    spdlog::info("git branch: {}",Ibis::GIT_BRANCH);
+    spdlog::info("git commit: {}-{}", Ibis::GIT_COMMIT_HASH, Ibis::GIT_CLEAN_STATUS); 
+    spdlog::info("revision date: {}", Ibis::GIT_COMMIT_DATE);
+    spdlog::info("build date: {}", Ibis::IBIS_BUILD_DATE);
 }
 
 int main(int argc, char* argv[]) {
+    std::vector<spdlog::sink_ptr> logs;
+    auto console_log = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
+    console_log->set_pattern("[%^%l%$] %v");
+    console_log->set_level(spdlog::level::info);
+    logs.push_back(console_log);
+
+    auto debug_log = std::make_shared<spdlog::sinks::basic_file_sink_mt>("log/log");
+    debug_log->set_level(spdlog::level::debug);
+    logs.push_back(debug_log);
+    auto logger = std::make_shared<spdlog::logger>("logger", begin(logs), end(logs));
+
+    spdlog::set_default_logger(logger);
     print_header(); 
 
     doctest::Context ctx;
 
     if (argc < 2) {
-        std::cerr << "Not enough arguments provided\n";
-        std::cerr << HELP;
+        spdlog::error("Not enough arguments provided\n");
         return 1;
     }
 

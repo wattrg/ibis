@@ -1,5 +1,19 @@
-add_library(finite_volume STATIC src/finite_volume.cpp src/flux_calc.cpp src/flow_state_conserved_conversion.cpp)
-target_link_libraries(finite_volume PUBLIC Kokkos::kokkos doctest util)
+add_library(
+	finite_volume 
+	STATIC 
+	src/finite_volume.cpp 
+	src/flux_calc.cpp 
+	src/flow_state_conserved_conversion.cpp
+)
+
+target_link_libraries(
+	finite_volume 
+	PUBLIC
+	Kokkos::kokkos 
+	doctest 
+	util
+	nlohmann_json::nlohmann_json
+)
 # target_link_libraries(grid PRIVATE doctest)
 # target_link_libraries(grid PRIVATE util)
 #
@@ -10,6 +24,11 @@ add_executable(
 	src/io.cpp
 )
 target_compile_options(finite_volume_unittest PRIVATE -Wall -Wextra -Wpedantic -Werror -g)
-target_link_libraries(finite_volume_unittest PRIVATE util)
-target_link_libraries(finite_volume_unittest PRIVATE doctest)
-target_link_libraries(finite_volume_unittest PRIVATE Kokkos::kokkos)
+target_link_libraries(
+	finite_volume_unittest 
+	PRIVATE 
+	util
+	doctest
+	Kokkos::kokkos
+	nlohmann_json::nlohmann_json
+)

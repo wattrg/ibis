@@ -1,0 +1,42 @@
+[2023-09-21 20:59:58.112] [logger] [info] ibis - cfd solver
+[2023-09-21 20:59:58.112] [logger] [info] git branch: main
+[2023-09-21 20:59:58.112] [logger] [info] git commit: e0fd488-dirty
+[2023-09-21 20:59:58.112] [logger] [info] revision date: Tue 19 Sep 2023 19:30:20 AEST
+[2023-09-21 20:59:58.112] [logger] [info] build date: Thu 21 Sep 2023 20:59:17 AEST
+[2023-09-21 20:59:58.112] [logger] [error] No job file provided
+[2023-09-21 21:03:54.717] [logger] [info] ibis - cfd solver
+[2023-09-21 21:03:54.717] [logger] [info] git branch: main
+[2023-09-21 21:03:54.717] [logger] [info] git commit: e0fd488-dirty
+[2023-09-21 21:03:54.717] [logger] [info] revision date: Tue 19 Sep 2023 19:30:20 AEST
+[2023-09-21 21:03:54.717] [logger] [info] build date: Thu 21 Sep 2023 21:03:46 AEST
+[2023-09-21 21:03:56.437] [logger] [info] ibis - cfd solver
+[2023-09-21 21:03:56.437] [logger] [info] git branch: main
+[2023-09-21 21:03:56.437] [logger] [info] git commit: e0fd488-dirty
+[2023-09-21 21:03:56.437] [logger] [info] revision date: Tue 19 Sep 2023 19:30:20 AEST
+[2023-09-21 21:03:56.437] [logger] [info] build date: Thu 21 Sep 2023 21:03:46 AEST
+[2023-09-21 21:06:43.487] [logger] [info] ibis - cfd solver
+[2023-09-21 21:06:43.487] [logger] [info] git branch: main
+[2023-09-21 21:06:43.487] [logger] [info] git commit: e0fd488-dirty
+[2023-09-21 21:06:43.487] [logger] [info] revision date: Tue 19 Sep 2023 19:30:20 AEST
+[2023-09-21 21:06:43.487] [logger] [info] build date: Thu 21 Sep 2023 21:03:46 AEST
+[2023-09-21 21:06:50.003] [logger] [info] ibis - cfd solver
+[2023-09-21 21:06:50.003] [logger] [info] git branch: main
+[2023-09-21 21:06:50.003] [logger] [info] git commit: e0fd488-dirty
+[2023-09-21 21:06:50.003] [logger] [info] revision date: Tue 19 Sep 2023 19:30:20 AEST
+[2023-09-21 21:06:50.003] [logger] [info] build date: Thu 21 Sep 2023 21:06:47 AEST
+[2023-09-21 21:06:50.004] [logger] [info] solver: runge_kutta
+[2023-09-21 21:06:50.004] [logger] [info] flux calculator: hanel
+[2023-09-21 21:15:00.295] [logger] [info] ibis - cfd solver
+[2023-09-21 21:15:00.295] [logger] [info] git branch: main
+[2023-09-21 21:15:00.295] [logger] [info] git commit: e0fd488-dirty
+[2023-09-21 21:15:00.295] [logger] [info] revision date: Tue 19 Sep 2023 19:30:20 AEST
+[2023-09-21 21:15:00.295] [logger] [info] build date: Thu 21 Sep 2023 21:14:47 AEST
+[2023-09-21 21:15:00.296] [logger] [info] solver: runge_kutta
+[2023-09-21 21:15:00.296] [logger] [info] flux calculator: hanel
+[2023-09-21 21:17:03.412] [logger] [info] ibis - cfd solver
+[2023-09-21 21:17:03.412] [logger] [info] git branch: main
+[2023-09-21 21:17:03.412] [logger] [info] git commit: e0fd488-dirty
+[2023-09-21 21:17:03.412] [logger] [info] revision date: Tue 19 Sep 2023 19:30:20 AEST
+[2023-09-21 21:17:03.412] [logger] [info] build date: Thu 21 Sep 2023 21:16:42 AEST
+[2023-09-21 21:17:03.412] [logger] [info] solver: runge_kutta
+[2023-09-21 21:17:03.412] [logger] [info] flux calculator: hanel
