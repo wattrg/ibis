@@ -102,7 +102,7 @@ public:
 
     void compute_areas(Vertices<T> vertices);
 
-    void mark_on_boundary(const int i);
+    // void mark_on_boundary(const int i);
 
     // void compute_connectivity(const Vertices<T>& vertices, const Cells<T>& cells){
     //     (void) vertices;

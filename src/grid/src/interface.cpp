@@ -28,7 +28,7 @@ Interfaces<T>::Interfaces(IdConstructor ids, std::vector<ElemType> shapes)
         right_cells_(i) = -1;
     }
 
-    on_boundary_ = Field<bool>("Interface::on_boundary", size_);
+    // on_boundary_ = Field<bool>("Interface::on_boundary", size_);
 }
 
 template <typename T>
@@ -120,10 +120,10 @@ void Interfaces<T>::compute_areas(Vertices<T> vertices) {
     });
 }
 
-template <typename T>
-void Interfaces<T>::mark_on_boundary(const int i){
-    on_boundary_(i) = true; 
-}
+// template <typename T>
+// void Interfaces<T>::mark_on_boundary(const int i){
+//     // on_boundary_(i) = true; 
+// }
 
 template struct Interfaces<double>;
 

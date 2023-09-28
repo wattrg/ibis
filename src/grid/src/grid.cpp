@@ -52,11 +52,12 @@ GridBlock<T>::GridBlock(const GridIO& grid_io, json boundaries){
     for (auto bc : grid_io.bcs()) {
         std::string bc_label = bc.first;
         std::vector<ElemIO> bc_faces = bc.second;
+        json boundary_config = boundaries.at(bc_label);
         for (unsigned int boundary_i = 0; boundary_i < bc_faces.size(); boundary_i++){
             int id = interfaces.id(bc_faces[boundary_i].vertex_ids());
-            interfaces_.mark_on_boundary(id); 
+            // interfaces_.mark_on_boundary(id); 
             boundary_faces.push_back(id);
-            if (boundaries.at("ghost_cells") == true) {
+            if (boundary_config.at("ghost_cells") == true) {
                 cell_vertices.push_back({-1, -1});
                 cell_shapes.push_back(ElemType::Line);
                 num_ghost_cells_++;
@@ -213,6 +214,16 @@ TEST_CASE("build grid block") {
 
     GridBlock<double> expected = GridBlock<double>(vertices, interfaces, cells);
     json boundaries {};
+    json slip_wall{};
+    json inflow{};
+    json outflow{};
+    slip_wall["ghost_cells"] = false;
+    inflow["ghost_cells"] = false;
+    outflow["ghost_cells"] = false;
+    boundaries["slip_wall_bottom"] = slip_wall;
+    boundaries["slip_wall_top"] = slip_wall;
+    boundaries["inflow"] = inflow;
+    boundaries["outflow"] = outflow;
     GridBlock<double> block = GridBlock<double>("../src/grid/test/grid.su2", boundaries);
     CHECK(block == expected);
 }
