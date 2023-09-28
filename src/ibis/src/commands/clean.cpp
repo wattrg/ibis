@@ -1,11 +1,12 @@
 #include <iostream>
 #include <Python.h>
+#include <spdlog/spdlog.h>
 #include "clean.h"
 
 int clean(int argc, char* argv[]) {
     wchar_t *program = Py_DecodeLocale(argv[0], NULL);
     if (program == NULL) {
-        std::cerr << "ibis clean unable to decode program name" << std::endl;
+        spdlog::error("ibis clean unable to decode program name");
         return 1;
     }
 
@@ -41,5 +42,7 @@ int clean(int argc, char* argv[]) {
     Py_DECREF(clean_module);
     
     Py_Finalize();
+
+    spdlog::info("Cleaned directory");
     return 0;
 }

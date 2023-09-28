@@ -29,7 +29,7 @@ private:
     ConservedQuantities<double> flux_;
 
     // ghost cells
-    // FlowStates<T> ghost_;
+    FlowStates<T> ghost_;
 
     // boundary conditions
     // NOTE: these will become vectors of these properties. 

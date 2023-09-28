@@ -102,6 +102,8 @@ public:
 
     void compute_areas(Vertices<T> vertices);
 
+    void mark_on_boundary(const int i);
+
     // void compute_connectivity(const Vertices<T>& vertices, const Cells<T>& cells){
     //     (void) vertices;
     //     Id& face_ids = cells.interface_ids();
@@ -133,6 +135,9 @@ private:
     Vector3s<T> tan1_;
     Vector3s<T> tan2_;
     Vector3s<T> centre_;
+
+    // boundary informaton
+    Field<bool> on_boundary_;
 };
 
 

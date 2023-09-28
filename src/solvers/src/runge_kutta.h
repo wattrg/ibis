@@ -13,7 +13,11 @@
 class RungeKutta : public Solver {
 public:
     RungeKutta(json config, GridBlock<double> grid, std::string grid_dir, std::string flow_dir);
-    virtual ~RungeKutta();
+
+    ~RungeKutta();
+
+    int solver();
+
 
 private:
     // configuration
@@ -40,9 +44,10 @@ private:
     bool print_this_step(unsigned int step);
     bool plot_this_step(unsigned int step);
     int plot_solution(unsigned int step);
-    int print_progress(unsigned int step);
+    std::string progress_string(unsigned int step);
     std::string stop_reason(unsigned int step);
     bool stop_now(unsigned int step);
+    int max_step() const {return max_step_;}
 
 private:
     // memory

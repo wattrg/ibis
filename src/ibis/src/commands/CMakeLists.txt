@@ -4,7 +4,7 @@ add_library(prep STATIC prep.cpp)
 target_link_libraries(prep PRIVATE Python::Python spdlog::spdlog)
 
 add_library(ibis_clean STATIC clean.cpp)
-target_link_libraries(ibis_clean PRIVATE Python::Python)
+target_link_libraries(ibis_clean PRIVATE Python::Python spdlog::spdlog)
 
 add_library(run STATIC run.cpp)
 target_link_libraries(

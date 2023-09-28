@@ -57,12 +57,14 @@ bool RungeKutta::plot_this_step(unsigned int step) {
 
 int RungeKutta::plot_solution(unsigned int step) {
     (void) step;
-    return 0;
+    int result =  write_flow_solution<double>(flow_, flow_dir_, n_solutions_);
+    n_solutions_ ++;
+    time_since_last_plot_ = 0.0;
+    return result;
 }
 
-int RungeKutta::print_progress(unsigned int step) {
-    std::cout << "  step: " << step << ", t = " << t_ << std::endl;
-    return 0;
+std::string RungeKutta::progress_string(unsigned int step) {
+    return "  step: " + std::to_string(step) + ", t = " + std::to_string(t_);
 }
 std::string RungeKutta::stop_reason(unsigned int step) {
     if (t_ > max_time_) return "reached max time"; 

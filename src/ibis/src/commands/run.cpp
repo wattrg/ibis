@@ -24,7 +24,7 @@ json read_config(json& directories) {
     std::string config_file = directories.at("config_file");
     std::ifstream f(config_dir + "/" + config_file);
     if (!f) {
-        std::cerr << "Unable to open config file. Make sure simulation is prepped\n";
+        spdlog::error("Unable to open config file. Make sure simulation is prepped");
         throw std::runtime_error("Unable to open config file");
     }
     json config = json::parse(f);
@@ -52,14 +52,20 @@ int run(int argc, char* argv[]) {
     std::string grid_dir = directories.at("grid_dir");
     std::string flow_dir = directories.at("flow_dir");
     Kokkos::initialize(argc, argv);
-    
+    int result; 
     {
         // GridBlock<double> grid = read_grid(directories);
         Solver * solver = make_solver(config, grid_dir, flow_dir);
-        solver->solve();
+        result = solver->solve();
         delete solver;
     }
-    
+
     Kokkos::finalize();
+    
+    if (result != 0) {
+        spdlog::error("run failed");
+    }
+    
+    spdlog::info("run complete");
     return 0;
 }

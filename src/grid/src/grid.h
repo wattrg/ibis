@@ -40,7 +40,9 @@ public:
 
     Cells<T>& cells() {return cells_;}
     const Cells<T>& cells() const {return cells_;}
-    int num_cells() const {return cells_.size();}
+    int num_cells() const {return num_valid_cells_;}
+    int num_ghost_cells() const {return num_ghost_cells_;}
+    int num_total_cells() const {return num_valid_cells_+num_ghost_cells_;}
 
     int dim() const {return dim_;}
 
@@ -49,6 +51,10 @@ private:
     Interfaces<T> interfaces_;
     Cells<T> cells_;
     int dim_;
+    int num_valid_cells_;
+    int num_ghost_cells_;
+    std::map<std::string, Field<int>> boundary_cells_;
+    std::map<std::string, Field<int>> boundary_faces_;
 
     // void compute_interface_connectivity_(){
     //     interfaces_.compute_connectivity(vertices_, cells_);

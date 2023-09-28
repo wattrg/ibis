@@ -23,6 +23,7 @@ GridBlock<T>::GridBlock(const GridIO& grid_io, json boundaries){
     std::vector<ElemIO> cells = grid_io.cells();
     std::vector<ElemType> cell_shapes {};
     std::vector<ElemType> interface_shapes{};
+    num_valid_cells_ = cells.size();
     for (unsigned int cell_i = 0; cell_i < cells.size(); cell_i++) {
         cell_vertices.push_back(cells[cell_i].vertex_ids()); 
         cell_shapes.push_back(cells[cell_i].cell_type());
@@ -44,6 +45,27 @@ GridBlock<T>::GridBlock(const GridIO& grid_io, json boundaries){
         }
         cell_interface_ids.push_back(cell_face_ids);
     } 
+
+    num_ghost_cells_ = 0;
+    std::vector<int> boundary_cells{};
+    std::vector<int> boundary_faces{};
+    for (auto bc : grid_io.bcs()) {
+        std::string bc_label = bc.first;
+        std::vector<ElemIO> bc_faces = bc.second;
+        for (unsigned int boundary_i = 0; boundary_i < bc_faces.size(); boundary_i++){
+            int id = interfaces.id(bc_faces[boundary_i].vertex_ids());
+            interfaces_.mark_on_boundary(id); 
+            boundary_faces.push_back(id);
+            if (boundaries.at("ghost_cells") == true) {
+                cell_vertices.push_back({-1, -1});
+                cell_shapes.push_back(ElemType::Line);
+                num_ghost_cells_++;
+                boundary_cells.push_back(num_ghost_cells_);
+            }
+        }
+        boundary_cells_.insert({bc_label, Field<int>("bc_cells", boundary_cells)});
+        boundary_faces_.insert({bc_label, Field<int>("bc_faces", boundary_faces)});
+    }
 
     interfaces_ = Interfaces<T>(interface_vertices, interface_shapes);
     cells_ = Cells<T>(cell_vertices, cell_interface_ids, cell_shapes);

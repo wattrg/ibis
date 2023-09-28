@@ -1,6 +1,7 @@
 #ifndef FIELD_H
 #define FIELD_H
 
+#include <vector>
 #include <Kokkos_Core.hpp>
 #include <Kokkos_MathematicalFunctions.hpp>
 
@@ -12,6 +13,13 @@ public:
 
     Field(std::string description, int n) {
         view_ = Kokkos::View<T*> (description, n);        
+    }
+
+    Field(std::string description, std::vector<T> values) {
+        view_ = Kokkos::View<T*> (description, values.size());
+        for (unsigned int i = 0; i < values.size(); i++){
+            view_(i) = values[i];
+        }
     }
 
     KOKKOS_FORCEINLINE_FUNCTION

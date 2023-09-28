@@ -13,6 +13,7 @@ Interfaces<T>::Interfaces(IdConstructor ids, std::vector<ElemType> shapes)
         shape_(i) = shapes[i];
     }
 
+    // geometry
     norm_ = Vector3s<T>("Interface::norm", size_);
     tan1_ = Vector3s<T>("Interface::tan1", size_);
     tan2_ = Vector3s<T>("Interface::tan2", size_);
@@ -26,6 +27,8 @@ Interfaces<T>::Interfaces(IdConstructor ids, std::vector<ElemType> shapes)
         left_cells_(i) = -1;
         right_cells_(i) = -1;
     }
+
+    on_boundary_ = Field<bool>("Interface::on_boundary", size_);
 }
 
 template <typename T>
@@ -115,6 +118,11 @@ void Interfaces<T>::compute_areas(Vertices<T> vertices) {
             }
         }
     });
+}
+
+template <typename T>
+void Interfaces<T>::mark_on_boundary(const int i){
+    on_boundary_(i) = true; 
 }
 
 template struct Interfaces<double>;

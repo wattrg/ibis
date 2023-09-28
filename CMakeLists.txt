@@ -36,6 +36,7 @@ target_link_libraries(
 	doctest 
 	ibis_git_version 
 	spdlog::spdlog
+	solver
 )
 target_compile_options(ibis PUBLIC -Werror -Wall -Wextra -Wpedantic)
 

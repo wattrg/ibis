@@ -63,7 +63,8 @@ int prep(int argc, char* argv[]) {
     Py_DECREF(py_prep_main);
     Py_DECREF(prep_module);
     Py_DECREF(main_args);
-    
     Py_Finalize();
+
+    spdlog::info("Preparation complete");
     return 0;
 }

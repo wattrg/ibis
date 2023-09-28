@@ -10,7 +10,7 @@ target_link_libraries(
 	spdlog::spdlog
 )
 
-add_library(runge_kutta STATIC src/runge_kutta.cpp src/solver.cpp)
+add_library(runge_kutta STATIC src/runge_kutta.cpp)
 target_link_libraries(
 	runge_kutta 
 	PUBLIC 
@@ -20,5 +20,6 @@ target_link_libraries(
 	grid 
 	nlohmann_json::nlohmann_json
 	finite_volume
+	solver
 	spdlog::spdlog
 )
