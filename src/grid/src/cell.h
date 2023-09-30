@@ -71,6 +71,7 @@ public:
 
     void compute_volumes(const Vertices<T>& vertices);
 
+    void set_outsign(const int cell_i, const int face_i, const int outsign);
 
 
 private:
@@ -78,7 +79,7 @@ private:
     Id vertex_ids_;
     Field<ElemType> shape_;
     Field<T> volume_;
-    Field<int> outsign_;
+    Id outsign_;
     Vector3s<T> centroid_;
 };
 

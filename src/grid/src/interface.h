@@ -37,7 +37,7 @@ public:
     Interfaces(IdConstructor ids, std::vector<ElemType> shapes);
 
     bool operator == (const Interfaces &other) const {
-        return m_vertex_ids == other.m_vertex_ids;
+        return vertex_ids_ == other.vertex_ids_;
     }
 
     KOKKOS_FORCEINLINE_FUNCTION 
@@ -47,7 +47,7 @@ public:
     }
 
     KOKKOS_FORCEINLINE_FUNCTION 
-    Id &vertex_ids() {return m_vertex_ids;}
+    Id &vertex_ids() {return vertex_ids_;}
 
     KOKKOS_FORCEINLINE_FUNCTION
     const Field<T> &area() const {return area_;}
@@ -91,6 +91,12 @@ public:
         return Vector3View(i, &norm_);
     } 
 
+    KOKKOS_FORCEINLINE_FUNCTION
+    int left_cell(const int face_id) const {return left_cells_(face_id);}
+
+    KOKKOS_FORCEINLINE_FUNCTION
+    int right_cell(const int face_id) const {return right_cells_(face_id);}
+
 
     // KOKKOS_FORCEINLINE_FUNCTION
     // Vector3View<T> norm(const int i) const {
@@ -118,7 +124,7 @@ public:
     // }
 
     KOKKOS_FORCEINLINE_FUNCTION
-    int size() const {return m_vertex_ids.size();}
+    int size() const {return vertex_ids_.size();}
 
     void compute_orientations(Vertices<T> vertices);
 
@@ -130,7 +136,7 @@ public:
 private:
     int size_;
     // the id's of the vertices forming each interface
-    Id m_vertex_ids;
+    Id vertex_ids_;
 
     // the cells to the left/right of the interface
     Field<int> left_cells_;

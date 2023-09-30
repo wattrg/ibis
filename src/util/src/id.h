@@ -31,15 +31,16 @@ struct Id {
 public:
     Id() {}
 
-    Id(Kokkos::View<int*> ids, Kokkos::View<int*> offsets)
-        : _ids(ids), _offsets(offsets){}
+    Id(Kokkos::View<int*> ids, Kokkos::View<int*> offsets);
 
     Id(std::vector<int> ids, std::vector<int> offsets);
 
     Id(IdConstructor constructor) 
         : Id(constructor.ids(), constructor.offsets()) {}
 
-    inline
+    Id clone();
+
+    KOKKOS_INLINE_FUNCTION
     auto operator [] (const int i) const {
         // return the slice of _ids corresponding 
         // to the object at index i
@@ -48,7 +49,17 @@ public:
         return Kokkos::subview(_ids, std::make_pair(first, last));
     }
 
-    inline int size() const {return _offsets.extent(0)-1;}
+    KOKKOS_INLINE_FUNCTION
+    auto operator [] (const int i) {
+        // return the slice of _ids corresponding 
+        // to the object at index i
+        int first = _offsets(i);
+        int last = _offsets(i+1);
+        return Kokkos::subview(_ids, std::make_pair(first, last));
+    }
+
+    KOKKOS_INLINE_FUNCTION
+    int size() const {return _offsets.extent(0)-1;}
 
     bool operator == (const Id &other) const {
         for (unsigned int i = 0; i < _ids.extent(0); i++) {

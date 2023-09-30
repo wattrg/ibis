@@ -141,18 +141,28 @@ void GridBlock<T>::compute_interface_connectivity_(std::map<int, int> ghost_cell
             if (dot > 0.0) {
                 // cell is on the left of the face
                 interfaces_.attach_cell_left(cell_i, face_id);
-                // TODO: set outsign of face_i cell_i to 1
+                cells_.set_outsign(cell_i, face_i, 1);
             }
             else {
                 // cell is on the right of face
                 interfaces_.attach_cell_right(cell_i, face_id);
-                // TODO: set outsign of face_i for cell_i to -1
+                cells_.set_outsign(cell_i, face_i, -1);
             }
         }
     });
 
     // TODO: loop through the ghost cells and attach them to
     // the other side of the interface
+    for (auto boundary : ghost_cells){
+        int face_id = boundary.first;
+        int ghost_cell_id = boundary.second;
+        if (interfaces_.left_cell(face_id) < 0) {
+            interfaces_.attach_cell_left(ghost_cell_id, face_id);
+        } 
+        else {
+            interfaces_.attach_cell_right(ghost_cell_id, face_id);
+        }
+    }
 }
 
 template class GridBlock<double>;

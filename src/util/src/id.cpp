@@ -1,6 +1,18 @@
 #include <doctest/doctest.h>
 #include "id.h"
 
+Id::Id(Kokkos::View<int*> ids, Kokkos::View<int*> offsets) {
+    _ids = Kokkos::View<int*> ("id", static_cast<int>(ids.size()));
+    _offsets = Kokkos::View<int*> ("offset", static_cast<int>(offsets.size()));
+    for (unsigned int i = 0; i < ids.size(); i++) {
+        _ids(i) = ids[i];
+    }
+
+    for (unsigned int i = 0; i < offsets.size(); i++) {
+        _offsets(i) = offsets[i];
+    }
+}
+
 Id::Id(std::vector<int> ids, std::vector<int> offsets) {
     _ids = Kokkos::View<int*> ("id", static_cast<int>(ids.size()));
     _offsets = Kokkos::View<int*> ("offset", static_cast<int>(offsets.size()));
@@ -13,6 +25,11 @@ Id::Id(std::vector<int> ids, std::vector<int> offsets) {
         _offsets(i) = offsets[i];
     }
 }
+
+Id Id::clone() {
+    return Id(_ids, _offsets);
+}
+
 
 TEST_CASE("id") {
     Id ids = Id(std::vector<int> {1,2,3,4,5,6}, std::vector<int> {0, 3});

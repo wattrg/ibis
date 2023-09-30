@@ -5,9 +5,9 @@
 
 template <typename T>
 Interfaces<T>::Interfaces(IdConstructor ids, std::vector<ElemType> shapes)
-    : m_vertex_ids(Id(ids))
+    : vertex_ids_(Id(ids))
 {
-    size_ = m_vertex_ids.size();
+    size_ = vertex_ids_.size();
     shape_ = Field<ElemType>("Interface::shape", shapes.size());
     for (int i = 0; i < size_; i++) {
         shape_(i) = shapes[i];
@@ -36,7 +36,7 @@ template <typename T>
 void Interfaces<T>::compute_orientations(Vertices<T> vertices) {
     // set the face tangents in parallel
     Kokkos::parallel_for("Interfaces::compute_orientations", norm_.size(), KOKKOS_LAMBDA (const int i){
-        auto vertex_ids = m_vertex_ids[i];
+        auto vertex_ids = vertex_ids_[i];
         T x0 = vertices.position(vertex_ids(0), 0);
         T x1 = vertices.position(vertex_ids(1), 0);
         T y0 = vertices.position(vertex_ids(0), 1);
@@ -50,7 +50,7 @@ void Interfaces<T>::compute_orientations(Vertices<T> vertices) {
 
         switch (shape_(i)) {
             case ElemType::Line: {
-                auto vertex_ids = m_vertex_ids[i];
+                auto vertex_ids = vertex_ids_[i];
                 tan2_(i, 0) = 0.0;
                 tan2_(i, 1) = 0.0;
                 tan2_(i, 2) = 1.0;
@@ -74,7 +74,7 @@ void Interfaces<T>::compute_areas(Vertices<T> vertices) {
     Kokkos::parallel_for("Interfaces::compute_areas", area_.size(), KOKKOS_LAMBDA (const int i) {
         switch (shape_(i)) {
             case ElemType::Line: {
-                auto vertex_ids = m_vertex_ids[i];
+                auto vertex_ids = vertex_ids_[i];
                 T x1 = vertices.position(vertex_ids(0), 0);
                 T x2 = vertices.position(vertex_ids(1), 0);
                 T y1 = vertices.position(vertex_ids(0), 1);
@@ -83,7 +83,7 @@ void Interfaces<T>::compute_areas(Vertices<T> vertices) {
                 break;
             }
             case ElemType::Tri: {
-                auto vertex_ids = m_vertex_ids[i];
+                auto vertex_ids = vertex_ids_[i];
                 T x1 = vertices.position(vertex_ids(0), 0);
                 T x2 = vertices.position(vertex_ids(1), 0);
                 T x3 = vertices.position(vertex_ids(2), 0);
@@ -95,7 +95,7 @@ void Interfaces<T>::compute_areas(Vertices<T> vertices) {
                 break;
             }
             case ElemType::Quad: {
-                auto vertex_ids = m_vertex_ids[i];
+                auto vertex_ids = vertex_ids_[i];
                 T x1 = vertices.position(vertex_ids(0), 0);
                 T x2 = vertices.position(vertex_ids(1), 0);
                 T x3 = vertices.position(vertex_ids(2), 0);
@@ -124,7 +124,7 @@ void Interfaces<T>::compute_areas(Vertices<T> vertices) {
 template <typename T>
 void Interfaces<T>::compute_centres(Vertices<T> vertices){
     Kokkos::parallel_for("Interfaces::compute_centres", centre_.size(), KOKKOS_LAMBDA (const int face_i){
-        auto face_vertices = m_vertex_ids[face_i]; 
+        auto face_vertices = vertex_ids_[face_i]; 
         T x = 0.0;
         T y = 0.0;
         T z = 0.0;

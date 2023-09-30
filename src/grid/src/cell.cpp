@@ -13,6 +13,7 @@ Cells<T>::Cells(Id vertices, Id interfaces, std::vector<ElemType> shapes)
 
     volume_ = Field<T>("Cell::Volume", shapes.size());
     centroid_ = Vector3s<T>("Cell::centroids", shapes.size());
+    outsign_ = interfaces.clone();
 }
 
 template <typename T>
@@ -36,6 +37,11 @@ void Cells<T>::compute_centroids(const Vertices<T>& vertices){
         centroid_.y(i) = y / n_vertices;
         centroid_.z(i) = z / n_vertices;
     });
+}
+
+template <typename T>
+void Cells<T>::set_outsign(const int cell_i, const int face_i, const int outsign) {
+    outsign_[cell_i](face_i) = outsign;
 }
 
 template <typename T>
