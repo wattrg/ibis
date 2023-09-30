@@ -1,10 +1,12 @@
 #include <doctest/doctest.h>
 #include "grid.h"
 #include "grid_io.h"
+#include "interface.h"
 
 template <typename T>
-GridBlock<T>::GridBlock(const GridIO& grid_io, json boundaries){
+GridBlock<T>::GridBlock(const GridIO& grid_io, json& config){
     dim_ = grid_io.dim();
+    json boundaries = config.at("boundaries");
 
     // set the positions of the vertices
     std::vector<Vertex<double>> vertices = grid_io.vertices();
@@ -46,33 +48,15 @@ GridBlock<T>::GridBlock(const GridIO& grid_io, json boundaries){
         cell_interface_ids.push_back(cell_face_ids);
     } 
 
-    num_ghost_cells_ = 0;
-    std::vector<int> boundary_cells{};
-    std::vector<int> boundary_faces{};
-    for (auto bc : grid_io.bcs()) {
-        std::string bc_label = bc.first;
-        std::vector<ElemIO> bc_faces = bc.second;
-        json boundary_config = boundaries.at(bc_label);
-        for (unsigned int boundary_i = 0; boundary_i < bc_faces.size(); boundary_i++){
-            int id = interfaces.id(bc_faces[boundary_i].vertex_ids());
-            // interfaces_.mark_on_boundary(id); 
-            boundary_faces.push_back(id);
-            if (boundary_config.at("ghost_cells") == true) {
-                cell_vertices.push_back({-1, -1});
-                cell_shapes.push_back(ElemType::Line);
-                num_ghost_cells_++;
-                boundary_cells.push_back(num_ghost_cells_);
-            }
-        }
-        boundary_cells_.insert({bc_label, Field<int>("bc_cells", boundary_cells)});
-        boundary_faces_.insert({bc_label, Field<int>("bc_faces", boundary_faces)});
-    }
+    std::map<int, int> ghost_cell_map = setup_boundaries(
+        grid_io, boundaries, cell_vertices, interfaces, cell_shapes
+    );
 
     interfaces_ = Interfaces<T>(interface_vertices, interface_shapes);
     cells_ = Cells<T>(cell_vertices, cell_interface_ids, cell_shapes);
 
     compute_geometric_data();
-    // compute_interface_connectivity_();
+    compute_interface_connectivity_(ghost_cell_map);
 } 
 
 template <typename T>
@@ -81,6 +65,94 @@ void GridBlock<T>::compute_geometric_data() {
     cells_.compute_centroids(vertices_);
     interfaces_.compute_areas(vertices_);
     interfaces_.compute_orientations(vertices_);
+    interfaces_.compute_centres(vertices_);
+}
+
+template <typename T>
+std::map<int, int> GridBlock<T>::setup_boundaries(const GridIO& grid_io, 
+                                    json& boundaries,
+                                    IdConstructor &cell_vertices, 
+                                    InterfaceLookup& interfaces,
+                                    std::vector<ElemType> cell_shapes) {
+    (void) cell_vertices;
+    (void) cell_shapes;
+    num_ghost_cells_ = 0;
+    std::map<int, int> ghost_cell_map; // face_id -> ghost_cell_id
+    for (auto bc : grid_io.bcs()) {
+        // unpack the boundary data from the grid_io object
+        std::string bc_label = bc.first;
+        std::vector<ElemIO> bc_faces = bc.second;
+        json boundary_config = boundaries.at(bc_label);
+
+        // loop over all the boundary faces for this boundary, keeping track of 
+        // which ones belong to this boundary
+        std::vector<int> boundary_cells{};
+        std::vector<int> boundary_faces{};
+        for (unsigned int boundary_i = 0; boundary_i < bc_faces.size(); boundary_i++){
+            int face_id = interfaces.id(bc_faces[boundary_i].vertex_ids());
+            boundary_faces.push_back(face_id);
+            if (boundary_config.at("ghost_cells") == true) {
+                // currently we're not going to actually build a 'cell',
+                // just 
+                // cell_vertices.push_back({-1, -1});
+                // cell_shapes.push_back(ElemType::Line);
+                num_ghost_cells_++;
+                int ghost_cell_id = num_valid_cells_ + num_ghost_cells_;
+                boundary_cells.push_back(ghost_cell_id);
+                ghost_cell_map.insert({face_id, ghost_cell_id});
+            }
+            else {
+                ghost_cell_map.insert({face_id, -1}); // no ghost cell
+            }
+        }
+
+        // keep track of which faces/cells belong to
+        // which boundary
+        boundary_cells_.insert(
+            {bc_label, Field<int>("bc_cells", boundary_cells)}
+        );
+        boundary_faces_.insert(
+            {bc_label, Field<int>("bc_faces", boundary_faces)}
+        );
+    }
+    return ghost_cell_map;
+}
+
+template <typename T> 
+void GridBlock<T>::compute_interface_connectivity_(std::map<int, int> ghost_cells) {
+    Kokkos::parallel_for("compute_interface_connectivity", num_valid_cells_, KOKKOS_LAMBDA (const int cell_i){
+        auto face_ids = cells_.interface_ids()[cell_i];
+        T cell_x = cells_.centroids().x(cell_i);
+        T cell_y = cells_.centroids().y(cell_i);
+        T cell_z = cells_.centroids().z(cell_i);
+        for (unsigned int face_i = 0; face_i < face_ids.size(); face_i++){
+            int face_id = face_ids[face_i];
+            
+            // vector from the face centre to the cell centre 
+            T dx = interfaces_.centre().x(face_id) - cell_x;
+            T dy = interfaces_.centre().y(face_id) - cell_y;
+            T dz = interfaces_.centre().z(face_id) - cell_z;
+
+            // dot product of the vector from centre to centre with
+            // the interface normal vector
+            T dot = dx * interfaces_.norm().x(face_id) +
+                    dy * interfaces_.norm().y(face_id) +
+                    dz * interfaces_.norm().z(face_id);
+            if (dot > 0.0) {
+                // cell is on the left of the face
+                interfaces_.attach_cell_left(cell_i, face_id);
+                // TODO: set outsign of face_i cell_i to 1
+            }
+            else {
+                // cell is on the right of face
+                interfaces_.attach_cell_right(cell_i, face_id);
+                // TODO: set outsign of face_i for cell_i to -1
+            }
+        }
+    });
+
+    // TODO: loop through the ghost cells and attach them to
+    // the other side of the interface
 }
 
 template class GridBlock<double>;
@@ -213,6 +285,7 @@ TEST_CASE("build grid block") {
     Cells<double> cells (cell_vertex_id_constructor, cell_interface_id_constructor, cell_shapes);
 
     GridBlock<double> expected = GridBlock<double>(vertices, interfaces, cells);
+    json config{};
     json boundaries {};
     json slip_wall{};
     json inflow{};
@@ -224,6 +297,7 @@ TEST_CASE("build grid block") {
     boundaries["slip_wall_top"] = slip_wall;
     boundaries["inflow"] = inflow;
     boundaries["outflow"] = outflow;
-    GridBlock<double> block = GridBlock<double>("../src/grid/test/grid.su2", boundaries);
+    config["boundaries"] = boundaries;
+    GridBlock<double> block = GridBlock<double>("../src/grid/test/grid.su2", config);
     CHECK(block == expected);
 }

@@ -21,7 +21,7 @@ FUNCTION(check_git_read git_hash)
     FILE(STRINGS ${CMAKE_BINARY_DIR}/git-state.txt CONTENT)
     LIST(GET CONTENT 0 var)
 
-    message(DEBUG "Cached Git hash: ${var}")
+    # message(DEBUG "Cached Git hash: ${var}")
     SET(${git_hash} ${var} PARENT_SCOPE)
   else()
     SET(${git_hash} "INVALID" PARENT_SCOPE)
@@ -97,7 +97,7 @@ FUNCTION(check_git_version)
   check_git_write(${GIT_COMMIT_HASH} ${GIT_CLEAN_STATUS})
 
   configure_file(${pre_configure_file} ${post_configure_file} @ONLY)
-  message(STATUS "Configured git information in ${post_configure_file}")
+  # message(STATUS "Configured git information in ${post_configure_file}")
 ENDFUNCTION()
 
 FUNCTION(check_git_setup)

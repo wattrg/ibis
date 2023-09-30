@@ -14,10 +14,10 @@ class GridBlock {
 public:
     GridBlock() {}
 
-    GridBlock(const GridIO &grid_io, json boundaries);
+    GridBlock(const GridIO &grid_io, json &config);
 
-    GridBlock(std::string file_name, json boundaries) 
-        : GridBlock<T>(GridIO(file_name), boundaries) {}
+    GridBlock(std::string file_name, json &config) 
+        : GridBlock<T>(GridIO(file_name), config) {}
 
     GridBlock(Vertices<T> vertices, Interfaces<T> interfaces, Cells<T> cells) 
         : vertices_(vertices), interfaces_(interfaces), cells_(cells) {}
@@ -56,9 +56,13 @@ private:
     std::map<std::string, Field<int>> boundary_cells_;
     std::map<std::string, Field<int>> boundary_faces_;
 
-    // void compute_interface_connectivity_(){
-    //     interfaces_.compute_connectivity(vertices_, cells_);
-    // }
+    std::map<int, int> setup_boundaries(
+        const GridIO & grid_io, json& boundaries,
+        IdConstructor &cell_vertices, 
+        InterfaceLookup& interfaces,
+        std::vector<ElemType> cell_shapes);
+
+    void compute_interface_connectivity_(std::map<int, int> ghost_cells);
 };
 
 #endif

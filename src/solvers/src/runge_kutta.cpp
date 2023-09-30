@@ -16,9 +16,11 @@ RungeKutta::RungeKutta(json config, GridBlock<double> grid, std::string grid_dir
 
     // memory
     grid_ = grid;
-    flow_ = FlowStates<double>(grid_.num_cells());
-    conserved_quantities_ = ConservedQuantities<double>(grid_.num_cells(), grid_.dim());
-    dUdt_ = ConservedQuantities<double>(grid_.num_cells(), grid_.dim());
+    int number_cells = grid_.num_total_cells();
+    int dim = grid_.dim();
+    flow_ = FlowStates<double>(number_cells);
+    conserved_quantities_ = ConservedQuantities<double>(number_cells, dim);
+    dUdt_ = ConservedQuantities<double>(number_cells, dim);
     fv_ = FiniteVolume<double>(grid_);
 
     // progress

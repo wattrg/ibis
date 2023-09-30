@@ -5,6 +5,7 @@
 #include "../../util/src/id.h"
 #include "../../util/src/field.h"
 #include "../../util/src/vector3.h"
+#include "Kokkos_Macros.hpp"
 #include "grid_io.h"
 #include "vertex.h"
 #include "cell.h"
@@ -17,8 +18,11 @@ public:
     InterfaceView(Interfaces<T> *interfaces, int id) 
         : _interfaces(interfaces), _id(id) {}
 
-    KOKKOS_FORCEINLINE_FUNCTION auto vertex_ids() {return _interfaces->vertex_ids()[_id];}
-    KOKKOS_FORCEINLINE_FUNCTION T& area() const {return _interfaces->area(_id);}
+    KOKKOS_FORCEINLINE_FUNCTION 
+    auto vertex_ids() {return _interfaces->vertex_ids()[_id];}
+
+    KOKKOS_FORCEINLINE_FUNCTION 
+    T& area() const {return _interfaces->area(_id);}
 
 private:
     Interfaces<T> * _interfaces;
@@ -36,7 +40,8 @@ public:
         return m_vertex_ids == other.m_vertex_ids;
     }
 
-    KOKKOS_FORCEINLINE_FUNCTION InterfaceView<T> operator[] (const int i) {
+    KOKKOS_FORCEINLINE_FUNCTION 
+    InterfaceView<T> operator[] (const int i) {
         assert(i < size());
         return InterfaceView<T>(this, i);
     }
@@ -66,9 +71,26 @@ public:
     Vector3s<T> tan2() {return tan2_;}
 
     KOKKOS_FORCEINLINE_FUNCTION
+    Vector3s<T> centre() {return centre_;}
+
+    KOKKOS_FORCEINLINE_FUNCTION
+    Vector3s<T> centre() const {return centre_;}
+
+    KOKKOS_FORCEINLINE_FUNCTION
+    void attach_cell_left(const int cell_id,  const int face_id) {
+        left_cells_(face_id) = cell_id;
+    }
+
+    KOKKOS_FORCEINLINE_FUNCTION
+    void attach_cell_right(const int cell_id, const int face_id) {
+        right_cells_(face_id) = cell_id;
+    }
+
+    KOKKOS_FORCEINLINE_FUNCTION
     Vector3View<T> norm(const int i) {
         return Vector3View(i, &norm_);
     } 
+
 
     // KOKKOS_FORCEINLINE_FUNCTION
     // Vector3View<T> norm(const int i) const {
@@ -102,22 +124,8 @@ public:
 
     void compute_areas(Vertices<T> vertices);
 
-    // void mark_on_boundary(const int i);
+    void compute_centres(Vertices<T> vertices);
 
-    // void compute_connectivity(const Vertices<T>& vertices, const Cells<T>& cells){
-    //     (void) vertices;
-    //     Id& face_ids = cells.interface_ids();
-    //     for (int cell_i = 0; cell_i < cells.size(); cell_i++){
-    //         auto cell_face_ids = face_ids[cell_i];
-    //         for (int face_idx = 0; face_idx < cell_face_ids.size(); face_idx++){
-    //             int face_id = cell_face_ids(face_idx);
-    //             
-    //             if (left_cells_(face_id) == -1 || right_cells_(face_id) == -1) {
-    //                 // 
-    //             } 
-    //         }
-    //     }    
-    // }
 
 private:
     int size_;

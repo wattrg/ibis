@@ -8,6 +8,9 @@ config.grid = Block(
     file_name="grid.su2", 
     initial_condition=flow_state,
     boundaries = {
-        "left": SupersonicInflow(flow_state)
+        "inflow": SupersonicInflow(flow_state),
+        "slip_wall_top": SupersonicInflow(flow_state),
+        "slip_wall_bottom": SupersonicInflow(flow_state),
+        "outflow": SupersonicInflow(flow_state)
     }
 )

@@ -18,6 +18,7 @@ Interfaces<T>::Interfaces(IdConstructor ids, std::vector<ElemType> shapes)
     tan1_ = Vector3s<T>("Interface::tan1", size_);
     tan2_ = Vector3s<T>("Interface::tan2", size_);
     area_ = Field<T>("Interface::area", size_);
+    centre_ = Vector3s<T>("Interface::centre", size_);
 
     // set left and right cells to -1 to indicate they haven't
     // been connected up to any cells yet
@@ -120,10 +121,24 @@ void Interfaces<T>::compute_areas(Vertices<T> vertices) {
     });
 }
 
-// template <typename T>
-// void Interfaces<T>::mark_on_boundary(const int i){
-//     // on_boundary_(i) = true; 
-// }
+template <typename T>
+void Interfaces<T>::compute_centres(Vertices<T> vertices){
+    Kokkos::parallel_for("Interfaces::compute_centres", centre_.size(), KOKKOS_LAMBDA (const int face_i){
+        auto face_vertices = m_vertex_ids[face_i]; 
+        T x = 0.0;
+        T y = 0.0;
+        T z = 0.0;
+        for (unsigned int vtx_i = 0; vtx_i < face_vertices.size(); vtx_i++) {
+            int vtx_id = face_vertices[vtx_i];
+            x += vertices.positions().x(vtx_id);  
+            y += vertices.positions().y(vtx_id);
+            z += vertices.positions().z(vtx_id);
+        }
+        centre_.x(face_i) = x;
+        centre_.y(face_i) = y;
+        centre_.z(face_i) = z;
+    });
+}
 
 template struct Interfaces<double>;
 
