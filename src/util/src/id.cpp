@@ -30,6 +30,15 @@ Id Id::clone() {
     return Id(_ids, _offsets);
 }
 
+Id Id::clone_offsets() {
+    Kokkos::View<int*> ids = Kokkos::View<int*>("id", static_cast<int>(_ids.size()));
+    Kokkos::View<int*> offsets = Kokkos::View<int*> ("offset", static_cast<int>(_offsets.size())); 
+    for (unsigned int i = 0; i < offsets.size(); i++){
+        offsets(i) = _offsets(i);
+    }
+    return Id(ids, offsets);
+}
+
 
 TEST_CASE("id") {
     Id ids = Id(std::vector<int> {1,2,3,4,5,6}, std::vector<int> {0, 3});

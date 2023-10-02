@@ -40,6 +40,8 @@ public:
 
     Id clone();
 
+    Id clone_offsets();
+
     KOKKOS_INLINE_FUNCTION
     auto operator [] (const int i) const {
         // return the slice of _ids corresponding 
@@ -70,6 +72,9 @@ public:
         }
         return true;
     }
+
+    Kokkos::View<int*> ids() const {return _ids;}
+    Kokkos::View<int*> offsets() const {return _offsets;}
 
 private:
     Kokkos::View<int*> _ids;

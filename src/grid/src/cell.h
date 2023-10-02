@@ -26,24 +26,47 @@ private:
 };
 
 template <typename T>
+struct CellFaces {
+public:
+    CellFaces() {}
+
+    CellFaces(const Id& interface_ids);
+
+    bool operator == (const CellFaces& other) const;
+
+    KOKKOS_INLINE_FUNCTION
+    auto face_ids(const int i) const {
+        int first = offsets_(i);
+        int last = offsets_(i+1);
+        return Kokkos::subview(face_ids_, std::make_pair(first, last));
+    }
+
+    KOKKOS_INLINE_FUNCTION
+    auto outsigns(const int i) const {
+        int first = offsets_(i);
+        int last = offsets_(i+1);
+        return Kokkos::subview(outsigns_, std::make_pair(first, last));
+    }
+
+    void set_outsign(const int i_cell, const int i_face, const int sign) {
+        outsigns(i_cell)(i_face) = sign;
+    }
+
+private:
+    Kokkos::View<int*> offsets_;
+    Kokkos::View<int*> face_ids_;
+    Kokkos::View<int*> outsigns_;
+};
+
+template <typename T>
 struct Cells {
 public:
     Cells () {}
 
     Cells(Id vertices, Id interfaces, std::vector<ElemType> shapes);
-    //     : interface_ids_(interfaces), vertex_ids_(vertices) 
-    // {
-    //     shape_ = Field<ElemType>("Cell::shape", shapes.size());
-    //     for (unsigned int i = 0; i < shapes.size(); i++) {
-    //         shape_(i) = shapes[i]; 
-    //     }
-    //
-    //     volume_ = Field<T>("Cell::Volume", shapes.size());
-    //     centroid_ = Vector3s<T>("Cell::centroids", shapes.size());
-    // }
 
     bool operator == (const Cells &other) const {
-        return (interface_ids_ == other.interface_ids_) &&
+        return (faces_ == other.faces_) &&
                (vertex_ids_ == other.vertex_ids_);
     }
 
@@ -56,11 +79,11 @@ public:
     KOKKOS_FORCEINLINE_FUNCTION
     const Id &vertex_ids() const {return vertex_ids_;}
 
+    // KOKKOS_FORCEINLINE_FUNCTION
+    // const Id &interface_ids() const {return interface_ids_;}
+    
     KOKKOS_FORCEINLINE_FUNCTION
-    const Id &interface_ids() const {return interface_ids_;}
-
-    KOKKOS_FORCEINLINE_FUNCTION
-    int size() const {return interface_ids_.size();}
+    int size() const {return num_cells_;}
 
     KOKKOS_FORCEINLINE_FUNCTION
     const T& volume(const int i) const {return volume_(i);}
@@ -71,16 +94,18 @@ public:
 
     void compute_volumes(const Vertices<T>& vertices);
 
-    void set_outsign(const int cell_i, const int face_i, const int outsign);
-
+    CellFaces<T> faces() const {return faces_;}
 
 private:
-    Id interface_ids_;
+    CellFaces<T> faces_;
+    // Id interface_ids_;
     Id vertex_ids_;
     Field<ElemType> shape_;
     Field<T> volume_;
-    Id outsign_;
+    // Id outsign_;
     Vector3s<T> centroid_;
+
+    int num_cells_;
 };
 
 #endif

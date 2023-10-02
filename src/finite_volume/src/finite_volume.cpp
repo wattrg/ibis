@@ -22,7 +22,7 @@ int FiniteVolume<T>::compute_dudt(const FlowStates<T>& flow_state,
 template <typename T>
 double FiniteVolume<T>::estimate_signal_frequency(const FlowStates<T> &flow_state, GridBlock<T> &grid) {
     int num_cells = grid.num_cells();
-    Id cell_interfaces_ids = grid.cells().interface_ids();
+    CellFaces<T> cell_interfaces_ids = grid.cells().faces();
     Interfaces<T> interfaces = grid.interfaces();
     Cells<T> cells = grid.cells();
     double signal_frequency = 0.0;
@@ -31,7 +31,7 @@ double FiniteVolume<T>::estimate_signal_frequency(const FlowStates<T> &flow_stat
                             num_cells, 
                             KOKKOS_LAMBDA(const int cell_i, double& signal_frequency_utd) 
     {
-        auto cell_face_ids = cell_interfaces_ids[cell_i];
+        auto cell_face_ids = cell_interfaces_ids.face_ids(cell_i);
         T spectral_radii = 0.0;
         for (unsigned int face_idx = 0; face_idx < cell_face_ids.size(); face_idx++) {
             int i_face = cell_face_ids(face_idx);

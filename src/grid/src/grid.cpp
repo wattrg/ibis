@@ -61,11 +61,11 @@ GridBlock<T>::GridBlock(const GridIO& grid_io, json& config){
 
 template <typename T>
 void GridBlock<T>::compute_geometric_data() {
-    cells_.compute_volumes(vertices_);
     cells_.compute_centroids(vertices_);
+    cells_.compute_volumes(vertices_);
+    interfaces_.compute_centres(vertices_);
     interfaces_.compute_areas(vertices_);
     interfaces_.compute_orientations(vertices_);
-    interfaces_.compute_centres(vertices_);
 }
 
 template <typename T>
@@ -121,7 +121,7 @@ std::map<int, int> GridBlock<T>::setup_boundaries(const GridIO& grid_io,
 template <typename T> 
 void GridBlock<T>::compute_interface_connectivity_(std::map<int, int> ghost_cells) {
     Kokkos::parallel_for("compute_interface_connectivity", num_valid_cells_, KOKKOS_LAMBDA (const int cell_i){
-        auto face_ids = cells_.interface_ids()[cell_i];
+        auto face_ids = cells_.faces().face_ids(cell_i);
         T cell_x = cells_.centroids().x(cell_i);
         T cell_y = cells_.centroids().y(cell_i);
         T cell_z = cells_.centroids().z(cell_i);
@@ -141,12 +141,12 @@ void GridBlock<T>::compute_interface_connectivity_(std::map<int, int> ghost_cell
             if (dot > 0.0) {
                 // cell is on the left of the face
                 interfaces_.attach_cell_left(cell_i, face_id);
-                cells_.set_outsign(cell_i, face_i, 1);
+                cells_.faces().set_outsign(cell_i, face_i, 1);
             }
             else {
                 // cell is on the right of face
                 interfaces_.attach_cell_right(cell_i, face_id);
-                cells_.set_outsign(cell_i, face_i, -1);
+                cells_.faces().set_outsign(cell_i, face_i, -1);
             }
         }
     });
@@ -167,7 +167,15 @@ void GridBlock<T>::compute_interface_connectivity_(std::map<int, int> ghost_cell
 
 template class GridBlock<double>;
 
-TEST_CASE("build grid block") {
+
+struct GridInfo{
+    Vertices<double> vertices;
+    Interfaces<double> faces;
+    Cells<double> cells;
+};
+
+GridInfo build_test_grid() {
+    GridInfo grid_info {};
     Vertices<double> vertices(16);
     std::vector<Vector3<double>> vertex_pos {
         Vector3<double>(0.0, 0.0, 0.0),
@@ -293,8 +301,13 @@ TEST_CASE("build grid block") {
     };
 
     Cells<double> cells (cell_vertex_id_constructor, cell_interface_id_constructor, cell_shapes);
+    grid_info.vertices = vertices;
+    grid_info.faces = interfaces;
+    grid_info.cells = cells;
+    return grid_info;
+}
 
-    GridBlock<double> expected = GridBlock<double>(vertices, interfaces, cells);
+json build_config() {
     json config{};
     json boundaries {};
     json slip_wall{};
@@ -308,6 +321,43 @@ TEST_CASE("build grid block") {
     boundaries["inflow"] = inflow;
     boundaries["outflow"] = outflow;
     config["boundaries"] = boundaries;
+    return config;
+}
+
+TEST_CASE("grid vertices") {
+    GridInfo expected = build_test_grid();
+    json config = build_config();
     GridBlock<double> block = GridBlock<double>("../src/grid/test/grid.su2", config);
-    CHECK(block == expected);
+    CHECK(block.vertices() == expected.vertices);
+}
+
+TEST_CASE("grid interfaces") {
+    GridInfo expected = build_test_grid();
+    json config = build_config();
+    GridBlock<double> block = GridBlock<double>("../src/grid/test/grid.su2", config);
+    CHECK(block.interfaces() == expected.faces);
+}
+
+TEST_CASE("grid cell faces") {
+    GridInfo expected = build_test_grid();
+    json config = build_config();
+    GridBlock<double> block = GridBlock<double>("../src/grid/test/grid.su2", config);
+    CHECK(block.cells().size() == expected.cells.size());
+    for (int i = 0; i < block.cells().size(); i++) {
+        for (unsigned int j = 0; j < block.cells().faces().face_ids(i).size(); j++){
+            CHECK(block.cells().faces().face_ids(i)(j) == expected.cells.faces().face_ids(i)(j));
+        }
+    }
+}
+
+TEST_CASE("grid cell outsigns") {
+    GridInfo expected = build_test_grid();
+    json config = build_config();
+    GridBlock<double> block = GridBlock<double>("../src/grid/test/grid.su2", config);
+    CHECK(block.cells().size() == expected.cells.size());
+    for (int i = 0; i < block.cells().size(); i++) {
+        for (unsigned int j = 0; j < block.cells().faces().outsigns(i).size(); j++){
+            CHECK(block.cells().faces().outsigns(i)(j) == 1);
+        }
+    }
 }

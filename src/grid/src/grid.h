@@ -22,6 +22,7 @@ public:
     GridBlock(Vertices<T> vertices, Interfaces<T> interfaces, Cells<T> cells) 
         : vertices_(vertices), interfaces_(interfaces), cells_(cells) {}
 
+
     bool operator == (const GridBlock &other) const {
         return (vertices_ == other.vertices_) &&
                (interfaces_ == other.interfaces_) &&

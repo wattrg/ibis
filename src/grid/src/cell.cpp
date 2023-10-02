@@ -3,17 +3,59 @@
 #include "interface.h"
 
 template <typename T>
-Cells<T>::Cells(Id vertices, Id interfaces, std::vector<ElemType> shapes)
-        : interface_ids_(interfaces), vertex_ids_(vertices) 
+CellFaces<T>::CellFaces(const Id& interface_ids) 
 {
-    shape_ = Field<ElemType>("Cell::shape", shapes.size());
-    for (unsigned int i = 0; i < shapes.size(); i++) {
+    offsets_ = Kokkos::View<int*>("CellFaces::offsets", interface_ids.offsets().size());      
+    face_ids_ = Kokkos::View<int*>("CellFaces::face_ids", interface_ids.ids().size());      
+    outsigns_ = Kokkos::View<int*>("CellFaces::outsigns", interface_ids.ids().size());
+    for (unsigned int i = 0; i < offsets_.size(); i++){
+        offsets_(i) = interface_ids.offsets()(i);
+    }
+    for (unsigned int i = 0; i < face_ids_.size(); i++){
+        face_ids_(i) = interface_ids.ids()(i);
+        outsigns_(i) = 0;
+    }
+}
+
+template <typename T>
+bool CellFaces<T>::operator == (const CellFaces& other) const {
+    for (unsigned int i = 0; i < offsets_.size(); i++){
+        if (offsets_(i) != other.offsets_(i)) return false;
+    }
+    for (unsigned int i = 0; i < face_ids_.size(); i++) {
+        if (face_ids_(i) != other.face_ids_(i)) return false;
+    }
+    for (unsigned int i = 0; i < outsigns_.size(); i++){
+        if (outsigns_(i) != other.outsigns_(i)){
+            for (unsigned int j = 0; j < outsigns_.size(); j++) {
+                std::cout << outsigns_(j) << " ";
+            }
+            std::cout << std::endl;
+            for (unsigned int j = 0; j < outsigns_.size(); j++) {
+                std::cout << other.outsigns_(j) << " ";
+            }
+            std::cout << std::endl;
+            return false;
+        }
+    }
+    return true;
+}
+
+template struct CellFaces<double>;
+
+template <typename T>
+Cells<T>::Cells(Id vertices, Id interfaces, std::vector<ElemType> shapes)
+        : vertex_ids_(vertices) 
+{
+    num_cells_ = shapes.size();
+    faces_ = CellFaces<T>(interfaces);
+    shape_ = Field<ElemType>("Cell::shape", num_cells_);
+    for (int i = 0; i < num_cells_; i++) {
         shape_(i) = shapes[i]; 
     }
 
-    volume_ = Field<T>("Cell::Volume", shapes.size());
-    centroid_ = Vector3s<T>("Cell::centroids", shapes.size());
-    outsign_ = interfaces.clone();
+    volume_ = Field<T>("Cell::Volume", num_cells_);
+    centroid_ = Vector3s<T>("Cell::centroids", num_cells_);
 }
 
 template <typename T>
@@ -37,11 +79,6 @@ void Cells<T>::compute_centroids(const Vertices<T>& vertices){
         centroid_.y(i) = y / n_vertices;
         centroid_.z(i) = z / n_vertices;
     });
-}
-
-template <typename T>
-void Cells<T>::set_outsign(const int cell_i, const int face_i, const int outsign) {
-    outsign_[cell_i](face_i) = outsign;
 }
 
 template <typename T>
