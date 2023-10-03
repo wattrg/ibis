@@ -15,6 +15,7 @@ target_link_libraries(
 	doctest 
 	util
 	nlohmann_json::nlohmann_json
+	spdlog::spdlog
 )
 
 add_executable(
@@ -34,4 +35,5 @@ target_link_libraries(
 	doctest 
 	Kokkos::kokkos 
 	nlohmann_json::nlohmann_json
+	spdlog::spdlog
 )

@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.22.1)
 
-project(ibis)
+project(ibis VERSION 0.1.0)
 
 INCLUDE(${CMAKE_CURRENT_SOURCE_DIR}/cmake/build_env_info.cmake)
 check_git_setup()
@@ -17,10 +17,10 @@ add_subdirectory(src/finite_volume)
 add_subdirectory(src/ibis/src/commands)
 add_subdirectory(src/solvers)
 
-add_subdirectory(extern/doctest)
-add_subdirectory(extern/kokkos)
-add_subdirectory(extern/json)
-add_subdirectory(extern/spdlog)
+add_subdirectory(extern/doctest EXCLUDE_FROM_ALL)
+add_subdirectory(extern/kokkos EXCLUDE_FROM_ALL)
+add_subdirectory(extern/json EXCLUDE_FROM_ALL)
+add_subdirectory(extern/spdlog EXCLUDE_FROM_ALL)
 
 add_executable(ibis src/ibis/src/main.cpp)
 target_include_directories(ibis PUBLIC ${CMAKE_SOURCE_DIR}/src)
@@ -50,3 +50,5 @@ enable_testing()
 add_test(NAME util_unittest COMMAND src/util/util_unittest)
 add_test(NAME grid_unittest COMMAND src/grid/grid_unittest)
 add_test(NAME finite_volume_unittest COMMAND src/finite_volume/finite_volume_unittest)
+
+include(CPack)

@@ -32,11 +32,6 @@ json read_config(json& directories) {
     return config;
 }
 
-// GridBlock<double> read_grid(json& directories) {
-//     std::string grid_dir = directories.at("grid_dir");
-//     std::string grid_file = grid_dir + "/" + "block_0000.su2";
-//     return GridBlock<double> (grid_file);
-// }
 
 void print_config_info(json config) {
     spdlog::info("solver: {}", std::string(config.at("solver").at("name")));
@@ -53,11 +48,10 @@ int run(int argc, char* argv[]) {
     std::string flow_dir = directories.at("flow_dir");
     Kokkos::initialize(argc, argv);
     int result; 
+
     {
-        // GridBlock<double> grid = read_grid(directories);
-        Solver * solver = make_solver(config, grid_dir, flow_dir);
+        std::unique_ptr<Solver> solver = make_solver(config, grid_dir, flow_dir);
         result = solver->solve();
-        delete solver;
     }
 
     Kokkos::finalize();
@@ -65,7 +59,8 @@ int run(int argc, char* argv[]) {
     if (result != 0) {
         spdlog::error("run failed");
     }
-    
-    spdlog::info("run complete");
-    return 0;
+    else { 
+        spdlog::info("run complete");
+    }
+    return result;
 }

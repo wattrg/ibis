@@ -2,11 +2,14 @@
 #include "conserved_quantities.h"
 
 template <typename T>
-FiniteVolume<T>::FiniteVolume(const GridBlock<T>& grid)
+FiniteVolume<T>::FiniteVolume(const GridBlock<T>& grid, json config)
     : left_(FlowStates<T>(grid.num_interfaces())),
       right_(FlowStates<T>(grid.num_interfaces())),
       flux_(ConservedQuantities<T>(grid.num_interfaces(), grid.dim()))
-{}
+{
+    dim_ = config.at("dimensions");
+    reconstruction_order_ = config.at("convective_flux").at("reconstructioin_order");
+}
 
 template <typename T>
 int FiniteVolume<T>::compute_dudt(const FlowStates<T>& flow_state,
@@ -47,6 +50,15 @@ double FiniteVolume<T>::estimate_signal_frequency(const FlowStates<T> &flow_stat
     }, signal_frequency);
 
     return signal_frequency;
+}
+
+template <typename T>
+void FiniteVolume<T>::apply_pre_reconstruction_bc(FlowStates<T>& fs, GridBlock<T>& grid) {
+    for (unsigned int i = 0; i < bcs_.size(); i++) {
+        std::shared_ptr<BoundaryCondition<T>> bc = bcs_[i];
+        Field<int> bc_faces = bc_interfaces_[i];
+        bc->apply_pre_reconstruction(fs, grid, bc_faces);
+    } 
 }
 
 template class FiniteVolume<double>;

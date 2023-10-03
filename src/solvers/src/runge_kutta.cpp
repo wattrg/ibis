@@ -1,3 +1,4 @@
+#include <spdlog/spdlog.h>
 #include "runge_kutta.h"
 #include "solver.h"
 
@@ -7,12 +8,13 @@ RungeKutta::RungeKutta(json config, GridBlock<double> grid, std::string grid_dir
     : Solver(grid_dir, flow_dir)
 {
     // configuration
-    max_time_ = config.at("max_time");
-    max_step_ = config.at("max_step");
-    print_frequency_ = config.at("print_frequency");
-    plot_frequency_ = config.at("plot_frequency");
-    plot_every_n_steps_ = config.at("plot_every_n_steps");
-    cfl_ = config.at("cfl"); 
+    json solver_config = config.at("solver");
+    max_time_ = solver_config.at("max_time");
+    max_step_ = solver_config.at("max_step");
+    print_frequency_ = solver_config.at("print_frequency");
+    plot_frequency_ = solver_config.at("plot_frequency");
+    plot_every_n_steps_ = solver_config.at("plot_every_n_steps");
+    cfl_ = solver_config.at("cfl"); 
 
     // memory
     grid_ = grid;
@@ -21,7 +23,7 @@ RungeKutta::RungeKutta(json config, GridBlock<double> grid, std::string grid_dir
     flow_ = FlowStates<double>(number_cells);
     conserved_quantities_ = ConservedQuantities<double>(number_cells, dim);
     dUdt_ = ConservedQuantities<double>(number_cells, dim);
-    fv_ = FiniteVolume<double>(grid_);
+    fv_ = FiniteVolume<double>(grid_, config);
 
     // progress
     time_since_last_plot_ = 0.0;
@@ -30,8 +32,7 @@ RungeKutta::RungeKutta(json config, GridBlock<double> grid, std::string grid_dir
 }
 
 int RungeKutta::initialise() {
-    read_initial_condition(flow_, flow_dir_);
-    return 0;
+    return read_initial_condition(flow_, flow_dir_);
 }
 
 int RungeKutta::finalise() {
@@ -40,6 +41,7 @@ int RungeKutta::finalise() {
 
 int RungeKutta::take_step() {
     fv_.compute_dudt(flow_, grid_, dUdt_);
+
     double dt = cfl_ / fv_.estimate_signal_frequency(flow_, grid_);
     conserved_quantities_.apply_time_derivative(dUdt_, dt);
     t_ += dt;
@@ -47,7 +49,7 @@ int RungeKutta::take_step() {
     return 0;
 }
 bool RungeKutta::print_this_step(unsigned int step) {
-    if (step % print_frequency_ == 0) return true;
+    if (step != 0 && step % print_frequency_ == 0) return true;
     return false;
 }
 
@@ -59,9 +61,10 @@ bool RungeKutta::plot_this_step(unsigned int step) {
 
 int RungeKutta::plot_solution(unsigned int step) {
     (void) step;
-    int result =  write_flow_solution<double>(flow_, flow_dir_, n_solutions_);
     n_solutions_ ++;
+    int result =  write_flow_solution<double>(flow_, flow_dir_, n_solutions_);
     time_since_last_plot_ = 0.0;
+    spdlog::info("  Written flow solution");
     return result;
 }
 
@@ -70,11 +73,11 @@ std::string RungeKutta::progress_string(unsigned int step) {
 }
 std::string RungeKutta::stop_reason(unsigned int step) {
     if (t_ > max_time_) return "reached max time"; 
-    if (step > max_step_) return "reached max step";
+    if (step >= max_step_-1) return "reached max step";
     return "Shouldn't reach here";
 }
 bool RungeKutta::stop_now(unsigned int step) {
-    if (step >= max_step_) return true;
+    if (step >= max_step_-1) return true;
     if (t_ >= max_time_) return true;
     return false;
 }

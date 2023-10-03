@@ -27,8 +27,6 @@ private:
     double plot_frequency_;
     int plot_every_n_steps_;
     double cfl_;
-    std::string grid_dir_;
-    std::string flow_dir_;
 
 private:
     // progress

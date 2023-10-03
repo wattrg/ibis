@@ -1,6 +1,7 @@
 #include <stdexcept>
 #include <string>
 #include <doctest/doctest.h>
+#include <spdlog/spdlog.h>
 #include "grid_io.h"
 
 GridFileType file_type_from_name(std::string file_name) {
@@ -10,9 +11,7 @@ GridFileType file_type_from_name(std::string file_name) {
         ext = file_name.substr(pos+1);
     }
     else {
-        std::cerr << "Unable to determine file type of " 
-                  << file_name 
-                  << std::endl;
+        spdlog::error("Unable to determine file type of {}", file_name);
         throw new std::runtime_error("Unable to determine file type");
     }
 
@@ -22,7 +21,7 @@ GridFileType file_type_from_name(std::string file_name) {
     if (ext == "ibis") {
         return GridFileType::Native;
     }
-    std::cerr << "Unknown grid file type: " << ext << std::endl;
+    spdlog::error("Unknown grid file type: {}", ext);
     throw new std::runtime_error("Unknown grid file type");
 }
 
@@ -41,7 +40,7 @@ ElemType elem_type_from_vtk_type(int su2_type) {
         case 14:
             return ElemType::Pyramid;
         default:
-            std::cerr << "Unknown su2 cell type: " << su2_type << std::endl;
+            spdlog::error("Unknown su2 cell type: {}", su2_type);
             throw new std::runtime_error("");
     }
 }
@@ -69,7 +68,7 @@ GridIO::GridIO(std::string file_name) {
     GridFileType type = file_type_from_name(file_name); 
     std::ifstream grid_file(file_name);
     if (!grid_file) {
-        std::cerr << "Could not find " << file_name << std::endl;
+        spdlog::error("Could not find {}", file_name);
         throw new std::runtime_error("File not found");
     }
     switch (type) {

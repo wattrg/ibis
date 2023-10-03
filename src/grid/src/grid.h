@@ -44,6 +44,7 @@ public:
     int num_cells() const {return num_valid_cells_;}
     int num_ghost_cells() const {return num_ghost_cells_;}
     int num_total_cells() const {return num_valid_cells_+num_ghost_cells_;}
+    bool is_valid(const int i) const {return i < num_valid_cells_;}
 
     int dim() const {return dim_;}
 

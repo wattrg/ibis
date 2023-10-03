@@ -194,7 +194,7 @@ def make_default_solver():
     )
 
 class Config:
-    _json_values = ["convective_flux", "solver", "grid"]
+    _json_values = ["convective_flux", "solver", "grid", "dimensions"]
     __slots__ = _json_values
 
     def __init__(self):

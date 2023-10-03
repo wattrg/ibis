@@ -128,15 +128,16 @@ void Interfaces<T>::compute_centres(Vertices<T> vertices){
         T x = 0.0;
         T y = 0.0;
         T z = 0.0;
-        for (unsigned int vtx_i = 0; vtx_i < face_vertices.size(); vtx_i++) {
+        unsigned int num_vertices = face_vertices.size();
+        for (unsigned int vtx_i = 0; vtx_i < num_vertices; vtx_i++) {
             int vtx_id = face_vertices[vtx_i];
             x += vertices.positions().x(vtx_id);  
             y += vertices.positions().y(vtx_id);
             z += vertices.positions().z(vtx_id);
         }
-        centre_.x(face_i) = x;
-        centre_.y(face_i) = y;
-        centre_.z(face_i) = z;
+        centre_.x(face_i) = x / num_vertices;
+        centre_.y(face_i) = y / num_vertices;
+        centre_.z(face_i) = z / num_vertices;
     });
 }
 
@@ -242,7 +243,7 @@ TEST_CASE("interface look up") {
     CHECK(x.id(std::vector<int> {7, 6}) == 9);
 }
 
-TEST_CASE("Interface Geometry") {
+Interfaces<double> generate_interfaces() {
     Vertices<double> vertices(16);
     std::vector<Vector3<double>> vertex_pos {
         Vector3<double>(0.0, 0.0, 0.0),
@@ -325,11 +326,19 @@ TEST_CASE("Interface Geometry") {
     Interfaces<double> interfaces (interface_id_constructor, shapes);
     interfaces.compute_areas(vertices);
     interfaces.compute_orientations(vertices);
+    interfaces.compute_centres(vertices);
+    return interfaces;
+}
 
-    for (unsigned int i = 0; i < shapes.size(); i++){
+TEST_CASE("Interface area") {
+    Interfaces<double> interfaces = generate_interfaces();
+    for (int i = 0; i < interfaces.size(); i++){
         CHECK(Kokkos::abs(interfaces.area(i) - 1.0) < 1e-14);
     }
+}
 
+TEST_CASE("Interface directions") {
+    Interfaces<double> interfaces = generate_interfaces();
     CHECK(Kokkos::abs(interfaces.norm(0).x() - +0.0) < 1e-14);
     CHECK(Kokkos::abs(interfaces.norm(0).y() - -1.0) < 1e-14);
     CHECK(Kokkos::abs(interfaces.norm(0).z() - +0.0) < 1e-14);
@@ -353,4 +362,21 @@ TEST_CASE("Interface Geometry") {
     CHECK(Kokkos::abs(interfaces.norm(5).x() - +1.0) < 1e-14);
     CHECK(Kokkos::abs(interfaces.norm(5).y() - +0.0) < 1e-14);
     CHECK(Kokkos::abs(interfaces.norm(5).z() - +0.0) < 1e-14);
+}
+
+TEST_CASE("Interface centres"){
+    Interfaces<double> interfaces = generate_interfaces();
+    std::vector<double> xs = {
+        0.5, 1.0, 0.5, 0.0, 1.5, 2.0, 1.5, 2.5, 3.0, 2.5, 1.0, 0.5, 0.0,
+        2.0, 1.5, 3.0, 2.5, 1.0, 0.5, 0.0, 2.0, 1.5, 3.0, 2.5
+    };
+    std::vector<double> ys = {
+        0.0, 0.5, 1.0, 0.5, 0.0, 0.5, 1.0, 0.0, 0.5, 1.0, 1.5, 2.0, 1.5, 1.5, 2.0, 1.5, 2.0,
+        2.5, 3.0, 2.5, 2.5, 3.0, 2.5, 3.0
+    };
+    for (unsigned int i = 0; i < xs.size(); i++) {
+        CHECK(Kokkos::abs(interfaces.centre().x(i) - xs[i]) < 1e-14);
+        CHECK(Kokkos::abs(interfaces.centre().y(i) - ys[i]) < 1e-14);
+        CHECK(Kokkos::abs(interfaces.centre().z(i) - 0.0) < 1e-14);
+    }
 }

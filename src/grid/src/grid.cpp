@@ -355,9 +355,20 @@ TEST_CASE("grid cell outsigns") {
     json config = build_config();
     GridBlock<double> block = GridBlock<double>("../src/grid/test/grid.su2", config);
     CHECK(block.cells().size() == expected.cells.size());
+    std::vector<std::vector<int>> outsigns = {
+         {1, 1, 1, 1}, 
+         {1, 1, 1, -1}, 
+         {1, 1, 1, -1}, 
+         {-1, 1, 1, 1},
+         {-1, 1, 1, -1},
+         {-1, 1, 1, -1},
+         {-1, 1, 1, 1},
+         {-1, 1, 1, -1},
+         {-1, 1, 1, -1}
+    };
     for (int i = 0; i < block.cells().size(); i++) {
         for (unsigned int j = 0; j < block.cells().faces().outsigns(i).size(); j++){
-            CHECK(block.cells().faces().outsigns(i)(j) == 1);
+            CHECK(block.cells().faces().outsigns(i)(j) == outsigns[i][j]);
         }
     }
 }

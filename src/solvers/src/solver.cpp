@@ -1,4 +1,6 @@
 #include <iostream>
+#include <filesystem>
+#include <algorithm>
 #include <nlohmann/json.hpp>
 #include <spdlog/spdlog.h>
 
@@ -11,7 +13,8 @@ Solver::Solver(std::string grid_dir, std::string flow_dir)
     : grid_dir_(grid_dir), flow_dir_(flow_dir) {}
 
 int Solver::solve() {
-    initialise();
+    int success = initialise();
+    if (success != 0) return success;
     for (int step = 0; step < max_step(); step++) {
         int result = take_step();
 
@@ -42,14 +45,14 @@ int Solver::solve() {
     return 0;
 }
 
-Solver * make_solver(json config, std::string grid_dir, std::string flow_dir) {
+std::unique_ptr<Solver> make_solver(json config, std::string grid_dir, std::string flow_dir) {
     std::string grid_file = grid_dir + "/block_0000.su2";
     json solver_config = config.at("solver");
     json grid_config = config.at("grid");
     std::string solver_name = solver_config.at("name");
     if (solver_name == "runge_kutta") {
         GridBlock<double> grid = GridBlock<double>(grid_file, grid_config);
-        return new RungeKutta(solver_config, grid, grid_dir, flow_dir);
+        return std::unique_ptr<Solver>(new RungeKutta(config, grid, grid_dir, flow_dir));
     }
     return NULL;
 }
@@ -58,14 +61,21 @@ template<typename T>
 int read_initial_condition(FlowStates<T>& fs, std::string flow_dir) {
     std::string line;
     std::ifstream temp(flow_dir + "/0000/T");
+    if (!temp) {
+        spdlog::error("Unable to load initial temperature");
+        return 1;
+    }
     int cell_i = 0;
     while (getline(temp, line)) {
         fs.gas.temp(cell_i) = stoi(line);
         cell_i++; 
     }
-    temp.close();
 
     std::ifstream pressure(flow_dir + "/0000/p");
+    if (!pressure) {
+        spdlog::error("Unable to load initial pressure");
+        return 1;
+    }
     cell_i = 0;
     while (getline(temp, line)){
         fs.gas.pressure(cell_i) = stoi(line);
@@ -74,6 +84,10 @@ int read_initial_condition(FlowStates<T>& fs, std::string flow_dir) {
     pressure.close();
 
     std::ifstream vx(flow_dir + "/0000/vx");
+    if (!pressure) {
+        spdlog::error("Unable to load initial vx");
+        return 1;
+    }
     cell_i = 0;
     while (getline(temp, line)){
         fs.vel.x(cell_i) = stoi(line);
@@ -82,6 +96,10 @@ int read_initial_condition(FlowStates<T>& fs, std::string flow_dir) {
     vx.close();
 
     std::ifstream vy(flow_dir + "/0000/vy");
+    if (!pressure) {
+        spdlog::error("Unable to load initial vy");
+        return 1;
+    }
     cell_i = 0;
     while (getline(temp, line)){
         fs.vel.y(cell_i) = stoi(line);
@@ -89,16 +107,69 @@ int read_initial_condition(FlowStates<T>& fs, std::string flow_dir) {
     }
     vy.close();
     return 0;
+
 }
 
 template int read_initial_condition<double>(FlowStates<double>&, std::string);
 
 template<typename T>
 int write_flow_solution(FlowStates<T>& fs, std::string flow_dir, int flow_i) {
-    std::ofstream temp(flow_dir + "/" + std::to_string(flow_i) + "/T");
-    for (unsigned int cell_i = 0; cell_i < fs.number_flow_states(); cell_i++) {
-        temp << fs.gas.temp(cell_i);
+    std::string flow_index = std::to_string(flow_i);
+    unsigned long len = 4;
+    flow_index = std::string(len - std::min(len, flow_index.length()), '0') + flow_index;
+    std::string folder_name = flow_dir + "/" + flow_index;
+    std::filesystem::create_directory(folder_name);
+
+    std::ofstream temp(folder_name + "/T");
+    if (!temp) {
+        spdlog::error("failed to open new temperature directory");
+        return 1;
     }
+    for (unsigned int cell_i = 0; cell_i < fs.number_flow_states(); cell_i++) {
+        temp << fs.gas.temp(cell_i) << std::endl;;
+    }
+    temp.close();
+
+    std::ofstream pressure(folder_name + "/p");
+    if (!pressure) {
+        spdlog::error("failed to open new pressure directory");
+        return 1;
+    }
+    for (unsigned int cell_i = 0; cell_i < fs.number_flow_states(); cell_i++) {
+        pressure << fs.gas.pressure(cell_i) << std::endl;;
+    }
+    pressure.close();
+
+    std::ofstream vx(folder_name + "/vx");
+    if (!vx) {
+        spdlog::error("failed to open new vx directory");
+        return 1;
+    }
+    for (unsigned int cell_i = 0; cell_i < fs.number_flow_states(); cell_i++) {
+        vx << fs.vel.x(cell_i) << std::endl;;
+    }
+    vx.close();
+
+    std::ofstream vy(folder_name + "/vy");
+    if (!vy) {
+        spdlog::error("failed to open new vy directory");
+        return 1;
+    }
+    for (unsigned int cell_i = 0; cell_i < fs.number_flow_states(); cell_i++) {
+        vy << fs.vel.x(cell_i) << std::endl;;
+    }
+    vy.close();
+
+    std::ofstream vz(folder_name + "/vz");
+    if (!vz) {
+        spdlog::error("failed to open new vz directory");
+        return 1;
+    }
+    for (unsigned int cell_i = 0; cell_i < fs.number_flow_states(); cell_i++) {
+        vz << fs.vel.x(cell_i) << std::endl;;
+    }
+    vz.close();
+
     return 0;
 }
 

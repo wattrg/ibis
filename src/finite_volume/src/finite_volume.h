@@ -6,14 +6,16 @@
 #include "conserved_quantities.h"
 #include "boundaries/boundary.h"
 #include "impl/Kokkos_HostThreadTeam.hpp"
+#include <nlohmann/json.hpp>
 
+using json = nlohmann::json;
 
 template <typename T>
 class FiniteVolume {
 public:
     FiniteVolume(){}
 
-    FiniteVolume(const GridBlock<T>& grid);
+    FiniteVolume(const GridBlock<T>& grid, json config);
 
     int compute_dudt(const FlowStates<T>& flow_state, 
                       const GridBlock<T>& grid,
@@ -28,22 +30,16 @@ private:
     FlowStates<T> right_;
     ConservedQuantities<double> flux_;
 
-    // ghost cells
-    // FlowStates<T> ghost_;
-
     // boundary conditions
-    // NOTE: these will become vectors of these properties. 
-    // But for the moment, I'm just using a single boundary 
-    // condition to make sure everything else works
-    // SupersonicInflow<T> bc_;
-    // Field<int> bc_interfaces_;
+    std::vector<std::shared_ptr<BoundaryCondition<T>>> bcs_;
+    std::vector<Field<int>> bc_interfaces_;
 
     // configuration
-    unsigned int dim;
-    unsigned int reconstruction_order;
+    unsigned int dim_;
+    unsigned int reconstruction_order_;
 
     // methods
-    void apply_pre_reconstruction_bc();
+    void apply_pre_reconstruction_bc(FlowStates<T>& fs, GridBlock<T>& grid);
     void reconstruct(FlowStates<T>& flow_states, unsigned int order);
     void compute_flux();
     void apply_post_convective_flux_bc();
