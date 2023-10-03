@@ -8,19 +8,20 @@ enum class BoundaryConditions {
     SupersonicInflow, SlipWall, SupersonicOutflow
 };
 
+
 template <typename T>
-class BoundaryCondition {
+class PreReconstruction {
 public:
-    virtual void apply_pre_reconstruction(FlowStates<T>& fs, GridBlock<T>& grid, Field<int>& boundary_faces);
+    virtual void apply(FlowStates<T>& fs, GridBlock<T>& grid, Field<int>& boundary_faces)=0;
 };
 
 template <typename T>
-class SupersonicInflow : public BoundaryCondition<T> {
+class FlowStateCopy : public PreReconstruction<T> {
 public:
-    SupersonicInflow(FlowState<T> fs) : fs_(fs) {}
+    FlowStateCopy(FlowState<T> fs) : fs_(fs) {}
 
     KOKKOS_INLINE_FUNCTION
-    void apply_pre_reconstruction(FlowStates<T>& fs, GridBlock<T>& grid, Field<int>& boundary_faces) {
+    void apply(FlowStates<T>& fs, GridBlock<T>& grid, Field<int>& boundary_faces) {
         unsigned int size = boundary_faces.size();
         Kokkos::parallel_for("SupersonicInflow::apply_pre_reconstruction", size, KOKKOS_LAMBDA(const int i){
             int face_id = boundary_faces(i);
@@ -39,6 +40,19 @@ public:
 
 private:
     FlowState<T> fs_;
+};
+
+template <typename T>
+class BoundaryCondition {
+public:
+    BoundaryCondition(std::vector<std::shared_ptr<PreReconstruction<T>>>);
+
+    BoundaryCondition(json config);
+
+    void apply_pre_reconstruction(FlowStates<T>& fs, GridBlock<T>& grid, Field<int>& boundary_faces);
+
+private:
+    std::vector<std::shared_ptr<PreReconstruction<T>>> pre_reconstruction_;
 };
 
 #endif

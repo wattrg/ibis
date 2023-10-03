@@ -4,6 +4,7 @@ add_library(
 	src/finite_volume.cpp 
 	src/flux_calc.cpp 
 	src/flow_state_conserved_conversion.cpp
+	src/boundaries/boundary.cpp
 )
 
 target_link_libraries(
