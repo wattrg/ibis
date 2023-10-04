@@ -3,6 +3,7 @@ add_library(
 	STATIC 
 	src/finite_volume.cpp 
 	src/flux_calc.cpp 
+	src/flux_calculators/hanel.cpp
 	src/flow_state_conserved_conversion.cpp
 	src/boundaries/boundary.cpp
 )
@@ -14,6 +15,7 @@ target_link_libraries(
 	doctest 
 	util
 	nlohmann_json::nlohmann_json
+	spdlog::spdlog
 )
 # target_link_libraries(grid PRIVATE doctest)
 # target_link_libraries(grid PRIVATE util)
@@ -22,6 +24,7 @@ add_executable(
 	finite_volume_unittest 
 	test/unittest.cpp 
 	src/flux_calc.cpp 
+	src/flux_calculators/hanel.cpp
 	src/io.cpp
 )
 target_compile_options(finite_volume_unittest PRIVATE -Wall -Wextra -Wpedantic -Werror -g)
@@ -32,4 +35,5 @@ target_link_libraries(
 	doctest
 	Kokkos::kokkos
 	nlohmann_json::nlohmann_json
+	spdlog::spdlog
 )

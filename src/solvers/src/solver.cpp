@@ -113,7 +113,7 @@ int read_initial_condition(FlowStates<T>& fs, std::string flow_dir) {
 template int read_initial_condition<double>(FlowStates<double>&, std::string);
 
 template<typename T>
-int write_flow_solution(FlowStates<T>& fs, std::string flow_dir, int flow_i) {
+int write_flow_solution(const FlowStates<T>& fs, const GridBlock<T>& grid, const std::string flow_dir, int flow_i) {
     std::string flow_index = std::to_string(flow_i);
     unsigned long len = 4;
     flow_index = std::string(len - std::min(len, flow_index.length()), '0') + flow_index;
@@ -125,7 +125,7 @@ int write_flow_solution(FlowStates<T>& fs, std::string flow_dir, int flow_i) {
         spdlog::error("failed to open new temperature directory");
         return 1;
     }
-    for (unsigned int cell_i = 0; cell_i < fs.number_flow_states(); cell_i++) {
+    for (int cell_i = 0; cell_i < grid.num_cells(); cell_i++) {
         temp << fs.gas.temp(cell_i) << std::endl;;
     }
     temp.close();
@@ -135,7 +135,7 @@ int write_flow_solution(FlowStates<T>& fs, std::string flow_dir, int flow_i) {
         spdlog::error("failed to open new pressure directory");
         return 1;
     }
-    for (unsigned int cell_i = 0; cell_i < fs.number_flow_states(); cell_i++) {
+    for (int cell_i = 0; cell_i < grid.num_cells(); cell_i++) {
         pressure << fs.gas.pressure(cell_i) << std::endl;;
     }
     pressure.close();
@@ -145,7 +145,7 @@ int write_flow_solution(FlowStates<T>& fs, std::string flow_dir, int flow_i) {
         spdlog::error("failed to open new vx directory");
         return 1;
     }
-    for (unsigned int cell_i = 0; cell_i < fs.number_flow_states(); cell_i++) {
+    for (int cell_i = 0; cell_i < grid.num_cells(); cell_i++) {
         vx << fs.vel.x(cell_i) << std::endl;;
     }
     vx.close();
@@ -155,7 +155,7 @@ int write_flow_solution(FlowStates<T>& fs, std::string flow_dir, int flow_i) {
         spdlog::error("failed to open new vy directory");
         return 1;
     }
-    for (unsigned int cell_i = 0; cell_i < fs.number_flow_states(); cell_i++) {
+    for (int cell_i = 0; cell_i < grid.num_cells(); cell_i++) {
         vy << fs.vel.x(cell_i) << std::endl;;
     }
     vy.close();
@@ -165,7 +165,7 @@ int write_flow_solution(FlowStates<T>& fs, std::string flow_dir, int flow_i) {
         spdlog::error("failed to open new vz directory");
         return 1;
     }
-    for (unsigned int cell_i = 0; cell_i < fs.number_flow_states(); cell_i++) {
+    for (int cell_i = 0; cell_i < grid.num_cells(); cell_i++) {
         vz << fs.vel.x(cell_i) << std::endl;;
     }
     vz.close();
@@ -173,4 +173,4 @@ int write_flow_solution(FlowStates<T>& fs, std::string flow_dir, int flow_i) {
     return 0;
 }
 
-template int write_flow_solution<double>(FlowStates<double>&, std::string, int);
+template int write_flow_solution<double>(const FlowStates<double>&, const GridBlock<double>&, std::string, int);

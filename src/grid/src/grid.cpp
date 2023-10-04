@@ -81,6 +81,7 @@ std::map<int, int> GridBlock<T>::setup_boundaries(const GridIO& grid_io,
     for (auto bc : grid_io.bcs()) {
         // unpack the boundary data from the grid_io object
         std::string bc_label = bc.first;
+        boundary_tags_.push_back(bc_label);
         std::vector<ElemIO> bc_faces = bc.second;
         json boundary_config = boundaries.at(bc_label);
 
@@ -163,6 +164,16 @@ void GridBlock<T>::compute_interface_connectivity_(std::map<int, int> ghost_cell
             interfaces_.attach_cell_right(ghost_cell_id, face_id);
         }
     }
+}
+
+template <typename T>
+const Field<int>& GridBlock<T>::boundary_faces(std::string boundary_tag) const {
+    return boundary_faces_.at(boundary_tag);
+}
+
+template <typename T>
+const std::vector<std::string>& GridBlock<T>::boundary_tags()const {
+    return boundary_tags_;
 }
 
 template class GridBlock<double>;

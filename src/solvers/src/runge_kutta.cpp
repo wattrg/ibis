@@ -2,7 +2,6 @@
 #include "runge_kutta.h"
 #include "solver.h"
 
-RungeKutta::~RungeKutta() {}
 
 RungeKutta::RungeKutta(json config, GridBlock<double> grid, std::string grid_dir, std::string flow_dir) 
     : Solver(grid_dir, flow_dir)
@@ -62,9 +61,9 @@ bool RungeKutta::plot_this_step(unsigned int step) {
 int RungeKutta::plot_solution(unsigned int step) {
     (void) step;
     n_solutions_ ++;
-    int result =  write_flow_solution<double>(flow_, flow_dir_, n_solutions_);
+    int result =  write_flow_solution<double>(flow_, grid_, flow_dir_, n_solutions_);
     time_since_last_plot_ = 0.0;
-    spdlog::info("  Written flow solution");
+    spdlog::info("    written flow solution");
     return result;
 }
 

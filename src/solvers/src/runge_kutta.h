@@ -14,9 +14,9 @@ class RungeKutta : public Solver {
 public:
     RungeKutta(json config, GridBlock<double> grid, std::string grid_dir, std::string flow_dir);
 
-    ~RungeKutta();
+    ~RungeKutta(){}
 
-    int solver();
+    int solve();
 
 
 private:
@@ -49,13 +49,13 @@ private:
 
 private:
     // memory
-    GridBlock<double> grid_;
     FlowStates<double> flow_;
     ConservedQuantities<double> conserved_quantities_;
     ConservedQuantities<double> dUdt_;
 
 private:
     // spatial discretisation
+    GridBlock<double> grid_;
     FiniteVolume<double> fv_;
 };
 

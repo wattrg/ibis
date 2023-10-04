@@ -46,6 +46,9 @@ public:
     int num_total_cells() const {return num_valid_cells_+num_ghost_cells_;}
     bool is_valid(const int i) const {return i < num_valid_cells_;}
 
+    const Field<int>& boundary_faces(std::string boundary_tag) const;
+    const std::vector<std::string>& boundary_tags() const;
+
     int dim() const {return dim_;}
 
 private:
@@ -57,6 +60,7 @@ private:
     int num_ghost_cells_;
     std::map<std::string, Field<int>> boundary_cells_;
     std::map<std::string, Field<int>> boundary_faces_;
+    std::vector<std::string> boundary_tags_;
 
     std::map<int, int> setup_boundaries(
         const GridIO & grid_io, json& boundaries,

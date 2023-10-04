@@ -3,6 +3,7 @@
 
 #include <Kokkos_Core.hpp>
 #include "../../../gas/src/flow_state.h"
+#include "../flux_calc.h"
 #include "../conserved_quantities.h"
 
 template <typename T>
@@ -13,9 +14,9 @@ void hanel(FlowStates<T>& left, FlowStates<T>& right, ConservedQuantities<T>& fl
         T pL = left.gas.pressure(i);
         T eL = left.gas.energy(i);
         T aL = Kokkos::sqrt(1.4 * 287 * left.gas.temp(i));
-        T uL = left.vel[i].x();
-        T vL = left.vel[i].y();
-        T wL = left.vel[i].z();
+        T uL = left.vel.x(i);
+        T vL = left.vel.y(i);
+        T wL = left.vel.z(i);
         T keL = 0.5*(uL*uL + vL*vL + wL*wL);
         T pLrL = pL / rL;
         T HL = eL + pLrL + keL;
@@ -25,17 +26,13 @@ void hanel(FlowStates<T>& left, FlowStates<T>& right, ConservedQuantities<T>& fl
         T pR = right.gas.pressure(i);
         T eR = right.gas.energy(i);
         T aR = Kokkos::sqrt(1.4 * 287 * right.gas.temp(i));
-        T uR = right.vel[i].x();
-        T vR = right.vel[i].y();
-        T wR = right.vel[i].z();
+        T uR = right.vel.x(i);
+        T vR = right.vel.y(i);
+        T wR = right.vel.z(i);
         T keR = 0.5*(uR*uR + vR*vR + wR*wR);
         T pRrR = pR / rR;
         T HR = eR + pRrR + keR;
 
-        // left and right mach numbers
-        T am = Kokkos::max(aL, aR);
-        T ML = uL / am;
-        T MR = uR / am;
 
         // pressure and velocity splitting (eqn. 7 and 9)
         T pLplus, uLplus;
@@ -69,5 +66,7 @@ void hanel(FlowStates<T>& left, FlowStates<T>& right, ConservedQuantities<T>& fl
         flux.energy(i) = uLplus * rL * HL + uRminus *rR * HR;
     });
 }
+
+template void hanel<double>(FlowStates<double>&, FlowStates<double>&, ConservedQuantities<double>&, bool);
 
 #endif

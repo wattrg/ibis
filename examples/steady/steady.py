@@ -2,8 +2,10 @@ config.convective_flux.flux_calculator = FluxCalculator.Hanel
 config.convective_flux.reconstruction_order = 1
 config.solver = RungeKutta()
 config.solver.cfl = 0.5
-config.solver.max_step = 100
+config.solver.max_step = 1
 config.solver.max_time = 1
+config.solver.plot_every_n_steps = 20
+config.solver.plot_frequency = 10000
 
 flow_state = FlowState(rho=1.225, T=300.0, vx=1000.0)
 config.grid = Block(

@@ -5,15 +5,15 @@
 #include "../../grid/src/interface.h"
 #include "conserved_quantities.h"
 
-#include "flux_calculators/hanel.h"
 
 enum class FluxCalculator {
     Hanel,
 };
 
+FluxCalculator flux_calculator_from_string(std::string name);
+
+
 template <typename T>
-void compute_flux(FlowStates<T>& left, FlowStates<T>& right, 
-                  ConservedQuantities<T>& flux, Interfaces<T>& faces, 
-                  FluxCalculator flux_calc, bool three_d);
+void hanel(FlowStates<T>& left, FlowStates<T>& right, ConservedQuantities<T>& flux, bool three_d);
 
 #endif

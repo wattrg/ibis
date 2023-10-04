@@ -132,6 +132,7 @@ class Block:
 
     def as_dict(self):
         dictionary = {"boundaries": {}}
+        dictionary["dimensions"] = self.dim
         for key in self.boundaries:
             dictionary["boundaries"][key] = self.boundaries[key].as_dict()
         return dictionary
@@ -194,7 +195,7 @@ def make_default_solver():
     )
 
 class Config:
-    _json_values = ["convective_flux", "solver", "grid", "dimensions"]
+    _json_values = ["convective_flux", "solver", "grid"]
     __slots__ = _json_values
 
     def __init__(self):

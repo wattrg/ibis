@@ -9,6 +9,10 @@
 template <typename T>
 struct FlowState{
 public:
+    FlowState(){}
+
+    ~FlowState(){}
+
     FlowState(GasState<T> gs, Vector3<T> vel)
         : gas_state(gs), velocity(vel) {}
     
@@ -24,7 +28,8 @@ public:
 
     FlowStates(int n) ;
 
-    void copy_flow_state(const FlowState<T>& fs, const int i);
+    KOKKOS_FUNCTION
+    void copy_flow_state(FlowState<T>& fs, const int i);
 
     unsigned int number_flow_states() const {return gas.size();}
 

@@ -9,6 +9,8 @@
 // A single vector with 3 components
 template <typename T>
 struct Vector3 {
+    Vector3(){}
+
     Vector3(T x, T y, T z) : x(x), y(y), z(z) {}
     T x, y, z;
 
@@ -45,6 +47,8 @@ template <typename T>
 struct Vector3s {
 public:
     Vector3s() {}
+
+    // ~Vector3s(){}
 
     Vector3s(std::string description, int n) {
         view_ = Kokkos::View<T*[3]>(description, n);

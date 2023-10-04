@@ -14,7 +14,7 @@ class Solver {
 public:
     Solver(std::string grid_dir, std::string flow_dir);
     int solve();
-    virtual ~Solver(){}
+    virtual ~Solver() {}
 
 protected:
     int write_solution();
@@ -40,7 +40,7 @@ template<typename T>
 int read_initial_condition(FlowStates<T>& fs, std::string flow_dir);
 
 template<typename T>
-int write_flow_solution(FlowStates<T>& fs, std::string flow_dir, int flow_i);
+int write_flow_solution(const FlowStates<T>& fs, const GridBlock<T>& grid, const std::string flow_dir, int flow_i);
 
 
 #endif
