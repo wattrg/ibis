@@ -39,10 +39,10 @@ int RungeKutta::finalise() {
 }
 
 int RungeKutta::take_step() {
-    fv_.compute_dudt(flow_, grid_, dUdt_);
-
     double dt = cfl_ / fv_.estimate_signal_frequency(flow_, grid_);
+    fv_.compute_dudt(flow_, grid_, dUdt_);
     conserved_quantities_.apply_time_derivative(dUdt_, dt);
+
     t_ += dt;
     time_since_last_plot_ += dt;
     return 0;

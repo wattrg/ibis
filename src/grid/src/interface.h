@@ -59,22 +59,22 @@ public:
     T& area(int i) {return area_(i);}
 
     KOKKOS_FORCEINLINE_FUNCTION
-    Vector3s<T> norm() {return norm_;}
+    Vector3s<T>& norm() {return norm_;}
 
     KOKKOS_FORCEINLINE_FUNCTION
-    Vector3s<T> norm() const {return norm_;}
+    const Vector3s<T>& norm() const {return norm_;}
 
     KOKKOS_FORCEINLINE_FUNCTION
-    Vector3s<T> tan1() {return tan1_;}
+    Vector3s<T>& tan1() {return tan1_;}
 
     KOKKOS_FORCEINLINE_FUNCTION
-    Vector3s<T> tan2() {return tan2_;}
+    Vector3s<T>& tan2() {return tan2_;}
 
     KOKKOS_FORCEINLINE_FUNCTION
-    Vector3s<T> centre() {return centre_;}
+    Vector3s<T>& centre() {return centre_;}
 
     KOKKOS_FORCEINLINE_FUNCTION
-    Vector3s<T> centre() const {return centre_;}
+    const Vector3s<T>& centre() const {return centre_;}
 
     KOKKOS_FORCEINLINE_FUNCTION
     void attach_cell_left(const int cell_id,  const int face_id) {

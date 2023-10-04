@@ -132,6 +132,7 @@ void FiniteVolume<T>::flux_surface_integral(const GridBlock<T>& grid, ConservedQ
             int face_id = face_ids(face_i); 
             T area = faces.area(face_id)* cell_faces.outsigns(cell_i)(face_i);
             d_mass += flux_.mass(face_id) * area; 
+            printf("face_id = %i, mass flux = %f\n", face_id, flux_.mass(face_id));
             d_momentum_x += flux_.momentum_x(face_id) * area; 
             d_momentum_y += flux_.momentum_y(face_id) * area; 
             d_momentum_z += flux_.momentum_z(face_id) * area; 
