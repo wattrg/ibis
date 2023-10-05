@@ -50,8 +50,9 @@ int run(int argc, char* argv[]) {
     int result; 
 
     {
-        std::unique_ptr<Solver> solver = make_solver(config, grid_dir, flow_dir);
+        Solver * solver = make_solver(config, grid_dir, flow_dir);
         result = solver->solve();
+        delete solver;
     }
 
     Kokkos::finalize();

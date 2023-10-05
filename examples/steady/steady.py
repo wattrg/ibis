@@ -1,4 +1,4 @@
-flow_state = FlowState(rho=1.225, T=300.0, vx=1000.0)
+flow_state = FlowState(rho=1.225, T=300.0, vx=1000.0, vy=500.0)
 
 config.convective_flux = ConvectiveFlux(
     flux_calculator = FluxCalculator.Hanel,
@@ -17,9 +17,9 @@ config.grid = Block(
     file_name="grid.su2", 
     initial_condition=flow_state,
     boundaries = {
-        "inflow": supersonic_inflow(flow_state),
-        "slip_wall_top": slip_wall(),
-        "slip_wall_bottom": slip_wall(),
-        "outflow": supersonic_outflow()
+        "left": supersonic_inflow(flow_state),
+        "top": supersonic_outflow(),
+        "bottom": supersonic_inflow(flow_state),
+        "right": supersonic_outflow()
     }
 )

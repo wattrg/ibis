@@ -97,8 +97,8 @@ std::map<int, int> GridBlock<T>::setup_boundaries(const GridIO& grid_io,
                 // just 
                 // cell_vertices.push_back({-1, -1});
                 // cell_shapes.push_back(ElemType::Line);
-                num_ghost_cells_++;
                 int ghost_cell_id = num_valid_cells_ + num_ghost_cells_;
+                num_ghost_cells_++;
                 boundary_cells.push_back(ghost_cell_id);
                 ghost_cell_map.insert({face_id, ghost_cell_id});
             }

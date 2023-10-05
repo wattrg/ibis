@@ -45,14 +45,14 @@ int Solver::solve() {
     return 0;
 }
 
-std::unique_ptr<Solver> make_solver(json config, std::string grid_dir, std::string flow_dir) {
+Solver * make_solver(json config, std::string grid_dir, std::string flow_dir) {
     std::string grid_file = grid_dir + "/block_0000.su2";
     json solver_config = config.at("solver");
     json grid_config = config.at("grid");
     std::string solver_name = solver_config.at("name");
     if (solver_name == "runge_kutta") {
         GridBlock<double> grid = GridBlock<double>(grid_file, grid_config);
-        return std::unique_ptr<Solver>(new RungeKutta(config, grid, grid_dir, flow_dir));
+        return new RungeKutta(config, grid, grid_dir, flow_dir);
     }
     return NULL;
 }

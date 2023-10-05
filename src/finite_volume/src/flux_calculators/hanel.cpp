@@ -13,7 +13,7 @@ void hanel(FlowStates<T>& left, FlowStates<T>& right, ConservedQuantities<T>& fl
         T rL = left.gas.rho(i);
         T pL = left.gas.pressure(i);
         T eL = left.gas.energy(i);
-        T aL = Kokkos::sqrt(1.4 * 287 * left.gas.temp(i));
+        T aL = Kokkos::sqrt(1.4 * 287.0 * left.gas.temp(i));
         T uL = left.vel.x(i);
         T vL = left.vel.y(i);
         T wL = left.vel.z(i);
@@ -25,7 +25,7 @@ void hanel(FlowStates<T>& left, FlowStates<T>& right, ConservedQuantities<T>& fl
         T rR = right.gas.rho(i);
         T pR = right.gas.pressure(i);
         T eR = right.gas.energy(i);
-        T aR = Kokkos::sqrt(1.4 * 287 * right.gas.temp(i));
+        T aR = Kokkos::sqrt(1.4 * 287.0 * right.gas.temp(i));
         T uR = right.vel.x(i);
         T vR = right.vel.y(i);
         T wR = right.vel.z(i);
@@ -42,7 +42,7 @@ void hanel(FlowStates<T>& left, FlowStates<T>& right, ConservedQuantities<T>& fl
         }
         else {
             uLplus = 0.5*(uL+Kokkos::abs(uL));
-            pLplus = pL*uLplus * (1.0/aL * (2.0-uL/aL));
+            pLplus = pL*uLplus * (1.0/uL);
         }
 
         T pRminus, uRminus;
@@ -58,12 +58,25 @@ void hanel(FlowStates<T>& left, FlowStates<T>& right, ConservedQuantities<T>& fl
         // the final fluxes
         T p_half = pLplus + pRminus;
         flux.mass(i) = uLplus*rL + uRminus * rR;
-        flux.momentum_x(i) = uLplus * rL * uL + uRminus *rR *uR + p_half;
+        flux.momentum_x(i) = uLplus * rL * uL + uRminus *rR * uR + p_half;
         flux.momentum_y(i) = uLplus * rL * vL + uRminus *rR * vR;
         if (three_d) {
             flux.momentum_z(i) = uLplus * rL * wL + uRminus * rR * wR;
         } 
-        flux.energy(i) = uLplus * rL * HL + uRminus *rR * HR;
+        flux.energy(i) = uLplus * rL * HL + uRminus * rR * HR;
+        // if (i==1 || i==3){
+        //     // printf("face %i: rL = %f, rR = %f\n", i, rL, rR);
+        //     // printf("face %i: uL = %f, uR = %f\n", i, uL, uR);
+        //     // printf("face %i: rL = %f, rR = %f\n", i, rL, rR);
+        //     // printf("face %i: hL = %f, hR = %f\n", i, HL, HR);
+        //     // printf("face %i: aL = %f, aR = %f\n", i, aL, aR);
+        //     // printf("face %i: keL = %f, keR = %f\n", i, keL, keR);
+        //     printf("face %i: uLplus = %f, uRminus = %f\n", i, uLplus, uRminus);
+        //     printf("face %i: pLplus = %f, pRminus = %f\n", i, pLplus, pRminus);
+        //     printf("face %i: p_half = %f\n", i, p_half);
+        //     printf("face %i: px = %f\n", i, flux.momentum_x(i));
+        //     printf("\n");
+        // }
     });
 }
 

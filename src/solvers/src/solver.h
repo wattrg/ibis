@@ -34,7 +34,7 @@ protected:
     std::string flow_dir_;
 };
 
-std::unique_ptr<Solver> make_solver(json config, std::string grid_dir, std::string flow_dir);
+Solver* make_solver(json config, std::string grid_dir, std::string flow_dir);
 
 template<typename T>
 int read_initial_condition(FlowStates<T>& fs, std::string flow_dir);
