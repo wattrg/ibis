@@ -68,7 +68,13 @@ public:
     Vector3s<T>& tan1() {return tan1_;}
 
     KOKKOS_FORCEINLINE_FUNCTION
+    const Vector3s<T>& tan1() const {return tan1_;}
+
+    KOKKOS_FORCEINLINE_FUNCTION
     Vector3s<T>& tan2() {return tan2_;}
+
+    KOKKOS_FORCEINLINE_FUNCTION
+    const Vector3s<T>& tan2() const {return tan2_;}
 
     KOKKOS_FORCEINLINE_FUNCTION
     Vector3s<T>& centre() {return centre_;}

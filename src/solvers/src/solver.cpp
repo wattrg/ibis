@@ -77,37 +77,43 @@ int read_initial_condition(FlowStates<T>& fs, std::string flow_dir) {
         return 1;
     }
     cell_i = 0;
-    while (getline(temp, line)){
+    while (getline(pressure, line)){
         fs.gas.pressure(cell_i) = stoi(line);
         cell_i++;
     }
     pressure.close();
 
     std::ifstream vx(flow_dir + "/0000/vx");
-    if (!pressure) {
+    if (!vx) {
         spdlog::error("Unable to load initial vx");
         return 1;
     }
     cell_i = 0;
-    while (getline(temp, line)){
+    while (getline(vx, line)){
         fs.vel.x(cell_i) = stoi(line);
         cell_i++;
     }
     vx.close();
 
     std::ifstream vy(flow_dir + "/0000/vy");
-    if (!pressure) {
+    if (!vy) {
         spdlog::error("Unable to load initial vy");
         return 1;
     }
     cell_i = 0;
-    while (getline(temp, line)){
+    while (getline(vy, line)){
         fs.vel.y(cell_i) = stoi(line);
         cell_i++;
     }
     vy.close();
-    return 0;
 
+    int n_cells = cell_i;
+    for (int cell_i = 0; cell_i < n_cells; cell_i++){
+        fs.gas.rho(cell_i) = fs.gas.pressure(cell_i) / (287.0 * fs.gas.temp(cell_i));
+        fs.gas.energy(cell_i) = 0.7171 * fs.gas.temp(cell_i);
+    }
+
+    return 0;
 }
 
 template int read_initial_condition<double>(FlowStates<double>&, std::string);
@@ -156,7 +162,7 @@ int write_flow_solution(const FlowStates<T>& fs, const GridBlock<T>& grid, const
         return 1;
     }
     for (int cell_i = 0; cell_i < grid.num_cells(); cell_i++) {
-        vy << fs.vel.x(cell_i) << std::endl;;
+        vy << fs.vel.y(cell_i) << std::endl;;
     }
     vy.close();
 
@@ -166,7 +172,7 @@ int write_flow_solution(const FlowStates<T>& fs, const GridBlock<T>& grid, const
         return 1;
     }
     for (int cell_i = 0; cell_i < grid.num_cells(); cell_i++) {
-        vz << fs.vel.x(cell_i) << std::endl;;
+        vz << fs.vel.z(cell_i) << std::endl;;
     }
     vz.close();
 

@@ -1,6 +1,7 @@
 #include <spdlog/spdlog.h>
 #include "runge_kutta.h"
 #include "solver.h"
+#include "../../finite_volume/src/flow_state_conserved_conversion.h"
 
 
 RungeKutta::RungeKutta(json config, GridBlock<double> grid, std::string grid_dir, std::string flow_dir) 
@@ -39,9 +40,11 @@ int RungeKutta::finalise() {
 }
 
 int RungeKutta::take_step() {
+    flow_states_to_conserved(conserved_quantities_, flow_);
     double dt = cfl_ / fv_.estimate_signal_frequency(flow_, grid_);
     fv_.compute_dudt(flow_, grid_, dUdt_);
     conserved_quantities_.apply_time_derivative(dUdt_, dt);
+    conserved_to_flow_states(conserved_quantities_, flow_);
 
     t_ += dt;
     time_since_last_plot_ += dt;
@@ -53,17 +56,16 @@ bool RungeKutta::print_this_step(unsigned int step) {
 }
 
 bool RungeKutta::plot_this_step(unsigned int step) {
-    if (plot_every_n_steps_ > 0 && step % plot_every_n_steps_ == 0) return true;
-    if (time_since_last_plot_ > plot_frequency_) return true;
+    if (plot_every_n_steps_ > 0 && step != 0 && step % plot_every_n_steps_ == 0) return true;
+    if (plot_frequency_ > 0 && time_since_last_plot_ > plot_frequency_) return true;
     return false;
 }
 
 int RungeKutta::plot_solution(unsigned int step) {
-    (void) step;
     n_solutions_ ++;
     int result =  write_flow_solution<double>(flow_, grid_, flow_dir_, n_solutions_);
     time_since_last_plot_ = 0.0;
-    spdlog::info("    written flow solution");
+    spdlog::info("    written flow solution step {}", step);
     return result;
 }
 

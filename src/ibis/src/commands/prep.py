@@ -32,11 +32,16 @@ class ConvectiveFlux:
     __slots__ = _json_values
     _defaults_file = "convective_flux.json"
     
-    def __init__(self):
+    def __init__(self, **kwargs):
         json_data = read_defaults(self._defaults_file) 
         for key in self._json_values:
             setattr(self, key, json_data[key])
-        self.flux_calculator = string_to_flux_calculator(self.flux_calculator)
+
+        for key in kwargs:
+            setattr(self, key, kwargs[key])
+
+        if type(self.flux_calculator) != FluxCalculator:
+            self.flux_calculator = string_to_flux_calculator(self.flux_calculator)
 
     def validate(self):
         if type(self.flux_calculator) != FluxCalculator:
@@ -151,16 +156,34 @@ class BoundaryCondition:
         dictionary["ghost_cells"] = self.ghost_cells
         return dictionary
 
-class FlowStateCopy:
+class _FlowStateCopy:
     def __init__(self, flow_state):
         self.flow_state = flow_state
 
     def as_dict(self):
         return {"type": "flow_state_copy", "flow_state": self.flow_state.as_dict()}
 
+class _InternalCopy:
+    def as_dict(self):
+        return {"type": "internal_copy"}
+
+class _InternalCopyReflect:
+    def as_dict(self):
+        return {"type": "internal_copy_reflect"}
+
 def supersonic_inflow(inflow):
     return BoundaryCondition(
-        pre_reconstruction=[FlowStateCopy(inflow)]
+        pre_reconstruction=[_FlowStateCopy(inflow)]
+    )
+
+def supersonic_outflow():
+    return BoundaryCondition(
+        pre_reconstruction = [_InternalCopy()]
+    )
+
+def slip_wall():
+    return BoundaryCondition(
+        pre_reconstruction = [_InternalCopyReflect()]
     )
 
 
@@ -171,10 +194,13 @@ class RungeKutta:
     _name = Solver.RungeKutta.value
     __slots__ = _json_values
 
-    def __init__(self):
+    def __init__(self, **kwargs):
         json_data = read_defaults(self._defaults_file)
         for key in json_data:
             setattr(self, key, json_data[key])
+
+        for key in kwargs:
+            setattr(self, key, kwargs[key])
 
     def as_dict(self):
         dictionary = {"name": self._name}
@@ -251,7 +277,9 @@ def main(file_name):
         "Solver": Solver,
         "FlowState": FlowState,
         "RungeKutta": RungeKutta,
-        "SupersonicInflow": supersonic_inflow
+        "supersonic_inflow": supersonic_inflow,
+        "supersonic_outflow": supersonic_outflow,
+        "slip_wall": slip_wall
     }
 
     # run the user supplied script

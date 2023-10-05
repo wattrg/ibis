@@ -18,7 +18,9 @@ int conserved_to_flow_states(ConservedQuantities<T>& cq, FlowStates<T> & fs)
         fs.gas.rho(i) = rho;
         fs.vel.x(i) = vx;
         fs.vel.y(i) = vy;
-        fs.vel.z(i) = vz;
+        if (cq.dim() == 3){
+            fs.vel.z(i) = vz;
+        }
         fs.gas.energy(i) = u;
     });
     return 0;

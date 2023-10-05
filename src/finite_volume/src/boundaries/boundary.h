@@ -34,10 +34,24 @@ private:
 };
 
 template <typename T>
+class InternalCopy : public PreReconstruction<T> {
+public:
+    ~InternalCopy(){}
+
+    void apply(FlowStates<T>& fs, const GridBlock<T>& grid, const Field<int>& boundary_faces);
+};
+
+template <typename T>
+class InternalCopyReflectNormal : public PreReconstruction<T> {
+public:
+    ~InternalCopyReflectNormal(){}
+
+    void apply(FlowStates<T>& fs, const GridBlock<T>& grid, const Field<int>& boundary_faces);
+};
+
+template <typename T>
 class BoundaryCondition {
 public:
-    BoundaryCondition(std::vector<std::shared_ptr<PreReconstruction<T>>>);
-
     BoundaryCondition(json config);
 
     void apply_pre_reconstruction(FlowStates<T>& fs, const GridBlock<T>& grid, const Field<int>& boundary_faces);

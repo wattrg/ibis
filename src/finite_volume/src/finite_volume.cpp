@@ -91,6 +91,9 @@ void FiniteVolume<T>::reconstruct(FlowStates<T>& flow_states, const GridBlock<T>
         left_.gas.pressure(i_face) = flow_states.gas.pressure(left);
         left_.gas.rho(i_face) = flow_states.gas.rho(left);
         left_.gas.energy(i_face) = flow_states.gas.energy(left);
+        left_.vel.x(i_face) = flow_states.vel.x(left);
+        left_.vel.y(i_face) = flow_states.vel.y(left);
+        left_.vel.z(i_face) = flow_states.vel.z(left);
 
         // copy right flow states
         int right = grid.interfaces().right_cell(i_face);
@@ -98,11 +101,15 @@ void FiniteVolume<T>::reconstruct(FlowStates<T>& flow_states, const GridBlock<T>
         right_.gas.pressure(i_face) = flow_states.gas.pressure(right);
         right_.gas.rho(i_face) = flow_states.gas.rho(right);
         right_.gas.energy(i_face) = flow_states.gas.energy(right);
+        right_.vel.x(i_face) = flow_states.vel.x(right);
+        right_.vel.y(i_face) = flow_states.vel.y(right);
+        right_.vel.z(i_face) = flow_states.vel.z(right);
     });
 }
 
 template <typename T>
 void FiniteVolume<T>::compute_flux(const GridBlock<T>& grid) {
+    // rotate velocities to the interface local frames
     Interfaces<T> faces = grid.interfaces();
     transform_to_local_frame(left_.vel, faces.norm(), faces.tan1(), faces.tan2());
     transform_to_local_frame(right_.vel, faces.norm(), faces.tan1(), faces.tan2());
@@ -113,7 +120,22 @@ void FiniteVolume<T>::compute_flux(const GridBlock<T>& grid) {
             break;
     }
 
-    // do we need to transform the flow states back to the global reference frame?
+    // rotate the fluxes to the global frame
+    Vector3s<T> norm = faces.norm();
+    Vector3s<T> tan1 = faces.tan1();
+    Vector3s<T> tan2 = faces.tan2();
+    Kokkos::parallel_for("flux::transform_to_global", faces.size(), KOKKOS_LAMBDA(const int i){
+        T px = flux_.momentum_x(i);
+        T py = flux_.momentum_y(i);
+        T pz = flux_.momentum_z(i);
+        T x = px*norm.x(i) + py*tan1.x(i) + pz*tan2.x(i);
+        T y = px*norm.y(i) + py*tan1.y(i) + pz*tan2.y(i);
+        T z = px*norm.z(i) + py*tan1.z(i) + pz*tan2.z(i);
+        flux_.momentum_x(i) = x;
+        flux_.momentum_y(i) = y;
+        flux_.momentum_z(i) = z;
+    });
+
 }
 
 template <typename T>
@@ -132,7 +154,6 @@ void FiniteVolume<T>::flux_surface_integral(const GridBlock<T>& grid, ConservedQ
             int face_id = face_ids(face_i); 
             T area = faces.area(face_id)* cell_faces.outsigns(cell_i)(face_i);
             d_mass += flux_.mass(face_id) * area; 
-            printf("face_id = %i, mass flux = %f\n", face_id, flux_.mass(face_id));
             d_momentum_x += flux_.momentum_x(face_id) * area; 
             d_momentum_y += flux_.momentum_y(face_id) * area; 
             d_momentum_z += flux_.momentum_z(face_id) * area; 
