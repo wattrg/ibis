@@ -65,7 +65,7 @@ int RungeKutta::plot_solution(unsigned int step) {
     n_solutions_ ++;
     int result =  write_flow_solution<double>(flow_, grid_, flow_dir_, n_solutions_);
     time_since_last_plot_ = 0.0;
-    spdlog::info("    written flow solution step {}", step);
+    spdlog::info("  written flow solution: step {}, time {}", step, t_);
     return result;
 }
 
