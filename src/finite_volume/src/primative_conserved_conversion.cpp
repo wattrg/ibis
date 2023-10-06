@@ -1,8 +1,8 @@
-#include "flow_state_conserved_conversion.h"
+#include "primative_conserved_conversion.h"
 #include "conserved_quantities.h"
 
 template <typename T>
-int conserved_to_flow_states(ConservedQuantities<T>& cq, FlowStates<T> & fs)
+int conserved_to_primatives(ConservedQuantities<T>& cq, FlowStates<T> & fs)
 {
 
     Kokkos::parallel_for("FS::from_conserved_quantities", fs.gas.size(), KOKKOS_LAMBDA(const int i){
@@ -14,7 +14,7 @@ int conserved_to_flow_states(ConservedQuantities<T>& cq, FlowStates<T> & fs)
             vz = cq.momentum_z(i) / rho;
         }
         T ke = 0.5*(vx*vx + vy*vy + vz*vz);
-        T u = cq.energy(i) - ke;
+        T u = cq.energy(i)/rho - ke;
         fs.gas.rho(i) = rho;
         fs.vel.x(i) = vx;
         fs.vel.y(i) = vy;
@@ -22,13 +22,15 @@ int conserved_to_flow_states(ConservedQuantities<T>& cq, FlowStates<T> & fs)
             fs.vel.z(i) = vz;
         }
         fs.gas.energy(i) = u;
+        fs.gas.temp(i) = u / 0.7171;
+        fs.gas.pressure(i) = rho * 287.0 * fs.gas.temp(i);
     });
     return 0;
 }
-template int conserved_to_flow_states(ConservedQuantities<double>& cq, FlowStates<double>& fs);
+template int conserved_to_primatives(ConservedQuantities<double>& cq, FlowStates<double>& fs);
 
 template <typename T>
-int flow_states_to_conserved(ConservedQuantities<T>& cq, FlowStates<T>& fs)
+int primatives_to_conserved(ConservedQuantities<T>& cq, FlowStates<T>& fs)
 {
     Kokkos::parallel_for("CQ::from_flow_state", fs.gas.size(), KOKKOS_LAMBDA(const int i){
         T vx = fs.vel.x(i);
@@ -49,4 +51,4 @@ int flow_states_to_conserved(ConservedQuantities<T>& cq, FlowStates<T>& fs)
     });
     return 0;
 }
-template int flow_states_to_conserved(ConservedQuantities<double>& cq, FlowStates<double>& fs);
+template int primatives_to_conserved(ConservedQuantities<double>& cq, FlowStates<double>& fs);

@@ -10,30 +10,13 @@ class ConservedQuantities {
 public:
     ConservedQuantities(){}
 
-    ConservedQuantities(unsigned int n, unsigned int dim)
-        : cq_(Kokkos::View<T**>("ConservedQuantities", n, dim+2)), num_values_(n), dim_(dim)
-    {
-        mass_idx_ = 0;
-        momentum_idx_ = 1;
-        energy_idx_ = momentum_idx_ + dim;
-    }
+    ConservedQuantities(unsigned int n, unsigned int dim);
 
     unsigned int size() const {return cq_.extent(0);}
     unsigned int n_conserved() const {return cq_.extent(1);}
     int dim() const {return dim_;}
 
-    void apply_time_derivative(const ConservedQuantities<T>& dudt, double dt) {
-        Kokkos::parallel_for("CQ::update_cq", num_values_, KOKKOS_LAMBDA(const int i){
-            mass(i) += dudt.mass(i) * dt;
-            momentum_x(i) += dudt.momentum_x(i) * dt;
-            momentum_y(i) += dudt.momentum_y(i) * dt;
-            if (dim_ == 3) {
-                momentum_z(i) += dudt.momentum_z(i) * dt;
-            }
-            energy(i) += dudt.energy(i) * dt;
-        });
-    }
-
+    void apply_time_derivative(const ConservedQuantities<T>& dudt, double dt);
 
     KOKKOS_FORCEINLINE_FUNCTION
     T& mass(int cell_i) const {return cq_(cell_i, mass_idx_);}

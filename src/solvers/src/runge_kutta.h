@@ -33,6 +33,7 @@ private:
     double time_since_last_plot_;
     int n_solutions_;
     double t_;
+    double dt_;
 
 private:
     // implementation
@@ -42,10 +43,12 @@ private:
     bool print_this_step(unsigned int step);
     bool plot_this_step(unsigned int step);
     int plot_solution(unsigned int step);
-    std::string progress_string(unsigned int step);
+    void print_progress(unsigned int step);
     std::string stop_reason(unsigned int step);
     bool stop_now(unsigned int step);
     int max_step() const {return max_step_;}
+
+    int count_bad_cells();
 
 private:
     // memory

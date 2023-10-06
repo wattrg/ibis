@@ -14,9 +14,18 @@ Solver::Solver(std::string grid_dir, std::string flow_dir)
 
 int Solver::solve() {
     int success = initialise();
-    if (success != 0) return success;
+    if (success != 0) {
+        spdlog::error("Failed to initialise runge kutta solver");
+        return success;
+    }
     for (int step = 0; step < max_step(); step++) {
         int result = take_step();
+        int bad_cells = count_bad_cells();
+        if (bad_cells > 0) {
+            spdlog::error("Encountered {} bad cells", bad_cells);
+            plot_solution(step);
+            return 1;
+        }
 
         if (result != 0) {
             spdlog::error("step {} failed", step);
@@ -25,8 +34,7 @@ int Solver::solve() {
         }
 
         if (print_this_step(step)) {
-            std::string progress = progress_string(step);
-            spdlog::info(progress);
+            print_progress(step);
         }
 
         if (plot_this_step(step)) {

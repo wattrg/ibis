@@ -24,14 +24,17 @@ protected:
     virtual bool print_this_step(unsigned int step)=0;
     virtual bool plot_this_step(unsigned int step)=0;
     virtual int plot_solution(unsigned int step)=0;
-    virtual std::string progress_string(unsigned int step)=0;
+    virtual void print_progress(unsigned int step)=0;
     virtual bool stop_now(unsigned int step)=0;
     virtual std::string stop_reason(unsigned step)=0;
     virtual int max_step() const = 0;
 
+    virtual int count_bad_cells() = 0;
+
     unsigned int max_step_ = 0;
     std::string grid_dir_;
     std::string flow_dir_;
+
 };
 
 Solver* make_solver(json config, std::string grid_dir, std::string flow_dir);

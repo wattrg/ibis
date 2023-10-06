@@ -4,7 +4,8 @@ add_library(
 	src/finite_volume.cpp 
 	src/flux_calc.cpp 
 	src/flux_calculators/hanel.cpp
-	src/flow_state_conserved_conversion.cpp
+	src/primative_conserved_conversion.cpp
+	src/conserved_quantities.cpp
 	src/boundaries/boundary.cpp
 )
 

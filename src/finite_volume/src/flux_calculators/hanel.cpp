@@ -64,19 +64,6 @@ void hanel(FlowStates<T>& left, FlowStates<T>& right, ConservedQuantities<T>& fl
             flux.momentum_z(i) = uLplus * rL * wL + uRminus * rR * wR;
         } 
         flux.energy(i) = uLplus * rL * HL + uRminus * rR * HR;
-        // if (i==1 || i==3){
-        //     // printf("face %i: rL = %f, rR = %f\n", i, rL, rR);
-        //     // printf("face %i: uL = %f, uR = %f\n", i, uL, uR);
-        //     // printf("face %i: rL = %f, rR = %f\n", i, rL, rR);
-        //     // printf("face %i: hL = %f, hR = %f\n", i, HL, HR);
-        //     // printf("face %i: aL = %f, aR = %f\n", i, aL, aR);
-        //     // printf("face %i: keL = %f, keR = %f\n", i, keL, keR);
-        //     printf("face %i: uLplus = %f, uRminus = %f\n", i, uLplus, uRminus);
-        //     printf("face %i: pLplus = %f, pRminus = %f\n", i, pLplus, pRminus);
-        //     printf("face %i: p_half = %f\n", i, p_half);
-        //     printf("face %i: px = %f\n", i, flux.momentum_x(i));
-        //     printf("\n");
-        // }
     });
 }
 

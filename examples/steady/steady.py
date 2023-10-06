@@ -7,9 +7,9 @@ config.convective_flux = ConvectiveFlux(
 
 config.solver = RungeKutta(
     cfl = 0.5,
-    max_step = 100,
+    max_step = 10000,
     max_time = 1.0,
-    plot_every_n_steps = 20,
+    plot_every_n_steps = 1000,
     plot_frequency = -1,
 )
 

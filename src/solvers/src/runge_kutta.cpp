@@ -1,7 +1,7 @@
 #include <spdlog/spdlog.h>
 #include "runge_kutta.h"
 #include "solver.h"
-#include "../../finite_volume/src/flow_state_conserved_conversion.h"
+#include "../../finite_volume/src/primative_conserved_conversion.h"
 
 
 RungeKutta::RungeKutta(json config, GridBlock<double> grid, std::string grid_dir, std::string flow_dir) 
@@ -32,7 +32,9 @@ RungeKutta::RungeKutta(json config, GridBlock<double> grid, std::string grid_dir
 }
 
 int RungeKutta::initialise() {
-    return read_initial_condition(flow_, flow_dir_);
+    int ic_result = read_initial_condition(flow_, flow_dir_);
+    int conversion_result = primatives_to_conserved(conserved_quantities_, flow_);
+    return ic_result + conversion_result;
 }
 
 int RungeKutta::finalise() {
@@ -40,14 +42,14 @@ int RungeKutta::finalise() {
 }
 
 int RungeKutta::take_step() {
-    flow_states_to_conserved(conserved_quantities_, flow_);
-    double dt = cfl_ / fv_.estimate_signal_frequency(flow_, grid_);
+    // printf("temp = %f, energy = %f\n", flow_.gas.temp(0), flow_.gas.energy(0));
+    dt_ = cfl_ / fv_.estimate_signal_frequency(flow_, grid_);
     fv_.compute_dudt(flow_, grid_, dUdt_);
-    conserved_quantities_.apply_time_derivative(dUdt_, dt);
-    conserved_to_flow_states(conserved_quantities_, flow_);
+    conserved_quantities_.apply_time_derivative(dUdt_, dt_);
+    conserved_to_primatives(conserved_quantities_, flow_);
 
-    t_ += dt;
-    time_since_last_plot_ += dt;
+    t_ += dt_;
+    time_since_last_plot_ += dt_;
     return 0;
 }
 bool RungeKutta::print_this_step(unsigned int step) {
@@ -69,8 +71,8 @@ int RungeKutta::plot_solution(unsigned int step) {
     return result;
 }
 
-std::string RungeKutta::progress_string(unsigned int step) {
-    return "  step: " + std::to_string(step) + ", t = " + std::to_string(t_);
+void RungeKutta::print_progress(unsigned int step) {
+    spdlog::info("  step: {}, t = {}, dt = {}", step, t_, dt_);
 }
 std::string RungeKutta::stop_reason(unsigned int step) {
     if (t_ > max_time_) return "reached max time"; 
@@ -81,4 +83,15 @@ bool RungeKutta::stop_now(unsigned int step) {
     if (step >= max_step_-1) return true;
     if (t_ >= max_time_) return true;
     return false;
+}
+
+int RungeKutta::count_bad_cells(){
+    int num_cells = grid_.num_cells();
+    int n_bad_cells = 0;
+    Kokkos::parallel_reduce("RungeKutta::check_state", num_cells, KOKKOS_LAMBDA(const int cell_i, int& n_bad_cells_utd){
+        if (flow_.gas.temp(cell_i) < 0.0 || flow_.gas.rho(cell_i) < 0.0) {
+            n_bad_cells_utd += 1;
+        }
+    }, n_bad_cells);
+    return n_bad_cells;
 }

@@ -44,7 +44,7 @@ int FiniteVolume<T>::compute_dudt(FlowStates<T>& flow_state,
 template <typename T>
 double FiniteVolume<T>::estimate_signal_frequency(const FlowStates<T> &flow_state, GridBlock<T> &grid) {
     int num_cells = grid.num_cells();
-    CellFaces<T> cell_interfaces_ids = grid.cells().faces();
+    CellFaces<T> cell_interfaces = grid.cells().faces();
     Interfaces<T> interfaces = grid.interfaces();
     Cells<T> cells = grid.cells();
     double signal_frequency = 0.0;
@@ -53,7 +53,7 @@ double FiniteVolume<T>::estimate_signal_frequency(const FlowStates<T> &flow_stat
                             num_cells, 
                             KOKKOS_LAMBDA(const int cell_i, double& signal_frequency_utd) 
     {
-        auto cell_face_ids = cell_interfaces_ids.face_ids(cell_i);
+        auto cell_face_ids = cell_interfaces.face_ids(cell_i);
         T spectral_radii = 0.0;
         for (unsigned int face_idx = 0; face_idx < cell_face_ids.size(); face_idx++) {
             int i_face = cell_face_ids(face_idx);
@@ -152,7 +152,7 @@ void FiniteVolume<T>::flux_surface_integral(const GridBlock<T>& grid, ConservedQ
         T d_energy = 0.0;
         for (unsigned int face_i = 0; face_i < face_ids.size(); face_i++){
             int face_id = face_ids(face_i); 
-            T area = faces.area(face_id)* cell_faces.outsigns(cell_i)(face_i);
+            T area = -faces.area(face_id) * cell_faces.outsigns(cell_i)(face_i);
             d_mass += flux_.mass(face_id) * area; 
             d_momentum_x += flux_.momentum_x(face_id) * area; 
             d_momentum_y += flux_.momentum_y(face_id) * area; 
