@@ -361,6 +361,29 @@ TEST_CASE("grid cell faces") {
     }
 }
 
+TEST_CASE("grid cell faces 2") {
+    json config = build_config();
+    GridBlock<double> block = GridBlock<double>("../src/grid/test/grid.su2", config);
+    std::vector<std::vector<int>> face_ids = {
+        {0, 1, 2, 3},
+        {4, 5, 6, 1},
+        {7, 8, 9, 5},
+        {2, 10, 11, 12},
+        {6, 13, 14, 10},
+        {9, 15, 16, 13},
+        {11, 17, 18, 19},
+        {14, 20, 21, 17},
+        {16, 22, 23, 20}
+    };
+    CHECK(block.num_cells() == 9);
+    for (int i = 0; i < block.num_cells(); i++){
+        CellFaces<double> faces = block.cells().faces();
+        for (unsigned int j = 0; j < faces.face_ids(i).size(); j++){
+            CHECK(faces.face_ids(i)(j) == face_ids[i][j]);
+        }
+    }
+}
+
 TEST_CASE("grid cell outsigns") {
     GridInfo expected = build_test_grid();
     json config = build_config();

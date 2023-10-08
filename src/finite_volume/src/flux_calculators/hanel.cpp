@@ -22,7 +22,7 @@ void hanel(FlowStates<T>& left, FlowStates<T>& right, ConservedQuantities<T>& fl
         T HL = eL + pLrL + keL;
 
         // unpack right gas state
-        T rR = right.gas.rho(i);
+        T rR = rL; // right.gas.rho(i);
         T pR = right.gas.pressure(i);
         T eR = right.gas.energy(i);
         T aR = Kokkos::sqrt(1.4 * 287.0 * right.gas.temp(i));
@@ -58,8 +58,8 @@ void hanel(FlowStates<T>& left, FlowStates<T>& right, ConservedQuantities<T>& fl
         // the final fluxes
         T p_half = pLplus + pRminus;
         flux.mass(i) = uLplus*rL + uRminus * rR;
-        flux.momentum_x(i) = uLplus * rL * uL + uRminus *rR * uR + p_half;
-        flux.momentum_y(i) = uLplus * rL * vL + uRminus *rR * vR;
+        flux.momentum_x(i) = uLplus * rL * uL + uRminus * rR * uR + p_half;
+        flux.momentum_y(i) = uLplus * rL * vL + uRminus * rR * vR;
         if (three_d) {
             flux.momentum_z(i) = uLplus * rL * wL + uRminus * rR * wR;
         } 

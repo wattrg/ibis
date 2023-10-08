@@ -22,7 +22,7 @@ int conserved_to_primatives(ConservedQuantities<T>& cq, FlowStates<T> & fs)
             fs.vel.z(i) = vz;
         }
         fs.gas.energy(i) = u;
-        fs.gas.temp(i) = u / 0.7171;
+        fs.gas.temp(i) = fs.gas.energy(i) / 0.7171;
         fs.gas.pressure(i) = rho * 287.0 * fs.gas.temp(i);
     });
     return 0;
@@ -47,7 +47,7 @@ int primatives_to_conserved(ConservedQuantities<T>& cq, FlowStates<T>& fs)
         if (cq.dim() == 3){
             ke += vz*vz;
         }
-        cq.energy(i) = rho*(0.5*ke + fs.gas.energy(i));
+        cq.energy(i) = rho*(0.5*ke + 0.7171*fs.gas.temp(i));
     });
     return 0;
 }

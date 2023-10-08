@@ -42,8 +42,7 @@ int RungeKutta::finalise() {
 }
 
 int RungeKutta::take_step() {
-    // printf("temp = %f, energy = %f\n", flow_.gas.temp(0), flow_.gas.energy(0));
-    dt_ = cfl_ / fv_.estimate_signal_frequency(flow_, grid_);
+    dt_ = cfl_ * fv_.estimate_dt(flow_, grid_);
     fv_.compute_dudt(flow_, grid_, dUdt_);
     conserved_quantities_.apply_time_derivative(dUdt_, dt_);
     conserved_to_primatives(conserved_quantities_, flow_);

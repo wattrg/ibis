@@ -1,3 +1,4 @@
+#include <iomanip>
 #include <iostream>
 #include <filesystem>
 #include <algorithm>
@@ -20,15 +21,15 @@ int Solver::solve() {
     }
     for (int step = 0; step < max_step(); step++) {
         int result = take_step();
-        int bad_cells = count_bad_cells();
-        if (bad_cells > 0) {
-            spdlog::error("Encountered {} bad cells", bad_cells);
+        if (result != 0) {
+            spdlog::error("step {} failed", step);
             plot_solution(step);
             return 1;
         }
 
-        if (result != 0) {
-            spdlog::error("step {} failed", step);
+        int bad_cells = count_bad_cells();
+        if (bad_cells > 0) {
+            spdlog::error("Encountered {} bad cells on step {}", bad_cells, step);
             plot_solution(step);
             return 1;
         }
@@ -75,7 +76,7 @@ int read_initial_condition(FlowStates<T>& fs, std::string flow_dir) {
     }
     int cell_i = 0;
     while (getline(temp, line)) {
-        fs.gas.temp(cell_i) = stoi(line);
+        fs.gas.temp(cell_i) = stod(line);
         cell_i++; 
     }
 
@@ -86,7 +87,7 @@ int read_initial_condition(FlowStates<T>& fs, std::string flow_dir) {
     }
     cell_i = 0;
     while (getline(pressure, line)){
-        fs.gas.pressure(cell_i) = stoi(line);
+        fs.gas.pressure(cell_i) = stod(line);
         cell_i++;
     }
     pressure.close();
@@ -98,7 +99,7 @@ int read_initial_condition(FlowStates<T>& fs, std::string flow_dir) {
     }
     cell_i = 0;
     while (getline(vx, line)){
-        fs.vel.x(cell_i) = stoi(line);
+        fs.vel.x(cell_i) = stod(line);
         cell_i++;
     }
     vx.close();
@@ -110,7 +111,7 @@ int read_initial_condition(FlowStates<T>& fs, std::string flow_dir) {
     }
     cell_i = 0;
     while (getline(vy, line)){
-        fs.vel.y(cell_i) = stoi(line);
+        fs.vel.y(cell_i) = stod(line);
         cell_i++;
     }
     vy.close();
@@ -139,6 +140,7 @@ int write_flow_solution(const FlowStates<T>& fs, const GridBlock<T>& grid, const
         spdlog::error("failed to open new temperature directory");
         return 1;
     }
+    temp << std::fixed << std::setprecision(16);
     for (int cell_i = 0; cell_i < grid.num_cells(); cell_i++) {
         temp << fs.gas.temp(cell_i) << std::endl;;
     }
@@ -149,6 +151,7 @@ int write_flow_solution(const FlowStates<T>& fs, const GridBlock<T>& grid, const
         spdlog::error("failed to open new pressure directory");
         return 1;
     }
+    pressure << std::fixed << std::setprecision(16);
     for (int cell_i = 0; cell_i < grid.num_cells(); cell_i++) {
         pressure << fs.gas.pressure(cell_i) << std::endl;;
     }
@@ -159,6 +162,7 @@ int write_flow_solution(const FlowStates<T>& fs, const GridBlock<T>& grid, const
         spdlog::error("failed to open new vx directory");
         return 1;
     }
+    vx << std::fixed << std::setprecision(16);
     for (int cell_i = 0; cell_i < grid.num_cells(); cell_i++) {
         vx << fs.vel.x(cell_i) << std::endl;;
     }
@@ -169,6 +173,7 @@ int write_flow_solution(const FlowStates<T>& fs, const GridBlock<T>& grid, const
         spdlog::error("failed to open new vy directory");
         return 1;
     }
+    vy << std::fixed << std::setprecision(16);
     for (int cell_i = 0; cell_i < grid.num_cells(); cell_i++) {
         vy << fs.vel.y(cell_i) << std::endl;;
     }
@@ -179,6 +184,7 @@ int write_flow_solution(const FlowStates<T>& fs, const GridBlock<T>& grid, const
         spdlog::error("failed to open new vz directory");
         return 1;
     }
+    vz << std::fixed << std::setprecision(16);
     for (int cell_i = 0; cell_i < grid.num_cells(); cell_i++) {
         vz << fs.vel.z(cell_i) << std::endl;;
     }

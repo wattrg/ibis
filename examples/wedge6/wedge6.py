@@ -1,4 +1,4 @@
-flow_state = FlowState(rho=1.225, T=300.0, vx=1000.0, vy=0.0)
+flow_state = FlowState(rho=1.225, T=300.0, vx=0.0, vy=0.0)
 
 config.convective_flux = ConvectiveFlux(
     flux_calculator = FluxCalculator.Hanel,
@@ -7,10 +7,11 @@ config.convective_flux = ConvectiveFlux(
 
 config.solver = RungeKutta(
     cfl = 0.5,
-    max_step = 1000,
-    max_time = 1.0,
-    plot_every_n_steps = 100,
-    plot_frequency = -1,
+    max_step = 100000,
+    max_time = 5 * 0.3 / 1000,
+    plot_every_n_steps = -1,
+    plot_frequency = 0.3 / 1000,
+    print_frequency = 2000
 )
 
 config.grid = Block(

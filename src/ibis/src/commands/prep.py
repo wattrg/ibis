@@ -121,12 +121,12 @@ class Block:
 
         if type(self._initial_condition) == FlowState:
             for _ in range(self.number_cells):
-                temp.write(str(self._initial_condition.T) + "\n")
-                pressure.write(str(self._initial_condition.p) + "\n")
-                vx.write(str(self._initial_condition.vx) + "\n")
-                vy.write(str(self._initial_condition.vy) + "\n")
+                temp.write(f"{self._initial_condition.T:.16e}\n")
+                pressure.write(f"{self._initial_condition.p:.16e}\n")
+                vx.write(f"{self._initial_condition.vx:.16e}\n")
+                vy.write(f"{self._initial_condition.vy:.16e}\n")
                 if self.dim == 3:
-                    vz.write(str(self._initial_condition.vz) + "\n")
+                    vz.write(f"{self._initial_condition.vz:.16e}\n")
 
         temp.close()
         pressure.close()

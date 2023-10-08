@@ -42,7 +42,7 @@ int FiniteVolume<T>::compute_dudt(FlowStates<T>& flow_state,
 }
 
 template <typename T>
-double FiniteVolume<T>::estimate_dt(const FlowStates<T> &flow_state, GridBlock<T> &grid) {
+double FiniteVolume<T>::estimate_signal_frequency(const FlowStates<T> &flow_state, GridBlock<T> &grid) {
     int num_cells = grid.num_cells();
     CellFaces<T> cell_interfaces = grid.cells().faces();
     Interfaces<T> interfaces = grid.interfaces();
@@ -61,14 +61,14 @@ double FiniteVolume<T>::estimate_dt(const FlowStates<T> &flow_state, GridBlock<T
             T y_term = flow_state.vel.y(cell_i) * interfaces.norm().y(i_face);
             T z_term = flow_state.vel.z(cell_i) * interfaces.norm().z(i_face);
             T dot = x_term + y_term + z_term;
-            T sig_vel = Kokkos::fabs(dot) + Kokkos::sqrt(1.4*287.0*flow_state.gas.temp(cell_i));
+            T sig_vel = Kokkos::fabs(dot) + Kokkos::sqrt(1.4*287*flow_state.gas.temp(cell_i));
             spectral_radii += sig_vel * interfaces.area(i_face); 
         }
         T local_signal_frequency = spectral_radii / cells.volume(cell_i);
         signal_frequency_utd = Kokkos::max(local_signal_frequency, signal_frequency_utd);
     }, signal_frequency);
 
-    return 1.0 / signal_frequency;
+    return signal_frequency;
 }
 
 template <typename T>
@@ -87,9 +87,9 @@ void FiniteVolume<T>::reconstruct(FlowStates<T>& flow_states, const GridBlock<T>
     Kokkos::parallel_for("Reconstruct", n_faces, KOKKOS_LAMBDA(const int i_face){
         // copy left flow states
         int left = grid.interfaces().left_cell(i_face);
-        left_.gas.temp(i_face) = flow_states.gas.temp(left);
+        left_.gas.temp(i_face) = 300.0; //flow_states.gas.temp(left);
         left_.gas.pressure(i_face) = flow_states.gas.pressure(left);
-        left_.gas.rho(i_face) = flow_states.gas.rho(left);
+        left_.gas.rho(i_face) = 1.225; //flow_states.gas.rho(left);
         left_.gas.energy(i_face) = flow_states.gas.energy(left);
         left_.vel.x(i_face) = flow_states.vel.x(left);
         left_.vel.y(i_face) = flow_states.vel.y(left);
@@ -152,7 +152,7 @@ void FiniteVolume<T>::flux_surface_integral(const GridBlock<T>& grid, ConservedQ
         T d_energy = 0.0;
         for (unsigned int face_i = 0; face_i < face_ids.size(); face_i++){
             int face_id = face_ids(face_i); 
-            T area = -faces.area(face_id) * cell_faces.outsigns(cell_i)(face_i);
+            T area = - faces.area(face_id) * cell_faces.outsigns(cell_i)(face_i);
             d_mass += flux_.mass(face_id) * area; 
             d_momentum_x += flux_.momentum_x(face_id) * area; 
             d_momentum_y += flux_.momentum_y(face_id) * area; 

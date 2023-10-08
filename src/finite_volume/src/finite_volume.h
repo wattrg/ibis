@@ -22,7 +22,7 @@ public:
                       const GridBlock<T>& grid,
                       ConservedQuantities<T>& dudt);
 
-    double estimate_signal_frequency(const FlowStates<T>& flow_state, GridBlock<T>& grid);
+    double estimate_dt(const FlowStates<T>& flow_state, GridBlock<T>& grid);
 
 
 private:
