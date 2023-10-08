@@ -29,6 +29,7 @@ target_link_libraries(
 	PUBLIC 
 	prep 
 	run 
+	post
 	ibis_clean 
 	gas 
 	util 

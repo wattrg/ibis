@@ -13,6 +13,7 @@
 #include "commands/prep.h"
 #include "commands/clean.h"
 #include "commands/run.h"
+#include "commands/post.h"
 
 
 static std::string HELP = 
@@ -74,6 +75,9 @@ int main(int argc, char* argv[]) {
 
     else if (command == "run") {
         return run(argc, argv);
+    }
+    else if (command == "post") {
+        return post(argc, argv);
     }
 
     else {

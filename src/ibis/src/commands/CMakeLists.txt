@@ -19,6 +19,14 @@ target_link_libraries(
         spdlog::spdlog
 )
 
+add_library(post STATIC post.cpp)
+target_link_libraries(
+        post PUBLIC
+        Python::Python 
+        spdlog::spdlog 
+        nlohmann_json::nlohmann_json
+)
+
 
 add_custom_command(
 	TARGET prep POST_BUILD
