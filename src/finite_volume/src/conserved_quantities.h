@@ -37,10 +37,16 @@ public:
     T& momentum_y(int cell_i) {return cq_(cell_i, momentum_idx_+1);}
 
     KOKKOS_FORCEINLINE_FUNCTION 
-    T& momentum_z(int cell_i) const {return cq_(cell_i, momentum_idx_+2);}
+    T& momentum_z(int cell_i) const {
+        assert(dim_ == 3);
+        return cq_(cell_i, momentum_idx_+2);
+    }
 
     KOKKOS_FORCEINLINE_FUNCTION 
-    T& momentum_z(int cell_i) {return cq_(cell_i, momentum_idx_+2);}
+    T& momentum_z(int cell_i) {
+        assert(dim_ == 3);
+        return cq_(cell_i, momentum_idx_+2);
+    }
 
     KOKKOS_FORCEINLINE_FUNCTION
     T& energy(int cell_i) const {return cq_(cell_i, energy_idx_);}

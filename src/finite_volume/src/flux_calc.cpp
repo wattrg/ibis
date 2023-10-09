@@ -7,6 +7,9 @@ FluxCalculator flux_calculator_from_string(std::string name){
     if (name == "hanel") {
         flux_calc = FluxCalculator::Hanel;
     }
+    else if (name == "ausmdv") {
+        flux_calc = FluxCalculator::Ausmdv;
+    }
     else {
         spdlog::error("Unknown flux calculator {}", name);
         throw std::runtime_error("Unknown flux calculator");

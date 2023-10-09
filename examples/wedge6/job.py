@@ -1,4 +1,4 @@
-flow_state = FlowState(rho=1.225, T=300.0, vx=0.0, vy=0.0)
+flow_state = FlowState(rho=1.225, T=600.0, vx=1000.0, vy=0.0)
 
 config.convective_flux = ConvectiveFlux(
     flux_calculator = FluxCalculator.Hanel,

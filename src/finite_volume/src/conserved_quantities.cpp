@@ -15,7 +15,7 @@ void ConservedQuantities<T>::apply_time_derivative(const ConservedQuantities<T>&
         mass(i) += dudt.mass(i) * dt;
         momentum_x(i) += dudt.momentum_x(i) * dt;
         momentum_y(i) += dudt.momentum_y(i) * dt;
-        if (dim_ == 3) {
+        if (dim_ == 3){
             momentum_z(i) += dudt.momentum_z(i) * dt;
         }
         energy(i) += dudt.energy(i) * dt;

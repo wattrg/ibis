@@ -1,6 +1,3 @@
-#ifndef HANEL_H
-#define HANEL_H
-
 #include <Kokkos_Core.hpp>
 #include "../../../gas/src/flow_state.h"
 #include "../flux_calc.h"
@@ -12,7 +9,7 @@ void hanel(FlowStates<T>& left, FlowStates<T>& right, ConservedQuantities<T>& fl
         // unpack left gas state
         T rL = left.gas.rho(i);
         T pL = left.gas.pressure(i);
-        T eL = left.gas.energy(i);
+        T eL = 717.5 * left.gas.temp(i); //left.gas.energy(i);
         T aL = Kokkos::sqrt(1.4 * 287.0 * left.gas.temp(i));
         T uL = left.vel.x(i);
         T vL = left.vel.y(i);
@@ -24,7 +21,7 @@ void hanel(FlowStates<T>& left, FlowStates<T>& right, ConservedQuantities<T>& fl
         // unpack right gas state
         T rR = rL; // right.gas.rho(i);
         T pR = right.gas.pressure(i);
-        T eR = right.gas.energy(i);
+        T eR = 717.5 * right.gas.temp(i); //right.gas.energy(i);
         T aR = Kokkos::sqrt(1.4 * 287.0 * right.gas.temp(i));
         T uR = right.vel.x(i);
         T vR = right.vel.y(i);
@@ -36,7 +33,7 @@ void hanel(FlowStates<T>& left, FlowStates<T>& right, ConservedQuantities<T>& fl
 
         // pressure and velocity splitting (eqn. 7 and 9)
         T pLplus, uLplus;
-        if (Kokkos::abs(uL) < aL) {
+        if (Kokkos::abs(uL) <= aL) {
             uLplus = 1.0 / (4.0*aL) * (uL+aL)*(uL+aL);
             pLplus = pL*uLplus * (1.0/aL * (2.0-uL/aL));
         }
@@ -46,7 +43,7 @@ void hanel(FlowStates<T>& left, FlowStates<T>& right, ConservedQuantities<T>& fl
         }
 
         T pRminus, uRminus;
-        if (Kokkos::abs(uR) < aR) {
+        if (Kokkos::abs(uR) <= aR) {
             uRminus = -1.0/(4.0*aR) * (uR-aR)*(uR-aR);
             pRminus = pR*uRminus * (1.0/aR * (-2.0-uR/aR));
         }
@@ -57,7 +54,7 @@ void hanel(FlowStates<T>& left, FlowStates<T>& right, ConservedQuantities<T>& fl
 
         // the final fluxes
         T p_half = pLplus + pRminus;
-        flux.mass(i) = uLplus*rL + uRminus * rR;
+        flux.mass(i) = uLplus * rL + uRminus * rR;
         flux.momentum_x(i) = uLplus * rL * uL + uRminus * rR * uR + p_half;
         flux.momentum_y(i) = uLplus * rL * vL + uRminus * rR * vR;
         if (three_d) {
@@ -68,5 +65,3 @@ void hanel(FlowStates<T>& left, FlowStates<T>& right, ConservedQuantities<T>& fl
 }
 
 template void hanel<double>(FlowStates<double>&, FlowStates<double>&, ConservedQuantities<double>&, bool);
-
-#endif

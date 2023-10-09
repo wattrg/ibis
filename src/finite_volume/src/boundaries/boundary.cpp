@@ -11,7 +11,7 @@ FlowStateCopy<T>::FlowStateCopy(json flow_state) {
     gs.temp = temp;
     gs.pressure = pressure;
     gs.rho = pressure / (287.0 * temp);
-    gs.energy = 0.7171 * temp;
+    gs.energy = 717.5 * temp;
 
     T vx = flow_state.at("vx");
     T vy = flow_state.at("vy");

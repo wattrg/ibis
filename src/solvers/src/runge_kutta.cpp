@@ -32,7 +32,7 @@ RungeKutta::RungeKutta(json config, GridBlock<double> grid, std::string grid_dir
 }
 
 int RungeKutta::initialise() {
-    int ic_result = read_initial_condition(flow_, flow_dir_);
+    int ic_result = read_initial_condition(flow_, flow_dir_, grid_.num_cells());
     int conversion_result = primatives_to_conserved(conserved_quantities_, flow_);
     return ic_result + conversion_result;
 }
@@ -42,8 +42,9 @@ int RungeKutta::finalise() {
 }
 
 int RungeKutta::take_step() {
-    dt_ = cfl_ * fv_.estimate_dt(flow_, grid_);
     fv_.compute_dudt(flow_, grid_, dUdt_);
+    double full_dt = cfl_ * fv_.estimate_dt(flow_, grid_);
+    dt_ = Kokkos::min(full_dt, max_time_ - t_);
     conserved_quantities_.apply_time_derivative(dUdt_, dt_);
     conserved_to_primatives(conserved_quantities_, flow_);
 
@@ -66,15 +67,15 @@ int RungeKutta::plot_solution(unsigned int step) {
     n_solutions_ ++;
     int result =  write_flow_solution<double>(flow_, grid_, flow_dir_, n_solutions_);
     time_since_last_plot_ = 0.0;
-    spdlog::info("  written flow solution: step {}, time {}", step, t_);
+    spdlog::info("  written flow solution: step {}, time {:.6e}", step, t_);
     return result;
 }
 
 void RungeKutta::print_progress(unsigned int step) {
-    spdlog::info("  step: {}, t = {}, dt = {}", step, t_, dt_);
+    spdlog::info("  step: {:>8}, t = {:.6e}, dt = {:.6e}", step, t_, dt_);
 }
 std::string RungeKutta::stop_reason(unsigned int step) {
-    if (t_ > max_time_) return "reached max time"; 
+    if (t_ >= max_time_ - 1e-15) return "reached max time"; // subtract small amount to avoid round off error
     if (step >= max_step_-1) return "reached max step";
     return "Shouldn't reach here";
 }

@@ -10,4 +10,5 @@ int post(int argc, char* argv[]) {
     if (command == "plot_vtk"){
         
     }
+    return 0;
 }

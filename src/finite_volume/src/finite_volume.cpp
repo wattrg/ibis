@@ -118,6 +118,9 @@ void FiniteVolume<T>::compute_flux(const GridBlock<T>& grid) {
         case FluxCalculator::Hanel:
             hanel(left_, right_, flux_, dim_==3);
             break;
+        case FluxCalculator::Ausmdv:
+            ausmdv(left_, right_, flux_, dim_==3);
+            break; 
     }
 
     // rotate the fluxes to the global frame
@@ -127,13 +130,18 @@ void FiniteVolume<T>::compute_flux(const GridBlock<T>& grid) {
     Kokkos::parallel_for("flux::transform_to_global", faces.size(), KOKKOS_LAMBDA(const int i){
         T px = flux_.momentum_x(i);
         T py = flux_.momentum_y(i);
-        T pz = flux_.momentum_z(i);
+        T pz = 0.0;
+        if (flux_.dim() == 3) {
+            pz = flux_.momentum_z(i);
+        }
         T x = px*norm.x(i) + py*tan1.x(i) + pz*tan2.x(i);
         T y = px*norm.y(i) + py*tan1.y(i) + pz*tan2.y(i);
         T z = px*norm.z(i) + py*tan1.z(i) + pz*tan2.z(i);
         flux_.momentum_x(i) = x;
         flux_.momentum_y(i) = y;
-        flux_.momentum_z(i) = z;
+        if (flux_.dim() == 3){
+            flux_.momentum_z(i) = z;
+        }
     });
 
 }
@@ -156,13 +164,17 @@ void FiniteVolume<T>::flux_surface_integral(const GridBlock<T>& grid, ConservedQ
             d_mass += flux_.mass(face_id) * area; 
             d_momentum_x += flux_.momentum_x(face_id) * area; 
             d_momentum_y += flux_.momentum_y(face_id) * area; 
-            d_momentum_z += flux_.momentum_z(face_id) * area; 
+            if (flux_.dim() == 3) {
+                d_momentum_z += flux_.momentum_z(face_id) * area; 
+            }
             d_energy += flux_.energy(face_id) * area;
         }
         dudt.mass(cell_i) = d_mass / cells.volume(cell_i);
         dudt.momentum_x(cell_i) = d_momentum_x / cells.volume(cell_i);
         dudt.momentum_y(cell_i) = d_momentum_y / cells.volume(cell_i);
-        dudt.momentum_z(cell_i) = d_momentum_z / cells.volume(cell_i);
+        if (dudt.dim() == 3){
+            dudt.momentum_z(cell_i) = d_momentum_z / cells.volume(cell_i);
+        }
         dudt.energy(cell_i) = d_energy / cells.volume(cell_i);
     });
 }

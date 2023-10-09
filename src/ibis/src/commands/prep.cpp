@@ -14,17 +14,12 @@ int prep(int argc, char* argv[]) {
         return 1;
     }
 
-    if (argc < 3) {
-        spdlog::error("No job file provided");
-        return 1;
-    }
-
     std::string prep_path = std::string(std::getenv("IBIS")) + "/lib";
 
     Py_SetProgramName(program);
     Py_Initialize();
 
-    PyObject* prep_script_name = PyUnicode_FromString(argv[2]);
+    PyObject* prep_script_name = PyUnicode_FromString("job.py");
     if (prep_script_name == NULL) {
         spdlog::error("Failed to interpret the name of the preparation script");
         return 1;
@@ -37,13 +32,11 @@ int prep(int argc, char* argv[]) {
     PyObject* prep_module = PyImport_ImportModule("prep");
     if (prep_module == NULL) {
         PyErr_Print();
-        // std::cerr << "Failed to import prep.py" << std::endl;
         return 1;
     }
     
     PyObject *py_prep_main = PyObject_GetAttrString(prep_module, "main");
     if (py_prep_main == NULL) {
-        // std::cerr << "Failed to find main function in prep.py\n";
         PyErr_Print();
         Py_DECREF(prep_module);
         return 1;

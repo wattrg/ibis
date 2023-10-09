@@ -67,7 +67,7 @@ Solver * make_solver(json config, std::string grid_dir, std::string flow_dir) {
 }
 
 template<typename T>
-int read_initial_condition(FlowStates<T>& fs, std::string flow_dir) {
+int read_initial_condition(FlowStates<T>& fs, std::string flow_dir, int num_cells) {
     std::string line;
     std::ifstream temp(flow_dir + "/0000/T");
     if (!temp) {
@@ -78,6 +78,9 @@ int read_initial_condition(FlowStates<T>& fs, std::string flow_dir) {
     while (getline(temp, line)) {
         fs.gas.temp(cell_i) = stod(line);
         cell_i++; 
+    }
+    if (cell_i != num_cells){
+        spdlog::error("Incorrect number of values in initial T. {} cells, but {} temperature values", num_cells, cell_i);
     }
 
     std::ifstream pressure(flow_dir + "/0000/p");
@@ -116,16 +119,15 @@ int read_initial_condition(FlowStates<T>& fs, std::string flow_dir) {
     }
     vy.close();
 
-    int n_cells = cell_i;
-    for (int cell_i = 0; cell_i < n_cells; cell_i++){
+    for (int cell_i = 0; cell_i < num_cells; cell_i++){
         fs.gas.rho(cell_i) = fs.gas.pressure(cell_i) / (287.0 * fs.gas.temp(cell_i));
-        fs.gas.energy(cell_i) = 0.7171 * fs.gas.temp(cell_i);
+        fs.gas.energy(cell_i) = 717.5 * fs.gas.temp(cell_i);
     }
 
     return 0;
 }
 
-template int read_initial_condition<double>(FlowStates<double>&, std::string);
+template int read_initial_condition<double>(FlowStates<double>&, std::string, int num_cells);
 
 template<typename T>
 int write_flow_solution(const FlowStates<T>& fs, const GridBlock<T>& grid, const std::string flow_dir, int flow_i) {

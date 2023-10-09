@@ -13,6 +13,7 @@ class ValidationException(Exception):
 
 class FluxCalculator(Enum):
     Hanel = "hanel"
+    Ausmdv = "ausmdv"
 
 class Solver(Enum):
     RungeKutta = "runge_kutta"
@@ -20,6 +21,8 @@ class Solver(Enum):
 def string_to_flux_calculator(string):
     if string == FluxCalculator.Hanel.value:
         return FluxCalculator.Hanel
+    elif string == FluxCalculator.Ausmdv.value:
+        return FluxCalculator.Ausmdv
     validation_errors.append(ValidationException(f"Unknown flux calculator {string}"))
 
 def string_to_solver(string):

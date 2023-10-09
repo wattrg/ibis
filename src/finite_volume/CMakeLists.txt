@@ -4,6 +4,7 @@ add_library(
 	src/finite_volume.cpp 
 	src/flux_calc.cpp 
 	src/flux_calculators/hanel.cpp
+	src/flux_calculators/ausmdv.cpp
 	src/primative_conserved_conversion.cpp
 	src/conserved_quantities.cpp
 	src/boundaries/boundary.cpp
@@ -26,6 +27,7 @@ add_executable(
 	test/unittest.cpp 
 	src/flux_calc.cpp 
 	src/flux_calculators/hanel.cpp
+	src/flux_calculators/ausmdv.cpp
 	src/io.cpp
 )
 target_compile_options(finite_volume_unittest PRIVATE -Wall -Wextra -Wpedantic -Werror -g)
