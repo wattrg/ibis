@@ -22,4 +22,5 @@ target_link_libraries(
 	finite_volume
 	solver
 	spdlog::spdlog
+	IO
 )

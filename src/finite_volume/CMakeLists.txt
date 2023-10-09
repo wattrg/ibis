@@ -28,7 +28,6 @@ add_executable(
 	src/flux_calc.cpp 
 	src/flux_calculators/hanel.cpp
 	src/flux_calculators/ausmdv.cpp
-	src/io.cpp
 )
 target_compile_options(finite_volume_unittest PRIVATE -Wall -Wextra -Wpedantic -Werror -g)
 target_link_libraries(

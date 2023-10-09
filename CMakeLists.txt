@@ -16,6 +16,7 @@ add_subdirectory(src/grid)
 add_subdirectory(src/finite_volume)
 add_subdirectory(src/ibis/src/commands)
 add_subdirectory(src/solvers)
+add_subdirectory(src/io)
 
 add_subdirectory(extern/doctest EXCLUDE_FROM_ALL)
 add_subdirectory(extern/kokkos EXCLUDE_FROM_ALL)

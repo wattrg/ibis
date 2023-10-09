@@ -27,12 +27,15 @@ RungeKutta::RungeKutta(json config, GridBlock<double> grid, std::string grid_dir
 
     // progress
     time_since_last_plot_ = 0.0;
-    n_solutions_ = 0;
     t_ = 0.0;
+
+    // input/output
+    io_ = FVIO<double>();
 }
 
 int RungeKutta::initialise() {
-    int ic_result = read_initial_condition(flow_, flow_dir_, grid_.num_cells());
+    // int ic_result = read_initial_condition(flow_, flow_dir_, grid_.num_cells());
+    int ic_result = io_.read(flow_, grid_, 0);
     int conversion_result = primatives_to_conserved(conserved_quantities_, flow_);
     return ic_result + conversion_result;
 }
@@ -64,8 +67,8 @@ bool RungeKutta::plot_this_step(unsigned int step) {
 }
 
 int RungeKutta::plot_solution(unsigned int step) {
-    n_solutions_ ++;
-    int result =  write_flow_solution<double>(flow_, grid_, flow_dir_, n_solutions_);
+    // int result =  write_flow_solution<double>(flow_, grid_, flow_dir_, n_solutions_);
+    int result = io_.write(flow_, grid_, t_);
     time_since_last_plot_ = 0.0;
     spdlog::info("  written flow solution: step {}, time {:.6e}", step, t_);
     return result;

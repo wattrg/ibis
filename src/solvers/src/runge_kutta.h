@@ -8,6 +8,7 @@
 // #include "finite_volume/src/finite_volume.h"
 #include "../../grid/src/grid.h"
 #include "solver.h"
+#include "../../io/src/io.h"
 
 
 class RungeKutta : public Solver {
@@ -31,9 +32,12 @@ private:
 private:
     // progress
     double time_since_last_plot_;
-    int n_solutions_;
     double t_;
     double dt_;
+
+private:
+    // input/output
+    FVIO<double> io_;
 
 private:
     // implementation
