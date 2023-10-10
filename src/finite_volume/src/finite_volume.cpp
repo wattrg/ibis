@@ -47,11 +47,11 @@ double FiniteVolume<T>::estimate_dt(const FlowStates<T> &flow_state, GridBlock<T
     CellFaces<T> cell_interfaces = grid.cells().faces();
     Interfaces<T> interfaces = grid.interfaces();
     Cells<T> cells = grid.cells();
-    double signal_frequency = 0.0;
 
+    double dt;
     Kokkos::parallel_reduce("FV::signal_frequency", 
                             num_cells, 
-                            KOKKOS_LAMBDA(const int cell_i, double& signal_frequency_utd) 
+                            KOKKOS_LAMBDA(const int cell_i, double& dt_utd) 
     {
         auto cell_face_ids = cell_interfaces.face_ids(cell_i);
         T spectral_radii = 0.0;
@@ -64,11 +64,11 @@ double FiniteVolume<T>::estimate_dt(const FlowStates<T> &flow_state, GridBlock<T
             T sig_vel = Kokkos::fabs(dot) + Kokkos::sqrt(1.4*287.0*flow_state.gas.temp(cell_i));
             spectral_radii += sig_vel * interfaces.area(i_face); 
         }
-        T local_signal_frequency = spectral_radii / cells.volume(cell_i);
-        signal_frequency_utd = Kokkos::max(local_signal_frequency, signal_frequency_utd);
-    }, signal_frequency);
+        T local_dt = cells.volume(cell_i) / spectral_radii;
+        dt_utd = Kokkos::min(local_dt, dt_utd);
+    }, Kokkos::Min<double>(dt));
 
-    return 1.0 / signal_frequency;
+    return dt;
 }
 
 template <typename T>

@@ -3,6 +3,7 @@ add_library(
 	STATIC
 	src/io.cpp
 	src/native.cpp
+	src/vtk.cpp
 )
 
 target_link_libraries(

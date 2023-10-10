@@ -34,7 +34,6 @@ RungeKutta::RungeKutta(json config, GridBlock<double> grid, std::string grid_dir
 }
 
 int RungeKutta::initialise() {
-    // int ic_result = read_initial_condition(flow_, flow_dir_, grid_.num_cells());
     int ic_result = io_.read(flow_, grid_, 0);
     int conversion_result = primatives_to_conserved(conserved_quantities_, flow_);
     return ic_result + conversion_result;
@@ -48,6 +47,9 @@ int RungeKutta::take_step() {
     fv_.compute_dudt(flow_, grid_, dUdt_);
     double full_dt = cfl_ * fv_.estimate_dt(flow_, grid_);
     dt_ = Kokkos::min(full_dt, max_time_ - t_);
+    if (plot_frequency_ > 0.0 && time_since_last_plot_ < plot_frequency_) {
+        dt_ = Kokkos::min(dt_, plot_frequency_ - time_since_last_plot_);
+    }
     conserved_quantities_.apply_time_derivative(dUdt_, dt_);
     conserved_to_primatives(conserved_quantities_, flow_);
 
@@ -62,12 +64,11 @@ bool RungeKutta::print_this_step(unsigned int step) {
 
 bool RungeKutta::plot_this_step(unsigned int step) {
     if (plot_every_n_steps_ > 0 && step != 0 && step % plot_every_n_steps_ == 0) return true;
-    if (plot_frequency_ > 0 && time_since_last_plot_ > plot_frequency_) return true;
+    if (plot_frequency_ > 0 && time_since_last_plot_ >= plot_frequency_-1e-15) return true;
     return false;
 }
 
 int RungeKutta::plot_solution(unsigned int step) {
-    // int result =  write_flow_solution<double>(flow_, grid_, flow_dir_, n_solutions_);
     int result = io_.write(flow_, grid_, t_);
     time_since_last_plot_ = 0.0;
     spdlog::info("  written flow solution: step {}, time {:.6e}", step, t_);

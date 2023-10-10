@@ -6,6 +6,7 @@
 #include <spdlog/spdlog.h>
 #include "io.h"
 #include "native.h"
+#include "vtk.h"
 
 
 std::string pad_time_index(int time_idx, unsigned long len) {
@@ -17,7 +18,7 @@ template <typename T>
 int FVIO<T>::write(const FlowStates<T>& fs, const GridBlock<T>& grid, double time) {
     (void) time;
     std::string time_index = pad_time_index(time_index_, 4);
-    std::string directory_name = directory_ + "/" + time_index;
+    std::string directory_name = output_dir_ + "/" + time_index;
     std::filesystem::create_directory(directory_name);
 
     int result = 0;
@@ -26,8 +27,7 @@ int FVIO<T>::write(const FlowStates<T>& fs, const GridBlock<T>& grid, double tim
             result = write_native(fs, grid, directory_name);
             break;
         case FlowFormat::Vtk:
-            spdlog::error("Writing VTK not implemnted yet");
-            throw std::runtime_error("Not implemented yet");
+            result = write_vtk(fs, grid, directory_name);
             break;
     } 
     time_index_ ++;
@@ -37,7 +37,7 @@ int FVIO<T>::write(const FlowStates<T>& fs, const GridBlock<T>& grid, double tim
 template<typename T>
 int FVIO<T>::read(FlowStates<T>& fs, const GridBlock<T>& grid, int time_idx) {
     std::string time_index = pad_time_index(time_idx, 4);
-    std::string directory_name = directory_ + "/" + time_index;
+    std::string directory_name = input_dir_ + "/" + time_index;
     
     int result = 0;
     switch (input_format_) {
