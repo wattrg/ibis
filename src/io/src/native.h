@@ -4,9 +4,19 @@
 #include "io.h"
 
 template <typename T>
-int write_native(const FlowStates<T>& fs, const GridBlock<T>& grid, std::string dir);
+class NativeInput : public FVInput<T> {
+public:
+    NativeInput() {}
+
+    int read(FlowStates<T>& fs, const GridBlock<T>& grid, std::string dir);
+};
 
 template <typename T>
-int read_native(FlowStates<T>& fs, const GridBlock<T>& grid, std::string dir);
+class NativeOutput : public FVOutput<T> {
+public:
+    NativeOutput() {}
+
+    int write(const FlowStates<T>& fs, const GridBlock<T>& grid, std::string dir, double time);
+};
 
 #endif

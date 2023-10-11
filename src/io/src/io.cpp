@@ -15,21 +15,54 @@ std::string pad_time_index(int time_idx, unsigned long len) {
 }
 
 template <typename T>
+std::unique_ptr<FVInput<T>> make_fv_input(FlowFormat format) {
+    switch (format) {
+        case FlowFormat::Native:
+            return std::unique_ptr<FVInput<T>>(new NativeInput<T>());
+        case FlowFormat::Vtk:
+            spdlog::error("Reading VTK files not supported");
+            throw std::runtime_error("Reading VTK files not supported");
+    }
+}
+
+template <typename T>
+std::unique_ptr<FVOutput<T>> make_fv_output(FlowFormat format) {
+    switch (format) {
+        case FlowFormat::Native:
+            return std::unique_ptr<FVOutput<T>>(new NativeOutput<T>());
+        case FlowFormat::Vtk:
+            return std::unique_ptr<FVOutput<T>>(new VtkOutput<T>());
+    }
+}
+
+template <typename T>
+FVIO<T>::FVIO(FlowFormat input_format, FlowFormat output_format, std::string input_dir, std::string output_dir, int time_index)
+    : input_(make_fv_input<T>(input_format)),
+      output_(make_fv_output<T>(output_format)),
+      time_index_(time_index),
+      input_dir_(input_dir),
+      output_dir_(output_dir)
+{}
+
+template <typename T>
+FVIO<T>::FVIO(FlowFormat input, FlowFormat output) 
+    : FVIO(input, output, "flow", "flow", 0) {}
+
+template <typename T>
+FVIO<T>::FVIO(FlowFormat input, FlowFormat output, std::string input_dir, std::string output_dir) 
+    : FVIO(input, output, input_dir, output_dir, 0) {}
+
+
+template <typename T>
+FVIO<T>::FVIO() : FVIO(FlowFormat::Native, FlowFormat::Native, "flow", "flow", 0) {}
+
+template <typename T>
 int FVIO<T>::write(const FlowStates<T>& fs, const GridBlock<T>& grid, double time) {
     (void) time;
     std::string time_index = pad_time_index(time_index_, 4);
     std::string directory_name = output_dir_ + "/" + time_index;
     std::filesystem::create_directory(directory_name);
-
-    int result = 0;
-    switch (output_format_) {
-        case FlowFormat::Native:
-            result = write_native(fs, grid, directory_name);
-            break;
-        case FlowFormat::Vtk:
-            result = write_vtk(fs, grid, directory_name);
-            break;
-    } 
+    int result = output_->write(fs, grid, directory_name, time);
     time_index_ ++;
     return result;
 }
@@ -38,17 +71,7 @@ template<typename T>
 int FVIO<T>::read(FlowStates<T>& fs, const GridBlock<T>& grid, int time_idx) {
     std::string time_index = pad_time_index(time_idx, 4);
     std::string directory_name = input_dir_ + "/" + time_index;
-    
-    int result = 0;
-    switch (input_format_) {
-        case FlowFormat::Native:
-            result = read_native(fs, grid, directory_name);
-            break;
-        case FlowFormat::Vtk:
-            spdlog::error("Reading VTK files not supported");
-            throw std::runtime_error("Not implemented");
-            break;
-    }
+    int result = input_->read(fs, grid, directory_name);
     return result;
 }
 

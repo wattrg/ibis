@@ -4,6 +4,10 @@
 #include "io.h"
 
 template <typename T>
-int write_vtk(const FlowStates<T>& fs, const GridBlock<T>& grid, std::string dir);
+class VtkOutput : public FVOutput<T> {
+public:
+    int write(const FlowStates<T>& fs, const GridBlock<T>& grid, std::string dir, double time);
+
+};
 
 #endif 

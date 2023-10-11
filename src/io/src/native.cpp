@@ -4,10 +4,18 @@
 #include "native.h"
 
 template <typename T>
-int write_native(const FlowStates<T>& fs, const GridBlock<T>& grid, std::string dir){
+int NativeOutput<T>::write(const FlowStates<T>& fs, const GridBlock<T>& grid, std::string dir, double time){
+    std::ofstream meta(dir + "/meta_data");
+    if (!meta) {
+        spdlog::error("failed to open {}", dir+"/time");
+    }
+    meta << std::fixed << std::setprecision(16);
+    meta << "time: " << time;
+    meta.close();
+
     std::ofstream temp(dir + "/T");
     if (!temp) {
-        spdlog::error("failed to open new temperature directory");
+        spdlog::error("failed to open {}", dir+"/T");
         return 1;
     }
     temp << std::fixed << std::setprecision(16);
@@ -18,7 +26,7 @@ int write_native(const FlowStates<T>& fs, const GridBlock<T>& grid, std::string 
 
     std::ofstream pressure(dir + "/p");
     if (!pressure) {
-        spdlog::error("failed to open new pressure directory");
+        spdlog::error("failed to open {}", dir+"/p");
         return 1;
     }
     pressure << std::fixed << std::setprecision(16);
@@ -29,7 +37,7 @@ int write_native(const FlowStates<T>& fs, const GridBlock<T>& grid, std::string 
 
     std::ofstream vx(dir + "/vx");
     if (!vx) {
-        spdlog::error("failed to open new vx directory");
+        spdlog::error("failed to open {}", dir+"/vx");
         return 1;
     }
     vx << std::fixed << std::setprecision(16);
@@ -40,7 +48,7 @@ int write_native(const FlowStates<T>& fs, const GridBlock<T>& grid, std::string 
 
     std::ofstream vy(dir + "/vy");
     if (!vy) {
-        spdlog::error("failed to open new vy directory");
+        spdlog::error("failed to open {}", dir+"/vy");
         return 1;
     }
     vy << std::fixed << std::setprecision(16);
@@ -51,7 +59,7 @@ int write_native(const FlowStates<T>& fs, const GridBlock<T>& grid, std::string 
 
     std::ofstream vz(dir + "/vz");
     if (!vz) {
-        spdlog::error("failed to open new vz directory");
+        spdlog::error("failed to open {}", dir+"/vz");
         return 1;
     }
     vz << std::fixed << std::setprecision(16);
@@ -62,10 +70,10 @@ int write_native(const FlowStates<T>& fs, const GridBlock<T>& grid, std::string 
 
     return 0;
 }
-template int write_native<double>(const FlowStates<double>&, const GridBlock<double>&, std::string);
+template class NativeOutput<double>;
 
 template <typename T>
-int read_native(FlowStates<T>& fs, const GridBlock<T>& grid, std::string dir){
+int NativeInput<T>::read(FlowStates<T>& fs, const GridBlock<T>& grid, std::string dir){
     int num_cells = grid.num_cells();
     std::string line;
     std::ifstream temp(dir + "/T");
@@ -125,4 +133,4 @@ int read_native(FlowStates<T>& fs, const GridBlock<T>& grid, std::string dir){
 
     return 0;
 }
-template int read_native<double>(FlowStates<double>&, const GridBlock<double>&, std::string);
+template class NativeInput<double>;
