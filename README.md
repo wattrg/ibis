@@ -1,5 +1,19 @@
 # ibis
-A soon-to-be CFD solver.
+```
+   MM      
+  <' \___/| 
+   \_  _/           _ _     _     
+     ][            (_) |   (_)    
+ ___/-\___          _| |__  _ ___ 
+|---------|        | | '_ \| / __|
+ | | | | |         | | |_) | \__ \
+ | | | | |         |_|_.__/|_|___/
+ | | | | |     
+ | | | | |                
+ |_______|
+```
+
+A soon-to-be compresible CFD solver.
 
 ## Installation
 ### Dependancies
