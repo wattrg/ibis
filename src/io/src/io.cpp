@@ -22,6 +22,8 @@ std::unique_ptr<FVInput<T>> make_fv_input(FlowFormat format) {
         case FlowFormat::Vtk:
             spdlog::error("Reading VTK files not supported");
             throw std::runtime_error("Reading VTK files not supported");
+        default:
+            throw std::runtime_error("Unreachable");
     }
 }
 
@@ -32,6 +34,8 @@ std::unique_ptr<FVOutput<T>> make_fv_output(FlowFormat format) {
             return std::unique_ptr<FVOutput<T>>(new NativeOutput<T>());
         case FlowFormat::Vtk:
             return std::unique_ptr<FVOutput<T>>(new VtkOutput<T>());
+        default:
+            throw std::runtime_error("Unreachable");
     }
 }
 
