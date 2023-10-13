@@ -66,7 +66,7 @@ int FVIO<T>::write(const FlowStates<T>& fs, const GridBlock<T>& grid, double tim
     std::string directory_name = output_dir_ + "/" + time_index;
     std::filesystem::create_directory(output_dir_);
     std::filesystem::create_directory(directory_name);
-    int result = output_->write(fs, grid, directory_name, time);
+    int result = output_->write(fs, grid, output_dir_, time_index, time);
     std::ofstream flows("config/flows", std::ios_base::app);
     flows << time << std::endl;
     time_index_ ++;
@@ -79,6 +79,11 @@ int FVIO<T>::read(FlowStates<T>& fs, const GridBlock<T>& grid, int time_idx) {
     std::string directory_name = input_dir_ + "/" + time_index;
     int result = input_->read(fs, grid, directory_name);
     return result;
+}
+
+template <typename T>
+void FVIO<T>::write_coordinating_file() {
+    output_->write_coordinating_file(output_dir_);
 }
 
 template class FVIO<double>;

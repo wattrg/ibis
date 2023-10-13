@@ -33,5 +33,6 @@ void plot_vtk(json directories){
         io.read(fs, grid, time_idx);
         io.write(fs, grid, 0.0);
     }
+    io.write_coordinating_file();
 }
 template void plot_vtk<double>(json);

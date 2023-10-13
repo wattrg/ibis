@@ -4,7 +4,8 @@
 #include "native.h"
 
 template <typename T>
-int NativeOutput<T>::write(const FlowStates<T>& fs, const GridBlock<T>& grid, std::string dir, double time){
+int NativeOutput<T>::write(const FlowStates<T>& fs, const GridBlock<T>& grid, std::string plot_dir, std::string time_dir, double time){
+    std::string dir = plot_dir + "/" + "time_dir";
     std::ofstream meta(dir + "/meta_data");
     if (!meta) {
         spdlog::error("failed to open {}", dir+"/time");

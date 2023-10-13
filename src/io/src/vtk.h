@@ -6,7 +6,8 @@
 template <typename T>
 class VtkOutput : public FVOutput<T> {
 public:
-    int write(const FlowStates<T>& fs, const GridBlock<T>& grid, std::string dir, double time);
+    int write(const FlowStates<T>& fs, const GridBlock<T>& grid, std::string plot_dir, std::string time_dir, double time);
+    void write_coordinating_file(std::string plot_dir);
 
 private:
     std::vector<double> times_;

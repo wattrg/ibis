@@ -23,7 +23,9 @@ class FVOutput {
 public:
     virtual ~FVOutput(){}
 
-    virtual int write(const FlowStates<T>& fs, const GridBlock<T>& grid, std::string dir, double time) = 0;
+    virtual int write(const FlowStates<T>& fs, const GridBlock<T>& grid, std::string plot_dir, std::string time_dir, double time) = 0;
+
+    virtual void write_coordinating_file(std::string plot_dir)=0;
 };
 
 template <typename T>
@@ -40,6 +42,7 @@ public:
     int read(FlowStates<T>& fs, const GridBlock<T>& grid, int time_idx);
 
     int write(const FlowStates<T>& flow_state, const GridBlock<T>& grid, double time);
+    void write_coordinating_file();
 
 private:
     std::unique_ptr<FVInput<T>> input_;

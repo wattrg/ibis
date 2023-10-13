@@ -133,7 +133,8 @@ void write_int_view(std::ofstream& f, const Kokkos::View<int*>& view, std::strin
 }
 
 void write_elem_type(std::ofstream& f, const Field<ElemType>& types){
-    f << "<DataArray type='Int64' NumberOfComponents='1' Name='types' format='ascii'>" << std::endl;
+    f << "<DataArray type='Int64' NumberOfComponents='1' Name='types' format='ascii'>" 
+        << std::endl;
     for (int i = 0; i < types.size(); i++) {
         int vtk_type = vtk_type_from_elem_type(types(i));
         f << vtk_type << std::endl;
@@ -144,15 +145,20 @@ void write_elem_type(std::ofstream& f, const Field<ElemType>& types){
 template <typename T>
 int VtkOutput<T>::write(const FlowStates<T>& fs, 
                         const GridBlock<T>& grid, 
-                        std::string dir, 
+                        std::string plot_dir,
+                        std::string time_dir, 
                         double time)
 {
-    std::ofstream f(dir + "/block_0.vtu");
+    std::ofstream f(plot_dir + "/" + time_dir + "/" + "/block_0.vtu");
     f << "<VTKFile type='UnstructuredGrid' byte_order='BigEndian'>" << std::endl;
     f << "<UnstructuredGrid>" << std::endl;
 
     // points
-    f << "<Piece NumberOfPoints='" << grid.num_vertices() << "' NumberOfCells='" << grid.num_cells() << "'>" << std::endl; 
+    f << "<Piece NumberOfPoints='" 
+      << grid.num_vertices() 
+      << "' NumberOfCells='" 
+      << grid.num_cells() 
+      << "'>" << std::endl; 
     f << "<Points>" << std::endl;
     write_vector_field(f, 
                        grid.vertices().positions(), 
@@ -185,7 +191,21 @@ int VtkOutput<T>::write(const FlowStates<T>& fs,
     f << "</VTKFile>";
     f.close();
     times_.push_back(time);
-    dirs_.push_back(dir);
+    dirs_.push_back(time_dir + "/block_0000.su2");
     return 0;
 }
+
+template <typename T>
+void VtkOutput<T>::write_coordinating_file(std::string plot_dir) {
+    std::ofstream plot_file(plot_dir + "/plot.pvd");
+    plot_file << "<?xml version='1.0'?>" << std::endl;
+    plot_file << "<VTKFile type='Collection' version='0.1' byte_order='LittleEndian'>" << std::endl;
+    plot_file << "<Collection>" << std::endl;
+    for (unsigned int i = 0; i < times_.size(); i++){
+        plot_file << "<DataSet timestep='" << times_[i] << "' group='' part='0' file='" << dirs_[i] << "'/>" << std::endl;
+    }
+    plot_file << "</Collection>" << std::endl;
+    plot_file << "</VTKFile>" << std::endl;
+}
+
 template class VtkOutput<double>;
