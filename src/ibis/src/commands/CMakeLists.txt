@@ -6,7 +6,7 @@ target_link_libraries(prep PRIVATE Python::Python spdlog::spdlog)
 add_library(ibis_clean STATIC clean.cpp)
 target_link_libraries(ibis_clean PRIVATE Python::Python spdlog::spdlog)
 
-add_library(run STATIC run.cpp)
+add_library(run STATIC run.cpp ../config.cpp)
 target_link_libraries(
         run PUBLIC 
         Kokkos::kokkos 
@@ -19,12 +19,15 @@ target_link_libraries(
         spdlog::spdlog
 )
 
-add_library(post STATIC post.cpp)
+add_library(post STATIC post.cpp post_commands/plot_vtk.cpp ../config.cpp)
 target_link_libraries(
         post PUBLIC
         Python::Python 
         spdlog::spdlog 
         nlohmann_json::nlohmann_json
+        Kokkos::kokkos
+        gas
+        grid
 )
 
 

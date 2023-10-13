@@ -4,5 +4,6 @@
     "config_status": "config_status",
     "grid_dir": "grid",
     "flow_dir": "flow",
+    "plot_dir": "plot",
     "log_dir": "log"
 }

@@ -6,3 +6,4 @@ examples/**/flow
 examples/**/grid
 examples/**/config
 examples/**/log
+examples/**/plot

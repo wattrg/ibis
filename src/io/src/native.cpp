@@ -10,7 +10,7 @@ int NativeOutput<T>::write(const FlowStates<T>& fs, const GridBlock<T>& grid, st
         spdlog::error("failed to open {}", dir+"/time");
     }
     meta << std::fixed << std::setprecision(16);
-    meta << "time: " << time;
+    meta << "time: " << time << std::endl;;
     meta.close();
 
     std::ofstream temp(dir + "/T");
