@@ -13,7 +13,7 @@
  |_______|
 ```
 
-A soon-to-be compresible CFD solver.
+A compresible CFD solver
 
 ## Installation
 ### Dependancies
