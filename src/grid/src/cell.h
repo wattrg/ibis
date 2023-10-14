@@ -96,6 +96,8 @@ public:
 
     CellFaces<T> faces() const {return faces_;}
 
+    const Field<ElemType>& shapes() const {return shape_;}
+
 private:
     CellFaces<T> faces_;
     // Id interface_ids_;

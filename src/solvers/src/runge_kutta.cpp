@@ -30,11 +30,12 @@ RungeKutta::RungeKutta(json config, GridBlock<double> grid, std::string grid_dir
     t_ = 0.0;
 
     // input/output
-    io_ = FVIO<double>();
+    io_ = FVIO<double>(1);
 }
 
 int RungeKutta::initialise() {
-    int ic_result = io_.read(flow_, grid_, 0);
+    json meta_data;
+    int ic_result = io_.read(flow_, grid_, meta_data, 0);
     int conversion_result = primatives_to_conserved(conserved_quantities_, flow_);
     return ic_result + conversion_result;
 }

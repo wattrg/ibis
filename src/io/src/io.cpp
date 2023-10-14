@@ -22,6 +22,8 @@ std::unique_ptr<FVInput<T>> make_fv_input(FlowFormat format) {
         case FlowFormat::Vtk:
             spdlog::error("Reading VTK files not supported");
             throw std::runtime_error("Reading VTK files not supported");
+        default:
+            throw std::runtime_error("Unreachable");
     }
 }
 
@@ -32,6 +34,8 @@ std::unique_ptr<FVOutput<T>> make_fv_output(FlowFormat format) {
             return std::unique_ptr<FVOutput<T>>(new NativeOutput<T>());
         case FlowFormat::Vtk:
             return std::unique_ptr<FVOutput<T>>(new VtkOutput<T>());
+        default:
+            throw std::runtime_error("Unreachable");
     }
 }
 
@@ -57,22 +61,30 @@ template <typename T>
 FVIO<T>::FVIO() : FVIO(FlowFormat::Native, FlowFormat::Native, "flow", "flow", 0) {}
 
 template <typename T>
+FVIO<T>::FVIO(int time_index) : FVIO(FlowFormat::Native, FlowFormat::Native, "flow", "flow", time_index) {}
+
+template <typename T>
 int FVIO<T>::write(const FlowStates<T>& fs, const GridBlock<T>& grid, double time) {
-    (void) time;
     std::string time_index = pad_time_index(time_index_, 4);
     std::string directory_name = output_dir_ + "/" + time_index;
+    std::filesystem::create_directory(output_dir_);
     std::filesystem::create_directory(directory_name);
-    int result = output_->write(fs, grid, directory_name, time);
+    int result = output_->write(fs, grid, output_dir_, time_index, time);
     time_index_ ++;
     return result;
 }
 
 template<typename T>
-int FVIO<T>::read(FlowStates<T>& fs, const GridBlock<T>& grid, int time_idx) {
+int FVIO<T>::read(FlowStates<T>& fs, const GridBlock<T>& grid, json& meta_data, int time_idx) {
     std::string time_index = pad_time_index(time_idx, 4);
     std::string directory_name = input_dir_ + "/" + time_index;
-    int result = input_->read(fs, grid, directory_name);
+    int result = input_->read(fs, grid, directory_name, meta_data);
     return result;
+}
+
+template <typename T>
+void FVIO<T>::write_coordinating_file() {
+    output_->write_coordinating_file(output_dir_);
 }
 
 template class FVIO<double>;
