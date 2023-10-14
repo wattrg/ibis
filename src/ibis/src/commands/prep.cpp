@@ -8,20 +8,14 @@
 
 
 int prep(int argc, char* argv[]) {
-    wchar_t *program = Py_DecodeLocale(argv[0], NULL);
-    if (program == NULL) {
-        spdlog::error("ibis prep unable to decode program name");
-        return 1;
-    }
-
     std::string prep_path = std::string(std::getenv("IBIS")) + "/lib";
 
-    Py_SetProgramName(program);
     Py_Initialize();
 
     PyObject* prep_script_name = PyUnicode_FromString("job.py");
     if (prep_script_name == NULL) {
         spdlog::error("Failed to interpret the name of the preparation script");
+        Py_Finalize();
         return 1;
     }
 
@@ -32,6 +26,7 @@ int prep(int argc, char* argv[]) {
     PyObject* prep_module = PyImport_ImportModule("prep");
     if (prep_module == NULL) {
         PyErr_Print();
+        Py_Finalize();
         return 1;
     }
     
@@ -39,6 +34,7 @@ int prep(int argc, char* argv[]) {
     if (py_prep_main == NULL) {
         PyErr_Print();
         Py_DECREF(prep_module);
+        Py_Finalize();
         return 1;
     }
 
@@ -50,6 +46,7 @@ int prep(int argc, char* argv[]) {
         Py_DECREF(prep_module);
         Py_DECREF(py_prep_main);
         Py_DECREF(main_args);
+        Py_Finalize();
         return 1;
     }
     

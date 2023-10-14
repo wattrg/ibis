@@ -18,6 +18,7 @@ int Solver::solve() {
         spdlog::error("Failed to initialise runge kutta solver");
         return success;
     }
+
     for (int step = 0; step < max_step(); step++) {
         int result = take_step();
         if (result != 0) {
@@ -33,19 +34,19 @@ int Solver::solve() {
             return 1;
         }
 
+        if (stop_now(step)) {
+            std::string reason = stop_reason(step);
+            spdlog::info("STOPPING: {}", reason);
+            plot_solution(step);
+            break;
+        }
+
         if (print_this_step(step)) {
             print_progress(step);
         }
 
         if (plot_this_step(step)) {
             plot_solution(step);
-        }
-
-        if (stop_now(step)) {
-            std::string reason = stop_reason(step);
-            spdlog::info("STOPPING: {}", reason);
-            plot_solution(step);
-            break;
         }
     }
     finalise();

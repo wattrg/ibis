@@ -4,15 +4,8 @@
 #include "clean.h"
 
 int clean(int argc, char* argv[]) {
-    wchar_t *program = Py_DecodeLocale(argv[0], NULL);
-    if (program == NULL) {
-        spdlog::error("ibis clean unable to decode program name");
-        return 1;
-    }
-
     std::string clean_path = std::string(std::getenv("IBIS")) + "/lib";
 
-    Py_SetProgramName(program);
     Py_Initialize();
 
 
@@ -23,6 +16,7 @@ int clean(int argc, char* argv[]) {
     PyObject* clean_module = PyImport_ImportModule("clean");
     if (clean_module == NULL) {
         PyErr_Print();
+        Py_Finalize();
         return 1;
     }
     
@@ -30,6 +24,7 @@ int clean(int argc, char* argv[]) {
     if (py_clean_main == NULL) {
         PyErr_Print();
         Py_DECREF(clean_module);
+        Py_Finalize();
         return 1;
     }
 

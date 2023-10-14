@@ -64,8 +64,12 @@ bool RungeKutta::print_this_step(unsigned int step) {
 }
 
 bool RungeKutta::plot_this_step(unsigned int step) {
-    if (plot_every_n_steps_ > 0 && step != 0 && step % plot_every_n_steps_ == 0) return true;
-    if (plot_frequency_ > 0 && time_since_last_plot_ >= plot_frequency_-1e-15) return true;
+    if (plot_every_n_steps_ > 0 && 
+        step != 0 && 
+        step % plot_every_n_steps_ == 0) return true;
+
+    if (plot_frequency_ > 0 && 
+        time_since_last_plot_ >= plot_frequency_-1e-15) return true;
     return false;
 }
 
