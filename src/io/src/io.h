@@ -41,6 +41,7 @@ public:
          int time_index);
     FVIO(FlowFormat input, FlowFormat output);
     FVIO(FlowFormat input, FlowFormat output, std::string input_dir, std::string output_dir);
+    FVIO(int time_index);
     FVIO();
 
     // read a flow state

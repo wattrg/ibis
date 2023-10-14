@@ -30,7 +30,7 @@ RungeKutta::RungeKutta(json config, GridBlock<double> grid, std::string grid_dir
     t_ = 0.0;
 
     // input/output
-    io_ = FVIO<double>();
+    io_ = FVIO<double>(1);
 }
 
 int RungeKutta::initialise() {
