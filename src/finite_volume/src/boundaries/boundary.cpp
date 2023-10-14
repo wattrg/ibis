@@ -123,18 +123,18 @@ void InternalCopyReflectNormal<T>::apply(FlowStates<T>& fs, const GridBlock<T>& 
 
         // the velocity in the valid cell in the interface coordinates
         // with the component normal to the interface negated
-        T x_star = -(x*norm_x + y*norm_y + z*norm_x);
+        T x_star = -(x*norm_x + y*norm_y + z*norm_z);
         T y_star =   x*tan1_x + y*tan1_y + z*tan1_z;
         T z_star =   x*tan2_x + y*tan2_y + z*tan2_z;
 
         // transform the star velocity back to the global frame
-        x = x_star*norm_x + y_star*tan1_x + z_star*tan2_x;
-        y = x_star*norm_y + y_star*tan1_y + z_star*tan2_y;
-        z = x_star*norm_z + y_star*tan1_z + z_star*tan2_z;
+        T x_ghost = x_star*norm_x + y_star*tan1_x + z_star*tan2_x;
+        T y_ghost = x_star*norm_y + y_star*tan1_y + z_star*tan2_y;
+        T z_ghost = x_star*norm_z + y_star*tan1_z + z_star*tan2_z;
 
-        fs.vel.x(ghost_cell) = x;
-        fs.vel.y(ghost_cell) = y;
-        fs.vel.z(ghost_cell) = z;
+        fs.vel.x(ghost_cell) = x_ghost;
+        fs.vel.y(ghost_cell) = y_ghost;
+        fs.vel.z(ghost_cell) = z_ghost;
     });
 }
 
