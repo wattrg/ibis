@@ -62,22 +62,20 @@ FVIO<T>::FVIO() : FVIO(FlowFormat::Native, FlowFormat::Native, "flow", "flow", 0
 
 template <typename T>
 int FVIO<T>::write(const FlowStates<T>& fs, const GridBlock<T>& grid, double time) {
+    time_index_ ++;
     std::string time_index = pad_time_index(time_index_, 4);
     std::string directory_name = output_dir_ + "/" + time_index;
     std::filesystem::create_directory(output_dir_);
     std::filesystem::create_directory(directory_name);
     int result = output_->write(fs, grid, output_dir_, time_index, time);
-    std::ofstream flows("config/flows", std::ios_base::app);
-    flows << time << std::endl;
-    time_index_ ++;
     return result;
 }
 
 template<typename T>
-int FVIO<T>::read(FlowStates<T>& fs, const GridBlock<T>& grid, int time_idx) {
+int FVIO<T>::read(FlowStates<T>& fs, const GridBlock<T>& grid, json& meta_data, int time_idx) {
     std::string time_index = pad_time_index(time_idx, 4);
     std::string directory_name = input_dir_ + "/" + time_index;
-    int result = input_->read(fs, grid, directory_name);
+    int result = input_->read(fs, grid, directory_name, meta_data);
     return result;
 }
 

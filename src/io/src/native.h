@@ -3,12 +3,13 @@
 
 #include "io.h"
 
+
 template <typename T>
 class NativeInput : public FVInput<T> {
 public:
     NativeInput() {}
 
-    int read(FlowStates<T>& fs, const GridBlock<T>& grid, std::string dir);
+    int read(FlowStates<T>& fs, const GridBlock<T>& grid, std::string dir, json& meta_data);
 };
 
 template <typename T>

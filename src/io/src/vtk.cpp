@@ -191,7 +191,7 @@ int VtkOutput<T>::write(const FlowStates<T>& fs,
     f << "</VTKFile>";
     f.close();
     times_.push_back(time);
-    dirs_.push_back(time_dir + "/block_0000.su2");
+    dirs_.push_back(time_dir + "/block_0.vtu");
     return 0;
 }
 

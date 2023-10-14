@@ -2,6 +2,7 @@
 #include <iostream>
 #include <vector>
 #include <string>
+#include <spdlog/spdlog.h>
 
 #include "plot_vtk.h"
 #include "../../../src/grid/src/grid.h"
@@ -12,13 +13,12 @@
 
 template <typename T>
 void plot_vtk(json directories){
-    std::string config_dir = directories.at("config_dir");
     std::string flow_dir = directories.at("flow_dir");
     std::string grid_dir = directories.at("grid_dir");
     std::string plot_dir = directories.at("plot_dir");
 
     // read the flows file to figure out what flow files exist
-    std::ifstream flows(config_dir + "/flows");
+    std::ifstream flows(flow_dir + "/flows");
     std::vector<std::string> dirs;
     std::string line;
     while (std::getline(flows, line)){
@@ -30,8 +30,10 @@ void plot_vtk(json directories){
     GridBlock<T> grid(grid_dir+"/block_0000.su2", config.at("grid"));
     FlowStates<T> fs(grid.num_cells());
     for (unsigned int time_idx = 0; time_idx < dirs.size(); time_idx++){
-        io.read(fs, grid, time_idx);
-        io.write(fs, grid, 0.0);
+        json meta_data;
+        io.read(fs, grid, meta_data, time_idx);
+        io.write(fs, grid, meta_data.at("time"));
+        spdlog::info("Written VTK file at time index {}", time_idx);
     }
     io.write_coordinating_file();
 }

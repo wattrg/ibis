@@ -121,6 +121,8 @@ class Block:
         vy = open(f"{ic_directory}/vy", "w")
         if self.dim == 3:
             vz = open(f"{ic_directory}/vz", "w")
+        meta_data = open(f"{ic_directory}/meta_data.json", "w")
+        times = open(f"{flow_directory}/flows", "w")
 
         if type(self._initial_condition) == FlowState:
             for _ in range(self.number_cells):
@@ -130,6 +132,8 @@ class Block:
                 vy.write(f"{self._initial_condition.vy:.16e}\n")
                 if self.dim == 3:
                     vz.write(f"{self._initial_condition.vz:.16e}\n")
+        json.dump({"time": 0.0}, meta_data, indent=4) 
+        times.write("0000\n")
 
         temp.close()
         pressure.close()
@@ -137,6 +141,8 @@ class Block:
         vy.close()
         if self.dim == 3:
             vz.close()
+        meta_data.close()
+        times.close()
 
     def as_dict(self):
         dictionary = {"boundaries": {}}

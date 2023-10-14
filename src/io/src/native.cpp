@@ -3,16 +3,19 @@
 #include <spdlog/spdlog.h>
 #include "native.h"
 
+
 template <typename T>
 int NativeOutput<T>::write(const FlowStates<T>& fs, const GridBlock<T>& grid, std::string plot_dir, std::string time_dir, double time){
-    std::string dir = plot_dir + "/" + "time_dir";
-    std::ofstream meta(dir + "/meta_data");
-    if (!meta) {
-        spdlog::error("failed to open {}", dir+"/time");
-    }
-    meta << std::fixed << std::setprecision(16);
-    meta << "time: " << time << std::endl;;
-    meta.close();
+    std::string dir = plot_dir + "/" + time_dir;
+    std::ofstream meta_f(dir + "/meta_data.json");
+    json meta;
+    meta["time"] = time;
+    meta_f << meta.dump(4);
+    meta_f.close();
+
+    std::ofstream flows(plot_dir+"/flows", std::ios_base::app);
+    flows << time_dir << std::endl;
+    flows.close();
 
     std::ofstream temp(dir + "/T");
     if (!temp) {
@@ -74,12 +77,20 @@ int NativeOutput<T>::write(const FlowStates<T>& fs, const GridBlock<T>& grid, st
 template class NativeOutput<double>;
 
 template <typename T>
-int NativeInput<T>::read(FlowStates<T>& fs, const GridBlock<T>& grid, std::string dir){
+int NativeInput<T>::read(FlowStates<T>& fs, const GridBlock<T>& grid, std::string dir, json& meta_data){
     int num_cells = grid.num_cells();
+    std::ifstream meta_f(dir + "/meta_data.json");
+    if (!meta_f){
+        spdlog::error("Unable to load {}", dir+"/meta_dta.json");
+        return 1;
+    }
+    meta_data = json::parse(meta_f);
+    meta_f.close();
+
     std::string line;
     std::ifstream temp(dir + "/T");
     if (!temp) {
-        spdlog::error("Unable to load initial temperature");
+        spdlog::error("Unable to load {}", dir+"/T");
         return 1;
     }
     int cell_i = 0;
@@ -93,7 +104,7 @@ int NativeInput<T>::read(FlowStates<T>& fs, const GridBlock<T>& grid, std::strin
 
     std::ifstream pressure(dir + "/p");
     if (!pressure) {
-        spdlog::error("Unable to load initial pressure");
+        spdlog::error("Unable to load {}", dir+"/p");
         return 1;
     }
     cell_i = 0;
@@ -105,7 +116,7 @@ int NativeInput<T>::read(FlowStates<T>& fs, const GridBlock<T>& grid, std::strin
 
     std::ifstream vx(dir + "/vx");
     if (!vx) {
-        spdlog::error("Unable to load initial vx");
+        spdlog::error("Unable to load {}", dir+"/vx");
         return 1;
     }
     cell_i = 0;
@@ -117,7 +128,7 @@ int NativeInput<T>::read(FlowStates<T>& fs, const GridBlock<T>& grid, std::strin
 
     std::ifstream vy(dir + "/vy");
     if (!vy) {
-        spdlog::error("Unable to load initial vy");
+        spdlog::error("Unable to load {}", dir+"/vy");
         return 1;
     }
     cell_i = 0;

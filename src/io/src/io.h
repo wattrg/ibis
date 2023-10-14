@@ -1,10 +1,12 @@
 #ifndef FV_IO_H
 #define FV_IO_H
 
-#include <string>
 #include <spdlog/spdlog.h>
+#include <nlohmann/json.hpp>
 #include "../../src/gas/src/flow_state.h"
 #include "../../src/grid/src/grid.h"
+
+using json = nlohmann::json;
 
 enum class FlowFormat {
     Native, Vtk
@@ -15,7 +17,7 @@ class FVInput {
 public:
     virtual ~FVInput(){}
 
-    virtual int read(FlowStates<T>& fs, const GridBlock<T>& grid, std::string dir)=0;
+    virtual int read(FlowStates<T>& fs, const GridBlock<T>& grid, std::string dir, json& meta_data)=0;
 };
 
 template <typename T>
@@ -31,16 +33,20 @@ public:
 template <typename T>
 class FVIO {
 public:
-    FVIO(FlowFormat input_format, FlowFormat output_format, std::string input_dir, std::string output_dir, int time_index);
-
+    // constructors
+    FVIO(FlowFormat input_format, 
+         FlowFormat output_format, 
+         std::string input_dir, 
+         std::string output_dir, 
+         int time_index);
     FVIO(FlowFormat input, FlowFormat output);
-
     FVIO(FlowFormat input, FlowFormat output, std::string input_dir, std::string output_dir);
-
     FVIO();
 
-    int read(FlowStates<T>& fs, const GridBlock<T>& grid, int time_idx);
+    // read a flow state
+    int read(FlowStates<T>& fs, const GridBlock<T>& grid, json& meta_data, int time_idx);
 
+    // write a flow state
     int write(const FlowStates<T>& flow_state, const GridBlock<T>& grid, double time);
     void write_coordinating_file();
 
