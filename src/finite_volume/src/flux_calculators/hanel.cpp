@@ -19,7 +19,7 @@ void hanel(FlowStates<T>& left, FlowStates<T>& right, ConservedQuantities<T>& fl
         T HL = eL + pLrL + keL;
 
         // unpack right gas state
-        T rR = rL; // right.gas.rho(i);
+        T rR = right.gas.rho(i);
         T pR = right.gas.pressure(i);
         T eR = 717.5 * right.gas.temp(i); //right.gas.energy(i);
         T aR = Kokkos::sqrt(1.4 * 287.0 * right.gas.temp(i));
