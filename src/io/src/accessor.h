@@ -8,6 +8,7 @@
 template <typename T>
 class ScalarAccessor{
 public:
+    virtual ~ScalarAccessor(){};
     virtual T access(const FlowStates<T>& fs, const int i) = 0;
 };
 
