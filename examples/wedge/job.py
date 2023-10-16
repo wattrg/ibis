@@ -9,7 +9,7 @@ vx = mach * math.sqrt(1.4 * 287 * T)
 flow_state = FlowState(rho=1.225, T=T, vx=vx, vy=0.0)
 
 config.convective_flux = ConvectiveFlux(
-    flux_calculator = FluxCalculator.Hanel,
+    flux_calculator = FluxCalculator.Ausmdv,
     reconstruction_order = 1
 )
 

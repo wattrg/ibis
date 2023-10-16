@@ -3,7 +3,7 @@ flow_state = FlowState(p=101325, T=300.0, vx=3*math.sqrt(1.4*287*300), vy=0.0)
 max_time = 5e-3
 
 config.convective_flux = ConvectiveFlux(
-    flux_calculator = FluxCalculator.Hanel,
+    flux_calculator = FluxCalculator.Ausmdv,
     reconstruction_order = 1
 )
 

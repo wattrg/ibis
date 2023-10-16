@@ -78,19 +78,19 @@ void ausmdv(FlowStates<T>& left, FlowStates<T>& right, ConservedQuantities<T>& f
         T ru2_half = (0.5 + s) * ru2_AUSMV + (0.5 - s) * ru2_AUSMD;
         //
         // Assemble components of the flux vector.
-        flux.mass(i) += ru_half;
+        flux.mass(i) = ru_half;
         if (ru_half >= 0.0) {
             // Wind is blowing from the left.
-            flux.momentum_x(i) += (ru2_half+p_half);
-            flux.momentum_y(i) += (ru_half*vL);
-            if (three_d) { flux.momentum_z(i) += (ru_half*wL); }
-            flux.energy(i) += ru_half*HL;
+            flux.momentum_x(i) = (ru2_half+p_half);
+            flux.momentum_y(i) = (ru_half*vL);
+            if (three_d) { flux.momentum_z(i) = (ru_half*wL); }
+            flux.energy(i) = ru_half*HL;
         } else {
             // Wind is blowing from the right.
-            flux.momentum_x(i) += (ru2_half+p_half);
-            flux.momentum_y(i) += (ru_half*vR);
-            if (three_d) { flux.momentum_z(i) += (ru_half*wR); }
-            flux.energy(i) += ru_half*HR;
+            flux.momentum_x(i) = (ru2_half+p_half);
+            flux.momentum_y(i) = (ru_half*vR);
+            if (three_d) { flux.momentum_z(i) = (ru_half*wR); }
+            flux.energy(i) = ru_half*HR;
         }
 
         // Apply entropy fix (section 3.5 in Wada and Liou's paper)
