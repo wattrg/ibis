@@ -7,3 +7,8 @@ examples/**/grid
 examples/**/config
 examples/**/log
 examples/**/plot
+tests/**/flow
+tests/**/grid
+tests/**/config
+tests/**/log
+tests/**/plot
