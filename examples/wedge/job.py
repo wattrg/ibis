@@ -2,7 +2,7 @@ import math
 
 mach = 3.0
 T = 300
-n_flows = 10
+n_flows = 3
 n_plots = 10
 length = 1.0
 vx = mach * math.sqrt(1.4 * 287 * T)
