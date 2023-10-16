@@ -3,6 +3,8 @@
 
 int vtk_type_from_elem_type(ElemType type) {
     switch (type) {
+        case ElemType::Tri:
+            return 5;
         case ElemType::Quad:
             return 9;
         default:
