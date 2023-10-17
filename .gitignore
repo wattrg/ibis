@@ -7,6 +7,7 @@ examples/**/grid
 examples/**/config
 examples/**/log
 examples/**/plot
+examples/**/*.su2
 tests/**/flow
 tests/**/grid
 tests/**/config
