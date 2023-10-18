@@ -1,4 +1,5 @@
 #include <doctest/doctest.h>
+#include "Kokkos_Core_fwd.hpp"
 #include "grid.h"
 #include "grid_io.h"
 #include "interface.h"
@@ -56,7 +57,7 @@ GridBlock<T>::GridBlock(const GridIO& grid_io, json& config){
     cells_ = Cells<T>(cell_vertices, cell_interface_ids, cell_shapes);
 
     compute_geometric_data();
-    compute_interface_connectivity_(ghost_cell_map);
+    compute_interface_connectivity(ghost_cell_map);
 } 
 
 template <typename T>
@@ -120,34 +121,38 @@ std::map<int, int> GridBlock<T>::setup_boundaries(const GridIO& grid_io,
 }
 
 template <typename T> 
-void GridBlock<T>::compute_interface_connectivity_(std::map<int, int> ghost_cells) {
-    Kokkos::parallel_for("compute_interface_connectivity", num_valid_cells_, KOKKOS_LAMBDA (const int cell_i){
-        auto face_ids = cells_.faces().face_ids(cell_i);
-        T cell_x = cells_.centroids().x(cell_i);
-        T cell_y = cells_.centroids().y(cell_i);
-        T cell_z = cells_.centroids().z(cell_i);
+void GridBlock<T>::compute_interface_connectivity(std::map<int, int> ghost_cells) {
+    auto this_interfaces = interfaces_;
+    auto this_cells = cells_;
+    Kokkos::parallel_for("compute_interface_connectivity", 
+                         Kokkos::RangePolicy<Kokkos::DefaultHostExecutionSpace>(0, num_valid_cells_),
+                         KOKKOS_LAMBDA (const int cell_i){
+        auto face_ids = this_cells.faces().face_ids(cell_i);
+        T cell_x = this_cells.centroids().x(cell_i);
+        T cell_y = this_cells.centroids().y(cell_i);
+        T cell_z = this_cells.centroids().z(cell_i);
         for (unsigned int face_i = 0; face_i < face_ids.size(); face_i++){
             int face_id = face_ids[face_i];
             
             // vector from the face centre to the cell centre 
-            T dx = interfaces_.centre().x(face_id) - cell_x;
-            T dy = interfaces_.centre().y(face_id) - cell_y;
-            T dz = interfaces_.centre().z(face_id) - cell_z;
+            T dx = this_interfaces.centre().x(face_id) - cell_x;
+            T dy = this_interfaces.centre().y(face_id) - cell_y;
+            T dz = this_interfaces.centre().z(face_id) - cell_z;
 
             // dot product of the vector from centre to centre with
             // the interface normal vector
-            T dot = dx * interfaces_.norm().x(face_id) +
-                    dy * interfaces_.norm().y(face_id) +
-                    dz * interfaces_.norm().z(face_id);
+            T dot = dx * this_interfaces.norm().x(face_id) +
+                    dy * this_interfaces.norm().y(face_id) +
+                    dz * this_interfaces.norm().z(face_id);
             if (dot > 0.0) {
                 // cell is on the left of the face
-                interfaces_.attach_cell_left(cell_i, face_id);
-                cells_.faces().set_outsign(cell_i, face_i, 1);
+                this_interfaces.attach_cell_left(cell_i, face_id);
+                this_cells.faces().set_outsign(cell_i, face_i, 1);
             }
             else {
                 // cell is on the right of face
-                interfaces_.attach_cell_right(cell_i, face_id);
-                cells_.faces().set_outsign(cell_i, face_i, -1);
+                this_interfaces.attach_cell_right(cell_i, face_id);
+                this_cells.faces().set_outsign(cell_i, face_i, -1);
             }
         }
     });

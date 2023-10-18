@@ -1,4 +1,5 @@
 #include <doctest/doctest.h>
+#include "Kokkos_Core_fwd.hpp"
 #include "cell.h"
 #include "interface.h"
 
@@ -63,8 +64,12 @@ void Cells<T>::compute_centroids(const Vertices<T>& vertices){
     // for the moment, we're using the arithmatic average
     // of the points as the centroid. For cells that aren't
     // nicely shaped, this could be a very bad approximation
-    Kokkos::parallel_for("Cells::compute_centroid", volume_.size(), KOKKOS_LAMBDA(const int i) {
-        auto cell_vertices = vertex_ids_[i];
+    auto centroid = centroid_;
+    auto vertex_ids = vertex_ids_;
+    Kokkos::parallel_for("Cells::compute_centroid", 
+                         Kokkos::RangePolicy<Kokkos::DefaultHostExecutionSpace>(0, volume_.size()), 
+                         KOKKOS_LAMBDA(const int i) {
+        auto cell_vertices = vertex_ids[i];
         int n_vertices = cell_vertices.size();
         T x = 0.0;
         T y = 0.0;
@@ -75,9 +80,9 @@ void Cells<T>::compute_centroids(const Vertices<T>& vertices){
             y += vertices.positions().y(vertex_id);
             z += vertices.positions().z(vertex_id);
         }
-        centroid_.x(i) = x / n_vertices;
-        centroid_.y(i) = y / n_vertices;
-        centroid_.z(i) = z / n_vertices;
+        centroid.x(i) = x / n_vertices;
+        centroid.y(i) = y / n_vertices;
+        centroid.z(i) = z / n_vertices;
     });
 }
 
@@ -88,13 +93,18 @@ void Cells<T>::compute_volumes(const Vertices<T>& vertices) {
     // of code in this method down, and avoid duplication with
     // computing the area of interfaces. However, this won't
     // be trivial for the GPU.
-    Kokkos::parallel_for("Cells::compute_volume", volume_.size(), KOKKOS_LAMBDA(const int i) {
-        switch (shape_(i)) {
+    auto volume = volume_;
+    auto shape = shape_;
+    auto this_vertex_ids = vertex_ids_;
+    Kokkos::parallel_for("Cells::compute_volume", 
+                         Kokkos::RangePolicy<Kokkos::DefaultHostExecutionSpace>(0, volume_.size()), 
+                         KOKKOS_LAMBDA(const int i) {
+        switch (shape(i)) {
             case ElemType::Line:
-                throw std::runtime_error("Invalid cell shape");
+                printf("Invalid cell shape");
                 break;
             case ElemType::Tri: {
-                auto vertex_ids = vertex_ids_[i];
+                auto vertex_ids = this_vertex_ids[i];
                 T x1 = vertices.positions().x(vertex_ids(0));
                 T x2 = vertices.positions().x(vertex_ids(1));
                 T x3 = vertices.positions().x(vertex_ids(2));
@@ -102,11 +112,11 @@ void Cells<T>::compute_volumes(const Vertices<T>& vertices) {
                 T y2 = vertices.positions().y(vertex_ids(1));
                 T y3 = vertices.positions().y(vertex_ids(2));
                 T area = x1*(y2-y3) + x2*(y3-y1) + x3*(y1-y2);
-                volume_(i) = 0.5 * Kokkos::fabs(area);
+                volume(i) = 0.5 * Kokkos::fabs(area);
                 break;
             }
             case ElemType::Quad: {
-                auto vertex_ids = vertex_ids_[i];
+                auto vertex_ids = this_vertex_ids[i];
                 T x1 = vertices.positions().x(vertex_ids(0));
                 T x2 = vertices.positions().x(vertex_ids(1));
                 T x3 = vertices.positions().x(vertex_ids(2));
@@ -117,17 +127,17 @@ void Cells<T>::compute_volumes(const Vertices<T>& vertices) {
                 T y4 = vertices.positions().y(vertex_ids(3));
                 T area = x1*y2 + x2*y3 + x3*y4 + x4*y1 - 
                              x2*y1 - x3*y2 - x4*y3 - x1*y4;
-                volume_(i) = 0.5 * Kokkos::fabs(area);
+                volume(i) = 0.5 * Kokkos::fabs(area);
                 break;
             }
             case ElemType::Hex:
-                throw std::runtime_error("Not implemented");
+                printf("Volume of Hex not implemented");
                 break;
             case ElemType::Wedge:
-                throw std::runtime_error("Not implemented");
+                printf("Volume of Wedge not implemented");
                 break;
             case ElemType::Pyramid:
-                throw std::runtime_error("Not implemented");
+                printf("Volume of pyramid ot implemented");
                 break;
         }
     }); 

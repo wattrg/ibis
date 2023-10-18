@@ -31,25 +31,41 @@ public:
 
     void compute_geometric_data();
 
+    KOKKOS_INLINE_FUNCTION
     Vertices<T>& vertices() {return vertices_;}
+    
+    KOKKOS_INLINE_FUNCTION
     const Vertices<T>& vertices() const {return vertices_;}
+
     int num_vertices() const {return vertices_.size();}
 
+    KOKKOS_INLINE_FUNCTION
     Interfaces<T>& interfaces() {return interfaces_;}
+
+    KOKKOS_INLINE_FUNCTION
     const Interfaces<T>& interfaces() const {return interfaces_;}
+
     int num_interfaces() const {return interfaces_.size();}
 
+    KOKKOS_INLINE_FUNCTION
     Cells<T>& cells() {return cells_;}
+
+    KOKKOS_INLINE_FUNCTION
     const Cells<T>& cells() const {return cells_;}
+
     int num_cells() const {return num_valid_cells_;}
     int num_ghost_cells() const {return num_ghost_cells_;}
     int num_total_cells() const {return num_valid_cells_+num_ghost_cells_;}
+
+    KOKKOS_INLINE_FUNCTION
     bool is_valid(const int i) const {return i < num_valid_cells_;}
 
     const Field<int>& boundary_faces(std::string boundary_tag) const;
     const std::vector<std::string>& boundary_tags() const;
 
     int dim() const {return dim_;}
+
+    void compute_interface_connectivity(std::map<int, int> ghost_cells);
 
 private:
     Vertices<T> vertices_;
@@ -68,7 +84,6 @@ private:
         InterfaceLookup& interfaces,
         std::vector<ElemType> cell_shapes);
 
-    void compute_interface_connectivity_(std::map<int, int> ghost_cells);
 };
 
 #endif

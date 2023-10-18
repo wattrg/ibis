@@ -84,26 +84,31 @@ template <typename T>
 void FiniteVolume<T>::reconstruct(FlowStates<T>& flow_states, const GridBlock<T>& grid, unsigned int order){
     (void) order;
     int n_faces = grid.num_interfaces();
-    Kokkos::parallel_for("Reconstruct", n_faces, KOKKOS_LAMBDA(const int i_face){
+    FlowStates<T> this_left = left_;
+    FlowStates<T> this_right = right_;
+    Interfaces<T> interfaces = grid.interfaces();
+    Kokkos::parallel_for("Reconstruct", 
+                         n_faces, 
+                         KOKKOS_LAMBDA(const int i_face){
         // copy left flow states
-        int left = grid.interfaces().left_cell(i_face);
-        left_.gas.temp(i_face) = flow_states.gas.temp(left);
-        left_.gas.pressure(i_face) = flow_states.gas.pressure(left);
-        left_.gas.rho(i_face) = flow_states.gas.rho(left);
-        left_.gas.energy(i_face) = flow_states.gas.energy(left);
-        left_.vel.x(i_face) = flow_states.vel.x(left);
-        left_.vel.y(i_face) = flow_states.vel.y(left);
-        left_.vel.z(i_face) = flow_states.vel.z(left);
+        int left = interfaces.left_cell(i_face);
+        this_left.gas.temp(i_face) = flow_states.gas.temp(left);
+        this_left.gas.pressure(i_face) = flow_states.gas.pressure(left);
+        this_left.gas.rho(i_face) = flow_states.gas.rho(left);
+        this_left.gas.energy(i_face) = flow_states.gas.energy(left);
+        this_left.vel.x(i_face) = flow_states.vel.x(left);
+        this_left.vel.y(i_face) = flow_states.vel.y(left);
+        this_left.vel.z(i_face) = flow_states.vel.z(left);
 
         // copy right flow states
-        int right = grid.interfaces().right_cell(i_face);
-        right_.gas.temp(i_face) = flow_states.gas.temp(right);
-        right_.gas.pressure(i_face) = flow_states.gas.pressure(right);
-        right_.gas.rho(i_face) = flow_states.gas.rho(right);
-        right_.gas.energy(i_face) = flow_states.gas.energy(right);
-        right_.vel.x(i_face) = flow_states.vel.x(right);
-        right_.vel.y(i_face) = flow_states.vel.y(right);
-        right_.vel.z(i_face) = flow_states.vel.z(right);
+        int right = interfaces.right_cell(i_face);
+        this_right.gas.temp(i_face) = flow_states.gas.temp(right);
+        this_right.gas.pressure(i_face) = flow_states.gas.pressure(right);
+        this_right.gas.rho(i_face) = flow_states.gas.rho(right);
+        this_right.gas.energy(i_face) = flow_states.gas.energy(right);
+        this_right.vel.x(i_face) = flow_states.vel.x(right);
+        this_right.vel.y(i_face) = flow_states.vel.y(right);
+        this_right.vel.z(i_face) = flow_states.vel.z(right);
     });
 }
 
@@ -127,20 +132,23 @@ void FiniteVolume<T>::compute_flux(const GridBlock<T>& grid) {
     Vector3s<T> norm = faces.norm();
     Vector3s<T> tan1 = faces.tan1();
     Vector3s<T> tan2 = faces.tan2();
-    Kokkos::parallel_for("flux::transform_to_global", faces.size(), KOKKOS_LAMBDA(const int i){
-        T px = flux_.momentum_x(i);
-        T py = flux_.momentum_y(i);
+    ConservedQuantities<T> flux = flux_;
+    Kokkos::parallel_for("flux::transform_to_global", 
+                         faces.size(), 
+                         KOKKOS_LAMBDA(const int i){
+        T px = flux.momentum_x(i);
+        T py = flux.momentum_y(i);
         T pz = 0.0;
-        if (flux_.dim() == 3) {
-            pz = flux_.momentum_z(i);
+        if (flux.dim() == 3) {
+            pz = flux.momentum_z(i);
         }
         T x = px*norm.x(i) + py*tan1.x(i) + pz*tan2.x(i);
         T y = px*norm.y(i) + py*tan1.y(i) + pz*tan2.y(i);
         T z = px*norm.z(i) + py*tan1.z(i) + pz*tan2.z(i);
-        flux_.momentum_x(i) = x;
-        flux_.momentum_y(i) = y;
-        if (flux_.dim() == 3){
-            flux_.momentum_z(i) = z;
+        flux.momentum_x(i) = x;
+        flux.momentum_y(i) = y;
+        if (flux.dim() == 3){
+            flux.momentum_z(i) = z;
         }
     });
 
@@ -151,7 +159,9 @@ void FiniteVolume<T>::flux_surface_integral(const GridBlock<T>& grid, ConservedQ
     Cells<T> cells = grid.cells();
     CellFaces<T> cell_faces = grid.cells().faces();
     Interfaces<T> faces = grid.interfaces();
-    Kokkos::parallel_for("flux_integral", grid.num_cells(), KOKKOS_LAMBDA(const int cell_i){
+    ConservedQuantities<T> flux = flux_;
+    int num_cells = grid.num_cells();
+    Kokkos::parallel_for("flux_integral", num_cells, KOKKOS_LAMBDA(const int cell_i){
         auto face_ids = cell_faces.face_ids(cell_i);
         T d_mass = 0.0;
         T d_momentum_x = 0.0;
@@ -161,13 +171,13 @@ void FiniteVolume<T>::flux_surface_integral(const GridBlock<T>& grid, ConservedQ
         for (unsigned int face_i = 0; face_i < face_ids.size(); face_i++){
             int face_id = face_ids(face_i); 
             T area = -faces.area(face_id) * cell_faces.outsigns(cell_i)(face_i);
-            d_mass += flux_.mass(face_id) * area; 
-            d_momentum_x += flux_.momentum_x(face_id) * area; 
-            d_momentum_y += flux_.momentum_y(face_id) * area; 
-            if (flux_.dim() == 3) {
-                d_momentum_z += flux_.momentum_z(face_id) * area; 
+            d_mass += flux.mass(face_id) * area; 
+            d_momentum_x += flux.momentum_x(face_id) * area; 
+            d_momentum_y += flux.momentum_y(face_id) * area; 
+            if (flux.dim() == 3) {
+                d_momentum_z += flux.momentum_z(face_id) * area; 
             }
-            d_energy += flux_.energy(face_id) * area;
+            d_energy += flux.energy(face_id) * area;
         }
         dudt.mass(cell_i) = d_mass / cells.volume(cell_i);
         dudt.momentum_x(cell_i) = d_momentum_x / cells.volume(cell_i);
@@ -177,6 +187,19 @@ void FiniteVolume<T>::flux_surface_integral(const GridBlock<T>& grid, ConservedQ
         }
         dudt.energy(cell_i) = d_energy / cells.volume(cell_i);
     });
+}
+
+template <typename T>
+int FiniteVolume<T>::count_bad_cells(const FlowStates<T>& fs, const int num_cells){
+    int n_bad_cells = 0;
+    Kokkos::parallel_reduce("RungeKutta::check_state", 
+                            num_cells, 
+                            KOKKOS_LAMBDA(const int cell_i, int& n_bad_cells_utd){
+        if (fs.gas.temp(cell_i) < 0.0 || fs.gas.rho(cell_i) < 0.0) {
+            n_bad_cells_utd += 1;
+        }
+    }, n_bad_cells);
+    return n_bad_cells;
 }
 
 template class FiniteVolume<double>;

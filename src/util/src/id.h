@@ -48,7 +48,7 @@ public:
         // to the object at index i
         int first = _offsets(i);
         int last = _offsets(i+1);
-        return Kokkos::subview(_ids, std::make_pair(first, last));
+        return Kokkos::subview(_ids, Kokkos::make_pair(first, last));
     }
 
     KOKKOS_INLINE_FUNCTION
@@ -57,7 +57,7 @@ public:
         // to the object at index i
         int first = _offsets(i);
         int last = _offsets(i+1);
-        return Kokkos::subview(_ids, std::make_pair(first, last));
+        return Kokkos::subview(_ids, Kokkos::make_pair(first, last));
     }
 
     KOKKOS_INLINE_FUNCTION

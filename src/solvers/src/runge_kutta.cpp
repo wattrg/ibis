@@ -94,13 +94,3 @@ bool RungeKutta::stop_now(unsigned int step) {
     return false;
 }
 
-int RungeKutta::count_bad_cells(){
-    int num_cells = grid_.num_cells();
-    int n_bad_cells = 0;
-    Kokkos::parallel_reduce("RungeKutta::check_state", num_cells, KOKKOS_LAMBDA(const int cell_i, int& n_bad_cells_utd){
-        if (flow_.gas.temp(cell_i) < 0.0 || flow_.gas.rho(cell_i) < 0.0) {
-            n_bad_cells_utd += 1;
-        }
-    }, n_bad_cells);
-    return n_bad_cells;
-}

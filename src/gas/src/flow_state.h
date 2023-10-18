@@ -11,7 +11,7 @@ struct FlowState{
 public:
     FlowState(){}
 
-    ~FlowState(){}
+    // ~FlowState(){}
 
     FlowState(GasState<T> gs, Vector3<T> vel)
         : gas_state(gs), velocity(vel) {}

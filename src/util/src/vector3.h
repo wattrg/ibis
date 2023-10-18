@@ -24,24 +24,24 @@ struct Vector3 {
 template <typename T>
 struct Vector3s;
 
-template <typename T>
-struct Vector3View {
-public:
-    Vector3View(int index, Vector3s<T> * vectors) : _index(index), _vectors(vectors) {}
-    
-    inline T & x() const {return _vectors(_index, 0);}
-    inline T & x() {return (*_vectors)(_index, 0);}
-
-    inline T & y() const {return _vectors(_index, 1);}
-    inline T & y() {return (*_vectors)(_index, 1);}
-
-    inline T & z() const {return _vectors(_index, 2);}
-    inline T & z() {return (*_vectors)(_index, 2);}
-
-private:
-    int _index;
-    Vector3s<T> *_vectors;
-};
+// template <typename T>
+// struct Vector3View {
+// public:
+//     Vector3View(int index, Vector3s<T> * vectors) : _index(index), _vectors(vectors) {}
+//     
+//     inline T & x() const {return _vectors(_index, 0);}
+//     inline T & x() {return (*_vectors)(_index, 0);}
+// 
+//     inline T & y() const {return _vectors(_index, 1);}
+//     inline T & y() {return (*_vectors)(_index, 1);}
+// 
+//     inline T & z() const {return _vectors(_index, 2);}
+//     inline T & z() {return (*_vectors)(_index, 2);}
+// 
+// private:
+//     int _index;
+//     Vector3s<T> *_vectors;
+// };
 
 template <typename T>
 struct Vector3s {
@@ -68,15 +68,15 @@ public:
         return view_(i, j);
     }
 
-    KOKKOS_FORCEINLINE_FUNCTION
-    Vector3View<T> operator[] (const int i) {
-        return Vector3View<T> (i, this);
-    }
-
-    KOKKOS_FORCEINLINE_FUNCTION
-    Vector3View<T> operator[] (const int i) const {
-        return Vector3View<T> (i, this);
-    }
+    // KOKKOS_FORCEINLINE_FUNCTION
+    // Vector3View<T> operator[] (const int i) {
+    //     return Vector3View<T> (i, this);
+    // }
+    //
+    // KOKKOS_FORCEINLINE_FUNCTION
+    // Vector3View<T> operator[] (const int i) const {
+    //     return Vector3View<T> (i, this);
+    // }
 
     KOKKOS_FORCEINLINE_FUNCTION
     T& x(const int i) {return view_(i, 0);}
@@ -126,10 +126,26 @@ private:
 };
 
 template <typename T>
+KOKKOS_INLINE_FUNCTION
+T dot(const Vector3s<T>& a, const Vector3s<T>& b, const int i) {
+    return a.x(i)*b.x(i) + a.y(i)*b.y(i) + a.z(i)*b.z(i);
+}
+
+template <typename T>
+KOKKOS_INLINE_FUNCTION
+void cross(const Vector3s<T>& a, const Vector3s<T>& b, const Vector3s<T>& c, const int i){
+    c.x(i) = a.y(i)*b.z(i) - a.z(i)*b.y(i);
+    c.y(i) = a.z(i)*b.x(i) - a.x(i)*b.z(i);
+    c.z(i) = a.x(i)*b.y(i) - a.y(i)*b.x(i);
+}
+
+template <typename T>
 void dot(const Vector3s<T> &a, const Vector3s<T> &b, Field<T> &result);
+
 
 template <typename T>
 void add(const Vector3s<T> &a, const Vector3s<T> &b, Vector3s<T> &result);
+
 
 template <typename T>
 void subtract(const Vector3s<T> &a, const Vector3s<T> &b, Vector3s<T> &result);

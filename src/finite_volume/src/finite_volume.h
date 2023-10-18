@@ -24,6 +24,17 @@ public:
 
     double estimate_dt(const FlowStates<T>& flow_state, GridBlock<T>& grid);
 
+    // methods
+    // these have to be public for NVCC, but they shouldn't really need to be
+    // accessed from outside of the class
+    void apply_pre_reconstruction_bc(FlowStates<T>& fs, const GridBlock<T>& grid);
+    void reconstruct(FlowStates<T>& flow_states, const GridBlock<T>& grid, unsigned int order);
+    void flux_surface_integral(const GridBlock<T>& grid, ConservedQuantities<T>& dudt);
+    void compute_flux(const GridBlock<T>& grid);
+    void apply_post_convective_flux_bc();
+    void apply_pre_spatial_deriv();
+    int count_bad_cells(const FlowStates<T>& fs, const int num_cells);
+
 
 private:
     // memory
@@ -40,13 +51,6 @@ private:
     unsigned int reconstruction_order_;
     FluxCalculator flux_calculator_;
 
-    // methods
-    void apply_pre_reconstruction_bc(FlowStates<T>& fs, const GridBlock<T>& grid);
-    void reconstruct(FlowStates<T>& flow_states, const GridBlock<T>& grid, unsigned int order);
-    void flux_surface_integral(const GridBlock<T>& grid, ConservedQuantities<T>& dudt);
-    void compute_flux(const GridBlock<T>& grid);
-    void apply_post_convective_flux_bc();
-    void apply_pre_spatial_deriv();
 
 };
 

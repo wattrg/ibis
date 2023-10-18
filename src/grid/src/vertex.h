@@ -24,15 +24,16 @@ public:
 
     Vertices(int num_vertices);
     
-    // Vertices(std::vector<Vertex<T>> vertices);
-
     void set_vertex_position(int vertex_id, Vector3<T> &pos);
 
+    KOKKOS_INLINE_FUNCTION
     Vector3s<T> &positions() {return _positions;}
+
+    KOKKOS_INLINE_FUNCTION
     const Vector3s<T> &positions() const {return  _positions;}
 
-    T& position(int i, int coordinate) {return _positions(i, coordinate);}
-    T& position(int i, int coordinate) const {return _positions(i, coordinate);}
+    // T& position(int i, int coordinate) {return _positions(i, coordinate);}
+    // T& position(int i, int coordinate) const {return _positions(i, coordinate);}
 
     // Vector3View<T> position(int i) {return Vector3View<T>(i, &_positions);}
     // Vector3View<T> position(int i) const {return Vector3View<T>(i, &_positions);}
@@ -41,6 +42,7 @@ public:
         return _positions == other._positions;
     }
     
+    KOKKOS_INLINE_FUNCTION
     int size() const {return _positions.size();}
 
 private:

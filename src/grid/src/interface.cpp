@@ -1,6 +1,7 @@
 #include <algorithm>
 #include <functional>
 #include <doctest/doctest.h>
+#include "Kokkos_Core_fwd.hpp"
 #include "interface.h"
 
 template <typename T>
@@ -35,87 +36,104 @@ Interfaces<T>::Interfaces(IdConstructor ids, std::vector<ElemType> shapes)
 template <typename T>
 void Interfaces<T>::compute_orientations(Vertices<T> vertices) {
     // set the face tangents in parallel
-    Kokkos::parallel_for("Interfaces::compute_orientations", norm_.size(), KOKKOS_LAMBDA (const int i){
-        auto vertex_ids = vertex_ids_[i];
-        T x0 = vertices.position(vertex_ids(0), 0);
-        T x1 = vertices.position(vertex_ids(1), 0);
-        T y0 = vertices.position(vertex_ids(0), 1);
-        T y1 = vertices.position(vertex_ids(1), 1);
-        T z0 = vertices.position(vertex_ids(0), 2);
-        T z1 = vertices.position(vertex_ids(1), 2);
+    auto this_norm = norm_;
+    auto this_tan1 = tan1_;
+    auto this_tan2 = tan2_;
+    auto this_vertex_ids = vertex_ids_;
+    auto shape = shape_;
+    Kokkos::parallel_for("Interfaces::compute_orientations", 
+                         Kokkos::RangePolicy<Kokkos::DefaultHostExecutionSpace>(0, norm_.size()), 
+                         KOKKOS_LAMBDA (const int i){
+        auto vertex_ids = this_vertex_ids[i];
+        T x0 = vertices.positions().x(vertex_ids(0));
+        T x1 = vertices.positions().x(vertex_ids(1));
+        T y0 = vertices.positions().y(vertex_ids(0));
+        T y1 = vertices.positions().y(vertex_ids(1));
+        T z0 = vertices.positions().z(vertex_ids(0));
+        T z1 = vertices.positions().z(vertex_ids(1));
         T ilength = 1./Kokkos::sqrt((x1-x0)*(x1-x0) + (y1-y0)*(y1-y0) + (z1-z0));
-        tan1_(i, 0) = ilength * (x1 - x0);
-        tan1_(i, 1) = ilength * (y1 - y0);
-        tan1_(i, 2) = ilength * (z1 - z0);
+        this_tan1.x(i) = ilength * (x1 - x0);
+        this_tan1.y(i) = ilength * (y1 - y0);
+        this_tan1.z(i) = ilength * (z1 - z0);
 
-        switch (shape_(i)) {
-            case ElemType::Line: {
-                auto vertex_ids = vertex_ids_[i];
-                tan2_(i, 0) = 0.0;
-                tan2_(i, 1) = 0.0;
-                tan2_(i, 2) = 1.0;
+        switch (shape(i)) {
+            case ElemType::Line: 
+            {
+                auto vertex_ids = this_vertex_ids[i];
+                this_tan2.x(i) = 0.0;
+                this_tan2.y(i) = 0.0;
+                this_tan2.z(i) = 1.0;
                 break;
             }
             case ElemType::Tri: 
-                throw std::runtime_error("Not implemented"); 
+                printf("Tri faces not implemented yet");
+                break;
             case ElemType::Quad:
-                throw std::runtime_error("Not implemented");
+                printf("Quad faces not implemented yet");
+                break;
             default:
-                throw std::runtime_error("Invalid interface");
+                printf("Invalid interface shape");
+                break;
         }
+        cross(this_tan1, this_tan2, this_norm, i);
     });
-
-    // the face normal is the cross product of the tangents
-    cross(tan1_, tan2_, norm_);
 }
 
 template <typename T>
 void Interfaces<T>::compute_areas(Vertices<T> vertices) {
-    Kokkos::parallel_for("Interfaces::compute_areas", area_.size(), KOKKOS_LAMBDA (const int i) {
-        switch (shape_(i)) {
+    auto this_area = area_;
+    auto shape = shape_;
+    auto this_vertex_ids = vertex_ids_;
+    Kokkos::parallel_for("Interfaces::compute_areas", 
+                         Kokkos::RangePolicy<Kokkos::DefaultHostExecutionSpace>(0, area_.size()), 
+                         KOKKOS_LAMBDA (const int i) {
+        switch (shape(i)) {
             case ElemType::Line: {
-                auto vertex_ids = vertex_ids_[i];
-                T x1 = vertices.position(vertex_ids(0), 0);
-                T x2 = vertices.position(vertex_ids(1), 0);
-                T y1 = vertices.position(vertex_ids(0), 1);
-                T y2 = vertices.position(vertex_ids(1), 1);
-                area_(i) = Kokkos::sqrt((x2-x1)*(x2-x1) + (y2-y1)*(y2-y1));
+                auto vertex_ids = this_vertex_ids[i];
+                T x1 = vertices.positions().x(vertex_ids(0));
+                T x2 = vertices.positions().x(vertex_ids(1));
+                T y1 = vertices.positions().y(vertex_ids(0));
+                T y2 = vertices.positions().y(vertex_ids(1));
+                this_area(i) = Kokkos::sqrt((x2-x1)*(x2-x1) + (y2-y1)*(y2-y1));
                 break;
             }
             case ElemType::Tri: {
-                auto vertex_ids = vertex_ids_[i];
-                T x1 = vertices.position(vertex_ids(0), 0);
-                T x2 = vertices.position(vertex_ids(1), 0);
-                T x3 = vertices.position(vertex_ids(2), 0);
-                T y1 = vertices.position(vertex_ids(0), 1);
-                T y2 = vertices.position(vertex_ids(1), 1);
-                T y3 = vertices.position(vertex_ids(2), 1);
+                auto vertex_ids = this_vertex_ids[i];
+                T x1 = vertices.positions().x(vertex_ids(0));
+                T x2 = vertices.positions().x(vertex_ids(1));
+                T x3 = vertices.positions().y(vertex_ids(2));
+                T y1 = vertices.positions().y(vertex_ids(0));
+                T y2 = vertices.positions().z(vertex_ids(1));
+                T y3 = vertices.positions().z(vertex_ids(2));
                 T area = 0.5*Kokkos::fabs(x1*(y2-y3) + x2*(y3-y1) + x3*(y1-y2));
-                area_(i) = area;
+                this_area(i) = area;
                 break;
             }
             case ElemType::Quad: {
-                auto vertex_ids = vertex_ids_[i];
-                T x1 = vertices.position(vertex_ids(0), 0);
-                T x2 = vertices.position(vertex_ids(1), 0);
-                T x3 = vertices.position(vertex_ids(2), 0);
-                T x4 = vertices.position(vertex_ids(3), 0);
-                T y1 = vertices.position(vertex_ids(0), 1);
-                T y2 = vertices.position(vertex_ids(1), 1);
-                T y3 = vertices.position(vertex_ids(2), 1);
-                T y4 = vertices.position(vertex_ids(3), 1);
+                auto vertex_ids = this_vertex_ids[i];
+                T x1 = vertices.positions().x(vertex_ids(0));
+                T x2 = vertices.positions().x(vertex_ids(1));
+                T x3 = vertices.positions().x(vertex_ids(2));
+                T x4 = vertices.positions().x(vertex_ids(3));
+                T y1 = vertices.positions().y(vertex_ids(0));
+                T y2 = vertices.positions().y(vertex_ids(1));
+                T y3 = vertices.positions().y(vertex_ids(2));
+                T y4 = vertices.positions().y(vertex_ids(3));
                 T area = x1*y2 + x2*y3 + x3*y4 + x4*y1 - x2*y1 - x3*y2 - x4*y3 - x1*y4;
-                area_(i) = 0.5 * Kokkos::fabs(area);
+                this_area(i) = 0.5 * Kokkos::fabs(area);
                 break;
             }
             case ElemType::Hex: {
-                throw std::runtime_error("Invalid interface"); 
+                printf("Invalid interface"); 
+                break;
             }
             case ElemType::Wedge: {
-                throw std::runtime_error("Invalid interface"); 
+                printf("Invalid interface"); 
+                break;
             }
             case ElemType::Pyramid: {
-                throw std::runtime_error("Invalid interface"); 
+                printf("Invalid interface"); 
+                break;
             }
         }
     });
@@ -123,8 +141,12 @@ void Interfaces<T>::compute_areas(Vertices<T> vertices) {
 
 template <typename T>
 void Interfaces<T>::compute_centres(Vertices<T> vertices){
-    Kokkos::parallel_for("Interfaces::compute_centres", centre_.size(), KOKKOS_LAMBDA (const int face_i){
-        auto face_vertices = vertex_ids_[face_i]; 
+    auto centre = centre_;
+    auto vertex_ids = vertex_ids_;
+    Kokkos::parallel_for("Interfaces::compute_centres", 
+                         Kokkos::RangePolicy<Kokkos::DefaultHostExecutionSpace>(0, centre_.size()), 
+                         KOKKOS_LAMBDA (const int face_i){
+        auto face_vertices = vertex_ids[face_i]; 
         T x = 0.0;
         T y = 0.0;
         T z = 0.0;
@@ -135,9 +157,9 @@ void Interfaces<T>::compute_centres(Vertices<T> vertices){
             y += vertices.positions().y(vtx_id);
             z += vertices.positions().z(vtx_id);
         }
-        centre_.x(face_i) = x / num_vertices;
-        centre_.y(face_i) = y / num_vertices;
-        centre_.z(face_i) = z / num_vertices;
+        centre.x(face_i) = x / num_vertices;
+        centre.y(face_i) = y / num_vertices;
+        centre.z(face_i) = z / num_vertices;
     });
 }
 
@@ -339,29 +361,29 @@ TEST_CASE("Interface area") {
 
 TEST_CASE("Interface directions") {
     Interfaces<double> interfaces = generate_interfaces();
-    CHECK(Kokkos::abs(interfaces.norm(0).x() - +0.0) < 1e-14);
-    CHECK(Kokkos::abs(interfaces.norm(0).y() - -1.0) < 1e-14);
-    CHECK(Kokkos::abs(interfaces.norm(0).z() - +0.0) < 1e-14);
+    CHECK(Kokkos::abs(interfaces.norm().x(0) - +0.0) < 1e-14);
+    CHECK(Kokkos::abs(interfaces.norm().y(0) - -1.0) < 1e-14);
+    CHECK(Kokkos::abs(interfaces.norm().z(0) - +0.0) < 1e-14);
 
-    CHECK(Kokkos::abs(interfaces.norm(1).x() - +1.0) < 1e-14);
-    CHECK(Kokkos::abs(interfaces.norm(1).y() - +0.0) < 1e-14);
-    CHECK(Kokkos::abs(interfaces.norm(1).z() - +0.0) < 1e-14);
+    CHECK(Kokkos::abs(interfaces.norm().x(1) - +1.0) < 1e-14);
+    CHECK(Kokkos::abs(interfaces.norm().y(1) - +0.0) < 1e-14);
+    CHECK(Kokkos::abs(interfaces.norm().z(1) - +0.0) < 1e-14);
 
-    CHECK(Kokkos::abs(interfaces.norm(2).x() - +0.0) < 1e-14);
-    CHECK(Kokkos::abs(interfaces.norm(2).y() - +1.0) < 1e-14);
-    CHECK(Kokkos::abs(interfaces.norm(2).z() - +0.0) < 1e-14);
+    CHECK(Kokkos::abs(interfaces.norm().x(2) - +0.0) < 1e-14);
+    CHECK(Kokkos::abs(interfaces.norm().y(2) - +1.0) < 1e-14);
+    CHECK(Kokkos::abs(interfaces.norm().z(2) - +0.0) < 1e-14);
 
-    CHECK(Kokkos::abs(interfaces.norm(3).x() - -1.0) < 1e-14);
-    CHECK(Kokkos::abs(interfaces.norm(3).y() - +0.0) < 1e-14);
-    CHECK(Kokkos::abs(interfaces.norm(3).z() - +0.0) < 1e-14);
+    CHECK(Kokkos::abs(interfaces.norm().x(3) - -1.0) < 1e-14);
+    CHECK(Kokkos::abs(interfaces.norm().y(3) - +0.0) < 1e-14);
+    CHECK(Kokkos::abs(interfaces.norm().z(3) - +0.0) < 1e-14);
 
-    CHECK(Kokkos::abs(interfaces.norm(4).x() - +0.0) < 1e-14);
-    CHECK(Kokkos::abs(interfaces.norm(4).y() - -1.0) < 1e-14);
-    CHECK(Kokkos::abs(interfaces.norm(4).z() - +0.0) < 1e-14);
+    CHECK(Kokkos::abs(interfaces.norm().x(4) - +0.0) < 1e-14);
+    CHECK(Kokkos::abs(interfaces.norm().y(4) - -1.0) < 1e-14);
+    CHECK(Kokkos::abs(interfaces.norm().z(4) - +0.0) < 1e-14);
 
-    CHECK(Kokkos::abs(interfaces.norm(5).x() - +1.0) < 1e-14);
-    CHECK(Kokkos::abs(interfaces.norm(5).y() - +0.0) < 1e-14);
-    CHECK(Kokkos::abs(interfaces.norm(5).z() - +0.0) < 1e-14);
+    CHECK(Kokkos::abs(interfaces.norm().x(5) - +1.0) < 1e-14);
+    CHECK(Kokkos::abs(interfaces.norm().y(5) - +0.0) < 1e-14);
+    CHECK(Kokkos::abs(interfaces.norm().z(5) - +0.0) < 1e-14);
 }
 
 TEST_CASE("Interface centres"){
