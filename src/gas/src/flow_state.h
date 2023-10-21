@@ -3,6 +3,7 @@
 
 #include <Kokkos_Core.hpp>
 #include "../../finite_volume/src/conserved_quantities.h"
+#include "Kokkos_Core_fwd.hpp"
 #include "gas_state.h"
 #include "../../util/src/vector3.h"
 
@@ -26,13 +27,9 @@ struct FlowStates{
 public:
     FlowStates(){}
 
-    FlowStates(int n) ;
-
-    KOKKOS_FUNCTION
-    void copy_flow_state(FlowState<T>& fs, const int i);
+    FlowStates(int n) : gas(GasStates<T>(n)), vel(Vector3s<T>(n)){}
 
     unsigned int number_flow_states() const {return gas.size();}
-
     
     GasStates<T> gas;
     Vector3s<T> vel;

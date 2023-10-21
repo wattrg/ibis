@@ -60,6 +60,11 @@ public:
         energy(i) = gs.energy;
     }
 
+    // template <class OtherMemSpace>
+    // void sync(const GasStates<T>& other) {
+    //     Kokkos::deep_copy(data_, other.data_);
+    // }
+
     KOKKOS_INLINE_FUNCTION
     int size() const {return data_.extent(0);}
 

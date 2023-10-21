@@ -3,20 +3,30 @@
 
 #include <vector>
 #include <Kokkos_Core.hpp>
-#include <Kokkos_MathematicalFunctions.hpp>
 
 
-template <typename T>
+template <typename T, 
+          class Layout=Kokkos::DefaultExecutionSpace::array_layout,
+          class Space=Kokkos::DefaultExecutionSpace::memory_space>
 class Field {
+public:
+    using view_type = Kokkos::View<T*, Layout, Space>;
+    using array_layout = typename view_type::array_layout;
+    using memory_space = typename view_type::memory_space;
+    using mirror_view_type = typename view_type::host_mirror_type;
+    using mirror_layout = typename mirror_view_type::array_layout;
+    using mirror_space = typename mirror_view_type::memory_space;
+    using mirror_type = Field<T, mirror_layout, mirror_space>;
+
 public:
     Field() {}
 
     Field(std::string description, int n) {
-        view_ = Kokkos::View<T*> (description, n);        
+        view_ = view_type (description, n);        
     }
 
     Field(std::string description, std::vector<T> values) {
-        view_ = Kokkos::View<T*> (description, values.size());
+        view_ = view_type (description, values.size());
         for (unsigned int i = 0; i < values.size(); i++){
             view_(i) = values[i];
         }
@@ -40,8 +50,17 @@ public:
         return true;
     }
 
-private:
-    Kokkos::View<T*> view_;
+    mirror_type host_mirror() {
+        return mirror_type("host_mirrir", view_.extent(0));
+    }
+
+    template <class OtherSpace>
+    void deep_copy(const Field<T, Layout, OtherSpace>& other) {
+        Kokkos::deep_copy(view_, other.view_);
+    }
+
+public:
+    view_type view_;
 };
 
 
