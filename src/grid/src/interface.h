@@ -103,32 +103,6 @@ public:
     KOKKOS_INLINE_FUNCTION
     int right_cell(const int face_id) const {return right_cells_(face_id);}
 
-
-    // KOKKOS_FORCEINLINE_FUNCTION
-    // Vector3View<T> norm(const int i) const {
-    //     return Vector3View(i, &norm_);
-    // } 
-
-    // KOKKOS_FORCEINLINE_FUNCTION
-    // Vector3View<T> &tan1(const int i) {
-    //     return Vector3View(i, &tan1_);
-    // }
-
-    // KOKKOS_FORCEINLINE_FUNCTION
-    // Vector3View<T> &tan1(const int i) const {
-    //     return Vector3View(i, &tan1_);
-    // }
-
-    // KOKKOS_FORCEINLINE_FUNCTION
-    // Vector3View<T> &tan2(const int i) {
-    //     return Vector3View(i, &tan2_);
-    // }
-
-    // KOKKOS_FORCEINLINE_FUNCTION
-    // Vector3View<T> &tan2(const int i) const {
-    //     return Vector3View(i, &tan2_);
-    // }
-
     KOKKOS_INLINE_FUNCTION
     int size() const {return vertex_ids_.size();}
 

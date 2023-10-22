@@ -59,6 +59,10 @@ public:
         Kokkos::deep_copy(view_, other.view_);
     }
 
+    void deep_copy(T value) {
+        Kokkos::deep_copy(view_, value);
+    }
+
 public:
     view_type view_;
 };

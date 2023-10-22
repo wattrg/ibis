@@ -25,10 +25,12 @@ Interfaces<T>::Interfaces(IdConstructor ids, std::vector<ElemType> shapes)
     // been connected up to any cells yet
     left_cells_ = Field<int>("Interface::left", size_);
     right_cells_ = Field<int>("Interface::right", size_);
-    for (int i = 0; i < size_; i++) {
-        left_cells_(i) = -1;
-        right_cells_(i) = -1;
-    }
+    left_cells_.deep_copy(-1);
+    right_cells_.deep_copy(-1);
+    // for (int i = 0; i < size_; i++) {
+    //     left_cells_mirror(i) = -1;
+    //     right_cells_mirror(i) = -1;
+    // }
 
     // on_boundary_ = Field<bool>("Interface::on_boundary", size_);
 }
@@ -42,7 +44,7 @@ void Interfaces<T>::compute_orientations(Vertices<T> vertices) {
     auto this_vertex_ids = vertex_ids_;
     auto shape = shape_;
     Kokkos::parallel_for("Interfaces::compute_orientations", 
-                         Kokkos::RangePolicy<Kokkos::DefaultHostExecutionSpace>(0, norm_.size()), 
+                         Kokkos::RangePolicy<Kokkos::DefaultExecutionSpace>(0, norm_.size()), 
                          KOKKOS_LAMBDA (const int i){
         auto vertex_ids = this_vertex_ids[i];
         T x0 = vertices.positions().x(vertex_ids(0));
@@ -85,7 +87,7 @@ void Interfaces<T>::compute_areas(Vertices<T> vertices) {
     auto shape = shape_;
     auto this_vertex_ids = vertex_ids_;
     Kokkos::parallel_for("Interfaces::compute_areas", 
-                         Kokkos::RangePolicy<Kokkos::DefaultHostExecutionSpace>(0, area_.size()), 
+                         Kokkos::RangePolicy<Kokkos::DefaultExecutionSpace>(0, area_.size()), 
                          KOKKOS_LAMBDA (const int i) {
         switch (shape(i)) {
             case ElemType::Line: {
@@ -144,7 +146,7 @@ void Interfaces<T>::compute_centres(Vertices<T> vertices){
     auto centre = centre_;
     auto vertex_ids = vertex_ids_;
     Kokkos::parallel_for("Interfaces::compute_centres", 
-                         Kokkos::RangePolicy<Kokkos::DefaultHostExecutionSpace>(0, centre_.size()), 
+                         Kokkos::RangePolicy<Kokkos::DefaultExecutionSpace>(0, centre_.size()), 
                          KOKKOS_LAMBDA (const int face_i){
         auto face_vertices = vertex_ids[face_i]; 
         T x = 0.0;
@@ -361,29 +363,30 @@ TEST_CASE("Interface area") {
 
 TEST_CASE("Interface directions") {
     Interfaces<double> interfaces = generate_interfaces();
-    CHECK(Kokkos::abs(interfaces.norm().x(0) - +0.0) < 1e-14);
-    CHECK(Kokkos::abs(interfaces.norm().y(0) - -1.0) < 1e-14);
-    CHECK(Kokkos::abs(interfaces.norm().z(0) - +0.0) < 1e-14);
+    auto norm_mirror = interfaces.norm().host_mirror();
+    CHECK(Kokkos::abs(norm_mirror.x(0) - +0.0) < 1e-14);
+    CHECK(Kokkos::abs(norm_mirror.y(0) - -1.0) < 1e-14);
+    CHECK(Kokkos::abs(norm_mirror.z(0) - +0.0) < 1e-14);
 
-    CHECK(Kokkos::abs(interfaces.norm().x(1) - +1.0) < 1e-14);
-    CHECK(Kokkos::abs(interfaces.norm().y(1) - +0.0) < 1e-14);
-    CHECK(Kokkos::abs(interfaces.norm().z(1) - +0.0) < 1e-14);
+    CHECK(Kokkos::abs(norm_mirror.x(1) - +1.0) < 1e-14);
+    CHECK(Kokkos::abs(norm_mirror.y(1) - +0.0) < 1e-14);
+    CHECK(Kokkos::abs(norm_mirror.z(1) - +0.0) < 1e-14);
 
-    CHECK(Kokkos::abs(interfaces.norm().x(2) - +0.0) < 1e-14);
-    CHECK(Kokkos::abs(interfaces.norm().y(2) - +1.0) < 1e-14);
-    CHECK(Kokkos::abs(interfaces.norm().z(2) - +0.0) < 1e-14);
+    CHECK(Kokkos::abs(norm_mirror.x(2) - +0.0) < 1e-14);
+    CHECK(Kokkos::abs(norm_mirror.y(2) - +1.0) < 1e-14);
+    CHECK(Kokkos::abs(norm_mirror.z(2) - +0.0) < 1e-14);
 
-    CHECK(Kokkos::abs(interfaces.norm().x(3) - -1.0) < 1e-14);
-    CHECK(Kokkos::abs(interfaces.norm().y(3) - +0.0) < 1e-14);
-    CHECK(Kokkos::abs(interfaces.norm().z(3) - +0.0) < 1e-14);
+    CHECK(Kokkos::abs(norm_mirror.x(3) - -1.0) < 1e-14);
+    CHECK(Kokkos::abs(norm_mirror.y(3) - +0.0) < 1e-14);
+    CHECK(Kokkos::abs(norm_mirror.z(3) - +0.0) < 1e-14);
 
-    CHECK(Kokkos::abs(interfaces.norm().x(4) - +0.0) < 1e-14);
-    CHECK(Kokkos::abs(interfaces.norm().y(4) - -1.0) < 1e-14);
-    CHECK(Kokkos::abs(interfaces.norm().z(4) - +0.0) < 1e-14);
+    CHECK(Kokkos::abs(norm_mirror.x(4) - +0.0) < 1e-14);
+    CHECK(Kokkos::abs(norm_mirror.y(4) - -1.0) < 1e-14);
+    CHECK(Kokkos::abs(norm_mirror.z(4) - +0.0) < 1e-14);
 
-    CHECK(Kokkos::abs(interfaces.norm().x(5) - +1.0) < 1e-14);
-    CHECK(Kokkos::abs(interfaces.norm().y(5) - +0.0) < 1e-14);
-    CHECK(Kokkos::abs(interfaces.norm().z(5) - +0.0) < 1e-14);
+    CHECK(Kokkos::abs(norm_mirror.x(5) - +1.0) < 1e-14);
+    CHECK(Kokkos::abs(norm_mirror.y(5) - +0.0) < 1e-14);
+    CHECK(Kokkos::abs(norm_mirror.z(5) - +0.0) < 1e-14);
 }
 
 TEST_CASE("Interface centres"){
@@ -396,9 +399,10 @@ TEST_CASE("Interface centres"){
         0.0, 0.5, 1.0, 0.5, 0.0, 0.5, 1.0, 0.0, 0.5, 1.0, 1.5, 2.0, 1.5, 1.5, 2.0, 1.5, 2.0,
         2.5, 3.0, 2.5, 2.5, 3.0, 2.5, 3.0
     };
+    auto centre_mirror = interfaces.centre().host_mirror();
     for (unsigned int i = 0; i < xs.size(); i++) {
-        CHECK(Kokkos::abs(interfaces.centre().x(i) - xs[i]) < 1e-14);
-        CHECK(Kokkos::abs(interfaces.centre().y(i) - ys[i]) < 1e-14);
-        CHECK(Kokkos::abs(interfaces.centre().z(i) - 0.0) < 1e-14);
+        CHECK(Kokkos::abs(centre_mirror.x(i) - xs[i]) < 1e-14);
+        CHECK(Kokkos::abs(centre_mirror.y(i) - ys[i]) < 1e-14);
+        CHECK(Kokkos::abs(centre_mirror.z(i) - 0.0) < 1e-14);
     }
 }

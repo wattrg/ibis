@@ -9,13 +9,8 @@ CellFaces<T>::CellFaces(const Id<>& interface_ids)
     offsets_ = Kokkos::View<int*>("CellFaces::offsets", interface_ids.offsets().size());      
     face_ids_ = Kokkos::View<int*>("CellFaces::face_ids", interface_ids.ids().size());      
     outsigns_ = Kokkos::View<int*>("CellFaces::outsigns", interface_ids.ids().size());
-    for (unsigned int i = 0; i < offsets_.size(); i++){
-        offsets_(i) = interface_ids.offsets()(i);
-    }
-    for (unsigned int i = 0; i < face_ids_.size(); i++){
-        face_ids_(i) = interface_ids.ids()(i);
-        outsigns_(i) = 0;
-    }
+    Kokkos::deep_copy(offsets_, interface_ids.offsets());
+    Kokkos::deep_copy(face_ids_, interface_ids.ids());
 }
 
 template <typename T>
@@ -51,9 +46,11 @@ Cells<T>::Cells(Id<> vertices, Id<> interfaces, std::vector<ElemType> shapes)
     num_cells_ = shapes.size();
     faces_ = CellFaces<T>(interfaces);
     shape_ = Field<ElemType>("Cell::shape", num_cells_);
+    Field<ElemType>::mirror_type shape_mirror ("Cell::shape", num_cells_);
     for (int i = 0; i < num_cells_; i++) {
-        shape_(i) = shapes[i]; 
+        shape_mirror(i) = shapes[i]; 
     }
+    shape_.deep_copy(shape_mirror);
 
     volume_ = Field<T>("Cell::Volume", num_cells_);
     centroid_ = Vector3s<T>("Cell::centroids", num_cells_);
@@ -67,7 +64,7 @@ void Cells<T>::compute_centroids(const Vertices<T>& vertices){
     auto centroid = centroid_;
     auto vertex_ids = vertex_ids_;
     Kokkos::parallel_for("Cells::compute_centroid", 
-                         Kokkos::RangePolicy<Kokkos::DefaultHostExecutionSpace>(0, volume_.size()), 
+                         Kokkos::RangePolicy<Kokkos::DefaultExecutionSpace>(0, volume_.size()), 
                          KOKKOS_LAMBDA(const int i) {
         auto cell_vertices = vertex_ids[i];
         int n_vertices = cell_vertices.size();
@@ -97,7 +94,7 @@ void Cells<T>::compute_volumes(const Vertices<T>& vertices) {
     auto shape = shape_;
     auto this_vertex_ids = vertex_ids_;
     Kokkos::parallel_for("Cells::compute_volume", 
-                         Kokkos::RangePolicy<Kokkos::DefaultHostExecutionSpace>(0, volume_.size()), 
+                         Kokkos::RangePolicy<Kokkos::DefaultExecutionSpace>(0, volume_.size()), 
                          KOKKOS_LAMBDA(const int i) {
         switch (shape(i)) {
             case ElemType::Line:
@@ -171,9 +168,13 @@ CellInfo generate_cells() {
         Vector3<double>(2.0, 3.0, 0.0),
         Vector3<double>(3.0, 3.0, 0.0)
     };
+    auto host_positions = vertices.positions().host_mirror();
     for (int i = 0; i < 16; i++) {
-        vertices.set_vertex_position(i, vertex_pos[i]);
+        host_positions.x(i) = vertex_pos[i].x;
+        host_positions.y(i) = vertex_pos[i].y;
+        host_positions.z(i) = vertex_pos[i].z;
     }
+    vertices.positions().deep_copy(host_positions);
 
     std::vector<std::vector<int>> interface_id_list {
         {0, 1},
@@ -289,9 +290,10 @@ TEST_CASE("cell volume") {
     Cells<double> cells = info.cells;
     Vertices<double> vertices = info.vertices;
     cells.compute_volumes(vertices);
+    auto volume_mirror = cells.volumes().host_mirror();
 
     for (int i = 0; i < cells.size(); i++) {
-        CHECK(Kokkos::fabs(cells.volume(i) - 1.0) < 1e-14);
+        CHECK(Kokkos::fabs(volume_mirror(i) - 1.0) < 1e-14);
     }
 }
 
@@ -301,12 +303,13 @@ TEST_CASE("cell_centre") {
     Vertices<double> vertices = info.vertices;
 
     cells.compute_centroids(vertices);
+    auto centroids_mirror = cells.centroids().host_mirror();
 
     std::vector<double> x_values = {0.5, 1.5, 2.5, 0.5, 1.5, 2.5, 0.5, 1.5, 2.5};
     std::vector<double> y_values = {0.5, 0.5, 0.5, 1.5, 1.5, 1.5, 2.5, 2.5, 2.5};
 
     for (int i = 0; i < cells.size(); i++) {
-        CHECK(Kokkos::fabs(cells.centroids().x(i) - x_values[i]) < 1e-14);
-        CHECK(Kokkos::fabs(cells.centroids().y(i) - y_values[i]) < 1e-14);
+        CHECK(Kokkos::fabs(centroids_mirror.x(i) - x_values[i]) < 1e-14);
+        CHECK(Kokkos::fabs(centroids_mirror.y(i) - y_values[i]) < 1e-14);
     }
 }

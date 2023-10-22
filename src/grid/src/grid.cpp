@@ -125,7 +125,7 @@ void GridBlock<T>::compute_interface_connectivity(std::map<int, int> ghost_cells
     auto this_interfaces = interfaces_;
     auto this_cells = cells_;
     Kokkos::parallel_for("compute_interface_connectivity", 
-                         Kokkos::RangePolicy<Kokkos::DefaultHostExecutionSpace>(0, num_valid_cells_),
+                         Kokkos::RangePolicy<Kokkos::DefaultExecutionSpace>(0, num_valid_cells_),
                          KOKKOS_LAMBDA (const int cell_i){
         auto face_ids = this_cells.faces().face_ids(cell_i);
         T cell_x = this_cells.centroids().x(cell_i);
@@ -158,7 +158,8 @@ void GridBlock<T>::compute_interface_connectivity(std::map<int, int> ghost_cells
     });
 
     // TODO: loop through the ghost cells and attach them to
-    // the other side of the interface
+    // the other side of the interface.
+    // Think about how to do this on the GPU
     for (auto boundary : ghost_cells){
         int face_id = boundary.first;
         int ghost_cell_id = boundary.second;

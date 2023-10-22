@@ -90,7 +90,16 @@ public:
     const T& volume(const int i) const {return volume_(i);}
 
     KOKKOS_INLINE_FUNCTION
+    const Field<T>& volumes() const {return volume_;}
+
+    KOKKOS_INLINE_FUNCTION
+    Field<T>& volumes() {return volume_;}
+
+    KOKKOS_INLINE_FUNCTION
     const Vector3s<T>& centroids() const {return centroid_;}
+
+    KOKKOS_INLINE_FUNCTION
+    Vector3s<T>& centroids() {return centroid_;}
 
     void compute_centroids(const Vertices<T>& vertices);
 
