@@ -4,7 +4,7 @@
 #include "interface.h"
 
 template <typename T>
-CellFaces<T>::CellFaces(const Id& interface_ids) 
+CellFaces<T>::CellFaces(const Id<>& interface_ids) 
 {
     offsets_ = Kokkos::View<int*>("CellFaces::offsets", interface_ids.offsets().size());      
     face_ids_ = Kokkos::View<int*>("CellFaces::face_ids", interface_ids.ids().size());      
@@ -45,7 +45,7 @@ bool CellFaces<T>::operator == (const CellFaces& other) const {
 template struct CellFaces<double>;
 
 template <typename T>
-Cells<T>::Cells(Id vertices, Id interfaces, std::vector<ElemType> shapes)
+Cells<T>::Cells(Id<> vertices, Id<> interfaces, std::vector<ElemType> shapes)
         : vertex_ids_(vertices) 
 {
     num_cells_ = shapes.size();

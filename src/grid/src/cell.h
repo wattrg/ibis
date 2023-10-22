@@ -30,7 +30,7 @@ struct CellFaces {
 public:
     CellFaces() {}
 
-    CellFaces(const Id& interface_ids);
+    CellFaces(const Id<>& interface_ids);
 
     bool operator == (const CellFaces& other) const;
 
@@ -64,7 +64,7 @@ struct Cells {
 public:
     Cells () {}
 
-    Cells(Id vertices, Id interfaces, std::vector<ElemType> shapes);
+    Cells(Id<> vertices, Id<> interfaces, std::vector<ElemType> shapes);
 
     bool operator == (const Cells &other) const {
         return (faces_ == other.faces_) &&
@@ -78,7 +78,7 @@ public:
     // }
 
     KOKKOS_INLINE_FUNCTION
-    const Id &vertex_ids() const {return vertex_ids_;}
+    const Id<> &vertex_ids() const {return vertex_ids_;}
 
     // KOKKOS_FORCEINLINE_FUNCTION
     // const Id &interface_ids() const {return interface_ids_;}
@@ -105,7 +105,7 @@ public:
 private:
     CellFaces<T> faces_;
     // Id interface_ids_;
-    Id vertex_ids_;
+    Id<> vertex_ids_;
     Field<ElemType> shape_;
     Field<T> volume_;
     // Id outsign_;

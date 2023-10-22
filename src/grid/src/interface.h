@@ -47,7 +47,7 @@ public:
     // }
 
     KOKKOS_INLINE_FUNCTION 
-    Id &vertex_ids() {return vertex_ids_;}
+    Id<> &vertex_ids() {return vertex_ids_;}
 
     KOKKOS_INLINE_FUNCTION
     const Field<T> &area() const {return area_;}
@@ -142,7 +142,7 @@ public:
 private:
     int size_;
     // the id's of the vertices forming each interface
-    Id vertex_ids_;
+    Id<> vertex_ids_;
 
     // the cells to the left/right of the interface
     Field<int> left_cells_;
