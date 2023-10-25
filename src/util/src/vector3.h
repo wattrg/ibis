@@ -101,6 +101,7 @@ public:
     }
 
     mirror_type host_mirror() {
+        // return Kokkos::create_mirror_view(view_);
         return mirror_type(view_.extent(0));
     }
 

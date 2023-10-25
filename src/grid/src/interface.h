@@ -12,10 +12,12 @@
 #include "cell.h"
 
 
-template <typename T, class Device=Kokkos::DefaultExecutionSpace>
+template <typename T, 
+          class ExecSpace=Kokkos::DefaultExecutionSpace,
+          class Layout=Kokkos::DefaultExecutionSpace::array_layout>
 struct Interfaces {
 public:
-    using execution_space = Device;
+    using execution_space = ExecSpace;
     using memory_space = typename execution_space::memory_space;
     using array_layout = typename execution_space::array_layout;
     using host_space = Kokkos::DefaultHostExecutionSpace::memory_space;
