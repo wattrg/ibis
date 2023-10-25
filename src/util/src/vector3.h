@@ -86,11 +86,6 @@ public:
     KOKKOS_INLINE_FUNCTION 
     int size() const {return view_.extent(0);}
 
-    template <class OtherSpace>
-    void copy(const Vector3s<T, Layout, OtherSpace>& other) {
-        Kokkos::deep_copy(view_, other.view_);
-    }
-
     KOKKOS_INLINE_FUNCTION
     bool operator == (const Vector3s &other) const {
         if (this->size() != other.size()) {

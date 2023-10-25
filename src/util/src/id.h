@@ -44,26 +44,22 @@ public:
     Id() {}
 
     Id(view_type ids, view_type offsets){
-        _ids = view_type ("id", static_cast<int>(ids.size()));
-        _offsets = view_type ("offset", static_cast<int>(offsets.size()));
+        _ids = view_type ("Id::id", static_cast<int>(ids.size()));
+        _offsets = view_type ("Id::offset", static_cast<int>(offsets.size()));
         Kokkos::deep_copy(_ids, ids);
         Kokkos::deep_copy(_offsets, offsets);
-        // for (unsigned int i = 0; i < ids.size(); i++) {
-        //     _ids(i) = ids[i];
-        // }
-        //
-        // for (unsigned int i = 0; i < offsets.size(); i++) {
-        //     _offsets(i) = offsets[i];
-        // }
     }
 
     Id(std::vector<int> ids, std::vector<int> offsets){
-        _ids = view_type ("id", static_cast<int>(ids.size()));
-        _offsets = view_type ("offset", static_cast<int>(offsets.size()));
+        _ids = view_type ("Id::id", static_cast<int>(ids.size()));
+        _offsets = view_type ("Id::offset", static_cast<int>(offsets.size()));
 
-        mirror_view_type ids_mirror ("id", static_cast<int>(ids.size()));
-        mirror_view_type offsets_mirror ("id", static_cast<int>(offsets.size()));
-
+        // make of copy of the view's on the host so we can copy
+        // from std::vector
+        mirror_view_type ids_mirror ("Id::id::mirror", 
+                                     static_cast<int>(ids.size()));
+        mirror_view_type offsets_mirror ("Id::offset::mirror", 
+                                         static_cast<int>(offsets.size()));
         for (unsigned int i = 0; i < ids.size(); i++) {
             ids_mirror(i) = ids[i];
         }
@@ -72,26 +68,33 @@ public:
             offsets_mirror(i) = offsets[i];
         }
 
+        // now copy the data onto the device
         Kokkos::deep_copy(_ids, ids_mirror);
         Kokkos::deep_copy(_offsets, offsets_mirror);
     }
 
+    Id(int n_ids, int n_values) {
+        _ids = view_type("Id::id", n_ids);
+        _offsets = view_type("Id::offset", n_values+1);
+    }
+
 
     Id(IdConstructor constructor) 
-        : Id<Layout, Space>(constructor.ids(), constructor.offsets()) {}
+        : Id<Layout, Space>(constructor.ids(), constructor.offsets()) 
+    {}
 
     Id<Layout, Space> clone(){
         return Id<Layout, Space>(_ids, _offsets);
     }
 
-    Id<Layout, Space> clone_offsets(){
-        view_type ids = Kokkos::View<int*>("id", static_cast<int>(_ids.size()));
-        view_type offsets = Kokkos::View<int*> ("offset", static_cast<int>(_offsets.size())); 
-        for (unsigned int i = 0; i < offsets.size(); i++){
-            offsets(i) = _offsets(i);
-        }
-        return Id<Layout, Space>(ids, offsets);
-    }
+    // Id<Layout, Space> clone_offsets(){
+    //     view_type ids = Kokkos::View<int*>("id", static_cast<int>(_ids.size()));
+    //     view_type offsets = Kokkos::View<int*> ("offset", static_cast<int>(_offsets.size())); 
+    //     for (unsigned int i = 0; i < offsets.size(); i++){
+    //         offsets(i) = _offsets(i);
+    //     }
+    //     return Id<Layout, Space>(ids, offsets);
+    // }
 
     KOKKOS_INLINE_FUNCTION
     auto operator [] (const int i) const {
@@ -131,15 +134,17 @@ public:
     }
 
     template <class OtherSpace>
-    void deep_copy(const Id<Layout, OtherSpace>& other){
+    void deep_copy(const Id<array_layout, OtherSpace>& other){
         Kokkos::deep_copy(_ids, other._ids);
         Kokkos::deep_copy(_offsets, other._offsets);
     }
 
     view_type ids() const {return _ids;}
+    int num_ids() const {return _ids.extent(0);}
     view_type offsets() const {return _offsets;}
+    // int num_offsets() const {return _offsets.extent(0);}
 
-private:
+public:
     view_type _ids;
     view_type _offsets;
 };

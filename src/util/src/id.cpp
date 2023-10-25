@@ -37,4 +37,34 @@ TEST_CASE("id constructioin") {
     CHECK(sub_id(0) == 2);
     CHECK(sub_id(1) == 8);
     CHECK(sub_id(2) == 9);
+
+    CHECK(id.size() == 3);
+    CHECK(id.num_ids() == 8);
+}
+
+TEST_CASE("id construction from views") {
+    IdConstructor idc;
+    idc.push_back(std::vector<int> {3, 2, 5});
+    idc.push_back(std::vector<int> {1, 3});
+    idc.push_back(std::vector<int> {2, 8, 9});
+
+    Id<>::mirror_type id (idc);
+    Id<>::mirror_type id_copy(id.ids(), id.offsets());
+
+    auto sub_id = id_copy[0];
+    CHECK(sub_id(0) == 3);
+    CHECK(sub_id(1) == 2);
+    CHECK(sub_id(2) == 5);
+    
+    sub_id = id_copy[1];
+    CHECK(sub_id(0) == 1);
+    CHECK(sub_id(1) == 3);
+
+    sub_id = id_copy[2];
+    CHECK(sub_id(0) == 2);
+    CHECK(sub_id(1) == 8);
+    CHECK(sub_id(2) == 9);
+
+    CHECK(id_copy.size() == 3);
+    CHECK(id_copy.num_ids() == 8);
 }
