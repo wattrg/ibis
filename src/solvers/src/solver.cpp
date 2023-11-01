@@ -60,7 +60,7 @@ Solver * make_solver(json config, std::string grid_dir, std::string flow_dir) {
     json grid_config = config.at("grid");
     std::string solver_name = solver_config.at("name");
     if (solver_name == "runge_kutta") {
-        GridBlock<double> grid = GridBlock<double>(grid_file, grid_config);
+        GridBlock<double> grid(grid_file, grid_config);
         return new RungeKutta(config, grid, grid_dir, flow_dir);
     }
     return NULL;

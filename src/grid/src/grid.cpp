@@ -7,14 +7,14 @@
 
 
 struct GridInfo{
-    Vertices<double> vertices;
-    Interfaces<double> faces;
-    Cells<double> cells;
+    Vertices<double, Kokkos::DefaultHostExecutionSpace> vertices;
+    Interfaces<double, Kokkos::DefaultHostExecutionSpace> faces;
+    Cells<double, Kokkos::DefaultHostExecutionSpace> cells;
 };
 
 GridInfo build_test_grid() {
     GridInfo grid_info {};
-    Vertices<double> vertices(16);
+    Vertices<double, Kokkos::DefaultHostExecutionSpace> vertices(16);
     std::vector<Vector3<double>> vertex_pos {
         Vector3<double>(0.0, 0.0, 0.0),
         Vector3<double>(1.0, 0.0, 0.0),
@@ -93,7 +93,7 @@ GridInfo build_test_grid() {
     for (unsigned int i = 0; i < interface_id_list.size(); i++){
         interface_id_constructor.push_back(interface_id_list[i]); 
     }
-    Interfaces<double> interfaces (interface_id_constructor, shapes);
+    Interfaces<double, Kokkos::DefaultHostExecutionSpace> interfaces (interface_id_constructor, shapes);
 
     std::vector<std::vector<int>> cell_interfaces_list {
         {0, 1, 2, 3},
@@ -138,7 +138,7 @@ GridInfo build_test_grid() {
         ElemType::Quad,
     };
 
-    Cells<double> cells (cell_vertex_id_constructor, cell_interface_id_constructor, cell_shapes);
+    Cells<double, Kokkos::DefaultHostExecutionSpace> cells (cell_vertex_id_constructor, cell_interface_id_constructor, cell_shapes);
     grid_info.vertices = vertices;
     grid_info.faces = interfaces;
     grid_info.cells = cells;
@@ -165,21 +165,22 @@ json build_config() {
 TEST_CASE("grid vertices") {
     GridInfo expected = build_test_grid();
     json config = build_config();
-    GridBlock<double> block = GridBlock<double>("../src/grid/test/grid.su2", config);
-    CHECK(block.vertices() == expected.vertices);
+    GridBlock<double>::mirror_type block("../src/grid/test/grid.su2", config);
+    auto expected_vertices = expected.vertices;
+    CHECK(block.vertices() == expected_vertices);
 }
 
 TEST_CASE("grid interfaces") {
     GridInfo expected = build_test_grid();
     json config = build_config();
-    GridBlock<double> block = GridBlock<double>("../src/grid/test/grid.su2", config);
+    GridBlock<double>::mirror_type block("../src/grid/test/grid.su2", config);
     CHECK(block.interfaces() == expected.faces);
 }
 
 TEST_CASE("grid cell faces") {
     GridInfo expected = build_test_grid();
     json config = build_config();
-    GridBlock<double> block = GridBlock<double>("../src/grid/test/grid.su2", config);
+    GridBlock<double>::mirror_type block("../src/grid/test/grid.su2", config);
     CHECK(block.cells().size() == expected.cells.size());
     for (int i = 0; i < block.cells().size(); i++) {
         for (unsigned int j = 0; j < block.cells().faces().face_ids(i).size(); j++){
@@ -190,7 +191,7 @@ TEST_CASE("grid cell faces") {
 
 TEST_CASE("grid cell faces 2") {
     json config = build_config();
-    GridBlock<double> block = GridBlock<double>("../src/grid/test/grid.su2", config);
+    GridBlock<double>::mirror_type block("../src/grid/test/grid.su2", config);
     std::vector<std::vector<int>> face_ids = {
         {0, 1, 2, 3},
         {4, 5, 6, 1},
@@ -204,7 +205,7 @@ TEST_CASE("grid cell faces 2") {
     };
     CHECK(block.num_cells() == 9);
     for (int i = 0; i < block.num_cells(); i++){
-        CellFaces<double> faces = block.cells().faces();
+        CellFaces<double>::mirror_type faces = block.cells().faces();
         for (unsigned int j = 0; j < faces.face_ids(i).size(); j++){
             CHECK(faces.face_ids(i)(j) == face_ids[i][j]);
         }
@@ -214,7 +215,7 @@ TEST_CASE("grid cell faces 2") {
 TEST_CASE("grid cell outsigns") {
     GridInfo expected = build_test_grid();
     json config = build_config();
-    GridBlock<double> block = GridBlock<double>("../src/grid/test/grid.su2", config);
+    GridBlock<double>::mirror_type block("../src/grid/test/grid.su2", config);
     CHECK(block.cells().size() == expected.cells.size());
     std::vector<std::vector<int>> outsigns = {
          {1, 1, 1, 1}, 
@@ -233,3 +234,9 @@ TEST_CASE("grid cell outsigns") {
         }
     }
 }
+
+TEST_CASE("build grid on device"){
+    json config = build_config();
+    GridBlock<double> block("../src/grid/test/grid.su2", config);
+}
+

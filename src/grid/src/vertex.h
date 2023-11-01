@@ -64,7 +64,7 @@ public:
         _positions.deep_copy(other._positions);
     }
 
-private:
+public:
     Vector3s<T, array_layout, memory_space> _positions;
 };
 

@@ -35,6 +35,7 @@ CellInfo generate_cells() {
         vertices_host.positions().y(i) = vertex_pos[i].y;
         vertices_host.positions().z(i) = vertex_pos[i].z;
     }
+    vertices.deep_copy(vertices_host);
 
     std::vector<std::vector<int>> interface_id_list {
         {0, 1},

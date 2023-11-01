@@ -120,9 +120,12 @@ T dot(const Vector3s<T>& a, const Vector3s<T>& b, const int i) {
     return a.x(i)*b.x(i) + a.y(i)*b.y(i) + a.z(i)*b.z(i);
 }
 
-template <typename T>
+template <typename T, class ExecSpace, class Layout>
 KOKKOS_INLINE_FUNCTION
-void cross(const Vector3s<T>& a, const Vector3s<T>& b, const Vector3s<T>& c, const int i){
+void cross(const Vector3s<T, ExecSpace, Layout>& a, 
+           const Vector3s<T, ExecSpace, Layout>& b,
+           const Vector3s<T, ExecSpace, Layout>& c,
+           const int i){
     c.x(i) = a.y(i)*b.z(i) - a.z(i)*b.y(i);
     c.y(i) = a.z(i)*b.x(i) - a.x(i)*b.z(i);
     c.z(i) = a.x(i)*b.y(i) - a.y(i)*b.x(i);

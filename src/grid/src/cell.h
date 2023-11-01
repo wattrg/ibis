@@ -206,14 +206,14 @@ public:
     Vector3s<T, array_layout, memory_space>& 
     centroids() {return centroid_;}
 
-    void compute_centroids(const Vertices<T>& vertices){
+    void compute_centroids(const Vertices<T, execution_space, array_layout>& vertices){
         // for the moment, we're using the arithmatic average
         // of the points as the centroid. For cells that aren't
         // nicely shaped, this could be a very bad approximation
         auto centroid = centroid_;
         auto vertex_ids = vertex_ids_;
         Kokkos::parallel_for("Cells::compute_centroid", 
-                             Kokkos::RangePolicy<Kokkos::DefaultExecutionSpace>(0, volume_.size()), 
+                             Kokkos::RangePolicy<execution_space>(0, volume_.size()), 
                              KOKKOS_LAMBDA(const int i) {
             auto cell_vertices = vertex_ids[i];
             int n_vertices = cell_vertices.size();
@@ -232,7 +232,7 @@ public:
         });
     }
 
-    void compute_volumes(const Vertices<T>& vertices){
+    void compute_volumes(const Vertices<T, execution_space, array_layout>& vertices){
         // TODO: It would be nicer to move each case in the switch 
         // to a function sitting somewhere else to keep the amount
         // of code in this method down, and avoid duplication with
@@ -242,7 +242,7 @@ public:
         auto shape = shape_;
         auto this_vertex_ids = vertex_ids_;
         Kokkos::parallel_for("Cells::compute_volume", 
-                             Kokkos::RangePolicy<Kokkos::DefaultExecutionSpace>(0, volume_.size()), 
+                             Kokkos::RangePolicy<execution_space>(0, volume_.size()), 
                              KOKKOS_LAMBDA(const int i) {
             switch (shape(i)) {
                 case ElemType::Line:
@@ -285,6 +285,7 @@ public:
                     printf("Volume of pyramid ot implemented");
                     break;
             }
+
         }); 
     }
 

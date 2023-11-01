@@ -107,6 +107,7 @@ TEST_CASE("interface look up") {
 
 Interfaces<double> generate_interfaces() {
     Vertices<double> vertices(16);
+    auto vertices_host = vertices.host_mirror();
     std::vector<Vector3<double>> vertex_pos {
         Vector3<double>(0.0, 0.0, 0.0),
         Vector3<double>(1.0, 0.0, 0.0),
@@ -126,8 +127,9 @@ Interfaces<double> generate_interfaces() {
         Vector3<double>(3.0, 3.0, 0.0)
     };
     for (int i = 0; i < 16; i++) {
-        vertices.set_vertex_position(i, vertex_pos[i]);
+        vertices_host.set_vertex_position(i, vertex_pos[i]);
     }
+    vertices.deep_copy(vertices_host);
 
     std::vector<std::vector<int>> interface_id_list {
         {0, 1},

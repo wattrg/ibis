@@ -20,21 +20,27 @@ public:
     using array_layout = Layout;
     using host_execution_space = Kokkos::DefaultHostExecutionSpace;
     using host_mirror_mem_space = Kokkos::DefaultHostExecutionSpace::memory_space;
-    using mirror_type = Cells<T, Kokkos::DefaultHostExecutionSpace, array_layout>;
+    using mirror_type = GridBlock<T, host_execution_space, array_layout>;
 
 public:
     GridBlock() {}
 
-    GridBlock(const GridIO &grid_io, json &config){
+    GridBlock(const GridIO& grid_io, json& config){
+        init_grid_block(grid_io, config);
+    }
+
+    void init_grid_block(const GridIO &grid_io, json &config){
         dim_ = grid_io.dim();
         json boundaries = config.at("boundaries");
 
         // set the positions of the vertices
         std::vector<Vertex<double>> vertices = grid_io.vertices();
-        vertices_ = Vertices<T>(vertices.size());
+        vertices_ = Vertices<T, execution_space, array_layout>(vertices.size());
+        auto host_vertices = vertices_.host_mirror();
         for (unsigned int i = 0; i < vertices.size(); i++) {
-            vertices_.set_vertex_position(i, vertices[i].pos());
+            host_vertices.set_vertex_position(i, vertices[i].pos());
         }
+        vertices_.deep_copy(host_vertices);
 
         // some objects to assist in constructing the grid
         IdConstructor interface_vertices = IdConstructor();
@@ -73,21 +79,60 @@ public:
             grid_io, boundaries, cell_vertices, interfaces, cell_shapes
         );
 
-        interfaces_ = Interfaces<T>(interface_vertices, interface_shapes);
-        cells_ = Cells<T>(cell_vertices, cell_interface_ids, cell_shapes);
+        interfaces_ = Interfaces<T, execution_space, array_layout>(interface_vertices, interface_shapes);
+        cells_ = Cells<T, execution_space, array_layout>(cell_vertices, cell_interface_ids, cell_shapes);
 
         compute_geometric_data();
         compute_interface_connectivity(ghost_cell_map);
 
     }
 
-    GridBlock(std::string file_name, json &config) 
-        : GridBlock<T>(GridIO(file_name), config) {}
+    GridBlock(std::string file_name, json &config) {
+        init_grid_block(GridIO(file_name), config);
+    }
 
     GridBlock(Vertices<T, execution_space, array_layout> vertices, 
               Interfaces<T, execution_space, array_layout> interfaces, 
-              Cells<T, execution_space, array_layout> cells) 
-        : vertices_(vertices), interfaces_(interfaces), cells_(cells) {}
+              Cells<T, execution_space, array_layout> cells,
+              int dim, int num_valid_cells, int num_ghost_cells,
+              std::map<std::string, Field<int, array_layout, memory_space>> boundary_cells,
+              std::map<std::string, Field<int, array_layout, memory_space>> boundary_faces,
+              std::vector<std::string> boundary_tags) 
+        : vertices_(vertices), 
+          interfaces_(interfaces), 
+          cells_(cells) ,
+          dim_(dim),
+          num_valid_cells_(num_valid_cells),
+          num_ghost_cells_(num_ghost_cells),
+          boundary_cells_(boundary_cells),
+          boundary_faces_(boundary_faces),
+          boundary_tags_(boundary_tags)
+    {}
+
+    GridBlock(int num_vertices, int num_faces, int num_cells,
+              int num_vertex_ids, int num_face_ids) {
+        vertices_ = Vertices<T, execution_space, array_layout>(num_vertices);
+        interfaces_ = Interfaces<T, execution_space, array_layout>(num_faces, num_vertex_ids);
+        cells_ = Cells<T, execution_space, array_layout>(num_cells, num_vertex_ids, num_face_ids);
+    }
+
+    mirror_type host_mirror() {
+        return mirror_type(vertices_.host_mirror(), 
+                           interfaces_.host_mirror(),
+                           cells_.host_mirror(),
+                           dim_, num_valid_cells_, num_ghost_cells_,
+                           boundary_cells_,
+                           boundary_faces_,
+                           boundary_tags_
+                           );
+    }
+
+    template <class OtherSpace>
+    void deep_copy(const GridBlock<T, OtherSpace, Layout>& other) {
+        vertices_.deep_copy(other.vertices_);
+        interfaces_.deep_copy(other.interfaces_);
+        cells_.deep_copy(other.interfaces_);
+    }
 
 
     bool operator == (const GridBlock &other) const {
@@ -201,14 +246,16 @@ public:
     int dim_;
     int num_valid_cells_;
     int num_ghost_cells_;
-    std::map<std::string, Field<int>> boundary_cells_;
-    std::map<std::string, Field<int>> boundary_faces_;
+    std::map<std::string, Field<int, array_layout, memory_space>> boundary_cells_;
+    std::map<std::string, Field<int, array_layout, memory_space>> boundary_faces_;
     std::vector<std::string> boundary_tags_;
 
-    std::map<int, int> setup_boundaries(const GridIO & grid_io, json& boundaries,
-                                        IdConstructor &cell_vertices, 
-                                        InterfaceLookup& interfaces,
-                                        std::vector<ElemType> cell_shapes){
+    std::map<int, int> 
+    setup_boundaries(const GridIO & grid_io, 
+                     json& boundaries,
+                     IdConstructor &cell_vertices, 
+                     InterfaceLookup& interfaces,
+                     std::vector<ElemType> cell_shapes){
         (void) cell_vertices;
         (void) cell_shapes;
         num_ghost_cells_ = 0;
@@ -245,10 +292,10 @@ public:
             // keep track of which faces/cells belong to
             // which boundary
             boundary_cells_.insert(
-                {bc_label, Field<int>("bc_cells", boundary_cells)}
+                {bc_label, Field<int, array_layout, memory_space>("bc_cells", boundary_cells)}
             );
             boundary_faces_.insert(
-                {bc_label, Field<int>("bc_faces", boundary_faces)}
+                {bc_label, Field<int, array_layout, memory_space>("bc_faces", boundary_faces)}
             );
         }
         return ghost_cell_map;
