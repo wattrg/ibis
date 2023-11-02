@@ -52,7 +52,7 @@ public:
         return true;
     }
 
-    mirror_type host_mirror() {
+    mirror_type host_mirror() const {
         return mirror_type("host_mirror", view_.extent(0));
     }
 

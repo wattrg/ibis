@@ -5,7 +5,9 @@
 
 
 template <typename T>
-int NativeOutput<T>::write(const FlowStates<T>& fs, const GridBlock<T>& grid, std::string plot_dir, std::string time_dir, double time){
+int NativeOutput<T>::write(const typename FlowStates<T>::mirror_type & fs, 
+                           const typename GridBlock<T>::mirror_type & grid, 
+                           std::string plot_dir, std::string time_dir, double time){
     std::string dir = plot_dir + "/" + time_dir;
     std::ofstream meta_f(dir + "/meta_data.json");
     json meta;
@@ -77,7 +79,9 @@ int NativeOutput<T>::write(const FlowStates<T>& fs, const GridBlock<T>& grid, st
 template class NativeOutput<double>;
 
 template <typename T>
-int NativeInput<T>::read(FlowStates<T>& fs, const GridBlock<T>& grid, std::string dir, json& meta_data){
+int NativeInput<T>::read(typename FlowStates<T>::mirror_type & fs, 
+                         const typename GridBlock<T>::mirror_type & grid, 
+                         std::string dir, json& meta_data){
     int num_cells = grid.num_cells();
     std::ifstream meta_f(dir + "/meta_data.json");
     if (!meta_f){

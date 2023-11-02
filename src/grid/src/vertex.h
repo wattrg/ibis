@@ -55,7 +55,7 @@ public:
     int size() const {return _positions.size();}
 
 
-    mirror_type host_mirror(){
+    mirror_type host_mirror() const {
         return mirror_type (_positions.size());
     } 
 

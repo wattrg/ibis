@@ -9,8 +9,8 @@ class VtkOutput : public FVOutput<T> {
 public:
     VtkOutput();
 
-    int write(const FlowStates<T>& fs, 
-              const GridBlock<T>& grid, 
+    int write(const typename FlowStates<T>::mirror_type & fs, 
+              const typename GridBlock<T>::mirror_type & grid, 
               std::string plot_dir, 
               std::string time_dir, 
               double time);

@@ -87,15 +87,6 @@ public:
         return Id<Layout, Space>(_ids, _offsets);
     }
 
-    // Id<Layout, Space> clone_offsets(){
-    //     view_type ids = Kokkos::View<int*>("id", static_cast<int>(_ids.size()));
-    //     view_type offsets = Kokkos::View<int*> ("offset", static_cast<int>(_offsets.size())); 
-    //     for (unsigned int i = 0; i < offsets.size(); i++){
-    //         offsets(i) = _offsets(i);
-    //     }
-    //     return Id<Layout, Space>(ids, offsets);
-    // }
-
     KOKKOS_INLINE_FUNCTION
     auto operator [] (const int i) const {
         // return the slice of _ids corresponding 
@@ -127,16 +118,14 @@ public:
         return true;
     }
 
-    mirror_type host_mirror() {
+    mirror_type host_mirror() const {
         mirror_view_type ids(_ids.extent(0));
         mirror_view_type offsets(_offsets.extent(0));
         return mirror_type(ids, offsets);
     }
 
     template <class OtherSpace>
-    void deep_copy(const Id<Layout, OtherSpace>& other){
-        // std::cout << size() << " " << num_ids() << std::endl;
-        // std::cout << other.size() << " " << other.num_ids() << std::endl << std::endl;
+    void deep_copy(const Id<Layout, OtherSpace>& other) {
         Kokkos::deep_copy(_ids, other._ids);
         Kokkos::deep_copy(_offsets, other._offsets);
     }
@@ -144,7 +133,6 @@ public:
     view_type ids() const {return _ids;}
     int num_ids() const {return _ids.extent(0);}
     view_type offsets() const {return _offsets;}
-    // int num_offsets() const {return _offsets.extent(0);}
 
 public:
     view_type _ids;

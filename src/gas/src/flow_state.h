@@ -29,8 +29,9 @@ struct FlowStates{
 public:
     using array_layout = Layout;
     using memory_space = Space;
-    using host_mirror_memory_space = Kokkos::DefaultHostExecutionSpace::memory_space;
-    using mirror_type = FlowStates<T, Layout, host_mirror_memory_space>;
+    using host_mirror_mem_space = Kokkos::DefaultHostExecutionSpace::memory_space;
+    using host_mirror_layout = Kokkos::DefaultExecutionSpace::array_layout;
+    using mirror_type = FlowStates<T, host_mirror_layout, host_mirror_mem_space>;
 
 public:
     FlowStates(){}
@@ -41,12 +42,12 @@ public:
 
     int number_flow_states() const {return gas.size();}
 
-    mirror_type host_mirror() {
+    mirror_type host_mirror() const {
         return mirror_type(number_flow_states());
     }
 
     template <class OtherSpace>
-    void deep_copy(const FlowStates<T, Layout, OtherSpace>& other){
+    void deep_copy(const FlowStates<T, Layout, OtherSpace>& other) {
         gas.deep_copy(other.gas);
         vel.deep_copy(other.vel);
     }

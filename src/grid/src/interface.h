@@ -65,7 +65,7 @@ public:
         right_cells_ = Field<int, array_layout, memory_space>("Interface::right", size_);
     }
 
-    mirror_type host_mirror() {
+    mirror_type host_mirror() const {
         return mirror_type(size_, vertex_ids_.num_ids());
     }
 
@@ -88,6 +88,9 @@ public:
 
     KOKKOS_INLINE_FUNCTION 
     Id<array_layout, memory_space> &vertex_ids() {return vertex_ids_;}
+
+    KOKKOS_INLINE_FUNCTION 
+    const Id<array_layout, memory_space> &vertex_ids() const {return vertex_ids_;}
 
     KOKKOS_INLINE_FUNCTION
     const Field<T, array_layout, memory_space> &area() const {return area_;}

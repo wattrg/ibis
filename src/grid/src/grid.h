@@ -109,18 +109,24 @@ public:
           boundary_tags_(boundary_tags)
     {}
 
-    GridBlock(int num_vertices, int num_faces, int num_valid_cells, int num_ghost_cells, int dim,
-              int num_cell_vertex_ids, int num_face_vertex_ids, int num_face_ids, 
+    GridBlock(int num_vertices, 
+              int num_faces, 
+              int num_valid_cells, 
+              int num_ghost_cells, 
+              int dim,
+              int num_cell_vertex_ids, 
+              int num_face_vertex_ids, 
+              int num_face_ids, 
               std::map<std::string, int> boundary_cell_sizes,
               std::map<std::string, int> boundary_face_sizes) 
     {
         num_valid_cells_ = num_valid_cells;
         num_ghost_cells_ = num_ghost_cells;
         dim_ = dim;
-        int num_total_cells = num_valid_cells + num_ghost_cells;
+        // int num_total_cells = num_valid_cells + num_ghost_cells;
         vertices_ = Vertices<T, execution_space, array_layout>(num_vertices);
         interfaces_ = Interfaces<T, execution_space, array_layout>(num_faces, num_face_vertex_ids);
-        cells_ = Cells<T, execution_space, array_layout>(num_total_cells, num_cell_vertex_ids, num_face_ids);
+        cells_ = Cells<T, execution_space, array_layout>(num_valid_cells, num_cell_vertex_ids, num_face_ids);
         boundary_cells_ = std::map<std::string, Field<int, array_layout, memory_space>>{};
         boundary_faces_ = std::map<std::string, Field<int, array_layout, memory_space>> {};
         for (auto const& [key, val] : boundary_cell_sizes) {
@@ -135,7 +141,7 @@ public:
         }
     }
 
-    mirror_type host_mirror() {
+    mirror_type host_mirror() const {
         std::map<std::string, int> boundary_cell_sizes{};
         std::map<std::string, int> boundary_face_sizes{};
         for (auto const& [key, val] : boundary_cells_){
@@ -156,14 +162,14 @@ public:
     }
 
     template <class OtherSpace>
-    void deep_copy(GridBlock<T, OtherSpace, Layout>& other) {
+    void deep_copy(const GridBlock<T, OtherSpace, Layout>& other) {
         vertices_.deep_copy(other.vertices_);
         interfaces_.deep_copy(other.interfaces_);
         cells_.deep_copy(other.cells_);
         for (unsigned int i = 0; i < boundary_tags_.size(); i++) {
             std::string tag = boundary_tags_[i];
-            boundary_cells_[tag].deep_copy(other.boundary_cells_[tag]);
-            boundary_faces_[tag].deep_copy(other.boundary_faces_[tag]);
+            boundary_cells_.at(tag).deep_copy(other.boundary_cells_.at(tag));
+            boundary_faces_.at(tag).deep_copy(other.boundary_faces_.at(tag));
         }
     }
 

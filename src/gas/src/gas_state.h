@@ -37,7 +37,7 @@ public:
         pressure_idx_ = 1;
         temp_idx_ = 2;
         energy_idx_ = 3;
-        data_ = Kokkos::View<T**> ("GasStates", n, 4);
+        data_ = view_type ("GasStates", n, 4);
     }
 
     KOKKOS_INLINE_FUNCTION 
@@ -72,12 +72,12 @@ public:
         energy(i) = gs.energy;
     }
 
-    mirror_type host_mirror(){
+    mirror_type host_mirror() const {
         return mirror_type(size());
     }
 
     template <class OtherSpace>
-    void deep_copy(const GasStates<T, Layout, OtherSpace>& other){
+    void deep_copy(const GasStates<T, Layout, OtherSpace>& other) {
         Kokkos::deep_copy(data_, other.data_);
     }
 

@@ -53,7 +53,7 @@ public:
         outsigns_ = view_type("CellFaces::outsigns", number_face_ids);
     }
 
-    mirror_type host_mirror() {
+    mirror_type host_mirror() const {
         return mirror_type (offsets_.size(), face_ids_.size());
     }
 
@@ -160,7 +160,7 @@ public:
         centroid_ = Vector3s<T, array_layout, memory_space>("Cells::centroids", num_cells);
     }
 
-    mirror_type host_mirror () {
+    mirror_type host_mirror () const {
         int num_vertex_ids = vertex_ids_.num_ids();
         int num_face_ids = faces_.num_face_ids();
         int num_cells = num_cells_;
@@ -290,12 +290,10 @@ public:
     }
 
     KOKKOS_INLINE_FUNCTION
-    CellFaces<T, array_layout, memory_space> 
-    faces() const {return faces_;}
+    CellFaces<T, array_layout, memory_space> faces() const {return faces_;}
 
     KOKKOS_INLINE_FUNCTION
-    const Field<ElemType, array_layout, memory_space>& 
-    shapes() const {return shape_;}
+    const Field<ElemType, array_layout, memory_space>& shapes() const {return shape_;}
 
 public:
     CellFaces<T, array_layout, memory_space> faces_;
