@@ -109,29 +109,62 @@ public:
           boundary_tags_(boundary_tags)
     {}
 
-    GridBlock(int num_vertices, int num_faces, int num_cells,
-              int num_vertex_ids, int num_face_ids) {
+    GridBlock(int num_vertices, int num_faces, int num_valid_cells, int num_ghost_cells, int dim,
+              int num_cell_vertex_ids, int num_face_vertex_ids, int num_face_ids, 
+              std::map<std::string, int> boundary_cell_sizes,
+              std::map<std::string, int> boundary_face_sizes) 
+    {
+        num_valid_cells_ = num_valid_cells;
+        num_ghost_cells_ = num_ghost_cells;
+        dim_ = dim;
+        int num_total_cells = num_valid_cells + num_ghost_cells;
         vertices_ = Vertices<T, execution_space, array_layout>(num_vertices);
-        interfaces_ = Interfaces<T, execution_space, array_layout>(num_faces, num_vertex_ids);
-        cells_ = Cells<T, execution_space, array_layout>(num_cells, num_vertex_ids, num_face_ids);
+        interfaces_ = Interfaces<T, execution_space, array_layout>(num_faces, num_face_vertex_ids);
+        cells_ = Cells<T, execution_space, array_layout>(num_total_cells, num_cell_vertex_ids, num_face_ids);
+        boundary_cells_ = std::map<std::string, Field<int, array_layout, memory_space>>{};
+        boundary_faces_ = std::map<std::string, Field<int, array_layout, memory_space>> {};
+        for (auto const& [key, val] : boundary_cell_sizes) {
+            boundary_cells_.insert(
+                {key, Field<int, array_layout, memory_space>("bc_cells", val)}
+            ); 
+        }
+        for (auto const& [key, val] : boundary_face_sizes) {
+            boundary_faces_.insert(
+                {key, Field<int, array_layout, memory_space>("bc_faces", val)}
+            ); 
+        }
     }
 
     mirror_type host_mirror() {
-        return mirror_type(vertices_.host_mirror(), 
-                           interfaces_.host_mirror(),
-                           cells_.host_mirror(),
-                           dim_, num_valid_cells_, num_ghost_cells_,
-                           boundary_cells_,
-                           boundary_faces_,
-                           boundary_tags_
-                           );
+        std::map<std::string, int> boundary_cell_sizes{};
+        std::map<std::string, int> boundary_face_sizes{};
+        for (auto const& [key, val] : boundary_cells_){
+            boundary_cell_sizes.insert({key, val.size()});
+        }
+        for (auto const& [key, val] : boundary_faces_){
+            boundary_face_sizes.insert({key, val.size()});
+        }
+        return mirror_type(num_vertices(), 
+                           num_interfaces(), 
+                           num_cells(), 
+                           num_ghost_cells(),
+                           dim(),
+                           cells_.vertex_ids().num_ids(),
+                           interfaces_.vertex_ids().num_ids(),
+                           cells_.faces().num_face_ids(),
+                           boundary_cell_sizes, boundary_face_sizes);
     }
 
     template <class OtherSpace>
-    void deep_copy(const GridBlock<T, OtherSpace, Layout>& other) {
+    void deep_copy(GridBlock<T, OtherSpace, Layout>& other) {
         vertices_.deep_copy(other.vertices_);
         interfaces_.deep_copy(other.interfaces_);
-        cells_.deep_copy(other.interfaces_);
+        cells_.deep_copy(other.cells_);
+        for (unsigned int i = 0; i < boundary_tags_.size(); i++) {
+            std::string tag = boundary_tags_[i];
+            boundary_cells_[tag].deep_copy(other.boundary_cells_[tag]);
+            boundary_faces_[tag].deep_copy(other.boundary_faces_[tag]);
+        }
     }
 
 
@@ -227,16 +260,19 @@ public:
         // TODO: loop through the ghost cells and attach them to
         // the other side of the interface.
         // Think about how to do this on the GPU
+        auto interfaces_host = interfaces_.host_mirror();
+        interfaces_host.deep_copy(interfaces_);
         for (auto boundary : ghost_cells){
             int face_id = boundary.first;
             int ghost_cell_id = boundary.second;
-            if (interfaces_.left_cell(face_id) < 0) {
-                interfaces_.attach_cell_left(ghost_cell_id, face_id);
+            if (interfaces_host.left_cell(face_id) < 0) {
+                interfaces_host.attach_cell_left(ghost_cell_id, face_id);
             } 
             else {
-                interfaces_.attach_cell_right(ghost_cell_id, face_id);
+                interfaces_host.attach_cell_right(ghost_cell_id, face_id);
             }
         }
+        interfaces_.deep_copy(interfaces_host);
     }
 
 public:

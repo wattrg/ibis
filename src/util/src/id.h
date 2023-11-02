@@ -44,14 +44,14 @@ public:
     Id() {}
 
     Id(view_type ids, view_type offsets){
-        _ids = view_type ("Id::id", static_cast<int>(ids.size()));
+        _ids = view_type ("Id::id_from_views", static_cast<int>(ids.size()));
         _offsets = view_type ("Id::offset", static_cast<int>(offsets.size()));
         Kokkos::deep_copy(_ids, ids);
         Kokkos::deep_copy(_offsets, offsets);
     }
 
     Id(std::vector<int> ids, std::vector<int> offsets){
-        _ids = view_type ("Id::id", static_cast<int>(ids.size()));
+        _ids = view_type ("Id::id_from_vec", static_cast<int>(ids.size()));
         _offsets = view_type ("Id::offset", static_cast<int>(offsets.size()));
 
         // make of copy of the view's on the host so we can copy
@@ -74,7 +74,7 @@ public:
     }
 
     Id(int n_ids, int n_values) {
-        _ids = view_type("Id::id", n_ids);
+        _ids = view_type("Id::id_without_init", n_ids);
         _offsets = view_type("Id::offset", n_values+1);
     }
 
@@ -128,13 +128,15 @@ public:
     }
 
     mirror_type host_mirror() {
-        Kokkos::View<int*, mirror_layout, mirror_space> ids(_ids.extent(0));
-        Kokkos::View<int*, mirror_layout, mirror_space> offsets(_offsets.extent(0));
+        mirror_view_type ids(_ids.extent(0));
+        mirror_view_type offsets(_offsets.extent(0));
         return mirror_type(ids, offsets);
     }
 
     template <class OtherSpace>
-    void deep_copy(const Id<array_layout, OtherSpace>& other){
+    void deep_copy(const Id<Layout, OtherSpace>& other){
+        // std::cout << size() << " " << num_ids() << std::endl;
+        // std::cout << other.size() << " " << other.num_ids() << std::endl << std::endl;
         Kokkos::deep_copy(_ids, other._ids);
         Kokkos::deep_copy(_offsets, other._offsets);
     }

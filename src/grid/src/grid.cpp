@@ -165,7 +165,9 @@ json build_config() {
 TEST_CASE("grid vertices") {
     GridInfo expected = build_test_grid();
     json config = build_config();
-    GridBlock<double>::mirror_type block("../src/grid/test/grid.su2", config);
+    GridBlock<double> block_dev("../src/grid/test/grid.su2", config);
+    auto block = block_dev.host_mirror();
+    block.deep_copy(block_dev);
     auto expected_vertices = expected.vertices;
     CHECK(block.vertices() == expected_vertices);
 }
@@ -173,14 +175,18 @@ TEST_CASE("grid vertices") {
 TEST_CASE("grid interfaces") {
     GridInfo expected = build_test_grid();
     json config = build_config();
-    GridBlock<double>::mirror_type block("../src/grid/test/grid.su2", config);
+    GridBlock<double> block_dev("../src/grid/test/grid.su2", config);
+    auto block = block_dev.host_mirror();
+    block.deep_copy(block_dev);
     CHECK(block.interfaces() == expected.faces);
 }
 
 TEST_CASE("grid cell faces") {
     GridInfo expected = build_test_grid();
     json config = build_config();
-    GridBlock<double>::mirror_type block("../src/grid/test/grid.su2", config);
+    GridBlock<double> block_dev("../src/grid/test/grid.su2", config);
+    auto block = block_dev.host_mirror();
+    block.deep_copy(block_dev);
     CHECK(block.cells().size() == expected.cells.size());
     for (int i = 0; i < block.cells().size(); i++) {
         for (unsigned int j = 0; j < block.cells().faces().face_ids(i).size(); j++){
@@ -191,7 +197,9 @@ TEST_CASE("grid cell faces") {
 
 TEST_CASE("grid cell faces 2") {
     json config = build_config();
-    GridBlock<double>::mirror_type block("../src/grid/test/grid.su2", config);
+    GridBlock<double> block_dev("../src/grid/test/grid.su2", config);
+    auto block = block_dev.host_mirror();
+    block.deep_copy(block_dev);
     std::vector<std::vector<int>> face_ids = {
         {0, 1, 2, 3},
         {4, 5, 6, 1},
@@ -215,7 +223,9 @@ TEST_CASE("grid cell faces 2") {
 TEST_CASE("grid cell outsigns") {
     GridInfo expected = build_test_grid();
     json config = build_config();
-    GridBlock<double>::mirror_type block("../src/grid/test/grid.su2", config);
+    GridBlock<double> block_dev("../src/grid/test/grid.su2", config);
+    auto block = block_dev.host_mirror();
+    block.deep_copy(block_dev);
     CHECK(block.cells().size() == expected.cells.size());
     std::vector<std::vector<int>> outsigns = {
          {1, 1, 1, 1}, 
@@ -234,9 +244,3 @@ TEST_CASE("grid cell outsigns") {
         }
     }
 }
-
-TEST_CASE("build grid on device"){
-    json config = build_config();
-    GridBlock<double> block("../src/grid/test/grid.su2", config);
-}
-

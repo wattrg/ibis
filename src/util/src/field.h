@@ -27,9 +27,11 @@ public:
 
     Field(std::string description, std::vector<T> values) {
         view_ = view_type (description, values.size());
+        auto view_host = Kokkos::create_mirror_view(view_);
         for (unsigned int i = 0; i < values.size(); i++){
-            view_(i) = values[i];
+            view_host(i) = values[i];
         }
+        Kokkos::deep_copy(view_, view_host);
     }
 
     KOKKOS_FORCEINLINE_FUNCTION
@@ -51,7 +53,7 @@ public:
     }
 
     mirror_type host_mirror() {
-        return mirror_type("host_mirrir", view_.extent(0));
+        return mirror_type("host_mirror", view_.extent(0));
     }
 
     template <class OtherSpace>

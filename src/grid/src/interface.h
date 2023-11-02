@@ -19,9 +19,10 @@ struct Interfaces {
 public:
     using execution_space = ExecSpace;
     using memory_space = typename execution_space::memory_space;
-    using array_layout = typename execution_space::array_layout;
-    using host_space = Kokkos::DefaultHostExecutionSpace::memory_space;
-    using mirror_type = Interfaces<T, Kokkos::DefaultHostExecutionSpace>;
+    using array_layout = Layout;
+    using host_execution_space = Kokkos::DefaultHostExecutionSpace;
+    using host_mirror_mem_space = Kokkos::DefaultHostExecutionSpace::memory_space;
+    using mirror_type = Interfaces<T, Kokkos::DefaultHostExecutionSpace, array_layout>;
 
 public:
     Interfaces () {}
@@ -65,12 +66,12 @@ public:
     }
 
     mirror_type host_mirror() {
-        return Interfaces(size_, vertex_ids_.num_ids());
+        return mirror_type(size_, vertex_ids_.num_ids());
     }
 
     template <class OtherSpace>
-    void deep_copy(const Interfaces<T, OtherSpace>& other) {
-        vertex_ids_.deep_copy(other);
+    void deep_copy(const Interfaces<T, OtherSpace, array_layout>& other) {
+        vertex_ids_.deep_copy(other.vertex_ids_);
         shape_.deep_copy(other.shape_);
         norm_.deep_copy(other.norm_);
         tan1_.deep_copy(other.tan1_);
