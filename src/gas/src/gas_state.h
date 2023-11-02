@@ -1,6 +1,7 @@
 #ifndef GAS_H
 #define GAS_H
 
+#include "Kokkos_Core_fwd.hpp"
 #include "Kokkos_Macros.hpp"
 #include <Kokkos_Core.hpp>
 
@@ -15,8 +16,19 @@ public:
     T energy;
 };
 
-template <typename T>
+template <typename T,
+          class Layout=Kokkos::DefaultExecutionSpace::array_layout,
+          class Space=Kokkos::DefaultExecutionSpace::memory_space>
 class GasStates {
+public:
+    using view_type = Kokkos::View<T**, Layout, Space>;
+    using array_layout = Layout;
+    using memory_space = Space;
+    using mirror_view_type = typename view_type::host_mirror_type;
+    using mirror_layout = typename mirror_view_type::array_layout;
+    using mirror_space = typename mirror_view_type::memory_space;
+    using mirror_type = GasStates<T, mirror_layout, mirror_space>;
+
 public:
     GasStates(){}
 
@@ -60,16 +72,20 @@ public:
         energy(i) = gs.energy;
     }
 
-    // template <class OtherMemSpace>
-    // void sync(const GasStates<T>& other) {
-    //     Kokkos::deep_copy(data_, other.data_);
-    // }
+    mirror_type host_mirror(){
+        return mirror_type(size());
+    }
+
+    template <class OtherSpace>
+    void deep_copy(const GasStates<T, Layout, OtherSpace>& other){
+        Kokkos::deep_copy(data_, other.data_);
+    }
 
     KOKKOS_INLINE_FUNCTION
     int size() const {return data_.extent(0);}
 
-private:
-    Kokkos::View<T**> data_;
+public:
+    view_type data_;
     int rho_idx_, pressure_idx_, temp_idx_, energy_idx_;
 };
 
