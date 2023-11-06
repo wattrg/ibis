@@ -7,7 +7,26 @@ on:
     branches: [ "main" ]
 
 jobs:
-  build:
+  build_cuda:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        submodules: recursive
+
+    - uses: Jimver/cuda-toolkit@v0.2.11
+      id: cuda-toolkit
+      with:
+        cuda: '12.2.0'
+
+    - name: configure
+      run: >
+        cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=Release
+
+    - name: build
+      run: cmake --build ${{github.workspace}}/build --config Release
+
+  build_serial:
     runs-on: ${{ matrix.os }}
 
     strategy:
