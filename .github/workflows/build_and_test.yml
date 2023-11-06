@@ -22,7 +22,7 @@ jobs:
         method: 'network'
 
     - name: configure
-      run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=Release -DKokkos_ENABLE_CUDA=ON
+      run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=Release -DKokkos_ENABLE_CUDA=ON -DKokkos_ARCH_AMPERE80=ON
 
     - name: build
       run: cmake --build ${{github.workspace}}/build --config Release
