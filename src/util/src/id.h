@@ -1,6 +1,7 @@
 #ifndef ID_H
 #define ID_H
 
+#include "Kokkos_Core_fwd.hpp"
 #include <vector>
 #include <Kokkos_Core.hpp>
 
@@ -27,20 +28,64 @@ private:
 };
 
 
+template <class Layout=Kokkos::DefaultExecutionSpace::array_layout,
+          class Space=Kokkos::DefaultExecutionSpace::memory_space>
 struct Id {
+public:
+    using view_type = Kokkos::View<int*, Layout, Space>;
+    using array_layout = typename view_type::array_layout;
+    using memory_space = typename view_type::memory_space;
+    using mirror_view_type = typename view_type::host_mirror_type;
+    using mirror_layout = typename mirror_view_type::array_layout;
+    using mirror_space = typename mirror_view_type::memory_space;
+    using mirror_type = Id<mirror_layout, mirror_space>;
+
 public:
     Id() {}
 
-    Id(Kokkos::View<int*> ids, Kokkos::View<int*> offsets);
+    Id(view_type ids, view_type offsets){
+        _ids = view_type ("Id::id_from_views", static_cast<int>(ids.size()));
+        _offsets = view_type ("Id::offset", static_cast<int>(offsets.size()));
+        Kokkos::deep_copy(_ids, ids);
+        Kokkos::deep_copy(_offsets, offsets);
+    }
 
-    Id(std::vector<int> ids, std::vector<int> offsets);
+    Id(std::vector<int> ids, std::vector<int> offsets){
+        _ids = view_type ("Id::id_from_vec", static_cast<int>(ids.size()));
+        _offsets = view_type ("Id::offset", static_cast<int>(offsets.size()));
+
+        // make of copy of the view's on the host so we can copy
+        // from std::vector
+        mirror_view_type ids_mirror ("Id::id::mirror", 
+                                     static_cast<int>(ids.size()));
+        mirror_view_type offsets_mirror ("Id::offset::mirror", 
+                                         static_cast<int>(offsets.size()));
+        for (unsigned int i = 0; i < ids.size(); i++) {
+            ids_mirror(i) = ids[i];
+        }
+
+        for (unsigned int i = 0; i < offsets.size(); i++) {
+            offsets_mirror(i) = offsets[i];
+        }
+
+        // now copy the data onto the device
+        Kokkos::deep_copy(_ids, ids_mirror);
+        Kokkos::deep_copy(_offsets, offsets_mirror);
+    }
+
+    Id(int n_ids, int n_values) {
+        _ids = view_type("Id::id_without_init", n_ids);
+        _offsets = view_type("Id::offset", n_values+1);
+    }
+
 
     Id(IdConstructor constructor) 
-        : Id(constructor.ids(), constructor.offsets()) {}
+        : Id<Layout, Space>(constructor.ids(), constructor.offsets()) 
+    {}
 
-    Id clone();
-
-    Id clone_offsets();
+    Id<Layout, Space> clone(){
+        return Id<Layout, Space>(_ids, _offsets);
+    }
 
     KOKKOS_INLINE_FUNCTION
     auto operator [] (const int i) const {
@@ -48,7 +93,7 @@ public:
         // to the object at index i
         int first = _offsets(i);
         int last = _offsets(i+1);
-        return Kokkos::subview(_ids, std::make_pair(first, last));
+        return Kokkos::subview(_ids, Kokkos::make_pair(first, last));
     }
 
     KOKKOS_INLINE_FUNCTION
@@ -57,7 +102,7 @@ public:
         // to the object at index i
         int first = _offsets(i);
         int last = _offsets(i+1);
-        return Kokkos::subview(_ids, std::make_pair(first, last));
+        return Kokkos::subview(_ids, Kokkos::make_pair(first, last));
     }
 
     KOKKOS_INLINE_FUNCTION
@@ -73,12 +118,25 @@ public:
         return true;
     }
 
-    Kokkos::View<int*> ids() const {return _ids;}
-    Kokkos::View<int*> offsets() const {return _offsets;}
+    mirror_type host_mirror() const {
+        mirror_view_type ids(_ids.extent(0));
+        mirror_view_type offsets(_offsets.extent(0));
+        return mirror_type(ids, offsets);
+    }
 
-private:
-    Kokkos::View<int*> _ids;
-    Kokkos::View<int*> _offsets;
+    template <class OtherSpace>
+    void deep_copy(const Id<Layout, OtherSpace>& other) {
+        Kokkos::deep_copy(_ids, other._ids);
+        Kokkos::deep_copy(_offsets, other._offsets);
+    }
+
+    view_type ids() const {return _ids;}
+    int num_ids() const {return _ids.extent(0);}
+    view_type offsets() const {return _offsets;}
+
+public:
+    view_type _ids;
+    view_type _offsets;
 };
 
 

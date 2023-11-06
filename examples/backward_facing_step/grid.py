@@ -29,9 +29,9 @@ gmsh.model.geo.addCurveLoop([1,2,3,4,5,6])
 gmsh.model.geo.addPlaneSurface([1])
 
 # boundaries
-gmsh.model.addPhysicalGroup(1, [1,2,3,5], name="wall")
-gmsh.model.addPhysicalGroup(1, [6], name="inflow")
-gmsh.model.addPhysicalGroup(1, [4], name="outflow")
+gmsh.model.geo.addPhysicalGroup(1, [1,2,3,5], name="wall")
+gmsh.model.geo.addPhysicalGroup(1, [6], name="inflow")
+gmsh.model.geo.addPhysicalGroup(1, [4], name="outflow")
 
 # mesh size
 gmsh.model.geo.mesh.setSize([(0, 1), (0,2), (0,3), (0,4), (0,5), (0,6)], 0.009)

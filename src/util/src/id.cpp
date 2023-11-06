@@ -1,47 +1,9 @@
 #include <doctest/doctest.h>
 #include "id.h"
 
-Id::Id(Kokkos::View<int*> ids, Kokkos::View<int*> offsets) {
-    _ids = Kokkos::View<int*> ("id", static_cast<int>(ids.size()));
-    _offsets = Kokkos::View<int*> ("offset", static_cast<int>(offsets.size()));
-    for (unsigned int i = 0; i < ids.size(); i++) {
-        _ids(i) = ids[i];
-    }
-
-    for (unsigned int i = 0; i < offsets.size(); i++) {
-        _offsets(i) = offsets[i];
-    }
-}
-
-Id::Id(std::vector<int> ids, std::vector<int> offsets) {
-    _ids = Kokkos::View<int*> ("id", static_cast<int>(ids.size()));
-    _offsets = Kokkos::View<int*> ("offset", static_cast<int>(offsets.size()));
-
-    for (unsigned int i = 0; i < ids.size(); i++) {
-        _ids(i) = ids[i];
-    }
-
-    for (unsigned int i = 0; i < offsets.size(); i++) {
-        _offsets(i) = offsets[i];
-    }
-}
-
-Id Id::clone() {
-    return Id(_ids, _offsets);
-}
-
-Id Id::clone_offsets() {
-    Kokkos::View<int*> ids = Kokkos::View<int*>("id", static_cast<int>(_ids.size()));
-    Kokkos::View<int*> offsets = Kokkos::View<int*> ("offset", static_cast<int>(_offsets.size())); 
-    for (unsigned int i = 0; i < offsets.size(); i++){
-        offsets(i) = _offsets(i);
-    }
-    return Id(ids, offsets);
-}
-
 
 TEST_CASE("id") {
-    Id ids = Id(std::vector<int> {1,2,3,4,5,6}, std::vector<int> {0, 3});
+    Id<>::mirror_type ids(std::vector<int> {1,2,3,4,5,6}, std::vector<int> {0, 3});
     auto sub_id = ids[0];
     CHECK(sub_id(0) == 1);
     CHECK(sub_id(1) == 2);
@@ -59,7 +21,8 @@ TEST_CASE("id constructioin") {
     idc.push_back(std::vector<int> {3, 2, 5});
     idc.push_back(std::vector<int> {1, 3});
     idc.push_back(std::vector<int> {2, 8, 9});
-    Id id (idc);
+
+    Id<>::mirror_type id (idc);
 
     auto sub_id = id[0];
     CHECK(sub_id(0) == 3);
@@ -74,4 +37,34 @@ TEST_CASE("id constructioin") {
     CHECK(sub_id(0) == 2);
     CHECK(sub_id(1) == 8);
     CHECK(sub_id(2) == 9);
+
+    CHECK(id.size() == 3);
+    CHECK(id.num_ids() == 8);
+}
+
+TEST_CASE("id construction from views") {
+    IdConstructor idc;
+    idc.push_back(std::vector<int> {3, 2, 5});
+    idc.push_back(std::vector<int> {1, 3});
+    idc.push_back(std::vector<int> {2, 8, 9});
+
+    Id<>::mirror_type id (idc);
+    Id<>::mirror_type id_copy(id.ids(), id.offsets());
+
+    auto sub_id = id_copy[0];
+    CHECK(sub_id(0) == 3);
+    CHECK(sub_id(1) == 2);
+    CHECK(sub_id(2) == 5);
+    
+    sub_id = id_copy[1];
+    CHECK(sub_id(0) == 1);
+    CHECK(sub_id(1) == 3);
+
+    sub_id = id_copy[2];
+    CHECK(sub_id(0) == 2);
+    CHECK(sub_id(1) == 8);
+    CHECK(sub_id(2) == 9);
+
+    CHECK(id_copy.size() == 3);
+    CHECK(id_copy.num_ids() == 8);
 }

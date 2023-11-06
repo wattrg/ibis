@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.22.1)
+cmake_minimum_required(VERSION 3.20.1)
 
 project(ibis VERSION 0.1.0)
 
@@ -8,7 +8,7 @@ check_git_setup()
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_INSTALL_PREFIX "../inst")
-set (CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 17)
 
 add_subdirectory(src/gas)
 add_subdirectory(src/util)

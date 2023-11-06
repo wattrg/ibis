@@ -23,25 +23,28 @@ FlowStateCopy<T>::FlowStateCopy(json flow_state) {
 template <typename T>
 void FlowStateCopy<T>::apply(FlowStates<T>& fs, const GridBlock<T>& grid, const Field<int>& boundary_faces) {
     unsigned int size = boundary_faces.size();
+    auto this_fs = fs_;
+    auto interfaces = grid.interfaces();
+    int num_valid_cells = grid.num_cells();
     Kokkos::parallel_for("FlowStateCopy::apply", size, KOKKOS_LAMBDA(const int i){
         int face_id = boundary_faces(i);
-        int left_cell = grid.interfaces().left_cell(face_id);
-        int right_cell = grid.interfaces().right_cell(face_id);
+        int left_cell = interfaces.left_cell(face_id);
+        int right_cell = interfaces.right_cell(face_id);
         int ghost_cell;
-        if (grid.is_valid(left_cell)) {
+        if (left_cell < num_valid_cells) {
             ghost_cell = right_cell;
         }
         else {
             ghost_cell = left_cell;
         }
-        fs.gas.temp(ghost_cell) = fs_.gas_state.temp;
-        fs.gas.pressure(ghost_cell) = fs_.gas_state.pressure;
-        fs.gas.rho(ghost_cell) = fs_.gas_state.rho;
-        fs.gas.energy(ghost_cell) = fs_.gas_state.energy;
+        fs.gas.temp(ghost_cell) = this_fs.gas_state.temp;
+        fs.gas.pressure(ghost_cell) = this_fs.gas_state.pressure;
+        fs.gas.rho(ghost_cell) = this_fs.gas_state.rho;
+        fs.gas.energy(ghost_cell) = this_fs.gas_state.energy;
 
-        fs.vel.x(ghost_cell) = fs_.velocity.x;
-        fs.vel.y(ghost_cell) = fs_.velocity.y;
-        fs.vel.z(ghost_cell) = fs_.velocity.z;
+        fs.vel.x(ghost_cell) = this_fs.velocity.x;
+        fs.vel.y(ghost_cell) = this_fs.velocity.y;
+        fs.vel.z(ghost_cell) = this_fs.velocity.z;
     }); 
 }
 template class FlowStateCopy<double>;
@@ -49,15 +52,17 @@ template class FlowStateCopy<double>;
 template <typename T>
 void InternalCopy<T>::apply(FlowStates<T>& fs, const GridBlock<T>& grid, const Field<int>& boundary_faces) {
     unsigned int size = boundary_faces.size();
+    auto interfaces = grid.interfaces();
+    int num_valid_cells = grid.num_cells();
     Kokkos::parallel_for("InternalCopy::apply", size, KOKKOS_LAMBDA(const int i){
         int face_id = boundary_faces(i);
 
         // determine the valid and the ghost cell
-        int left_cell = grid.interfaces().left_cell(face_id);
-        int right_cell = grid.interfaces().right_cell(face_id);
+        int left_cell = interfaces.left_cell(face_id);
+        int right_cell = interfaces.right_cell(face_id);
         int ghost_cell;
         int valid_cell;
-        if (grid.is_valid(left_cell)){
+        if (left_cell < num_valid_cells){
             ghost_cell = right_cell;
             valid_cell = left_cell;
         }
@@ -82,15 +87,17 @@ template class InternalCopy<double>;
 template <typename T>
 void InternalCopyReflectNormal<T>::apply(FlowStates<T>& fs, const GridBlock<T>& grid, const Field<int>& boundary_faces) {
     unsigned int size = boundary_faces.size();
+    auto interfaces = grid.interfaces();
+    int num_valid_cells = grid.num_cells();
     Kokkos::parallel_for("ReflectNormal::apply", size, KOKKOS_LAMBDA(const int i) {
         int face_id = boundary_faces(i);
 
         // determine the valid and the ghost cell
-        int left_cell = grid.interfaces().left_cell(face_id);
-        int right_cell = grid.interfaces().right_cell(face_id);
+        int left_cell = interfaces.left_cell(face_id);
+        int right_cell = interfaces.right_cell(face_id);
         int ghost_cell;
         int valid_cell;
-        if (grid.is_valid(left_cell)){
+        if (left_cell < num_valid_cells){
             ghost_cell = right_cell;
             valid_cell = left_cell;
         }

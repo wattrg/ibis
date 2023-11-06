@@ -11,7 +11,7 @@ ConservedQuantities<T>::ConservedQuantities(unsigned int n, unsigned int dim)
 
 template <typename T>
 void ConservedQuantities<T>::apply_time_derivative(const ConservedQuantities<T>& dudt, double dt) {
-    Kokkos::parallel_for("CQ::update_cq", num_values_, KOKKOS_LAMBDA(const int i){
+    Kokkos::parallel_for("CQ::update_cq", num_values_, KOKKOS_CLASS_LAMBDA(const int i){
         mass(i) += dudt.mass(i) * dt;
         momentum_x(i) += dudt.momentum_x(i) * dt;
         momentum_y(i) += dudt.momentum_y(i) * dt;

@@ -1,5 +1,9 @@
 #include "vtk.h"
+#include "Kokkos_Core_fwd.hpp"
 #include "accessor.h"
+
+using array_layout = Kokkos::DefaultExecutionSpace::array_layout;
+using host_mem_space = Kokkos::DefaultHostExecutionSpace::memory_space;
 
 int vtk_type_from_elem_type(ElemType type) {
     switch (type) {
@@ -14,7 +18,7 @@ int vtk_type_from_elem_type(ElemType type) {
 
 template <typename T>
 void write_scalar_field(std::ofstream& f, 
-                        const FlowStates<T> fs, 
+                        const FlowStates<T, array_layout, host_mem_space> fs, 
                         std::shared_ptr<ScalarAccessor<T>> accessor, 
                         std::string name, 
                         std::string type, 
@@ -34,7 +38,7 @@ void write_scalar_field(std::ofstream& f,
 
 template <typename T>
 void write_vector_field(std::ofstream& f, 
-                        const Vector3s<T>& vec, 
+                        const Vector3s<T, array_layout, host_mem_space>& vec, 
                         std::string name, 
                         std::string type, 
                         int num_values) 
@@ -51,7 +55,10 @@ void write_vector_field(std::ofstream& f,
     f << "</DataArray>" << std::endl;
 }
 
-void write_int_view(std::ofstream& f, const Kokkos::View<int*>& view, std::string name, std::string type, bool skip_first=false) {
+void write_int_view(std::ofstream& f, 
+                    const Kokkos::View<int*, array_layout, host_mem_space>& view, 
+                    std::string name, std::string type, bool skip_first=false) 
+{
     f << "<DataArray type='" << type << "' " << "NumberOfComponents='1' " << "Name='" << name << "' format='ascii'>" << std::endl;
     for (unsigned int i = 0; i < view.extent(0); i++){
         if (!(skip_first && i == 0)){
@@ -61,7 +68,7 @@ void write_int_view(std::ofstream& f, const Kokkos::View<int*>& view, std::strin
     f << "</DataArray>" << std::endl;
 }
 
-void write_elem_type(std::ofstream& f, const Field<ElemType>& types){
+void write_elem_type(std::ofstream& f, const Field<ElemType, array_layout, host_mem_space>& types){
     f << "<DataArray type='Int64' NumberOfComponents='1' Name='types' format='ascii'>" 
         << std::endl;
     for (int i = 0; i < types.size(); i++) {
@@ -77,8 +84,8 @@ VtkOutput<T>::VtkOutput() {
 }
 
 template <typename T>
-int VtkOutput<T>::write(const FlowStates<T>& fs, 
-                        const GridBlock<T>& grid, 
+int VtkOutput<T>::write(const typename FlowStates<T>::mirror_type & fs, 
+                        const typename GridBlock<T>::mirror_type & grid, 
                         std::string plot_dir,
                         std::string time_dir, 
                         double time)

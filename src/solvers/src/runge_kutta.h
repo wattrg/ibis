@@ -1,11 +1,8 @@
 #ifndef RUNGE_KUTTA_H
 #define RUNGE_KUTTA_H
 
-// #include <finite_volume/src/conserved_quantities.h>
-// #include <gas/src/flow_state.h>
 #include "../../finite_volume/src/conserved_quantities.h"
 #include "../../gas/src/flow_state.h"
-// #include "finite_volume/src/finite_volume.h"
 #include "../../grid/src/grid.h"
 #include "solver.h"
 #include "../../io/src/io.h"
@@ -18,7 +15,6 @@ public:
     ~RungeKutta(){}
 
     int solve();
-
 
 private:
     // configuration
@@ -51,8 +47,8 @@ private:
     std::string stop_reason(unsigned int step);
     bool stop_now(unsigned int step);
     int max_step() const {return max_step_;}
+    int count_bad_cells() {return fv_.count_bad_cells(flow_, grid_.num_cells());}
 
-    int count_bad_cells();
 
 private:
     // memory

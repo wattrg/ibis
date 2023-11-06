@@ -17,7 +17,9 @@ class FVInput {
 public:
     virtual ~FVInput(){}
 
-    virtual int read(FlowStates<T>& fs, const GridBlock<T>& grid, std::string dir, json& meta_data)=0;
+    virtual int read(typename FlowStates<T>::mirror_type & fs, 
+                     const typename GridBlock<T>::mirror_type& grid, 
+                     std::string dir, json& meta_data)=0;
 };
 
 template <typename T>
@@ -25,7 +27,9 @@ class FVOutput {
 public:
     virtual ~FVOutput(){}
 
-    virtual int write(const FlowStates<T>& fs, const GridBlock<T>& grid, std::string plot_dir, std::string time_dir, double time) = 0;
+    virtual int write(const typename FlowStates<T>::mirror_type & fs, 
+                      const typename GridBlock<T>::mirror_type & grid, 
+                      std::string plot_dir, std::string time_dir, double time) = 0;
 
     virtual void write_coordinating_file(std::string plot_dir)=0;
 };
