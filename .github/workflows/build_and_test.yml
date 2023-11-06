@@ -18,6 +18,8 @@ jobs:
       id: cuda-toolkit
       with:
         cuda: '12.2.0'
+        sub-packages: '["nvcc"]'
+        method: 'network'
 
     - name: configure
       run: >
