@@ -30,9 +30,11 @@ int run(int argc, char* argv[]) {
     int result; 
 
     {
-        Solver * solver = make_solver(config, grid_dir, flow_dir);
+        // we need to make the solver (and thus allocate all the kokkos memory)
+        // inside a block, so that the solver (and thus all kokkos managed memory)
+        // is removed before Kokkos::finalise is called
+        std::unique_ptr<Solver> solver = make_solver(config, grid_dir, flow_dir);
         result = solver->solve();
-        delete solver;
     }
 
     Kokkos::finalize();
