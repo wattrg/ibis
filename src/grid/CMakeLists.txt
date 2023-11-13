@@ -18,22 +18,25 @@ target_link_libraries(
 	spdlog::spdlog
 )
 
-add_executable(
-	grid_unittest 
-	test/unittest.cpp 
-	src/grid_io.cpp 
-	src/grid.cpp 
-	src/interface.cpp
-	src/cell.cpp
-	src/vertex.cpp
-)
-target_compile_options(grid_unittest PRIVATE -Wall -Wextra -Wpedantic -g)
-target_link_libraries(
-	grid_unittest 
-	PRIVATE 
-	util 
-	doctest 
-	Kokkos::kokkos 
-	nlohmann_json::nlohmann_json
-	spdlog::spdlog
-)
+if (Ibis_BUILD_TESTS)
+    add_executable(
+        grid_unittest 
+        test/unittest.cpp 
+        src/grid_io.cpp 
+        src/grid.cpp 
+        src/interface.cpp
+        src/cell.cpp
+        src/vertex.cpp
+    )
+    target_link_libraries(
+        grid_unittest 
+        PRIVATE 
+        util 
+        doctest 
+        Kokkos::kokkos 
+        nlohmann_json::nlohmann_json
+        spdlog::spdlog
+    )
+    
+    add_test(NAME grid_unittest COMMAND grid_unittest)
+endif(Ibis_BUILD_TESTS)

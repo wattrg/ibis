@@ -1,0 +1,9 @@
+#include "runtime_dirs.h"
+
+namespace Ibis {
+
+std::string BIN_DIR = "@CMAKE_INSTALL_FULL_BINDIR@";
+std::string LIB_DIR = "@CMAKE_INSTALL_FULL_LIBDIR@";
+std::string RES_DIR = "@CMAKE_INSTALL_FULL_DATADIR@";
+
+}

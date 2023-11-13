@@ -2,15 +2,22 @@
 #include <Python.h>
 #include <spdlog/spdlog.h>
 #include "clean.h"
+#include "runtime_dirs.h"
 
 int clean(int argc, char* argv[]) {
-    std::string clean_path = std::string(std::getenv("IBIS")) + "/lib";
-
+    (void) argc;
+    (void) argv;
     Py_Initialize();
 
+    PyObject* res_dir = PyUnicode_FromString(Ibis::RES_DIR.c_str());
+    if (res_dir == NULL) {
+        spdlog::error("Failed to set library directory");
+        Py_Finalize();
+        return 1;
+    }
 
     PyRun_SimpleString("import sys");
-    std::string import_string = "sys.path.append('" + clean_path + "')";
+    std::string import_string = "sys.path.append('" + Ibis::LIB_DIR + "')";
     PyRun_SimpleString(import_string.c_str());
 
     PyObject* clean_module = PyImport_ImportModule("clean");
@@ -28,7 +35,10 @@ int clean(int argc, char* argv[]) {
         return 1;
     }
 
-    PyObject* main_result = PyObject_CallObject(py_clean_main, NULL);
+    PyObject* main_args = PyTuple_New(1);
+    PyTuple_SetItem(main_args, 0, res_dir);
+
+    PyObject* main_result = PyObject_CallObject(py_clean_main, main_args);
     if (main_result == NULL) {
         PyErr_Print();
     }
