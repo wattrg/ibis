@@ -10,6 +10,7 @@
 #include <spdlog/sinks/basic_file_sink.h>
 
 #include "ibis_version_info.h"
+#include "runtime_dirs.h"
 #include "commands/prep.h"
 #include "commands/clean.h"
 #include "commands/run.h"

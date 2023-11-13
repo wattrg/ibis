@@ -322,7 +322,7 @@ TEST_CASE("number_vertices_from_elem_type") {
 }
 
 TEST_CASE("get_next_line") {
-    std::ifstream file ("../src/grid/test/test_file.txt");
+    std::ifstream file ("../../../src/grid/test/test_file.txt");
     std::string line;
     bool result;
 
@@ -370,7 +370,7 @@ TEST_CASE("read_vetex") {
 
 TEST_CASE("read_su2_boundary_marker") {
     std::string line;
-    std::ifstream file ("../src/grid/test/boundary_test.txt");
+    std::ifstream file ("../../../src/grid/test/boundary_test.txt");
     get_next_line(file, line);
 
     std::pair<std::string, std::vector<ElemIO>> result {
@@ -453,6 +453,6 @@ TEST_CASE("read_su2_grid") {
     };
 
     GridIO grid_io_expected = GridIO(vertices, cells, bcs);
-    GridIO grid_io ("../src/grid/test/grid.su2");
+    GridIO grid_io ("../../../src/grid/test/grid.su2");
     CHECK(grid_io == grid_io_expected);
 }

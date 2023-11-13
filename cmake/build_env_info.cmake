@@ -76,7 +76,7 @@ FUNCTION(check_git_version)
     OUTPUT_STRIP_TRAILING_WHITESPACE)
 
   IF(IS_DIRTY EQUAL 0)
-    SET(GIT_CLEAN_STATUS "clean")
+    SET(GIT_CLEAN_STATUS "")
   else()
     SET(GIT_CLEAN_STATUS "dirty")
   ENDIF()

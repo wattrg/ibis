@@ -36,7 +36,8 @@ class ConvectiveFlux:
     _defaults_file = "convective_flux.json"
     
     def __init__(self, **kwargs):
-        json_data = read_defaults(self._defaults_file) 
+        json_data = read_defaults(DEFAULTS_DIRECTORY,
+                                  self._defaults_file) 
         for key in self._json_values:
             setattr(self, key, json_data[key])
 
@@ -204,7 +205,8 @@ class RungeKutta:
     __slots__ = _json_values
 
     def __init__(self, **kwargs):
-        json_data = read_defaults(self._defaults_file)
+        json_data = read_defaults(DEFAULTS_DIRECTORY, 
+                                  self._defaults_file)
         for key in json_data:
             setattr(self, key, json_data[key])
 
@@ -221,7 +223,8 @@ class RungeKutta:
         return
 
 def make_default_solver():
-    default_solver_name = read_defaults("config.json")["solver"] 
+    default_solver_name = read_defaults(DEFAULTS_DIRECTORY,
+                                        "config.json")["solver"] 
     default_solver = string_to_solver(default_solver_name)
     if default_solver == Solver.RungeKutta:
         return RungeKutta()
@@ -264,9 +267,12 @@ class Config:
         self.grid.write(grid_directory, flow_directory)
 
 
-def main(file_name):
+def main(file_name, res_dir):
     # make the config directory
-    directories = read_defaults("directories.json")
+    global DEFAULTS_DIRECTORY
+    DEFAULTS_DIRECTORY = f"{res_dir}/defaults"
+    directories = read_defaults(DEFAULTS_DIRECTORY,
+                                "directories.json")
     config_dir = directories["config_dir"]
     config_status = directories["config_status"]
     if not os.path.exists(config_dir):

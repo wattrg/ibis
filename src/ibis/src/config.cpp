@@ -1,10 +1,10 @@
 #include <fstream>
 #include <spdlog/spdlog.h>
 #include "config.h"
+#include "runtime_dirs.h"
 
 json read_directories() {
-    std::string ibis = std::getenv("IBIS");
-    std::ifstream f(ibis + "/resources/defaults/directories.json");
+    std::ifstream f(Ibis::RES_DIR + "/defaults/directories.json");
     json directories = json::parse(f);
     f.close();
     return directories;

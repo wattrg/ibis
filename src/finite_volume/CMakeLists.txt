@@ -19,23 +19,25 @@ target_link_libraries(
 	nlohmann_json::nlohmann_json
 	spdlog::spdlog
 )
-# target_link_libraries(grid PRIVATE doctest)
-# target_link_libraries(grid PRIVATE util)
-#
-add_executable(
-	finite_volume_unittest 
-	test/unittest.cpp 
-	src/flux_calc.cpp 
-	src/flux_calculators/hanel.cpp
-	src/flux_calculators/ausmdv.cpp
-)
-target_compile_options(finite_volume_unittest PRIVATE -Wall -Wextra -Wpedantic -Werror -g)
-target_link_libraries(
-	finite_volume_unittest 
-	PRIVATE 
-	util
-	doctest
-	Kokkos::kokkos
-	nlohmann_json::nlohmann_json
-	spdlog::spdlog
-)
+
+if (Ibis_BUILD_TESTS)
+    add_executable(
+    	finite_volume_unittest 
+    	test/unittest.cpp 
+    	src/flux_calc.cpp 
+    	src/flux_calculators/hanel.cpp
+    	src/flux_calculators/ausmdv.cpp
+    )
+    # target_compile_options(finite_volume_unittest -g)
+    target_link_libraries(
+    	finite_volume_unittest 
+    	PRIVATE 
+    	util
+    	doctest
+    	Kokkos::kokkos
+    	nlohmann_json::nlohmann_json
+    	spdlog::spdlog
+    )
+    
+    add_test(NAME finite_volume_unittest COMMAND finite_volume_unittest)
+endif(Ibis_BUILD_TESTS)

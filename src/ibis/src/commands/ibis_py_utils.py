@@ -3,8 +3,8 @@ import os
 
 IBIS = os.environ.get("IBIS")
 
-def read_defaults(file_name):
-    with open(f"{IBIS}/resources/defaults/{file_name}", "r") as defaults:
+def read_defaults(defaults_dir, file_name):
+    with open(f"{defaults_dir}/{file_name}", "r") as defaults:
         defaults = json.load(defaults)
     return defaults
 
