@@ -39,6 +39,7 @@ add_custom_command(
         COMMAND ${CMAKE_COMMAND} -E copy
         ${CMAKE_SOURCE_DIR}/src/ibis/src/commands/prep.py $<TARGET_FILE_DIR:prep>
         ${CMAKE_SOURCE_DIR}/src/ibis/src/commands/ibis_py_utils.py $<TARGET_FILE_DIR:prep>
+        ${CMAKE_SOURCE_DIR}/src/ibis/src/commands/units.py $<TARGET_FILE_DIR:prep>
 )
 
 add_custom_command(
@@ -47,9 +48,12 @@ add_custom_command(
         ${CMAKE_SOURCE_DIR}/src/ibis/src/commands/clean.py $<TARGET_FILE_DIR:ibis_clean>
 )
 
+
 install(FILES prep.py 
         DESTINATION ${CMAKE_INSTALL_LIBDIR})
 install(FILES ibis_py_utils.py 
         DESTINATION ${CMAKE_INSTALL_LIBDIR})
 install(FILES clean.py
+        DESTINATION ${CMAKE_INSTALL_LIBDIR})
+install(FILES units.py
         DESTINATION ${CMAKE_INSTALL_LIBDIR})

@@ -42,3 +42,4 @@ class FlowState:
             "p": self.p, "T": self.T, 
             "vx": self.vx, "vy": self.vy, "vz": self.vz
         }
+

@@ -4,6 +4,17 @@ import shutil
 from enum import Enum
 
 from ibis_py_utils import read_defaults, FlowState
+from units import (
+    UnitVal, 
+    ReferenceUnitSystem, 
+    second, 
+    metre, 
+    kilogram,
+    ampere,
+    kelvin,
+    mole,
+    candela
+)
 
 validation_errors = []
 
@@ -232,13 +243,19 @@ def make_default_solver():
         ValidationException(f"Unknown default solver {default_solver_name}")
     )
 
+def make_default_reference_units():
+    default_reference_units = read_defaults(DEFAULTS_DIRECTORY,
+                                            "reference_units.json")
+    return ReferenceUnitSystem(default_reference_units)
+
 class Config:
-    _json_values = ["convective_flux", "solver", "grid"]
+    _json_values = ["convective_flux", "solver", "reference_units", "grid"]
     __slots__ = _json_values
 
     def __init__(self):
         self.convective_flux = ConvectiveFlux()
         self.solver = make_default_solver()
+        self.reference_units = make_default_reference_units()
     
     def validate(self):
         for setting in self.__slots__:
@@ -294,7 +311,16 @@ def main(file_name, res_dir):
         "RungeKutta": RungeKutta,
         "supersonic_inflow": supersonic_inflow,
         "supersonic_outflow": supersonic_outflow,
-        "slip_wall": slip_wall
+        "slip_wall": slip_wall,
+        "UnitVal": UnitVal,
+        "ReferenceUnitSystem": ReferenceUnitSystem,
+        "second": second,
+        "metre": metre,
+        "kilogram": kilogram,
+        "ampere": ampere,
+        "kelvin": kelvin,
+        "mole": mole,
+        "candela": candela
     }
 
     # run the user supplied script

@@ -16,6 +16,12 @@ config.solver = RungeKutta(
     print_frequency = 500
 )
 
+length = UnitVal(0.8, metre)
+velocity = UnitVal(flow_state.vx, metre / second)
+pressure = UnitVal(101325, kilogram / metre / second**2)
+temp = UnitVal(300.0, kelvin)
+config.reference_units = ReferenceUnitSystem(length, velocity, pressure, temp)
+
 config.grid = Block(
     file_name="grid.su2", 
     initial_condition=flow_state,
