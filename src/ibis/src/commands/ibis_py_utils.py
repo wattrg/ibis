@@ -42,4 +42,12 @@ class FlowState:
             "p": self.p, "T": self.T, 
             "vx": self.vx, "vy": self.vy, "vz": self.vz
         }
-
+    
+    def non_dimensionalise(self, reference_units):
+        self.T /= reference_units.temp()
+        self.p /= reference_units.pressure()
+        self.rho /= reference_units.density()
+        self.vx /= reference_units.velocity()
+        self.vy /= reference_units.velocity()
+        self.vz /= reference_units.velocity()
+        return self

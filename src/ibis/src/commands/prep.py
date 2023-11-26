@@ -113,7 +113,12 @@ class Block:
                 ValidationException("No grid blocks specified")
             )
 
-    def write(self, grid_directory, flow_directory):
+    def non_dimensionalise(self, reference_units):
+        for key in self.boundaries:
+            self.boundaries[key].non_dimensionalise(reference_units)
+
+
+    def write(self, grid_directory, flow_directory, reference_units):
         if not os.path.exists(grid_directory):
             os.mkdir(grid_directory)
         if not os.path.exists(flow_directory):
@@ -136,14 +141,18 @@ class Block:
         meta_data = open(f"{ic_directory}/meta_data.json", "w")
         times = open(f"{flow_directory}/flows", "w")
 
+        temp_ref = reference_units.temp()
+        p_ref = reference_units.pressure()
+        v_ref = reference_units.velocity()
+
         if type(self._initial_condition) == FlowState:
             for _ in range(self.number_cells):
-                temp.write(f"{self._initial_condition.T:.16e}\n")
-                pressure.write(f"{self._initial_condition.p:.16e}\n")
-                vx.write(f"{self._initial_condition.vx:.16e}\n")
-                vy.write(f"{self._initial_condition.vy:.16e}\n")
+                temp.write(f"{self._initial_condition.T/temp_ref:.16e}\n")
+                pressure.write(f"{self._initial_condition.p / p_ref:.16e}\n")
+                vx.write(f"{self._initial_condition.vx / v_ref:.16e}\n")
+                vy.write(f"{self._initial_condition.vy / v_ref:.16e}\n")
                 if self.dim == 3:
-                    vz.write(f"{self._initial_condition.vz:.16e}\n")
+                    vz.write(f"{self._initial_condition.vz / v_ref:.16e}\n")
         json.dump({"time": 0.0}, meta_data, indent=4) 
         times.write("0000\n")
 
@@ -177,18 +186,32 @@ class BoundaryCondition:
         dictionary["ghost_cells"] = self.ghost_cells
         return dictionary
 
-class _FlowStateCopy:
+    def non_dimensionalise(self, reference_units):
+        for action in self._pre_reconstruction:
+            action.non_dimensionalise(reference_units)
+
+class BoundaryAction:
+    def non_dimensionalise(self, reference_units):
+        return
+
+class _FlowStateCopy(BoundaryAction):
     def __init__(self, flow_state):
         self.flow_state = flow_state
 
     def as_dict(self):
-        return {"type": "flow_state_copy", "flow_state": self.flow_state.as_dict()}
+        return {
+            "type": "flow_state_copy", 
+            "flow_state": self.flow_state.as_dict()
+        }
 
-class _InternalCopy:
+    def non_dimensionalise(self, reference_units):
+        self.flow_state.non_dimensionalise(reference_units)
+
+class _InternalCopy(BoundaryAction):
     def as_dict(self):
         return {"type": "internal_copy"}
 
-class _InternalCopyReflect:
+class _InternalCopyReflect(BoundaryAction):
     def as_dict(self):
         return {"type": "internal_copy_reflect"}
 
@@ -230,6 +253,10 @@ class RungeKutta:
             dictionary[key] = getattr(self, key)
         return dictionary
 
+    def non_dimensionalise(self, reference_units):
+        self.max_time /= reference_units.time()
+        self.plot_frequency /= reference_units.time()
+
     def validate(self):
         return
 
@@ -269,6 +296,10 @@ class Config:
         config_file = directories["config_file"]
         config_file = f"{config_directory}/{config_file}"
 
+        # non dimensionalise everything
+        self.grid.non_dimensionalise(self.reference_units)
+        self.solver.non_dimensionalise(self.reference_units)
+
         # extract all the values to go in the json config file
         json_values = {}
         for setting in self._json_values:
@@ -281,7 +312,7 @@ class Config:
         # write the grid files
         grid_directory = directories["grid_dir"]
         flow_directory = directories["flow_dir"]
-        self.grid.write(grid_directory, flow_directory)
+        self.grid.write(grid_directory, flow_directory, self.reference_units)
 
 
 def main(file_name, res_dir):

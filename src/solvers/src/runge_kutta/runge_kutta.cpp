@@ -1,11 +1,11 @@
 #include <spdlog/spdlog.h>
 #include "runge_kutta.h"
-#include "solver.h"
-#include "../../finite_volume/src/primative_conserved_conversion.h"
+#include "../solver.h"
+#include "../../../finite_volume/src/primative_conserved_conversion.h"
 
 
 RungeKutta::RungeKutta(json config, GridBlock<double> grid, std::string grid_dir, std::string flow_dir) 
-    : Solver(grid_dir, flow_dir)
+    : Solver(grid_dir, flow_dir, config.at("reference_units"))
 {
     // configuration
     json solver_config = config.at("solver");

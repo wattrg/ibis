@@ -142,6 +142,9 @@ class ReferenceUnitSystem:
     def density(self):
         return self.mass() / (self.length()**3)
 
+    def pressure(self):
+        return self.mass() / (self.length() * self.time()**2)
+
     def _count_units(self, reference_values):
         """
         Check the reference values provided are not over or 

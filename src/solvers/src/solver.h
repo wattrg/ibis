@@ -7,12 +7,13 @@
 #include <nlohmann/json.hpp>
 #include "../../finite_volume/src/finite_volume.h"
 #include "../../gas/src/flow_state.h"
+#include "units.h"
 
 using json = nlohmann::json;
 
 class Solver {
 public:
-    Solver(std::string grid_dir, std::string flow_dir);
+    Solver(std::string grid_dir, std::string flow_dir, Units units);
     int solve();
     virtual ~Solver() {}
 
@@ -35,6 +36,7 @@ protected:
     std::string grid_dir_;
     std::string flow_dir_;
 
+    Units units_;
 };
 
 std::unique_ptr<Solver> make_solver(json config, std::string grid_dir, std::string flow_dir);
