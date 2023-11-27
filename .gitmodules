@@ -10,3 +10,6 @@
 [submodule "extern/spdlog"]
 	path = extern/spdlog
 	url = git@github.com:gabime/spdlog.git
+[submodule "extern/--force"]
+	path = extern/--force
+	url = git@github.com:pybind/pybind11.git

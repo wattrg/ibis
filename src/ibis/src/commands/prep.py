@@ -127,12 +127,12 @@ class Block:
 
         if type(self._initial_condition) == FlowState:
             for _ in range(self.number_cells):
-                temp.write(f"{self._initial_condition.T:.16e}\n")
-                pressure.write(f"{self._initial_condition.p:.16e}\n")
-                vx.write(f"{self._initial_condition.vx:.16e}\n")
-                vy.write(f"{self._initial_condition.vy:.16e}\n")
+                temp.write(f"{self._initial_condition.gas.T:.16e}\n")
+                pressure.write(f"{self._initial_condition.gas.p:.16e}\n")
+                vx.write(f"{self._initial_condition.vel.x:.16e}\n")
+                vy.write(f"{self._initial_condition.vel.y:.16e}\n")
                 if self.dim == 3:
-                    vz.write(f"{self._initial_condition.vz:.16e}\n")
+                    vz.write(f"{self._initial_condition.vel.z:.16e}\n")
         json.dump({"time": 0.0}, meta_data, indent=4) 
         times.write("0000\n")
 

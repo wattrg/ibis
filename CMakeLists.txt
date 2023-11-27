@@ -29,8 +29,9 @@ add_subdirectory(extern/doctest EXCLUDE_FROM_ALL)
 add_subdirectory(extern/kokkos EXCLUDE_FROM_ALL)
 add_subdirectory(extern/json EXCLUDE_FROM_ALL)
 add_subdirectory(extern/spdlog EXCLUDE_FROM_ALL)
+add_subdirectory(extern/pybind11 EXCLUDE_FROM_ALL)
 
-
+# tests configuration
 option(Ibis_BUILD_TESTS "Build Ibis CI tests" ON)
 if (Ibis_BUILD_TESTS)
     enable_testing()
@@ -38,6 +39,7 @@ else()
     add_compile_options( -DDOCTEST_CONFIG_DISABLE )
 endif(Ibis_BUILD_TESTS)
 
+# be picky about warnings
 add_compile_options( -Wall -Wextra -Wpedantic )
 
 # add all the source code
@@ -48,6 +50,7 @@ add_subdirectory(src/finite_volume)
 add_subdirectory(src/ibis/)
 add_subdirectory(src/solvers)
 add_subdirectory(src/io)
+add_subdirectory(src/python)
 add_subdirectory(share)
 
 # allow packaging to distribute a pre-compiled 
