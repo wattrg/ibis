@@ -1,7 +1,6 @@
 import json
-import os
+from python_api import GasState, Vector3
 
-IBIS = os.environ.get("IBIS")
 
 def read_defaults(defaults_dir, file_name):
     with open(f"{defaults_dir}/{file_name}", "r") as defaults:
@@ -10,35 +9,36 @@ def read_defaults(defaults_dir, file_name):
 
 class FlowState:
     # __slots__ = ["p", "T", "rho" "vx", "vy", "vz"]
+    __slots__ = ["gas", "vel"]
 
     def __init__(self, p=None, T=None, rho=None, vx=0.0, vy=0.0, vz=0.0):
-        if p:
-            self.p = p
-        if T:
-            self.T = T
-        if rho:
-            self.rho = rho
-        self.vx = vx
-        self.vy = vy
-        self.vz = vz
+        self.vel = Vector3()
+        self.vel.x = vx
+        self.vel.y = vy
+        self.vel.z = vz
 
-        if not p:
-            if not T or not rho:
-                raise Exception("Need two of rho, T, and p")
-            self.p = self.rho * 287 * T
+        self.gas = GasState()
+        if p and T:
+            self.gas.p = p
+            self.gas.T = T
+            self.gas.rho = p / (287 * T)   
 
-        if not T:
-            if not rho or not p:
-                raise Exception("Need two of rho, T, and p")
-            self.T = self.p / (self.rho * 287)
+        elif p and rho:
+            self.gas.p = p
+            self.gas.rho = rho
+            self.gas.T = p / (rho * 287)
 
-        if not rho:
-            if not T or not p:
-                raise Exception("Need two of rho, T, and p")
-            self.rho = self.p / (287 * self.T)
+        elif rho and T:
+            self.gas.rho = rho
+            self.gas.T = T
+            self.gas.p = rho * 287.0 * T
+
+        else:
+            raise Exception("Need two of rho, T, and p")
+
 
     def as_dict(self):
         return {
-            "p": self.p, "T": self.T, 
-            "vx": self.vx, "vy": self.vy, "vz": self.vz
+            "p": self.gas.p, "T": self.gas.T, 
+            "vx": self.vel.x, "vy": self.vel.y, "vz": self.vel.z
         }
