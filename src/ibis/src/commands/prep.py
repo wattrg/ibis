@@ -4,6 +4,7 @@ import shutil
 from enum import Enum
 
 from ibis_py_utils import read_defaults, FlowState
+from python_api import FluxCalculator, flux_calculator_from_string, string_from_flux_calculator
 
 validation_errors = []
 
@@ -11,19 +12,19 @@ class ValidationException(Exception):
     pass
 
 
-class FluxCalculator(Enum):
-    Hanel = "hanel"
-    Ausmdv = "ausmdv"
+# class FluxCalculator(Enum):
+#     Hanel = "hanel"
+#     Ausmdv = "ausmdv"
 
 class Solver(Enum):
     RungeKutta = "runge_kutta"
 
-def string_to_flux_calculator(string):
-    if string == FluxCalculator.Hanel.value:
-        return FluxCalculator.Hanel
-    elif string == FluxCalculator.Ausmdv.value:
-        return FluxCalculator.Ausmdv
-    validation_errors.append(ValidationException(f"Unknown flux calculator {string}"))
+# def string_to_flux_calculator(string):
+#     if string == "hanel":
+#         return FluxCalculator.Hanel
+#     elif string == "ausmdv":
+#         return FluxCalculator.Ausmdv
+#     validation_errors.append(ValidationException(f"Unknown flux calculator {string}"))
 
 def string_to_solver(string):
     if string == Solver.RungeKutta.value:
@@ -45,11 +46,11 @@ class ConvectiveFlux:
             setattr(self, key, kwargs[key])
 
         if type(self.flux_calculator) != FluxCalculator:
-            self.flux_calculator = string_to_flux_calculator(self.flux_calculator)
+            self.flux_calculator = flux_calculator_from_string(self.flux_calculator)
 
     def validate(self):
         if type(self.flux_calculator) != FluxCalculator:
-            self.flux_calculator = string_to_flux_calculator(self.flux_calculator)
+            self.flux_calculator = flux_calculator_from_string(self.flux_calculator)
         if self.reconstruction_order not in (1, 2):
             validation_errors.append(
                 ValidationException(
@@ -61,7 +62,7 @@ class ConvectiveFlux:
         dictionary = {}
         for key in self._json_values:
             if key == "flux_calculator":
-                dictionary[key] = self.flux_calculator.value
+                dictionary[key] = string_from_flux_calculator(self.flux_calculator)
             else:
                 dictionary[key] = getattr(self, key)
         return dictionary

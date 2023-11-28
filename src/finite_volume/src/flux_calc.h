@@ -12,6 +12,7 @@ enum class FluxCalculator {
 };
 
 FluxCalculator flux_calculator_from_string(std::string name);
+std::string string_from_flux_calculator(FluxCalculator flux_calc);
 
 
 template <typename T>

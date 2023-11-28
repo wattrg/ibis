@@ -15,6 +15,9 @@ set(CMAKE_INSTALL_PREFIX "${CMAKE_SOURCE_DIR}/inst")
 # Use c++ 17
 set(CMAKE_CXX_STANDARD 17)
 
+# to build the python bindings, we need to make position independent code
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+
 # get information about the git commit being built
 INCLUDE(${CMAKE_CURRENT_SOURCE_DIR}/cmake/build_env_info.cmake)
 check_git_setup()

@@ -9,6 +9,9 @@ target_link_libraries(
 	python_api
 	PRIVATE 
 	Kokkos::kokkos
+	doctest
+	spdlog::spdlog
+	finite_volume
 )
 
 install(TARGETS python_api DESTINATION ${CMAKE_INSTALL_LIBDIR})

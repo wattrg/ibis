@@ -1,3 +1,4 @@
+#include <Kokkos_Core.hpp>
 #include <spdlog/spdlog.h>
 #include "boundary.h"
 
@@ -12,6 +13,7 @@ FlowStateCopy<T>::FlowStateCopy(json flow_state) {
     gs.pressure = pressure;
     gs.rho = pressure / (287.0 * temp);
     gs.energy = 717.5 * temp;
+    gs.a = Kokkos::sqrt(1.4 * 287.0 * temp);
 
     T vx = flow_state.at("vx");
     T vy = flow_state.at("vy");

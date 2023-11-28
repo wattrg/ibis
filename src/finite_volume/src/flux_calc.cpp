@@ -1,5 +1,6 @@
 #include <spdlog/spdlog.h>
 #include <doctest/doctest.h>
+#include <stdexcept>
 #include "flux_calc.h"
 
 FluxCalculator flux_calculator_from_string(std::string name){
@@ -15,4 +16,15 @@ FluxCalculator flux_calculator_from_string(std::string name){
         throw std::runtime_error("Unknown flux calculator");
     }
     return flux_calc;
+}
+
+std::string string_from_flux_calculator(FluxCalculator flux_calc) {
+    switch (flux_calc){
+        case FluxCalculator::Hanel:
+            return "hanel";
+        case FluxCalculator::Ausmdv:
+            return "ausmdv";
+        default:
+            throw std::runtime_error("Shouldn't get here");
+    }
 }

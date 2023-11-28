@@ -14,6 +14,7 @@ public:
     T pressure;
     T temp;
     T energy;
+    T a;
 };
 
 template <typename T,
