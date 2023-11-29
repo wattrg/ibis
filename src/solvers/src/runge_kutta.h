@@ -4,19 +4,19 @@
 #include "../../finite_volume/src/conserved_quantities.h"
 #include "../../gas/src/flow_state.h"
 #include "../../grid/src/grid.h"
-#include "solver.h"
 #include "../../io/src/io.h"
-
+#include "solver.h"
 
 class RungeKutta : public Solver {
-public:
-    RungeKutta(json config, GridBlock<double> grid, std::string grid_dir, std::string flow_dir);
+   public:
+    RungeKutta(json config, GridBlock<double> grid, std::string grid_dir,
+               std::string flow_dir);
 
-    ~RungeKutta(){}
+    ~RungeKutta() {}
 
     int solve();
 
-private:
+   private:
     // configuration
     double max_time_;
     unsigned int max_step_;
@@ -25,17 +25,17 @@ private:
     int plot_every_n_steps_;
     double cfl_;
 
-private:
+   private:
     // progress
     double time_since_last_plot_;
     double t_;
     double dt_;
 
-private:
+   private:
     // input/output
     FVIO<double> io_;
 
-private:
+   private:
     // implementation
     int initialise();
     int finalise();
@@ -46,17 +46,18 @@ private:
     void print_progress(unsigned int step);
     std::string stop_reason(unsigned int step);
     bool stop_now(unsigned int step);
-    int max_step() const {return max_step_;}
-    int count_bad_cells() {return fv_.count_bad_cells(flow_, grid_.num_cells());}
+    int max_step() const { return max_step_; }
+    int count_bad_cells() {
+        return fv_.count_bad_cells(flow_, grid_.num_cells());
+    }
 
-
-private:
+   private:
     // memory
     FlowStates<double> flow_;
     ConservedQuantities<double> conserved_quantities_;
     ConservedQuantities<double> dUdt_;
 
-private:
+   private:
     // spatial discretisation
     GridBlock<double> grid_;
     FiniteVolume<double> fv_;
