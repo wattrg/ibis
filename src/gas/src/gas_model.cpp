@@ -1,5 +1,6 @@
-#include <Kokkos_Core.hpp>
 #include "gas_model.h"
+
+#include <Kokkos_Core.hpp>
 
 template <typename T>
 IdealGas<T>::IdealGas(double R) {

@@ -1,8 +1,8 @@
 #include <pybind11/pybind11.h>
 
 #include "../../finite_volume/src/flux_calc.h"
-#include "../../gas/src/gas_state.h"
 #include "../../gas/src/gas_model.h"
+#include "../../gas/src/gas_state.h"
 #include "../../util/src/vector3.h"
 
 #define DOCTEST_CONFIG_IMPLEMENT
@@ -20,8 +20,9 @@ PYBIND11_MODULE(python_api, m) {
 
     pybind11::class_<IdealGas<double>>(m, "IdealGas")
         .def(pybind11::init<double>())
-        .def("update_thermo_from_pT", 
-             static_cast<void (IdealGas<double>::*)(GasState<double>&)>(&IdealGas<double>::update_thermo_from_pT));
+        .def("update_thermo_from_pT",
+             static_cast<void (IdealGas<double>::*)(GasState<double>&)>(
+                 &IdealGas<double>::update_thermo_from_pT));
 
     pybind11::class_<Vector3<double>>(m, "Vector3")
         .def(pybind11::init())

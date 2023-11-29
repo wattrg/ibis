@@ -19,7 +19,7 @@ void ausmdv(FlowStates<T>& left, FlowStates<T>& right,
             T aL = Kokkos::sqrt(1.4 * 287.0 * left.gas.temp(i));
             T keL = 0.5 * (uL * uL + vL * vL + wL * wL);
             T HL = eL + pLrL + keL;
-            
+
             T rR = right.gas.rho(i);
             T pR = right.gas.pressure(i);
             T pRrR = pR / rR;
@@ -30,7 +30,7 @@ void ausmdv(FlowStates<T>& left, FlowStates<T>& right,
             T aR = Kokkos::sqrt(1.4 * 287.0 * right.gas.temp(i));
             T keR = 0.5 * (uR * uR + vR * vR + wR * wR);
             T HR = eR + pRrR + keR;
-            
+
             // This is the main part of the flux calculator.
             // Weighting parameters (eqn 32) for velocity splitting.
             T alphaL = 2.0 * pLrL / (pLrL + pRrR);
@@ -88,7 +88,7 @@ void ausmdv(FlowStates<T>& left, FlowStates<T>& right,
             T ru2_AUSMD =
                 0.5 * (ru_half * (uL + uR) - Kokkos::fabs(ru_half) * (uR - uL));
             T ru2_half = (0.5 + s) * ru2_AUSMV + (0.5 - s) * ru2_AUSMD;
-            
+
             // Assemble components of the flux vector.
             flux.mass(i) = ru_half;
             if (ru_half >= 0.0) {
