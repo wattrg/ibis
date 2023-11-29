@@ -1,4 +1,5 @@
 #include <pybind11/pybind11.h>
+
 #include "../../finite_volume/src/flux_calc.h"
 #include "../../gas/src/gas_state.h"
 #include "../../util/src/vector3.h"
@@ -22,15 +23,13 @@ PYBIND11_MODULE(python_api, m) {
         .def_readwrite("y", &Vector3<double>::y, "y")
         .def_readwrite("z", &Vector3<double>::z, "z");
 
-    pybind11::enum_<FluxCalculator>(m , "FluxCalculator")
+    pybind11::enum_<FluxCalculator>(m, "FluxCalculator")
         .value("Hanel", FluxCalculator::Hanel)
         .value("Ausmdv", FluxCalculator::Ausmdv);
 
-    m.def("flux_calculator_from_string", 
-          &flux_calculator_from_string, 
+    m.def("flux_calculator_from_string", &flux_calculator_from_string,
           "Convert string to flux calculator");
 
-    m.def("string_from_flux_calculator",
-          &string_from_flux_calculator,
+    m.def("string_from_flux_calculator", &string_from_flux_calculator,
           "Convert flux calculator to string");
 }

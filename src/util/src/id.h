@@ -1,15 +1,16 @@
 #ifndef ID_H
 #define ID_H
 
-#include "Kokkos_Core_fwd.hpp"
-#include <vector>
 #include <Kokkos_Core.hpp>
+#include <vector>
+
+#include "Kokkos_Core_fwd.hpp"
 
 struct IdConstructor {
-public:
+   public:
     IdConstructor() {
-        _ids = std::vector<int> {};
-        _offsets = std::vector<int> {0};
+        _ids = std::vector<int>{};
+        _offsets = std::vector<int>{0};
     }
 
     void push_back(std::vector<int> ids) {
@@ -19,19 +20,18 @@ public:
         _offsets.push_back(_offsets.back() + ids.size());
     }
 
-    std::vector<int> ids() const {return _ids;}
-    std::vector<int> offsets() const {return _offsets;}
+    std::vector<int> ids() const { return _ids; }
+    std::vector<int> offsets() const { return _offsets; }
 
-private:
+   private:
     std::vector<int> _ids;
     std::vector<int> _offsets;
 };
 
-
-template <class Layout=Kokkos::DefaultExecutionSpace::array_layout,
-          class Space=Kokkos::DefaultExecutionSpace::memory_space>
+template <class Layout = Kokkos::DefaultExecutionSpace::array_layout,
+          class Space = Kokkos::DefaultExecutionSpace::memory_space>
 struct Id {
-public:
+   public:
     using view_type = Kokkos::View<int*, Layout, Space>;
     using array_layout = typename view_type::array_layout;
     using memory_space = typename view_type::memory_space;
@@ -40,26 +40,26 @@ public:
     using mirror_space = typename mirror_view_type::memory_space;
     using mirror_type = Id<mirror_layout, mirror_space>;
 
-public:
+   public:
     Id() {}
 
-    Id(view_type ids, view_type offsets){
-        _ids = view_type ("Id::id_from_views", static_cast<int>(ids.size()));
-        _offsets = view_type ("Id::offset", static_cast<int>(offsets.size()));
+    Id(view_type ids, view_type offsets) {
+        _ids = view_type("Id::id_from_views", static_cast<int>(ids.size()));
+        _offsets = view_type("Id::offset", static_cast<int>(offsets.size()));
         Kokkos::deep_copy(_ids, ids);
         Kokkos::deep_copy(_offsets, offsets);
     }
 
-    Id(std::vector<int> ids, std::vector<int> offsets){
-        _ids = view_type ("Id::id_from_vec", static_cast<int>(ids.size()));
-        _offsets = view_type ("Id::offset", static_cast<int>(offsets.size()));
+    Id(std::vector<int> ids, std::vector<int> offsets) {
+        _ids = view_type("Id::id_from_vec", static_cast<int>(ids.size()));
+        _offsets = view_type("Id::offset", static_cast<int>(offsets.size()));
 
         // make of copy of the view's on the host so we can copy
         // from std::vector
-        mirror_view_type ids_mirror ("Id::id::mirror", 
-                                     static_cast<int>(ids.size()));
-        mirror_view_type offsets_mirror ("Id::offset::mirror", 
-                                         static_cast<int>(offsets.size()));
+        mirror_view_type ids_mirror("Id::id::mirror",
+                                    static_cast<int>(ids.size()));
+        mirror_view_type offsets_mirror("Id::offset::mirror",
+                                        static_cast<int>(offsets.size()));
         for (unsigned int i = 0; i < ids.size(); i++) {
             ids_mirror(i) = ids[i];
         }
@@ -75,40 +75,36 @@ public:
 
     Id(int n_ids, int n_values) {
         _ids = view_type("Id::id_without_init", n_ids);
-        _offsets = view_type("Id::offset", n_values+1);
+        _offsets = view_type("Id::offset", n_values + 1);
     }
 
+    Id(IdConstructor constructor)
+        : Id<Layout, Space>(constructor.ids(), constructor.offsets()) {}
 
-    Id(IdConstructor constructor) 
-        : Id<Layout, Space>(constructor.ids(), constructor.offsets()) 
-    {}
-
-    Id<Layout, Space> clone(){
-        return Id<Layout, Space>(_ids, _offsets);
-    }
+    Id<Layout, Space> clone() { return Id<Layout, Space>(_ids, _offsets); }
 
     KOKKOS_INLINE_FUNCTION
-    auto operator [] (const int i) const {
-        // return the slice of _ids corresponding 
+    auto operator[](const int i) const {
+        // return the slice of _ids corresponding
         // to the object at index i
         int first = _offsets(i);
-        int last = _offsets(i+1);
+        int last = _offsets(i + 1);
         return Kokkos::subview(_ids, Kokkos::make_pair(first, last));
     }
 
     KOKKOS_INLINE_FUNCTION
-    auto operator [] (const int i) {
-        // return the slice of _ids corresponding 
+    auto operator[](const int i) {
+        // return the slice of _ids corresponding
         // to the object at index i
         int first = _offsets(i);
-        int last = _offsets(i+1);
+        int last = _offsets(i + 1);
         return Kokkos::subview(_ids, Kokkos::make_pair(first, last));
     }
 
     KOKKOS_INLINE_FUNCTION
-    int size() const {return _offsets.extent(0)-1;}
+    int size() const { return _offsets.extent(0) - 1; }
 
-    bool operator == (const Id &other) const {
+    bool operator==(const Id& other) const {
         for (unsigned int i = 0; i < _ids.extent(0); i++) {
             if (_ids(i) != other._ids(i)) return false;
         }
@@ -130,14 +126,13 @@ public:
         Kokkos::deep_copy(_offsets, other._offsets);
     }
 
-    view_type ids() const {return _ids;}
-    int num_ids() const {return _ids.extent(0);}
-    view_type offsets() const {return _offsets;}
+    view_type ids() const { return _ids; }
+    int num_ids() const { return _ids.extent(0); }
+    view_type offsets() const { return _offsets; }
 
-public:
+   public:
     view_type _ids;
     view_type _offsets;
 };
-
 
 #endif

@@ -3,26 +3,25 @@
 
 #include "io.h"
 
-
 template <typename T>
 class NativeInput : public FVInput<T> {
-public:
+   public:
     NativeInput() {}
 
-    int read(typename FlowStates<T>::mirror_type & fs, 
-             const typename GridBlock<T>::mirror_type & grid, 
-             std::string dir, json& meta_data);
+    int read(typename FlowStates<T>::mirror_type& fs,
+             const typename GridBlock<T>::mirror_type& grid, std::string dir,
+             json& meta_data);
 };
 
 template <typename T>
 class NativeOutput : public FVOutput<T> {
-public:
+   public:
     NativeOutput() {}
 
-    int write(const typename FlowStates<T>::mirror_type & fs, 
-              const typename GridBlock<T>::mirror_type & grid, 
+    int write(const typename FlowStates<T>::mirror_type& fs,
+              const typename GridBlock<T>::mirror_type& grid,
               std::string plot_dir, std::string time_dir, double time);
-    void write_coordinating_file(std::string plot_dir) {(void) plot_dir;}
+    void write_coordinating_file(std::string plot_dir) { (void)plot_dir; }
 };
 
 #endif

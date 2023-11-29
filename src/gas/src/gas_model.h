@@ -2,13 +2,14 @@
 #define GAS_MODEL_H
 
 #include <nlohmann/json.hpp>
+
 #include "gas_state.h"
 
 using json = nlohmann::json;
 
 template <typename T>
 class IdealGas {
-public:
+   public:
     IdealGas(double R);
     IdealGas(json config);
 
@@ -21,13 +22,13 @@ public:
     void update_thermo_from_pT(GasStates<T> &gs);
     void update_thermo_from_rhoT(GasStates<T> &gs);
     void update_thermo_from_rhop(GasStates<T> &gs);
-    
+
     // update a single gas state from the collection
     void update_thermo_from_pT(GasStates<T> &gs, int i);
     void update_thermo_from_rhoT(GasStates<T> &gs, int i);
     void update_thermo_from_rhop(GasStates<T> &gs, int i);
 
-private:
+   private:
     double R_;
     double Cv_;
     double Cp_;

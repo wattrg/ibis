@@ -1,6 +1,8 @@
-#include <Kokkos_Core.hpp>
-#include "Kokkos_Macros.hpp"
 #include "gas_model.h"
+
+#include <Kokkos_Core.hpp>
+
+#include "Kokkos_Macros.hpp"
 
 template <typename T>
 IdealGas<T>::IdealGas(double R) {
@@ -11,28 +13,24 @@ IdealGas<T>::IdealGas(double R) {
 }
 
 template <typename T>
-IdealGas<T>::IdealGas(json config) :
-    R_(config.at("R")),
-    Cv_(config.at("Cv")),
-    Cp_(config.at("Cp")),
-    gamma_(config.at("gamma"))
-{}
+IdealGas<T>::IdealGas(json config)
+    : R_(config.at("R")),
+      Cv_(config.at("Cv")),
+      Cp_(config.at("Cp")),
+      gamma_(config.at("gamma")) {}
 
 template <typename T>
-KOKKOS_INLINE_FUNCTION
-T rho_from_pT(T p, T temp, double R) {
+KOKKOS_INLINE_FUNCTION T rho_from_pT(T p, T temp, double R) {
     return p / (R * temp);
 }
 
 template <typename T>
-KOKKOS_INLINE_FUNCTION
-T T_from_rhop(T rho, T p, double R) {
+KOKKOS_INLINE_FUNCTION T T_from_rhop(T rho, T p, double R) {
     return p / (rho * R);
 }
 
 template <typename T>
-KOKKOS_INLINE_FUNCTION
-T p_from_rhoT(T rho, T temp, double R) {
+KOKKOS_INLINE_FUNCTION T p_from_rhoT(T rho, T temp, double R) {
     return rho * R * temp;
 }
 

@@ -1,12 +1,13 @@
-#include <spdlog/spdlog.h>
 #include "runge_kutta.h"
-#include "solver.h"
+
+#include <spdlog/spdlog.h>
+
 #include "../../finite_volume/src/primative_conserved_conversion.h"
+#include "solver.h"
 
-
-RungeKutta::RungeKutta(json config, GridBlock<double> grid, std::string grid_dir, std::string flow_dir) 
-    : Solver(grid_dir, flow_dir)
-{
+RungeKutta::RungeKutta(json config, GridBlock<double> grid,
+                       std::string grid_dir, std::string flow_dir)
+    : Solver(grid_dir, flow_dir) {
     // configuration
     json solver_config = config.at("solver");
     max_time_ = solver_config.at("max_time");
@@ -14,7 +15,7 @@ RungeKutta::RungeKutta(json config, GridBlock<double> grid, std::string grid_dir
     print_frequency_ = solver_config.at("print_frequency");
     plot_frequency_ = solver_config.at("plot_frequency");
     plot_every_n_steps_ = solver_config.at("plot_every_n_steps");
-    cfl_ = solver_config.at("cfl"); 
+    cfl_ = solver_config.at("cfl");
 
     // memory
     grid_ = grid;
@@ -36,13 +37,12 @@ RungeKutta::RungeKutta(json config, GridBlock<double> grid, std::string grid_dir
 int RungeKutta::initialise() {
     json meta_data;
     int ic_result = io_.read(flow_, grid_, meta_data, 0);
-    int conversion_result = primatives_to_conserved(conserved_quantities_, flow_);
+    int conversion_result =
+        primatives_to_conserved(conserved_quantities_, flow_);
     return ic_result + conversion_result;
 }
 
-int RungeKutta::finalise() {
-    return 0;
-}
+int RungeKutta::finalise() { return 0; }
 
 int RungeKutta::take_step() {
     fv_.compute_dudt(flow_, grid_, dUdt_);
@@ -64,12 +64,11 @@ bool RungeKutta::print_this_step(unsigned int step) {
 }
 
 bool RungeKutta::plot_this_step(unsigned int step) {
-    if (plot_every_n_steps_ > 0 && 
-        step != 0 && 
-        step % plot_every_n_steps_ == 0) return true;
+    if (plot_every_n_steps_ > 0 && step != 0 && step % plot_every_n_steps_ == 0)
+        return true;
 
-    if (plot_frequency_ > 0 && 
-        time_since_last_plot_ >= plot_frequency_-1e-15) return true;
+    if (plot_frequency_ > 0 && time_since_last_plot_ >= plot_frequency_ - 1e-15)
+        return true;
     return false;
 }
 
@@ -84,13 +83,14 @@ void RungeKutta::print_progress(unsigned int step) {
     spdlog::info("  step: {:>8}, t = {:.6e}, dt = {:.6e}", step, t_, dt_);
 }
 std::string RungeKutta::stop_reason(unsigned int step) {
-    if (t_ >= max_time_ - 1e-15) return "reached max time"; // subtract small amount to avoid round off error
-    if (step >= max_step_-1) return "reached max step";
+    if (t_ >= max_time_ - 1e-15)
+        return "reached max time";  // subtract small amount to avoid round off
+                                    // error
+    if (step >= max_step_ - 1) return "reached max step";
     return "Shouldn't reach here";
 }
 bool RungeKutta::stop_now(unsigned int step) {
-    if (step >= max_step_-1) return true;
+    if (step >= max_step_ - 1) return true;
     if (t_ >= max_time_) return true;
     return false;
 }
-

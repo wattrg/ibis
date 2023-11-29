@@ -1,62 +1,63 @@
 #ifndef BOUNDARY_H
 #define BOUNDARY_H
 
-#include "../../../grid/src/grid.h"
 #include "../../../gas/src/flow_state.h"
+#include "../../../grid/src/grid.h"
 
-enum class BoundaryConditions {
-    SupersonicInflow, SlipWall, SupersonicOutflow
-};
-
+enum class BoundaryConditions { SupersonicInflow, SlipWall, SupersonicOutflow };
 
 template <typename T>
 class PreReconstruction {
-public:
+   public:
+    virtual ~PreReconstruction() {}
 
-    virtual ~PreReconstruction(){}
-
-    virtual void apply(FlowStates<T>& fs, const GridBlock<T>& grid, const Field<int>& boundary_faces) = 0;
+    virtual void apply(FlowStates<T>& fs, const GridBlock<T>& grid,
+                       const Field<int>& boundary_faces) = 0;
 };
 
 template <typename T>
 class FlowStateCopy : public PreReconstruction<T> {
-public:
+   public:
     FlowStateCopy(FlowState<T> fs) : fs_(fs) {}
 
     FlowStateCopy(json flow_state);
 
-    ~FlowStateCopy(){}
+    ~FlowStateCopy() {}
 
-    void apply(FlowStates<T>& fs, const GridBlock<T>& grid, const Field<int>& boundary_faces);
+    void apply(FlowStates<T>& fs, const GridBlock<T>& grid,
+               const Field<int>& boundary_faces);
 
-private:
+   private:
     FlowState<T> fs_;
 };
 
 template <typename T>
 class InternalCopy : public PreReconstruction<T> {
-public:
-    ~InternalCopy(){}
+   public:
+    ~InternalCopy() {}
 
-    void apply(FlowStates<T>& fs, const GridBlock<T>& grid, const Field<int>& boundary_faces);
+    void apply(FlowStates<T>& fs, const GridBlock<T>& grid,
+               const Field<int>& boundary_faces);
 };
 
 template <typename T>
 class InternalCopyReflectNormal : public PreReconstruction<T> {
-public:
-    ~InternalCopyReflectNormal(){}
+   public:
+    ~InternalCopyReflectNormal() {}
 
-    void apply(FlowStates<T>& fs, const GridBlock<T>& grid, const Field<int>& boundary_faces);
+    void apply(FlowStates<T>& fs, const GridBlock<T>& grid,
+               const Field<int>& boundary_faces);
 };
 
 template <typename T>
 class BoundaryCondition {
-public:
+   public:
     BoundaryCondition(json config);
 
-    void apply_pre_reconstruction(FlowStates<T>& fs, const GridBlock<T>& grid, const Field<int>& boundary_faces);
+    void apply_pre_reconstruction(FlowStates<T>& fs, const GridBlock<T>& grid,
+                                  const Field<int>& boundary_faces);
 
-private:
+   private:
     std::vector<std::shared_ptr<PreReconstruction<T>>> pre_reconstruction_;
 };
 
