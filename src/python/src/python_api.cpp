@@ -2,6 +2,7 @@
 
 #include "../../finite_volume/src/flux_calc.h"
 #include "../../gas/src/gas_state.h"
+#include "../../gas/src/gas_model.h"
 #include "../../util/src/vector3.h"
 
 #define DOCTEST_CONFIG_IMPLEMENT
@@ -16,6 +17,11 @@ PYBIND11_MODULE(python_api, m) {
         .def_readwrite("T", &GasState<double>::temp, "temperature (K)")
         .def_readwrite("rho", &GasState<double>::rho, "density (kg/m^3)")
         .def_readwrite("a", &GasState<double>::a, "speed of sound (m/s)");
+
+    pybind11::class_<IdealGas<double>>(m, "IdealGas")
+        .def(pybind11::init<double>())
+        .def("update_thermo_from_pT", 
+             static_cast<void (IdealGas<double>::*)(GasState<double>&)>(&IdealGas<double>::update_thermo_from_pT));
 
     pybind11::class_<Vector3<double>>(m, "Vector3")
         .def(pybind11::init())

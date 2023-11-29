@@ -4,7 +4,13 @@ import shutil
 from enum import Enum
 
 from ibis_py_utils import read_defaults, FlowState
-from python_api import FluxCalculator, flux_calculator_from_string, string_from_flux_calculator
+from python_api import (
+    FluxCalculator, 
+    flux_calculator_from_string, 
+    string_from_flux_calculator,
+    IdealGas,
+    GasState
+)
 
 validation_errors = []
 
@@ -292,6 +298,8 @@ def main(file_name, res_dir):
         "Block": Block,
         "Solver": Solver,
         "FlowState": FlowState,
+        "GasState": GasState,
+        "IdealGas": IdealGas,
         "RungeKutta": RungeKutta,
         "supersonic_inflow": supersonic_inflow,
         "supersonic_outflow": supersonic_outflow,
