@@ -4,11 +4,11 @@
 #include <nlohmann/json.hpp>
 
 #include "../../gas/src/flow_state.h"
+#include "../../gas/src/gas_model.h"
 #include "../../grid/src/grid.h"
 #include "boundaries/boundary.h"
 #include "conserved_quantities.h"
 #include "flux_calc.h"
-#include "impl/Kokkos_HostThreadTeam.hpp"
 
 using json = nlohmann::json;
 
@@ -52,6 +52,9 @@ private:
     unsigned int dim_;
     unsigned int reconstruction_order_;
     FluxCalculator flux_calculator_;
+
+    // gas model
+    IdealGas<T> gas_model_;
 };
 
 #endif

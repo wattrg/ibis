@@ -16,6 +16,8 @@ config.convective_flux = ConvectiveFlux(
     reconstruction_order = 1
 )
 
+config.gas_model = gas_model
+
 config.solver = RungeKutta(
     cfl = 0.5,
     max_step = 100000,

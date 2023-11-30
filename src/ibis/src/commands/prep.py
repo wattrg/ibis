@@ -3,12 +3,11 @@ import os
 import shutil
 from enum import Enum
 
-from ibis_py_utils import read_defaults, FlowState
+from ibis_py_utils import read_defaults, FlowState, GasModel, IdealGas
 from python_api import (
     FluxCalculator, 
     flux_calculator_from_string, 
     string_from_flux_calculator,
-    IdealGas,
     GasState
 )
 
@@ -17,20 +16,8 @@ validation_errors = []
 class ValidationException(Exception):
     pass
 
-
-# class FluxCalculator(Enum):
-#     Hanel = "hanel"
-#     Ausmdv = "ausmdv"
-
 class Solver(Enum):
     RungeKutta = "runge_kutta"
-
-# def string_to_flux_calculator(string):
-#     if string == "hanel":
-#         return FluxCalculator.Hanel
-#     elif string == "ausmdv":
-#         return FluxCalculator.Ausmdv
-#     validation_errors.append(ValidationException(f"Unknown flux calculator {string}"))
 
 def string_to_solver(string):
     if string == Solver.RungeKutta.value:
@@ -239,13 +226,29 @@ def make_default_solver():
         ValidationException(f"Unknown default solver {default_solver_name}")
     )
 
+def get_gas_model(name):
+    with open(f"{SHARE_DIRECTORY}/gas_models/{name}.json", "r") as gas_model:
+        gas_model = json.load(gas_model)
+
+    gas_model_type = gas_model["type"]
+    if gas_model_type == "ideal_gas":
+        return IdealGas(gas_model["R"])        
+    else:
+        raise ValidationException(f"Unknown gas model {gas_model_type}")
+
+def default_gas_model():
+    default_gas_model_name = read_defaults(DEFAULTS_DIRECTORY,
+                                           "config.json")["gas_model"]
+    return get_gas_model(default_gas_model_name)
+
 class Config:
-    _json_values = ["convective_flux", "solver", "grid"]
+    _json_values = ["convective_flux", "solver", "grid", "gas_model"]
     __slots__ = _json_values
 
     def __init__(self):
         self.convective_flux = ConvectiveFlux()
         self.solver = make_default_solver()
+        self.gas_model = default_gas_model()
     
     def validate(self):
         for setting in self.__slots__:
@@ -277,7 +280,9 @@ class Config:
 def main(file_name, res_dir):
     # make the config directory
     global DEFAULTS_DIRECTORY
+    global SHARE_DIRECTORY
     DEFAULTS_DIRECTORY = f"{res_dir}/defaults"
+    SHARE_DIRECTORY = res_dir
     directories = read_defaults(DEFAULTS_DIRECTORY,
                                 "directories.json")
     config_dir = directories["config_dir"]
@@ -299,7 +304,9 @@ def main(file_name, res_dir):
         "Solver": Solver,
         "FlowState": FlowState,
         "GasState": GasState,
+        "GasModel": GasModel,
         "IdealGas": IdealGas,
+        "get_gas_model": get_gas_model,
         "RungeKutta": RungeKutta,
         "supersonic_inflow": supersonic_inflow,
         "supersonic_outflow": supersonic_outflow,

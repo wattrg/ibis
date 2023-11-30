@@ -15,6 +15,8 @@ FiniteVolume<T>::FiniteVolume(const GridBlock<T>& grid, json config)
     flux_calculator_ = flux_calculator_from_string(
         convective_flux_config.at("flux_calculator"));
 
+    gas_model_ = IdealGas<T>(config.at("gas_model"));
+
     std::vector<std::string> boundary_tags = grid.boundary_tags();
     json boundaries_config = config.at("grid").at("boundaries");
     for (unsigned int bi = 0; bi < boundary_tags.size(); bi++) {
@@ -47,6 +49,7 @@ double FiniteVolume<T>::estimate_dt(const FlowStates<T>& flow_state,
     CellFaces<T> cell_interfaces = grid.cells().faces();
     Interfaces<T> interfaces = grid.interfaces();
     Cells<T> cells = grid.cells();
+    IdealGas<T> gas_model = gas_model_;
 
     double dt;
     Kokkos::parallel_reduce(
@@ -57,13 +60,12 @@ double FiniteVolume<T>::estimate_dt(const FlowStates<T>& flow_state,
             for (unsigned int face_idx = 0; face_idx < cell_face_ids.size();
                  face_idx++) {
                 int i_face = cell_face_ids(face_idx);
-                T dot =
-                    flow_state.vel.x(cell_i) * interfaces.norm().x(i_face) +
-                    flow_state.vel.y(cell_i) * interfaces.norm().y(i_face) +
-                    flow_state.vel.z(cell_i) * interfaces.norm().z(i_face);
-                T sig_vel =
-                    Kokkos::fabs(dot) +
-                    Kokkos::sqrt(1.4 * 287.0 * flow_state.gas.temp(cell_i));
+                T dot = flow_state.vel.x(cell_i) * interfaces.norm().x(i_face) +
+                        flow_state.vel.y(cell_i) * interfaces.norm().y(i_face) +
+                        flow_state.vel.z(cell_i) * interfaces.norm().z(i_face);
+                T sig_vel = Kokkos::fabs(dot) +
+                            gas_model.speed_of_sound(flow_state.gas, cell_i);
+                // Kokkos::sqrt(1.4 * 287.0 * flow_state.gas.temp(cell_i));
                 spectral_radii += sig_vel * interfaces.area(i_face);
             }
             T local_dt = cells.volume(cell_i) / spectral_radii;
