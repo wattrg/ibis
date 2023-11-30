@@ -19,7 +19,7 @@ template <typename T,
           class Layout = Kokkos::DefaultExecutionSpace::array_layout,
           class Space = Kokkos::DefaultExecutionSpace::memory_space>
 struct CellFaces {
-   public:
+public:
     using array_layout = Layout;
     using memory_space = Space;
     using view_type = Kokkos::View<int*, array_layout, memory_space>;
@@ -104,7 +104,7 @@ struct CellFaces {
 
     int num_face_ids() const { return face_ids_.extent(0); }
 
-   public:
+public:
     template <class OtherSpace>
     void deep_copy(const CellFaces<T, OtherSpace>& other) {
         Kokkos::deep_copy(offsets_, other.offsets_);
@@ -112,7 +112,7 @@ struct CellFaces {
         Kokkos::deep_copy(outsigns_, other.outsigns_);
     }
 
-   public:
+public:
     view_type offsets_;
     view_type face_ids_;
     view_type outsigns_;
@@ -120,7 +120,7 @@ struct CellFaces {
 
 template <typename T, class ExecSpace, class Layout>
 struct Cells {
-   public:
+public:
     using execution_space = ExecSpace;
     using memory_space = typename execution_space::memory_space;
     using array_layout = Layout;
@@ -130,7 +130,7 @@ struct Cells {
     using mirror_type =
         Cells<T, Kokkos::DefaultHostExecutionSpace, array_layout>;
 
-   public:
+public:
     Cells() {}
 
     Cells(Id<array_layout, memory_space> vertices,
@@ -309,7 +309,7 @@ struct Cells {
         return shape_;
     }
 
-   public:
+public:
     CellFaces<T, array_layout, memory_space> faces_;
     Id<array_layout, memory_space> vertex_ids_;
     Field<ElemType, array_layout, memory_space> shape_;

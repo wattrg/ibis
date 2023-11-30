@@ -14,7 +14,7 @@ using json = nlohmann::json;
 
 template <typename T>
 class FiniteVolume {
-   public:
+public:
     FiniteVolume() {}
 
     FiniteVolume(const GridBlock<T>& grid, json config);
@@ -25,8 +25,8 @@ class FiniteVolume {
     double estimate_dt(const FlowStates<T>& flow_state, GridBlock<T>& grid);
 
     // methods
-    // these have to be public for NVCC, but they shouldn't really need to be
-    // accessed from outside of the class
+    // these have to be public for NVCC, but they shouldn't really need to
+    // be accessed from outside of the class
     void apply_pre_reconstruction_bc(FlowStates<T>& fs,
                                      const GridBlock<T>& grid);
     void reconstruct(FlowStates<T>& flow_states, const GridBlock<T>& grid,
@@ -38,7 +38,7 @@ class FiniteVolume {
     void apply_pre_spatial_deriv();
     int count_bad_cells(const FlowStates<T>& fs, const int num_cells);
 
-   private:
+private:
     // memory
     FlowStates<T> left_;
     FlowStates<T> right_;

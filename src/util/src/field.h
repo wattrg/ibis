@@ -8,7 +8,7 @@ template <typename T,
           class Layout = Kokkos::DefaultExecutionSpace::array_layout,
           class Space = Kokkos::DefaultExecutionSpace::memory_space>
 class Field {
-   public:
+public:
     using view_type = Kokkos::View<T*, Layout, Space>;
     using array_layout = typename view_type::array_layout;
     using memory_space = typename view_type::memory_space;
@@ -17,7 +17,7 @@ class Field {
     using mirror_space = typename mirror_view_type::memory_space;
     using mirror_type = Field<T, mirror_layout, mirror_space>;
 
-   public:
+public:
     Field() {}
 
     Field(std::string description, int n) { view_ = view_type(description, n); }
@@ -60,7 +60,7 @@ class Field {
 
     void deep_copy(T value) { Kokkos::deep_copy(view_, value); }
 
-   public:
+public:
     view_type view_;
 };
 

@@ -14,7 +14,7 @@ enum class FlowFormat { Native, Vtk };
 
 template <typename T>
 class FVInput {
-   public:
+public:
     virtual ~FVInput() {}
 
     virtual int read(typename FlowStates<T>::mirror_type& fs,
@@ -24,7 +24,7 @@ class FVInput {
 
 template <typename T>
 class FVOutput {
-   public:
+public:
     virtual ~FVOutput() {}
 
     virtual int write(const typename FlowStates<T>::mirror_type& fs,
@@ -37,7 +37,7 @@ class FVOutput {
 
 template <typename T>
 class FVIO {
-   public:
+public:
     // constructors
     FVIO(FlowFormat input_format, FlowFormat output_format,
          std::string input_dir, std::string output_dir, int time_index);
@@ -56,7 +56,7 @@ class FVIO {
               double time);
     void write_coordinating_file();
 
-   private:
+private:
     std::unique_ptr<FVInput<T>> input_;
     std::unique_ptr<FVOutput<T>> output_;
     int time_index_;

@@ -5,7 +5,7 @@
 
 template <typename T>
 class NativeInput : public FVInput<T> {
-   public:
+public:
     NativeInput() {}
 
     int read(typename FlowStates<T>::mirror_type& fs,
@@ -15,7 +15,7 @@ class NativeInput : public FVInput<T> {
 
 template <typename T>
 class NativeOutput : public FVOutput<T> {
-   public:
+public:
     NativeOutput() {}
 
     int write(const typename FlowStates<T>::mirror_type& fs,

@@ -10,8 +10,9 @@
 // A single vector with 3 components
 template <typename T>
 struct Vector3 {
-    Vector3() {}
-
+    Vector3() : x(0.0), y(0.0), z(0.0) {}
+    Vector3(T x) : x(x), y(0.0), z(0.0) {}
+    Vector3(T x, T y) : x(x), y(y), z(0.0) {}
     Vector3(T x, T y, T z) : x(x), y(y), z(z) {}
 
     T x, y, z;
@@ -27,7 +28,7 @@ template <typename T,
           class Layout = Kokkos::DefaultExecutionSpace::array_layout,
           class Space = Kokkos::DefaultExecutionSpace::memory_space>
 struct Vector3s {
-   public:
+public:
     using view_type = Kokkos::View<T* [3], Layout, Space>;
     using array_layout = typename view_type::array_layout;
     using memory_space = typename view_type::memory_space;
@@ -36,7 +37,7 @@ struct Vector3s {
     using mirror_space = typename mirror_view_type::memory_space;
     using mirror_type = Vector3s<T, mirror_layout, mirror_space>;
 
-   public:
+public:
     Vector3s() {}
 
     // ~Vector3s(){}
@@ -105,7 +106,7 @@ struct Vector3s {
         Kokkos::deep_copy(view_, other.view_);
     }
 
-   public:
+public:
     view_type view_;
 };
 

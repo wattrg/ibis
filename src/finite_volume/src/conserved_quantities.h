@@ -8,7 +8,7 @@
 
 template <typename T>
 class ConservedQuantities {
-   public:
+public:
     ConservedQuantities() {}
 
     ConservedQuantities(unsigned int n, unsigned int dim);
@@ -60,7 +60,7 @@ class ConservedQuantities {
     KOKKOS_INLINE_FUNCTION
     T& energy(int cell_i) { return cq_(cell_i, energy_idx_); }
 
-   private:
+private:
     Kokkos::View<T**> cq_;
     unsigned int mass_idx_, momentum_idx_, energy_idx_;
     int num_values_, dim_;

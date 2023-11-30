@@ -9,8 +9,8 @@ gas_state = GasState()
 gas_state.p = p
 gas_state.T = T
 gas_model.update_thermo_from_pT(gas_state)
-vx = mach * gas_state.a
-flow_state = FlowState(p=p, T=T, vx=vx, vy=0.0)
+vx = mach * gas_model.speed_of_sound(gas_state)
+flow_state = FlowState(gas=gas_state, vx=vx)
 
 config.convective_flux = ConvectiveFlux(
     flux_calculator = FluxCalculator.Ausmdv,

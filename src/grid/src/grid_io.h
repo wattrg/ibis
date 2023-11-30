@@ -42,14 +42,14 @@ struct ElemIO {
 
     std::vector<ElemIO> interfaces() const;
 
-   private:
+private:
     std::vector<int> vertex_ids_{};
     ElemType cell_type_;
     FaceOrder face_order_;
 };
 
 struct GridIO {
-   public:
+public:
     GridIO(std::vector<Vertex<double>> vertices, std::vector<ElemIO> cells,
            std::unordered_map<std::string, std::vector<ElemIO>> bcs)
         : vertices_(vertices), cells_(cells), bcs_(bcs) {}
@@ -71,7 +71,7 @@ struct GridIO {
 
     int dim() const { return dim_; }
 
-   private:
+private:
     std::vector<Vertex<double>> vertices_{};
     std::vector<ElemIO> cells_{};
     std::unordered_map<std::string, std::vector<ElemIO>> bcs_;

@@ -9,7 +9,7 @@
 #include <doctest/doctest.h>
 
 PYBIND11_MODULE(python_api, m) {
-    m.doc() = "Aeolus python module";
+    m.doc() = "ibis python module";
 
     pybind11::class_<GasState<double>>(m, "GasState")
         .def(pybind11::init())
@@ -20,12 +20,24 @@ PYBIND11_MODULE(python_api, m) {
 
     pybind11::class_<IdealGas<double>>(m, "IdealGas")
         .def(pybind11::init<double>())
+        .def("speed_of_sound",
+             static_cast<double (IdealGas<double>::*)(GasState<double>&)>(
+                 &IdealGas<double>::speed_of_sound))
         .def("update_thermo_from_pT",
              static_cast<void (IdealGas<double>::*)(GasState<double>&)>(
-                 &IdealGas<double>::update_thermo_from_pT));
+                 &IdealGas<double>::update_thermo_from_pT))
+        .def("update_thermo_from_rhoT",
+             static_cast<void (IdealGas<double>::*)(GasState<double>&)>(
+                 &IdealGas<double>::update_thermo_from_rhoT))
+        .def("update_thermo_from_rhop",
+             static_cast<void (IdealGas<double>::*)(GasState<double>&)>(
+                 &IdealGas<double>::update_thermo_from_rhop));
 
     pybind11::class_<Vector3<double>>(m, "Vector3")
-        .def(pybind11::init())
+        .def(pybind11::init<>())
+        .def(pybind11::init<double>())
+        .def(pybind11::init<double, double>())
+        .def(pybind11::init<double, double, double>())
         .def_readwrite("x", &Vector3<double>::x, "x")
         .def_readwrite("y", &Vector3<double>::y, "y")
         .def_readwrite("z", &Vector3<double>::z, "z");

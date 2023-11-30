@@ -15,7 +15,7 @@
 template <typename T, class ExecSpace = Kokkos::DefaultExecutionSpace,
           class Layout = Kokkos::DefaultExecutionSpace::array_layout>
 struct Interfaces {
-   public:
+public:
     using execution_space = ExecSpace;
     using memory_space = typename execution_space::memory_space;
     using array_layout = Layout;
@@ -25,7 +25,7 @@ struct Interfaces {
     using mirror_type =
         Interfaces<T, Kokkos::DefaultHostExecutionSpace, array_layout>;
 
-   public:
+public:
     Interfaces() {}
 
     Interfaces(IdConstructor ids, std::vector<ElemType> shapes) {
@@ -305,7 +305,7 @@ struct Interfaces {
             });
     }
 
-   public:
+public:
     int size_;
     // the id's of the vertices forming each interface
     Id<array_layout, memory_space> vertex_ids_;
@@ -327,14 +327,14 @@ struct Interfaces {
 // from the index of the vertices
 // forming the interface
 struct InterfaceLookup {
-   public:
+public:
     InterfaceLookup();
 
     int insert(std::vector<int> vertex_ids);
     bool contains(std::vector<int> vertex_ids);
     int id(std::vector<int> vertex_ids);
 
-   private:
+private:
     std::unordered_map<std::string, int> hash_map_;
 
     std::string hash_vertex_ids(std::vector<int> vertex_ids);

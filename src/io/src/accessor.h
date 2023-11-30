@@ -11,7 +11,7 @@ using host_mem_space = Kokkos::DefaultHostExecutionSpace::memory_space;
 
 template <typename T>
 class ScalarAccessor {
-   public:
+public:
     virtual ~ScalarAccessor(){};
     virtual T access(const FlowStates<T, array_layout, host_mem_space>& fs,
                      const int i) = 0;

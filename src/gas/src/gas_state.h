@@ -8,7 +8,7 @@
 
 template <typename T>
 struct GasState {
-   public:
+public:
     GasState() {}
 
     T rho;
@@ -22,7 +22,7 @@ template <typename T,
           class Layout = Kokkos::DefaultExecutionSpace::array_layout,
           class Space = Kokkos::DefaultExecutionSpace::memory_space>
 class GasStates {
-   public:
+public:
     using view_type = Kokkos::View<T**, Layout, Space>;
     using array_layout = Layout;
     using memory_space = Space;
@@ -31,7 +31,7 @@ class GasStates {
     using mirror_space = typename mirror_view_type::memory_space;
     using mirror_type = GasStates<T, mirror_layout, mirror_space>;
 
-   public:
+public:
     GasStates() {}
 
     GasStates(int n) {
@@ -84,7 +84,7 @@ class GasStates {
     KOKKOS_INLINE_FUNCTION
     int size() const { return data_.extent(0); }
 
-   public:
+public:
     view_type data_;
     int rho_idx_, pressure_idx_, temp_idx_, energy_idx_;
 };

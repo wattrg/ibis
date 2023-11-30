@@ -6,27 +6,27 @@
 
 template <typename T>
 struct Vertex {
-   public:
+public:
     Vertex(Vector3<T> pos) : _pos(pos) {}
     Vector3<T> &pos() { return _pos; }
 
     bool operator==(const Vertex<T> &other) const { return _pos == other._pos; }
 
-   private:
+private:
     Vector3<T> _pos;
 };
 
 template <typename T, class ExecSpace = Kokkos::DefaultExecutionSpace,
           class Layout = Kokkos::DefaultExecutionSpace::array_layout>
 struct Vertices {
-   public:
+public:
     using array_layout = Layout;
     using memory_space = typename ExecSpace::memory_space;
     using vector_type = Vector3s<T, array_layout, memory_space>;
     using mirror_type =
         Vertices<T, Kokkos::DefaultHostExecutionSpace, array_layout>;
 
-   public:
+public:
     Vertices() {}
 
     Vertices(int num_vertices) {
@@ -61,7 +61,7 @@ struct Vertices {
         _positions.deep_copy(other._positions);
     }
 
-   public:
+public:
     Vector3s<T, array_layout, memory_space> _positions;
 };
 

@@ -6,7 +6,7 @@
 
 template <typename T>
 class VtkOutput : public FVOutput<T> {
-   public:
+public:
     VtkOutput();
 
     int write(const typename FlowStates<T>::mirror_type& fs,
@@ -15,7 +15,7 @@ class VtkOutput : public FVOutput<T> {
 
     void write_coordinating_file(std::string plot_dir);
 
-   private:
+private:
     std::vector<double> times_;
     std::vector<std::string> dirs_;
     std::map<std::string, std::shared_ptr<ScalarAccessor<T>>>

@@ -7,7 +7,7 @@
 #include "Kokkos_Core_fwd.hpp"
 
 struct IdConstructor {
-   public:
+public:
     IdConstructor() {
         _ids = std::vector<int>{};
         _offsets = std::vector<int>{0};
@@ -23,7 +23,7 @@ struct IdConstructor {
     std::vector<int> ids() const { return _ids; }
     std::vector<int> offsets() const { return _offsets; }
 
-   private:
+private:
     std::vector<int> _ids;
     std::vector<int> _offsets;
 };
@@ -31,7 +31,7 @@ struct IdConstructor {
 template <class Layout = Kokkos::DefaultExecutionSpace::array_layout,
           class Space = Kokkos::DefaultExecutionSpace::memory_space>
 struct Id {
-   public:
+public:
     using view_type = Kokkos::View<int*, Layout, Space>;
     using array_layout = typename view_type::array_layout;
     using memory_space = typename view_type::memory_space;
@@ -40,7 +40,7 @@ struct Id {
     using mirror_space = typename mirror_view_type::memory_space;
     using mirror_type = Id<mirror_layout, mirror_space>;
 
-   public:
+public:
     Id() {}
 
     Id(view_type ids, view_type offsets) {
@@ -130,7 +130,7 @@ struct Id {
     int num_ids() const { return _ids.extent(0); }
     view_type offsets() const { return _offsets; }
 
-   public:
+public:
     view_type _ids;
     view_type _offsets;
 };

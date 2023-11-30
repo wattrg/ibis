@@ -13,12 +13,12 @@
 using json = nlohmann::json;
 
 class Solver {
-   public:
+public:
     Solver(std::string grid_dir, std::string flow_dir);
     int solve();
     virtual ~Solver() {}
 
-   protected:
+protected:
     int write_solution();
     virtual int initialise() = 0;
     virtual int finalise() = 0;

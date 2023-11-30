@@ -57,13 +57,10 @@ double FiniteVolume<T>::estimate_dt(const FlowStates<T>& flow_state,
             for (unsigned int face_idx = 0; face_idx < cell_face_ids.size();
                  face_idx++) {
                 int i_face = cell_face_ids(face_idx);
-                T x_term =
-                    flow_state.vel.x(cell_i) * interfaces.norm().x(i_face);
-                T y_term =
-                    flow_state.vel.y(cell_i) * interfaces.norm().y(i_face);
-                T z_term =
+                T dot =
+                    flow_state.vel.x(cell_i) * interfaces.norm().x(i_face) +
+                    flow_state.vel.y(cell_i) * interfaces.norm().y(i_face) +
                     flow_state.vel.z(cell_i) * interfaces.norm().z(i_face);
-                T dot = x_term + y_term + z_term;
                 T sig_vel =
                     Kokkos::fabs(dot) +
                     Kokkos::sqrt(1.4 * 287.0 * flow_state.gas.temp(cell_i));
@@ -205,7 +202,7 @@ int FiniteVolume<T>::count_bad_cells(const FlowStates<T>& fs,
                                      const int num_cells) {
     int n_bad_cells = 0;
     Kokkos::parallel_reduce(
-        "RungeKutta::check_state", num_cells,
+        "FiniteVolume::count_bad_cells", num_cells,
         KOKKOS_LAMBDA(const int cell_i, int& n_bad_cells_utd) {
             if (fs.gas.temp(cell_i) < 0.0 || fs.gas.rho(cell_i) < 0.0) {
                 n_bad_cells_utd += 1;

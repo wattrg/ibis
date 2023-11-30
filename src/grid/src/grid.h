@@ -14,7 +14,7 @@ using json = nlohmann::json;
 template <typename T, class ExecSpace = Kokkos::DefaultExecutionSpace,
           class Layout = Kokkos::DefaultExecutionSpace::array_layout>
 class GridBlock {
-   public:
+public:
     using execution_space = ExecSpace;
     using memory_space = typename execution_space::memory_space;
     using array_layout = Layout;
@@ -23,7 +23,7 @@ class GridBlock {
         Kokkos::DefaultHostExecutionSpace::memory_space;
     using mirror_type = GridBlock<T, host_execution_space, array_layout>;
 
-   public:
+public:
     GridBlock() {}
 
     GridBlock(const GridIO& grid_io, json& config) {
@@ -285,7 +285,7 @@ class GridBlock {
         interfaces_.deep_copy(interfaces_host);
     }
 
-   public:
+public:
     Vertices<T, execution_space, array_layout> vertices_;
     Interfaces<T, execution_space, array_layout> interfaces_;
     Cells<T, execution_space, array_layout> cells_;
@@ -313,8 +313,8 @@ class GridBlock {
             std::vector<ElemIO> bc_faces = bc.second;
             json boundary_config = boundaries.at(bc_label);
 
-            // loop over all the boundary faces for this boundary, keeping track
-            // of which ones belong to this boundary
+            // loop over all the boundary faces for this boundary, keeping
+            // track of which ones belong to this boundary
             std::vector<int> boundary_cells{};
             std::vector<int> boundary_faces{};
             for (unsigned int boundary_i = 0; boundary_i < bc_faces.size();

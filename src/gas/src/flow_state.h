@@ -10,7 +10,7 @@
 
 template <typename T>
 struct FlowState {
-   public:
+public:
     FlowState() {}
 
     // ~FlowState(){}
@@ -25,7 +25,7 @@ template <typename T,
           class Layout = Kokkos::DefaultExecutionSpace::array_layout,
           class Space = Kokkos::DefaultExecutionSpace::memory_space>
 struct FlowStates {
-   public:
+public:
     using array_layout = Layout;
     using memory_space = Space;
     using host_mirror_mem_space =
@@ -34,7 +34,7 @@ struct FlowStates {
     using mirror_type =
         FlowStates<T, host_mirror_layout, host_mirror_mem_space>;
 
-   public:
+public:
     FlowStates() {}
 
     FlowStates(int n)

@@ -8,7 +8,7 @@
 #include "solver.h"
 
 class RungeKutta : public Solver {
-   public:
+public:
     RungeKutta(json config, GridBlock<double> grid, std::string grid_dir,
                std::string flow_dir);
 
@@ -16,7 +16,7 @@ class RungeKutta : public Solver {
 
     int solve();
 
-   private:
+private:
     // configuration
     double max_time_;
     unsigned int max_step_;
@@ -25,17 +25,17 @@ class RungeKutta : public Solver {
     int plot_every_n_steps_;
     double cfl_;
 
-   private:
+private:
     // progress
     double time_since_last_plot_;
     double t_;
     double dt_;
 
-   private:
+private:
     // input/output
     FVIO<double> io_;
 
-   private:
+private:
     // implementation
     int initialise();
     int finalise();
@@ -51,13 +51,13 @@ class RungeKutta : public Solver {
         return fv_.count_bad_cells(flow_, grid_.num_cells());
     }
 
-   private:
+private:
     // memory
     FlowStates<double> flow_;
     ConservedQuantities<double> conserved_quantities_;
     ConservedQuantities<double> dUdt_;
 
-   private:
+private:
     // spatial discretisation
     GridBlock<double> grid_;
     FiniteVolume<double> fv_;
