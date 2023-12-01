@@ -12,6 +12,7 @@ target_link_libraries(
 	doctest
 	spdlog::spdlog
 	finite_volume
+	gas
 )
 
 install(TARGETS python_api DESTINATION ${CMAKE_INSTALL_LIBDIR})

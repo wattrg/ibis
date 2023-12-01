@@ -1,12 +1,15 @@
-#include <iostream>
+#include "clean.h"
+
 #include <Python.h>
 #include <spdlog/spdlog.h>
-#include "clean.h"
+
+#include <iostream>
+
 #include "runtime_dirs.h"
 
 int clean(int argc, char* argv[]) {
-    (void) argc;
-    (void) argv;
+    (void)argc;
+    (void)argv;
     Py_Initialize();
 
     PyObject* res_dir = PyUnicode_FromString(Ibis::RES_DIR.c_str());
@@ -26,8 +29,8 @@ int clean(int argc, char* argv[]) {
         Py_Finalize();
         return 1;
     }
-    
-    PyObject *py_clean_main = PyObject_GetAttrString(clean_module, "main");
+
+    PyObject* py_clean_main = PyObject_GetAttrString(clean_module, "main");
     if (py_clean_main == NULL) {
         PyErr_Print();
         Py_DECREF(clean_module);
@@ -42,10 +45,10 @@ int clean(int argc, char* argv[]) {
     if (main_result == NULL) {
         PyErr_Print();
     }
-    
+
     Py_DECREF(py_clean_main);
     Py_DECREF(clean_module);
-    
+
     Py_Finalize();
 
     spdlog::info("Cleaned directory");

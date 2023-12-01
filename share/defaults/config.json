@@ -1,4 +1,5 @@
 {
     "dimensions": 2,
-    "solver": "runge_kutta"
+    "solver": "runge_kutta",
+    "gas_model": "ideal_air"
 }

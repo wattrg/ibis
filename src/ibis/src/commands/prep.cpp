@@ -1,16 +1,18 @@
 #define PY_SSIZE_T_CLEAN
-#include <Python.h>
-#include <iostream>
-#include <fstream>
-#include <cstdlib>
-#include <spdlog/spdlog.h>
 #include "prep.h"
+
+#include <Python.h>
+#include <spdlog/spdlog.h>
+
+#include <cstdlib>
+#include <fstream>
+#include <iostream>
+
 #include "runtime_dirs.h"
 
-
 int prep(int argc, char* argv[]) {
-    (void) argc;
-    (void) argv;
+    (void)argc;
+    (void)argv;
     Py_Initialize();
 
     PyObject* prep_script_name = PyUnicode_FromString("job.py");
@@ -37,8 +39,8 @@ int prep(int argc, char* argv[]) {
         Py_Finalize();
         return 1;
     }
-    
-    PyObject *py_prep_main = PyObject_GetAttrString(prep_module, "main");
+
+    PyObject* py_prep_main = PyObject_GetAttrString(prep_module, "main");
     if (py_prep_main == NULL) {
         PyErr_Print();
         Py_DECREF(prep_module);
@@ -49,7 +51,7 @@ int prep(int argc, char* argv[]) {
     PyObject* main_args = PyTuple_New(2);
     PyTuple_SetItem(main_args, 0, prep_script_name);
     PyTuple_SetItem(main_args, 1, res_dir);
-    PyObject *py_main_result = PyObject_CallObject(py_prep_main, main_args);
+    PyObject* py_main_result = PyObject_CallObject(py_prep_main, main_args);
     if (py_main_result == NULL) {
         PyErr_Print();
         Py_DECREF(prep_module);
@@ -58,7 +60,7 @@ int prep(int argc, char* argv[]) {
         Py_Finalize();
         return 1;
     }
-    
+
     Py_DECREF(py_prep_main);
     Py_DECREF(prep_module);
     Py_DECREF(main_args);

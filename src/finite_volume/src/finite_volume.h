@@ -1,40 +1,43 @@
 #ifndef FINITE_VOLUME_H
 #define FINITE_VOLUME_H
 
-#include "../../grid/src/grid.h"
-#include "../../gas/src/flow_state.h"
-#include "conserved_quantities.h"
-#include "boundaries/boundary.h"
-#include "flux_calc.h"
-#include "impl/Kokkos_HostThreadTeam.hpp"
 #include <nlohmann/json.hpp>
+
+#include "../../gas/src/flow_state.h"
+#include "../../gas/src/gas_model.h"
+#include "../../grid/src/grid.h"
+#include "boundaries/boundary.h"
+#include "conserved_quantities.h"
+#include "flux_calc.h"
 
 using json = nlohmann::json;
 
 template <typename T>
 class FiniteVolume {
 public:
-    FiniteVolume(){}
+    FiniteVolume() {}
 
     FiniteVolume(const GridBlock<T>& grid, json config);
 
-    int compute_dudt(FlowStates<T>& flow_state, 
-                      const GridBlock<T>& grid,
-                      ConservedQuantities<T>& dudt);
+    int compute_dudt(FlowStates<T>& flow_state, const GridBlock<T>& grid,
+                     ConservedQuantities<T>& dudt, IdealGas<T>& gas_model);
 
-    double estimate_dt(const FlowStates<T>& flow_state, GridBlock<T>& grid);
+    double estimate_dt(const FlowStates<T>& flow_state, GridBlock<T>& grid,
+                       IdealGas<T>& gas_model);
 
     // methods
-    // these have to be public for NVCC, but they shouldn't really need to be
-    // accessed from outside of the class
-    void apply_pre_reconstruction_bc(FlowStates<T>& fs, const GridBlock<T>& grid);
-    void reconstruct(FlowStates<T>& flow_states, const GridBlock<T>& grid, unsigned int order);
-    void flux_surface_integral(const GridBlock<T>& grid, ConservedQuantities<T>& dudt);
-    void compute_flux(const GridBlock<T>& grid);
+    // these have to be public for NVCC, but they shouldn't really need to
+    // be accessed from outside of the class
+    void apply_pre_reconstruction_bc(FlowStates<T>& fs,
+                                     const GridBlock<T>& grid);
+    void reconstruct(FlowStates<T>& flow_states, const GridBlock<T>& grid,
+                     unsigned int order);
+    void flux_surface_integral(const GridBlock<T>& grid,
+                               ConservedQuantities<T>& dudt);
+    void compute_flux(const GridBlock<T>& grid, IdealGas<T>& gas_model);
     void apply_post_convective_flux_bc();
     void apply_pre_spatial_deriv();
     int count_bad_cells(const FlowStates<T>& fs, const int num_cells);
-
 
 private:
     // memory
@@ -51,7 +54,8 @@ private:
     unsigned int reconstruction_order_;
     FluxCalculator flux_calculator_;
 
-
+    // gas model
+    IdealGas<T> gas_model_;
 };
 
 #endif

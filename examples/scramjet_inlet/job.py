@@ -1,17 +1,23 @@
-import math
-
 mach = 5.27
 T = 220
+p = 2416
 n_flows = 3
 n_plots = 3
 length = 2.3
-vx = mach * math.sqrt(1.4 * 287 * T)
-flow_state = FlowState(p=2416, T=T, vx=vx, vy=0.0)
+gas_model = IdealGas(287.0)
+gas_state = GasState()
+gas_state.p = p
+gas_state.T = T
+gas_model.update_thermo_from_pT(gas_state)
+vx = mach * gas_model.speed_of_sound(gas_state)
+flow_state = FlowState(gas=gas_state, vx=vx)
 
 config.convective_flux = ConvectiveFlux(
     flux_calculator = FluxCalculator.Ausmdv,
     reconstruction_order = 1
 )
+
+config.gas_model = gas_model
 
 config.solver = RungeKutta(
     cfl = 0.5,

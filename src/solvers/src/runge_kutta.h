@@ -4,15 +4,15 @@
 #include "../../finite_volume/src/conserved_quantities.h"
 #include "../../gas/src/flow_state.h"
 #include "../../grid/src/grid.h"
-#include "solver.h"
 #include "../../io/src/io.h"
-
+#include "solver.h"
 
 class RungeKutta : public Solver {
 public:
-    RungeKutta(json config, GridBlock<double> grid, std::string grid_dir, std::string flow_dir);
+    RungeKutta(json config, GridBlock<double> grid, std::string grid_dir,
+               std::string flow_dir);
 
-    ~RungeKutta(){}
+    ~RungeKutta() {}
 
     int solve();
 
@@ -46,9 +46,10 @@ private:
     void print_progress(unsigned int step);
     std::string stop_reason(unsigned int step);
     bool stop_now(unsigned int step);
-    int max_step() const {return max_step_;}
-    int count_bad_cells() {return fv_.count_bad_cells(flow_, grid_.num_cells());}
-
+    int max_step() const { return max_step_; }
+    int count_bad_cells() {
+        return fv_.count_bad_cells(flow_, grid_.num_cells());
+    }
 
 private:
     // memory
@@ -60,6 +61,9 @@ private:
     // spatial discretisation
     GridBlock<double> grid_;
     FiniteVolume<double> fv_;
+
+private:
+    IdealGas<double> gas_model_;
 };
 
 #endif

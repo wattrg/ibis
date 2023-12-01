@@ -1,17 +1,19 @@
-#include <algorithm>
-#include <functional>
-#include <doctest/doctest.h>
-#include "Kokkos_Core_fwd.hpp"
 #include "interface.h"
 
+#include <doctest/doctest.h>
+
+#include <algorithm>
+#include <functional>
+
+#include "Kokkos_Core_fwd.hpp"
 
 InterfaceLookup::InterfaceLookup() {
-    hash_map_ = std::unordered_map<std::string, int> {};
+    hash_map_ = std::unordered_map<std::string, int>{};
 }
 
 int InterfaceLookup::insert(std::vector<int> vertex_ids) {
     std::string hash = hash_vertex_ids(vertex_ids);
-    if (contains_hash(hash)){
+    if (contains_hash(hash)) {
         return hash_map_[hash];
     }
     int id = hash_map_.size();
@@ -48,146 +50,98 @@ std::string InterfaceLookup::hash_vertex_ids(std::vector<int> vertex_ids) {
 
 TEST_CASE("interface look up contains") {
     InterfaceLookup x;
-    x.insert(std::vector<int> {0, 1});
-    x.insert(std::vector<int> {1, 5});
-    x.insert(std::vector<int> {5, 4});
-    x.insert(std::vector<int> {5, 1});
+    x.insert(std::vector<int>{0, 1});
+    x.insert(std::vector<int>{1, 5});
+    x.insert(std::vector<int>{5, 4});
+    x.insert(std::vector<int>{5, 1});
 
-    CHECK(x.contains(std::vector<int> {1, 0}));
-    CHECK(x.contains(std::vector<int> {6, 1}) == false);
+    CHECK(x.contains(std::vector<int>{1, 0}));
+    CHECK(x.contains(std::vector<int>{6, 1}) == false);
 }
 
 TEST_CASE("interface look up id 1") {
     InterfaceLookup x;
-    x.insert(std::vector<int> {0, 1});
-    x.insert(std::vector<int> {1, 5});
-    x.insert(std::vector<int> {5, 4});
-    x.insert(std::vector<int> {5, 1});
+    x.insert(std::vector<int>{0, 1});
+    x.insert(std::vector<int>{1, 5});
+    x.insert(std::vector<int>{5, 4});
+    x.insert(std::vector<int>{5, 1});
 
-    CHECK(x.id(std::vector<int> {5, 1}) == 1);
-    CHECK(x.id(std::vector<int> {1, 5}) == 1);
+    CHECK(x.id(std::vector<int>{5, 1}) == 1);
+    CHECK(x.id(std::vector<int>{1, 5}) == 1);
 }
 
 TEST_CASE("interface look up id 2") {
     InterfaceLookup x;
-    x.insert(std::vector<int> {0, 1});
-    x.insert(std::vector<int> {1, 5});
-    x.insert(std::vector<int> {5, 4});
-    x.insert(std::vector<int> {5, 1});
+    x.insert(std::vector<int>{0, 1});
+    x.insert(std::vector<int>{1, 5});
+    x.insert(std::vector<int>{5, 4});
+    x.insert(std::vector<int>{5, 1});
 
-    CHECK(x.id(std::vector<int> {6, 1}) == -1);
+    CHECK(x.id(std::vector<int>{6, 1}) == -1);
 }
 
 TEST_CASE("interface look up") {
     InterfaceLookup x;
-    x.insert(std::vector<int> {0, 1});
-    x.insert(std::vector<int> {1, 5});
-    x.insert(std::vector<int> {5, 4});
-    x.insert(std::vector<int> {4, 0});
-    x.insert(std::vector<int> {1, 2});
-    x.insert(std::vector<int> {2, 6});
-    x.insert(std::vector<int> {6, 5});
-    x.insert(std::vector<int> {5, 1});
-    x.insert(std::vector<int> {2, 3});
-    x.insert(std::vector<int> {3, 7});
-    x.insert(std::vector<int> {7, 6});
-    x.insert(std::vector<int> {6, 2});
+    x.insert(std::vector<int>{0, 1});
+    x.insert(std::vector<int>{1, 5});
+    x.insert(std::vector<int>{5, 4});
+    x.insert(std::vector<int>{4, 0});
+    x.insert(std::vector<int>{1, 2});
+    x.insert(std::vector<int>{2, 6});
+    x.insert(std::vector<int>{6, 5});
+    x.insert(std::vector<int>{5, 1});
+    x.insert(std::vector<int>{2, 3});
+    x.insert(std::vector<int>{3, 7});
+    x.insert(std::vector<int>{7, 6});
+    x.insert(std::vector<int>{6, 2});
 
-    CHECK(x.id(std::vector<int> {0, 1}) == 0);
-    CHECK(x.id(std::vector<int> {1, 5}) == 1);
-    CHECK(x.id(std::vector<int> {5, 4}) == 2);
-    CHECK(x.id(std::vector<int> {4, 0}) == 3);
-    CHECK(x.id(std::vector<int> {1, 2}) == 4);
-    CHECK(x.id(std::vector<int> {2, 6}) == 5);
-    CHECK(x.id(std::vector<int> {6, 5}) == 6);
-    CHECK(x.id(std::vector<int> {2, 3}) == 7);
-    CHECK(x.id(std::vector<int> {3, 7}) == 8);
-    CHECK(x.id(std::vector<int> {7, 6}) == 9);
+    CHECK(x.id(std::vector<int>{0, 1}) == 0);
+    CHECK(x.id(std::vector<int>{1, 5}) == 1);
+    CHECK(x.id(std::vector<int>{5, 4}) == 2);
+    CHECK(x.id(std::vector<int>{4, 0}) == 3);
+    CHECK(x.id(std::vector<int>{1, 2}) == 4);
+    CHECK(x.id(std::vector<int>{2, 6}) == 5);
+    CHECK(x.id(std::vector<int>{6, 5}) == 6);
+    CHECK(x.id(std::vector<int>{2, 3}) == 7);
+    CHECK(x.id(std::vector<int>{3, 7}) == 8);
+    CHECK(x.id(std::vector<int>{7, 6}) == 9);
 }
 
 Interfaces<double> generate_interfaces() {
     Vertices<double> vertices(16);
     auto vertices_host = vertices.host_mirror();
-    std::vector<Vector3<double>> vertex_pos {
-        Vector3<double>(0.0, 0.0, 0.0),
-        Vector3<double>(1.0, 0.0, 0.0),
-        Vector3<double>(2.0, 0.0, 0.0),
-        Vector3<double>(3.0, 0.0, 0.0),
-        Vector3<double>(0.0, 1.0, 0.0),
-        Vector3<double>(1.0, 1.0, 0.0),
-        Vector3<double>(2.0, 1.0, 0.0),
-        Vector3<double>(3.0, 1.0, 0.0),
-        Vector3<double>(0.0, 2.0, 0.0),
-        Vector3<double>(1.0, 2.0, 0.0),
-        Vector3<double>(2.0, 2.0, 0.0),
-        Vector3<double>(3.0, 2.0, 0.0),
-        Vector3<double>(0.0, 3.0, 0.0),
-        Vector3<double>(1.0, 3.0, 0.0),
-        Vector3<double>(2.0, 3.0, 0.0),
-        Vector3<double>(3.0, 3.0, 0.0)
-    };
+    std::vector<Vector3<double>> vertex_pos{
+        Vector3<double>(0.0, 0.0, 0.0), Vector3<double>(1.0, 0.0, 0.0),
+        Vector3<double>(2.0, 0.0, 0.0), Vector3<double>(3.0, 0.0, 0.0),
+        Vector3<double>(0.0, 1.0, 0.0), Vector3<double>(1.0, 1.0, 0.0),
+        Vector3<double>(2.0, 1.0, 0.0), Vector3<double>(3.0, 1.0, 0.0),
+        Vector3<double>(0.0, 2.0, 0.0), Vector3<double>(1.0, 2.0, 0.0),
+        Vector3<double>(2.0, 2.0, 0.0), Vector3<double>(3.0, 2.0, 0.0),
+        Vector3<double>(0.0, 3.0, 0.0), Vector3<double>(1.0, 3.0, 0.0),
+        Vector3<double>(2.0, 3.0, 0.0), Vector3<double>(3.0, 3.0, 0.0)};
     for (int i = 0; i < 16; i++) {
         vertices_host.set_vertex_position(i, vertex_pos[i]);
     }
     vertices.deep_copy(vertices_host);
 
-    std::vector<std::vector<int>> interface_id_list {
-        {0, 1},
-        {1, 5},
-        {5, 4},
-        {4, 0},
-        {1, 2},
-        {2, 6},
-        {6, 5},
-        {2, 3},
-        {3, 7},
-        {7, 6},
-        {5, 9},
-        {9, 8},
-        {8, 4},
-        {6, 10},
-        {10, 9},
-        {7, 11},
-        {11, 10},
-        {9, 13},
-        {13, 12},
-        {12, 8},
-        {10, 14},
-        {14, 13},
-        {11, 15},
-        {15, 14}
-    };
+    std::vector<std::vector<int>> interface_id_list{
+        {0, 1},   {1, 5},  {5, 4},   {4, 0},   {1, 2},   {2, 6},
+        {6, 5},   {2, 3},  {3, 7},   {7, 6},   {5, 9},   {9, 8},
+        {8, 4},   {6, 10}, {10, 9},  {7, 11},  {11, 10}, {9, 13},
+        {13, 12}, {12, 8}, {10, 14}, {14, 13}, {11, 15}, {15, 14}};
     std::vector<ElemType> shapes = {
-        ElemType::Line,
-        ElemType::Line,
-        ElemType::Line,
-        ElemType::Line,
-        ElemType::Line,
-        ElemType::Line,
-        ElemType::Line,
-        ElemType::Line,
-        ElemType::Line,
-        ElemType::Line,
-        ElemType::Line,
-        ElemType::Line,
-        ElemType::Line,
-        ElemType::Line,
-        ElemType::Line,
-        ElemType::Line,
-        ElemType::Line,
-        ElemType::Line,
-        ElemType::Line,
-        ElemType::Line,
-        ElemType::Line,
-        ElemType::Line,
-        ElemType::Line,
-        ElemType::Line,
+        ElemType::Line, ElemType::Line, ElemType::Line, ElemType::Line,
+        ElemType::Line, ElemType::Line, ElemType::Line, ElemType::Line,
+        ElemType::Line, ElemType::Line, ElemType::Line, ElemType::Line,
+        ElemType::Line, ElemType::Line, ElemType::Line, ElemType::Line,
+        ElemType::Line, ElemType::Line, ElemType::Line, ElemType::Line,
+        ElemType::Line, ElemType::Line, ElemType::Line, ElemType::Line,
     };
     IdConstructor interface_id_constructor;
-    for (unsigned int i = 0; i < interface_id_list.size(); i++){
-        interface_id_constructor.push_back(interface_id_list[i]); 
+    for (unsigned int i = 0; i < interface_id_list.size(); i++) {
+        interface_id_constructor.push_back(interface_id_list[i]);
     }
-    Interfaces<double> interfaces (interface_id_constructor, shapes);
+    Interfaces<double> interfaces(interface_id_constructor, shapes);
     interfaces.compute_areas(vertices);
     interfaces.compute_orientations(vertices);
     interfaces.compute_centres(vertices);
@@ -199,7 +153,7 @@ TEST_CASE("Interface area") {
     auto areas = interfaces.area();
     auto areas_mirror = areas.host_mirror();
     areas_mirror.deep_copy(areas);
-    for (int i = 0; i < interfaces.size(); i++){
+    for (int i = 0; i < interfaces.size(); i++) {
         CHECK(Kokkos::abs(areas_mirror(i) - 1.0) < 1e-14);
     }
 }
@@ -234,16 +188,14 @@ TEST_CASE("Interface directions") {
     CHECK(Kokkos::abs(norm_mirror.z(5) - +0.0) < 1e-14);
 }
 
-TEST_CASE("Interface centres"){
+TEST_CASE("Interface centres") {
     Interfaces<double> interfaces = generate_interfaces();
-    std::vector<double> xs = {
-        0.5, 1.0, 0.5, 0.0, 1.5, 2.0, 1.5, 2.5, 3.0, 2.5, 1.0, 0.5, 0.0,
-        2.0, 1.5, 3.0, 2.5, 1.0, 0.5, 0.0, 2.0, 1.5, 3.0, 2.5
-    };
-    std::vector<double> ys = {
-        0.0, 0.5, 1.0, 0.5, 0.0, 0.5, 1.0, 0.0, 0.5, 1.0, 1.5, 2.0, 1.5, 1.5, 2.0, 1.5, 2.0,
-        2.5, 3.0, 2.5, 2.5, 3.0, 2.5, 3.0
-    };
+    std::vector<double> xs = {0.5, 1.0, 0.5, 0.0, 1.5, 2.0, 1.5, 2.5,
+                              3.0, 2.5, 1.0, 0.5, 0.0, 2.0, 1.5, 3.0,
+                              2.5, 1.0, 0.5, 0.0, 2.0, 1.5, 3.0, 2.5};
+    std::vector<double> ys = {0.0, 0.5, 1.0, 0.5, 0.0, 0.5, 1.0, 0.0,
+                              0.5, 1.0, 1.5, 2.0, 1.5, 1.5, 2.0, 1.5,
+                              2.0, 2.5, 3.0, 2.5, 2.5, 3.0, 2.5, 3.0};
     auto centres = interfaces.centre();
     auto centre_mirror = interfaces.centre().host_mirror();
     centre_mirror.deep_copy(centres);

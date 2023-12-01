@@ -1,8 +1,8 @@
 #ifndef PLOT_VTK_H
 #define PLOT_VTK_H
 
-#include <string>
 #include <nlohmann/json.hpp>
+#include <string>
 
 using json = nlohmann::json;
 
