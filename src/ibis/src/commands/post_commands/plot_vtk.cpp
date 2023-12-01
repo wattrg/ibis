@@ -26,14 +26,15 @@ void plot_vtk(json directories) {
         dirs.push_back(line);
     }
     json config = read_config(directories);
+    IdealGas<double> gas_model{config.at("gas_model")};
 
     FVIO<T> io(FlowFormat::Native, FlowFormat::Vtk, flow_dir, plot_dir);
     GridBlock<T> grid(grid_dir + "/block_0000.su2", config.at("grid"));
     FlowStates<T> fs(grid.num_cells());
     for (unsigned int time_idx = 0; time_idx < dirs.size(); time_idx++) {
         json meta_data;
-        io.read(fs, grid, meta_data, time_idx);
-        io.write(fs, grid, meta_data.at("time"));
+        io.read(fs, grid, gas_model, meta_data, time_idx);
+        io.write(fs, grid, gas_model, meta_data.at("time"));
         spdlog::info("Written VTK file at time index {}", time_idx);
     }
     io.write_coordinating_file();

@@ -9,8 +9,8 @@ public:
     NativeInput() {}
 
     int read(typename FlowStates<T>::mirror_type& fs,
-             const typename GridBlock<T>::mirror_type& grid, std::string dir,
-             json& meta_data);
+             const typename GridBlock<T>::mirror_type& grid,
+             const IdealGas<T>& gas_model, std::string dir, json& meta_data);
 };
 
 template <typename T>
@@ -20,7 +20,8 @@ public:
 
     int write(const typename FlowStates<T>::mirror_type& fs,
               const typename GridBlock<T>::mirror_type& grid,
-              std::string plot_dir, std::string time_dir, double time);
+              const IdealGas<T>& gas_model, std::string plot_dir,
+              std::string time_dir, double time);
     void write_coordinating_file(std::string plot_dir) { (void)plot_dir; }
 };
 

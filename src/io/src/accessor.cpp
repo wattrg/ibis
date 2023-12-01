@@ -2,43 +2,53 @@
 
 template <typename T>
 T PressureAccess<T>::access(
-    const FlowStates<T, array_layout, host_mem_space>& fs, const int i) {
+    const FlowStates<T, array_layout, host_mem_space>& fs,
+    const IdealGas<T>& gas_model, const int i) {
+    (void)gas_model;
     return fs.gas.pressure(i);
 }
 template class PressureAccess<double>;
 
 template <typename T>
 T TemperatureAccess<T>::access(
-    const FlowStates<T, array_layout, host_mem_space>& fs, const int i) {
+    const FlowStates<T, array_layout, host_mem_space>& fs,
+    const IdealGas<T>& gas_model, const int i) {
+    (void)gas_model;
     return fs.gas.temp(i);
 }
 template class TemperatureAccess<double>;
 
 template <typename T>
 T DensityAccess<T>::access(
-    const FlowStates<T, array_layout, host_mem_space>& fs, const int i) {
+    const FlowStates<T, array_layout, host_mem_space>& fs,
+    const IdealGas<T>& gas_model, const int i) {
+    (void)gas_model;
     return fs.gas.rho(i);
 }
 template class DensityAccess<double>;
 
 template <typename T>
 T InternalEnergyAccess<T>::access(
-    const FlowStates<T, array_layout, host_mem_space>& fs, const int i) {
+    const FlowStates<T, array_layout, host_mem_space>& fs,
+    const IdealGas<T>& gas_model, const int i) {
+    (void)gas_model;
     return fs.gas.energy(i);
 }
 template class InternalEnergyAccess<double>;
 
 template <typename T>
 T SpeedOfSoundAccess<T>::access(
-    const FlowStates<T, array_layout, host_mem_space>& fs, const int i) {
-    return Kokkos::sqrt(1.4 * 287.0 * fs.gas.temp(i));
+    const FlowStates<T, array_layout, host_mem_space>& fs,
+    const IdealGas<T>& gas_model, const int i) {
+    return gas_model.speed_of_sound(fs.gas, i);
 }
 template class SpeedOfSoundAccess<double>;
 
 template <typename T>
 T MachNumberAccess<T>::access(
-    const FlowStates<T, array_layout, host_mem_space>& fs, const int i) {
-    T a = Kokkos::sqrt(1.4 * 287.0 * fs.gas.temp(i));
+    const FlowStates<T, array_layout, host_mem_space>& fs,
+    const IdealGas<T>& gas_model, const int i) {
+    T a = gas_model.speed_of_sound(fs.gas, i);
     T vx = fs.vel.x(i);
     T vy = fs.vel.y(i);
     T vz = fs.vel.z(i);

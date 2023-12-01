@@ -21,14 +21,15 @@ template <typename T>
 void write_scalar_field(std::ofstream& f,
                         const FlowStates<T, array_layout, host_mem_space> fs,
                         std::shared_ptr<ScalarAccessor<T>> accessor,
-                        std::string name, std::string type, int num_values) {
+                        const IdealGas<T>& gas_model, std::string name,
+                        std::string type, int num_values) {
     f << "<DataArray type='" << type << "' ";
     f << "NumberOfComponents='1' ";
     f << "Name='" << name << "' ";
     f << "format='ascii'>" << std::endl;
 
     for (int i = 0; i < num_values; i++) {
-        f << accessor->access(fs, i) << std::endl;
+        f << accessor->access(fs, gas_model, i) << std::endl;
     }
 
     f << "</DataArray>" << std::endl;
@@ -86,8 +87,8 @@ VtkOutput<T>::VtkOutput() {
 template <typename T>
 int VtkOutput<T>::write(const typename FlowStates<T>::mirror_type& fs,
                         const typename GridBlock<T>::mirror_type& grid,
-                        std::string plot_dir, std::string time_dir,
-                        double time) {
+                        const IdealGas<T>& gas_model, std::string plot_dir,
+                        std::string time_dir, double time) {
     std::ofstream f(plot_dir + "/" + time_dir + "/" + "/block_0.vtu");
     f << "<VTKFile type='UnstructuredGrid' byte_order='BigEndian'>"
       << std::endl;
@@ -112,7 +113,8 @@ int VtkOutput<T>::write(const typename FlowStates<T>::mirror_type& fs,
     for (auto& key_value : m_scalar_accessors) {
         std::string name = key_value.first;
         std::shared_ptr<ScalarAccessor<T>> accessor = key_value.second;
-        write_scalar_field(f, fs, accessor, name, "Float64", grid.num_cells());
+        write_scalar_field(f, fs, accessor, gas_model, name, "Float64",
+                           grid.num_cells());
     }
     write_vector_field(f, fs.vel, "velocity", "Float64", grid.num_cells());
     f << "</CellData>" << std::endl;

@@ -8,8 +8,9 @@
 template <typename T>
 int NativeOutput<T>::write(const typename FlowStates<T>::mirror_type& fs,
                            const typename GridBlock<T>::mirror_type& grid,
-                           std::string plot_dir, std::string time_dir,
-                           double time) {
+                           const IdealGas<T>& gas_model, std::string plot_dir,
+                           std::string time_dir, double time) {
+    (void)gas_model;
     std::string dir = plot_dir + "/" + time_dir;
     std::ofstream meta_f(dir + "/meta_data.json");
     json meta;
@@ -88,7 +89,8 @@ template class NativeOutput<double>;
 template <typename T>
 int NativeInput<T>::read(typename FlowStates<T>::mirror_type& fs,
                          const typename GridBlock<T>::mirror_type& grid,
-                         std::string dir, json& meta_data) {
+                         const IdealGas<T>& gas_model, std::string dir,
+                         json& meta_data) {
     int num_cells = grid.num_cells();
     std::ifstream meta_f(dir + "/meta_data.json");
     if (!meta_f) {
@@ -152,10 +154,10 @@ int NativeInput<T>::read(typename FlowStates<T>::mirror_type& fs,
     }
     vy.close();
 
+    // gas_model.update_thermo_from_pT(fs.gas);
+
     for (int cell_i = 0; cell_i < num_cells; cell_i++) {
-        fs.gas.rho(cell_i) =
-            fs.gas.pressure(cell_i) / (287.0 * fs.gas.temp(cell_i));
-        fs.gas.energy(cell_i) = 717.5 * fs.gas.temp(cell_i);
+        gas_model.update_thermo_from_pT(fs.gas, cell_i);
     }
 
     return 0;

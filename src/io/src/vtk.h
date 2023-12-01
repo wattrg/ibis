@@ -11,7 +11,8 @@ public:
 
     int write(const typename FlowStates<T>::mirror_type& fs,
               const typename GridBlock<T>::mirror_type& grid,
-              std::string plot_dir, std::string time_dir, double time);
+              const IdealGas<T>& gas_model, std::string plot_dir,
+              std::string time_dir, double time);
 
     void write_coordinating_file(std::string plot_dir);
 

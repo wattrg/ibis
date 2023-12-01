@@ -71,7 +71,7 @@ FVIO<T>::FVIO(int time_index)
 
 template <typename T>
 int FVIO<T>::write(const FlowStates<T>& fs, const GridBlock<T>& grid,
-                   double time) {
+                   const IdealGas<T>& gas_model, double time) {
     // get a copy of the flow states and grid on the CPU
     auto grid_host = grid.host_mirror();
     auto fs_host = fs.host_mirror();
@@ -82,20 +82,21 @@ int FVIO<T>::write(const FlowStates<T>& fs, const GridBlock<T>& grid,
     std::string directory_name = output_dir_ + "/" + time_index;
     std::filesystem::create_directory(output_dir_);
     std::filesystem::create_directory(directory_name);
-    int result =
-        output_->write(fs_host, grid_host, output_dir_, time_index, time);
+    int result = output_->write(fs_host, grid_host, gas_model, output_dir_,
+                                time_index, time);
     time_index_++;
     return result;
 }
 
 template <typename T>
-int FVIO<T>::read(FlowStates<T>& fs, const GridBlock<T>& grid, json& meta_data,
-                  int time_idx) {
+int FVIO<T>::read(FlowStates<T>& fs, const GridBlock<T>& grid,
+                  const IdealGas<T>& gas_model, json& meta_data, int time_idx) {
     auto grid_host = grid.host_mirror();
     auto fs_host = fs.host_mirror();
     std::string time_index = pad_time_index(time_idx, 4);
     std::string directory_name = input_dir_ + "/" + time_index;
-    int result = input_->read(fs_host, grid_host, directory_name, meta_data);
+    int result =
+        input_->read(fs_host, grid_host, gas_model, directory_name, meta_data);
     fs.deep_copy(fs_host);
     return result;
 }
