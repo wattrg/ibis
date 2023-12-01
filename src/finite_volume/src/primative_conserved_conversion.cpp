@@ -3,7 +3,8 @@
 #include "conserved_quantities.h"
 
 template <typename T>
-int conserved_to_primatives(ConservedQuantities<T>& cq, FlowStates<T>& fs) {
+int conserved_to_primatives(ConservedQuantities<T>& cq, FlowStates<T>& fs,
+                            const IdealGas<T>& gm) {
     Kokkos::parallel_for(
         "FS::from_conserved_quantities", fs.gas.size(),
         KOKKOS_LAMBDA(const int i) {
@@ -21,16 +22,18 @@ int conserved_to_primatives(ConservedQuantities<T>& cq, FlowStates<T>& fs) {
             fs.vel.y(i) = vy;
             fs.vel.z(i) = vz;
             fs.gas.energy(i) = u;
-            fs.gas.temp(i) = u / 717.5;
-            fs.gas.pressure(i) = rho * 287.0 * fs.gas.temp(i);
+            gm.update_thermo_from_rhou(fs.gas, i);
         });
     return 0;
 }
 template int conserved_to_primatives(ConservedQuantities<double>& cq,
-                                     FlowStates<double>& fs);
+                                     FlowStates<double>& fs,
+                                     const IdealGas<double>& gm);
 
 template <typename T>
-int primatives_to_conserved(ConservedQuantities<T>& cq, FlowStates<T>& fs) {
+int primatives_to_conserved(ConservedQuantities<T>& cq, FlowStates<T>& fs,
+                            const IdealGas<T>& gm) {
+    (void)gm;
     Kokkos::parallel_for(
         "CQ::from_flow_state", fs.gas.size(), KOKKOS_LAMBDA(const int i) {
             T vx = fs.vel.x(i);
@@ -44,9 +47,10 @@ int primatives_to_conserved(ConservedQuantities<T>& cq, FlowStates<T>& fs) {
                 cq.momentum_z(i) = rho * vz;
             }
             T ke = 0.5 * (vx * vx + vy * vy + vz * vz);
-            cq.energy(i) = rho * (ke + 717.5 * fs.gas.temp(i));
+            cq.energy(i) = rho * (ke + fs.gas.energy(i));
         });
     return 0;
 }
 template int primatives_to_conserved(ConservedQuantities<double>& cq,
-                                     FlowStates<double>& fs);
+                                     FlowStates<double>& fs,
+                                     const IdealGas<double>& gm);

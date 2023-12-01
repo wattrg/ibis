@@ -15,8 +15,6 @@ FiniteVolume<T>::FiniteVolume(const GridBlock<T>& grid, json config)
     flux_calculator_ = flux_calculator_from_string(
         convective_flux_config.at("flux_calculator"));
 
-    gas_model_ = IdealGas<T>(config.at("gas_model"));
-
     std::vector<std::string> boundary_tags = grid.boundary_tags();
     json boundaries_config = config.at("grid").at("boundaries");
     for (unsigned int bi = 0; bi < boundary_tags.size(); bi++) {
@@ -34,22 +32,24 @@ FiniteVolume<T>::FiniteVolume(const GridBlock<T>& grid, json config)
 template <typename T>
 int FiniteVolume<T>::compute_dudt(FlowStates<T>& flow_state,
                                   const GridBlock<T>& grid,
-                                  ConservedQuantities<T>& dudt) {
+                                  ConservedQuantities<T>& dudt,
+                                  IdealGas<T>& gas_model) {
     apply_pre_reconstruction_bc(flow_state, grid);
     reconstruct(flow_state, grid, reconstruction_order_);
-    compute_flux(grid);
+    compute_flux(grid, gas_model);
     flux_surface_integral(grid, dudt);
     return 0;
 }
 
 template <typename T>
 double FiniteVolume<T>::estimate_dt(const FlowStates<T>& flow_state,
-                                    GridBlock<T>& grid) {
+                                    GridBlock<T>& grid,
+                                    IdealGas<T>& gas_model) {
     int num_cells = grid.num_cells();
     CellFaces<T> cell_interfaces = grid.cells().faces();
     Interfaces<T> interfaces = grid.interfaces();
     Cells<T> cells = grid.cells();
-    IdealGas<T> gas_model = gas_model_;
+    // IdealGas<T> gas_model = gas_model_;
 
     double dt;
     Kokkos::parallel_reduce(
@@ -65,7 +65,6 @@ double FiniteVolume<T>::estimate_dt(const FlowStates<T>& flow_state,
                         flow_state.vel.z(cell_i) * interfaces.norm().z(i_face);
                 T sig_vel = Kokkos::fabs(dot) +
                             gas_model.speed_of_sound(flow_state.gas, cell_i);
-                // Kokkos::sqrt(1.4 * 287.0 * flow_state.gas.temp(cell_i));
                 spectral_radii += sig_vel * interfaces.area(i_face);
             }
             T local_dt = cells.volume(cell_i) / spectral_radii;
@@ -120,7 +119,8 @@ void FiniteVolume<T>::reconstruct(FlowStates<T>& flow_states,
 }
 
 template <typename T>
-void FiniteVolume<T>::compute_flux(const GridBlock<T>& grid) {
+void FiniteVolume<T>::compute_flux(const GridBlock<T>& grid,
+                                   IdealGas<T>& gas_model) {
     // rotate velocities to the interface local frames
     Interfaces<T> faces = grid.interfaces();
     transform_to_local_frame(left_.vel, faces.norm(), faces.tan1(),
@@ -130,10 +130,10 @@ void FiniteVolume<T>::compute_flux(const GridBlock<T>& grid) {
 
     switch (flux_calculator_) {
         case FluxCalculator::Hanel:
-            hanel(left_, right_, flux_, dim_ == 3);
+            hanel(left_, right_, flux_, gas_model, dim_ == 3);
             break;
         case FluxCalculator::Ausmdv:
-            ausmdv(left_, right_, flux_, dim_ == 3);
+            ausmdv(left_, right_, flux_, gas_model, dim_ == 3);
             break;
     }
 

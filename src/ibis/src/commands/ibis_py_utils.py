@@ -33,6 +33,7 @@ class FlowState:
     def as_dict(self):
         return {
             "p": self.gas.p, "T": self.gas.T, 
+            "rho": self.gas.rho, "energy": self.gas.energy,
             "vx": self.vel.x, "vy": self.vel.y, "vz": self.vel.z
         }
 

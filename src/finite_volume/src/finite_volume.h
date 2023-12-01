@@ -20,9 +20,10 @@ public:
     FiniteVolume(const GridBlock<T>& grid, json config);
 
     int compute_dudt(FlowStates<T>& flow_state, const GridBlock<T>& grid,
-                     ConservedQuantities<T>& dudt);
+                     ConservedQuantities<T>& dudt, IdealGas<T>& gas_model);
 
-    double estimate_dt(const FlowStates<T>& flow_state, GridBlock<T>& grid);
+    double estimate_dt(const FlowStates<T>& flow_state, GridBlock<T>& grid,
+                       IdealGas<T>& gas_model);
 
     // methods
     // these have to be public for NVCC, but they shouldn't really need to
@@ -33,7 +34,7 @@ public:
                      unsigned int order);
     void flux_surface_integral(const GridBlock<T>& grid,
                                ConservedQuantities<T>& dudt);
-    void compute_flux(const GridBlock<T>& grid);
+    void compute_flux(const GridBlock<T>& grid, IdealGas<T>& gas_model);
     void apply_post_convective_flux_bc();
     void apply_pre_spatial_deriv();
     int count_bad_cells(const FlowStates<T>& fs, const int num_cells);

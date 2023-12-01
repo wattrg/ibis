@@ -8,13 +8,14 @@ template <typename T>
 FlowStateCopy<T>::FlowStateCopy(json flow_state) {
     T temp = flow_state.at("T");
     T pressure = flow_state.at("p");
+    T rho = flow_state.at("rho");
+    T energy = flow_state.at("energy");
 
     GasState<T> gs;
     gs.temp = temp;
     gs.pressure = pressure;
-    gs.rho = pressure / (287.0 * temp);
-    gs.energy = 717.5 * temp;
-    gs.a = Kokkos::sqrt(1.4 * 287.0 * temp);
+    gs.rho = rho;
+    gs.energy = energy;
 
     T vx = flow_state.at("vx");
     T vy = flow_state.at("vy");

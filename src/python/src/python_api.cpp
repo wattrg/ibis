@@ -11,9 +11,7 @@
 
 #include <Kokkos_Core.hpp>
 
-using host_layout = Kokkos::DefaultHostExecutionSpace::array_layout;
-using host_space = Kokkos::DefaultHostExecutionSpace::memory_space;
-using ideal_gas = IdealGas<double, host_layout, host_space>;
+using ideal_gas = IdealGas<double>;
 
 PYBIND11_MODULE(python_api, m) {
     m.doc() = "ibis python module";
@@ -23,7 +21,7 @@ PYBIND11_MODULE(python_api, m) {
         .def_readwrite("p", &GasState<double>::pressure, "pressure (Pa)")
         .def_readwrite("T", &GasState<double>::temp, "temperature (K)")
         .def_readwrite("rho", &GasState<double>::rho, "density (kg/m^3)")
-        .def_readwrite("a", &GasState<double>::a, "speed of sound (m/s)");
+        .def_readwrite("energy", &GasState<double>::energy, "energy (J/kg)");
 
     pybind11::class_<ideal_gas>(m, "PyIdealGas")
         .def(pybind11::init<double>())

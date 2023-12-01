@@ -6,14 +6,14 @@
 
 template <typename T>
 void hanel(FlowStates<T>& left, FlowStates<T>& right,
-           ConservedQuantities<T>& flux, bool three_d) {
+           ConservedQuantities<T>& flux, IdealGas<T>& gm, bool three_d) {
     Kokkos::parallel_for(
         "Flux::hanel", flux.size(), KOKKOS_LAMBDA(const int i) {
             // unpack left gas state
             T rL = left.gas.rho(i);
             T pL = left.gas.pressure(i);
-            T eL = 717.5 * left.gas.temp(i);  // left.gas.energy(i);
-            T aL = Kokkos::sqrt(1.4 * 287.0 * left.gas.temp(i));
+            T eL = gm.internal_energy(left.gas, i);
+            T aL = gm.speed_of_sound(left.gas, i);
             T uL = left.vel.x(i);
             T vL = left.vel.y(i);
             T wL = left.vel.z(i);
@@ -24,8 +24,8 @@ void hanel(FlowStates<T>& left, FlowStates<T>& right,
             // unpack right gas state
             T rR = right.gas.rho(i);
             T pR = right.gas.pressure(i);
-            T eR = 717.5 * right.gas.temp(i);  // right.gas.energy(i);
-            T aR = Kokkos::sqrt(1.4 * 287.0 * right.gas.temp(i));
+            T eR = gm.internal_energy(right.gas, i);
+            T aR = gm.speed_of_sound(right.gas, i);
             T uR = right.vel.x(i);
             T vR = right.vel.y(i);
             T wR = right.vel.z(i);
@@ -65,4 +65,5 @@ void hanel(FlowStates<T>& left, FlowStates<T>& right,
 }
 
 template void hanel<double>(FlowStates<double>&, FlowStates<double>&,
-                            ConservedQuantities<double>&, bool);
+                            ConservedQuantities<double>&, IdealGas<double>&,
+                            bool);

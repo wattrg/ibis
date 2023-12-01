@@ -61,6 +61,9 @@ private:
     // spatial discretisation
     GridBlock<double> grid_;
     FiniteVolume<double> fv_;
+
+private:
+    IdealGas<double> gas_model_;
 };
 
 #endif

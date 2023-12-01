@@ -6,7 +6,7 @@
 
 template <typename T>
 void ausmdv(FlowStates<T>& left, FlowStates<T>& right,
-            ConservedQuantities<T>& flux, bool three_d) {
+            ConservedQuantities<T>& flux, IdealGas<T>& gm, bool three_d) {
     Kokkos::parallel_for(
         "ausmdv", flux.size(), KOKKOS_LAMBDA(const int i) {
             T rL = left.gas.rho(i);
@@ -15,8 +15,8 @@ void ausmdv(FlowStates<T>& left, FlowStates<T>& right,
             T uL = left.vel.x(i);
             T vL = left.vel.y(i);
             T wL = left.vel.z(i);
-            T eL = 717.5 * left.gas.temp(i);
-            T aL = Kokkos::sqrt(1.4 * 287.0 * left.gas.temp(i));
+            T eL = gm.internal_energy(left.gas, i);
+            T aL = gm.speed_of_sound(left.gas, i);
             T keL = 0.5 * (uL * uL + vL * vL + wL * wL);
             T HL = eL + pLrL + keL;
 
@@ -26,8 +26,8 @@ void ausmdv(FlowStates<T>& left, FlowStates<T>& right,
             T uR = right.vel.x(i);
             T vR = right.vel.y(i);
             T wR = right.vel.z(i);
-            T eR = 717.5 * right.gas.temp(i);
-            T aR = Kokkos::sqrt(1.4 * 287.0 * right.gas.temp(i));
+            T eR = gm.internal_energy(right.gas, i);
+            T aR = gm.speed_of_sound(right.gas, i);
             T keR = 0.5 * (uR * uR + vR * vR + wR * wR);
             T HR = eR + pRrR + keR;
 
@@ -132,4 +132,5 @@ void ausmdv(FlowStates<T>& left, FlowStates<T>& right,
         });
 }
 template void ausmdv<double>(FlowStates<double>&, FlowStates<double>&,
-                             ConservedQuantities<double>&, bool);
+                             ConservedQuantities<double>&, IdealGas<double>&,
+                             bool);
