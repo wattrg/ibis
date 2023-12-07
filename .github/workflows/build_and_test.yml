@@ -46,8 +46,7 @@ jobs:
           python3 -m pip install --upgrade pip &&
 
     - name: configure
-      run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=Release -DKokkos_ENABLE_HIP=ON -
-      -DCMAKE_CXX_COMPILER=amdclang++ -DKokkos_ARCH_VEGA90A=ON
+      run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=Release -DKokkos_ENABLE_HIP=ON -DCMAKE_CXX_COMPILER=amdclang++ -DKokkos_ARCH_VEGA90A=ON
     
     - name: build
       run: cmake --build ${{github.workspace}}/build --config Release 
