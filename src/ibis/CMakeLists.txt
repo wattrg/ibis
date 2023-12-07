@@ -17,5 +17,6 @@ target_link_libraries(
 	runtime_dirs
 	spdlog::spdlog
 	solver
+	stdc++fs
 )
 install(TARGETS ibis DESTINATION ${CMAKE_INSTALL_BIN_DIR})
