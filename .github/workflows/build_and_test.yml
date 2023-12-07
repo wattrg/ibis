@@ -6,6 +6,10 @@ on:
   pull_request:
     branches: [ "main" ]
 
+env:
+  ROCM_PATH: /opt/rocm
+  HIP_PATH: /opt/rocm/hip
+
 jobs:
   build_cuda:
     runs-on: ubuntu-latest
@@ -29,9 +33,6 @@ jobs:
 
   build_rocm:
     runs-on: ubuntu-latest
-    env:
-      ROCM_PATH: /opt/rocm
-      HIP_PATH: /opt/rocm/hip
     steps:
     - uses: actions/checkout@v3
       with:
@@ -52,8 +53,6 @@ jobs:
       run: |
           echo "PATH=$HOME/.local/bin:${{env.ROCM_PATH}}/bin:${{env.HIP_PATH}}/bin:$PATH" >> $GITHUB_PATH &&
           echo "LD_LIBRARY_PATH=${{env.ROCM_PATH}}:${{env.HIP_PATH}}:/usr/local/lib:${LD_LIBRARY_PATH}" >> $GITHUB_ENV &&
-          echo "export ROCM_PATH=${{env.ROCM_PATH}}"
-          echo "export HIP_PATH=${{env.HIP_PATH}}"
 
     - name: configure
       run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=Release -DKokkos_ENABLE_HIP=ON -DCMAKE_CXX_COMPILER=amdclang++ -DKokkos_ARCH_VEGA90A=ON
