@@ -55,7 +55,10 @@ jobs:
           echo "LD_LIBRARY_PATH=${{env.ROCM_PATH}}:${{env.HIP_PATH}}:/usr/local/lib:${LD_LIBRARY_PATH}" >> $GITHUB_ENV
 
     - name: configure
-      run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=Release -DKokkos_ENABLE_HIP=ON -DCMAKE_CXX_COMPILER=amdclang++ -DKokkos_ARCH_VEGA90A=ON
+      run: | 
+        echo $ROCM_PATH &&
+        echo $(which amdclang++)
+        cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=Release -DKokkos_ENABLE_HIP=ON -DCMAKE_CXX_COMPILER=amdclang++ -DKokkos_ARCH_VEGA90A=ON
     
     - name: build
       run: cmake --build ${{github.workspace}}/build --config Release 
