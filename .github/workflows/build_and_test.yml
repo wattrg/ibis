@@ -46,7 +46,7 @@ jobs:
           echo 'deb [arch=amd64 signed-by=/etc/apt/trusted.gpg.d/rocm-keyring.gpg] https://repo.radeon.com/rocm/apt/5.7.1 jammy main' | sudo tee /etc/apt/sources.list.d/rocm.list &&
           echo -e 'Package: *\nPin: release o=repo.radeon.com\nPin-Priority: 600' | sudo tee /etc/apt/preferences.d/rocm-pin-600 &&
           sudo apt update &&
-          sudo apt-get install -y build-essential python3-pip clang g++ rocm-dev hip-dev rocm-libs
+          sudo apt-get install -y build-essential python3-pip clang clang++ g++ rocm-dev hip-dev rocm-libs
 
     # Configure PATH for ROCM
     - name: Configure Environment
@@ -58,6 +58,7 @@ jobs:
       run: | 
         echo $ROCM_PATH &&
         echo $(which amdclang++)
+        echo $(ls $ENV{ROCM_PATH}/llvm/lib/clang/*/lib/*/*clang_rt.builtins*)
         cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=Release -DKokkos_ENABLE_HIP=ON -DCMAKE_CXX_COMPILER=amdclang++ -DKokkos_ARCH_VEGA90A=ON
     
     - name: build
