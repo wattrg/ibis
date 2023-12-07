@@ -27,6 +27,31 @@ jobs:
     - name: build
       run: cmake --build ${{github.workspace}}/build --config Release
 
+  build_rocm:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        submodules: true
+
+    - name: Install ROCM/HIP
+      run: |
+          sudo apt-get update &&
+          sudo apt-get install -y software-properties-common wget gnupg2 &&
+          curl -fsSL https://repo.radeon.com/rocm/rocm.gpg.key | sudo gpg --dearmor -o /etc/apt/trusted.gpg.d/rocm-keyring.gpg
+          echo 'deb [arch=amd64 signed-by=/etc/apt/trusted.gpg.d/rocm-keyring.gpg] https://repo.radeon.com/rocm/apt/${{env.ROCM_VERSION}} focal main' | sudo tee /etc/apt/sources.list.d/rocm.list &&
+          echo -e 'Package: *\nPin: release o=repo.radeon.com\nPin-Priority: 600' | sudo tee /etc/apt/preferences.d/rocm-pin-600 &&
+          sudo apt update &&
+          sudo apt-get install -y build-essential python3-pip clang g++ rocm-dev hip-dev rocm-libs &&
+          python3 -m pip install --upgrade pip &&
+
+    - name: configure
+      run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=Release -DKokkos_ENABLE_HIP=ON -
+      -DCMAKE_CXX_COMPILER=amdclang++ -DKokkos_ARCH_VEGA90A=ON
+    
+    - name: build
+      run: cmake --build ${{github.workspace}}/build --config Release 
+
   build_serial:
     runs-on: ${{ matrix.os }}
 
