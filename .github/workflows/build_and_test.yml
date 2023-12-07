@@ -29,6 +29,9 @@ jobs:
 
   build_rocm:
     runs-on: ubuntu-latest
+    env:
+      ROCM_PATH: /opt/rocm
+      HIP_PATH: /opt/rocm/hip
     steps:
     - uses: actions/checkout@v3
       with:
