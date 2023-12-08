@@ -44,10 +44,13 @@ cd build
 cmake .. -DKokkos_ENABLE_[ARCH]=ON
 make install
 ```
-where `[ARCH]` refers to the architecture to build for. For example, `[ARCH]` could be `SERIAL`, `OPENMP`, `CUDA`, or `HIP`. If compiling with `HIP`, you'll also need to use
+where `[ARCH]` refers to the architecture to build for. For example, `[ARCH]` could be `SERIAL`, `OPENMP`, `CUDA`. 
+
+If compiling with `HIP`, you'll need to make sure the `ROCM_PATH` environment variable is set to `opt/rocm`. 
+And you'll also have to change the `cmake` line to:
 
 ```
-cmake .. -DKokkos_ENABLE_HIP=ON -DCMAKE_CXX_COMPILER=amdclang++
+cmake .. -DKokkos_ENABLE_HIP=ON -DCMAKE_CXX_COMPILER=hipcc
 ```
 
 This will compile and install ibis. You probably want to add the install directory (by default this is in the `inst` folder in the root of the repository) to your `PATH`.
