@@ -18,7 +18,7 @@ target_link_libraries(
 	spdlog::spdlog
 	solver
 )
-if (Kokkos_ENABLE_HIP)
-	target_link_libraries(ibis PUBILC stdc++fs)
-endif()
+# if (Kokkos_ENABLE_HIP)
+# 	target_link_libraries(ibis PUBILC stdc++fs)
+# endif()
 install(TARGETS ibis DESTINATION ${CMAKE_INSTALL_BIN_DIR})
