@@ -58,7 +58,7 @@ jobs:
       run: | 
         echo $ROCM_PATH &&
         echo $(which amdclang++)
-        echo $(ls $ENV{ROCM_PATH}/llvm/lib/clang/*/lib/*/*clang_rt.builtins*)
+        echo $(ls $(ROCM_PATH)/llvm/lib/clang/*/lib/*/*clang_rt.builtins*)
         cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=Release -DKokkos_ENABLE_HIP=ON -DCMAKE_CXX_COMPILER=amdclang++ -DKokkos_ARCH_VEGA90A=ON
     
     - name: build
