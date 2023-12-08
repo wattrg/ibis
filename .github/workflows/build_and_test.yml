@@ -46,7 +46,7 @@ jobs:
           echo 'deb [arch=amd64 signed-by=/etc/apt/trusted.gpg.d/rocm-keyring.gpg] https://repo.radeon.com/rocm/apt/5.7.1 jammy main' | sudo tee /etc/apt/sources.list.d/rocm.list &&
           echo -e 'Package: *\nPin: release o=repo.radeon.com\nPin-Priority: 600' | sudo tee /etc/apt/preferences.d/rocm-pin-600 &&
           sudo apt update &&
-          sudo apt-get install -y build-essential rocm-dev hip-dev rocm-libs
+          sudo apt-get install -y build-essential rocm-dev hip-dev rocm-libs rocm-hip-libraries rocm-llvm
 
     # Configure PATH for ROCM
     - name: Configure Environment
