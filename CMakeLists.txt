@@ -32,6 +32,7 @@ add_subdirectory(extern/doctest EXCLUDE_FROM_ALL)
 add_subdirectory(extern/kokkos EXCLUDE_FROM_ALL)
 add_subdirectory(extern/json EXCLUDE_FROM_ALL)
 add_subdirectory(extern/spdlog EXCLUDE_FROM_ALL)
+find_package(Python COMPONENTS Interpreter Development REQUIRED)
 add_subdirectory(extern/pybind11 EXCLUDE_FROM_ALL)
 
 # tests configuration
