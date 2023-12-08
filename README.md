@@ -46,7 +46,7 @@ make install
 ```
 where `[ARCH]` refers to the architecture to build for. For example, `[ARCH]` could be `SERIAL`, `OPENMP`, `CUDA`. 
 
-If compiling with `HIP`, you'll need to make sure the `ROCM_PATH` environment variable is set to `opt/rocm`. 
+If compiling with `HIP`, you'll need to make sure the `ROCM_PATH` environment variable is set to `/opt/rocm`. 
 And you'll also have to change the `cmake` line to:
 
 ```
