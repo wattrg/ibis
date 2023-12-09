@@ -53,6 +53,12 @@ And you'll also have to change the `cmake` line to:
 cmake .. -DKokkos_ENABLE_HIP=ON -DCMAKE_CXX_COMPILER=hipcc
 ```
 
+If compiling with `HIP` on bunya, it needs to manually link to the filesystem library:
+
+```
+cmake .. -DKokkos_ENABLE_HIP=ON -DCMAKE_CXX_COMPILER=hipcc -DIbis_LINK_FS=ON
+```
+
 This will compile and install ibis. You probably want to add the install directory (by default this is in the `inst` folder in the root of the repository) to your `PATH`.
 
 ## Gridding

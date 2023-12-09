@@ -18,4 +18,7 @@ target_link_libraries(
 	spdlog::spdlog
 	solver
 )
+if (Ibis_LINK_FS)
+	target_link_libraries(ibis PUBLIC stdc++fs)
+endif()
 install(TARGETS ibis DESTINATION ${CMAKE_INSTALL_BIN_DIR})

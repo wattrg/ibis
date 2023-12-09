@@ -8,6 +8,13 @@ set(CMAKE_DISABLE_IN_SOURCE_BUILD ON)
 # helpful for linters
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
+# Bunya's AMD nodes need manually linking to the filesystem
+# library for some reason. To compile on bunya, add
+# -DIbis_LINK_FS=ON to the cmake configuration command
+if (NOT Ibis_LINK_FS)
+    set(Ibis_LINK_FS OFF)
+endif()
+
 # default install location is in inst folder in the
 # root of the repository
 set(CMAKE_INSTALL_PREFIX "${CMAKE_SOURCE_DIR}/inst")
