@@ -43,7 +43,7 @@ private:
     bool print_this_step(unsigned int step);
     bool plot_this_step(unsigned int step);
     int plot_solution(unsigned int step);
-    void print_progress(unsigned int step);
+    void print_progress(unsigned int step, double wc);
     std::string stop_reason(unsigned int step);
     bool stop_now(unsigned int step);
     int max_step() const { return max_step_; }

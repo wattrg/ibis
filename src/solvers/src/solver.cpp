@@ -1,6 +1,7 @@
 #include "solver.h"
 
 #include <spdlog/spdlog.h>
+#include <spdlog/stopwatch.h>
 
 #include <algorithm>
 #include <filesystem>
@@ -20,7 +21,7 @@ int Solver::solve() {
         spdlog::error("Failed to initialise runge kutta solver");
         return success;
     }
-
+    spdlog::stopwatch sw;
     for (int step = 0; step < max_step(); step++) {
         int result = take_step();
         if (result != 0) {
@@ -45,13 +46,14 @@ int Solver::solve() {
         }
 
         if (print_this_step(step)) {
-            print_progress(step);
+            print_progress(step, sw.elapsed().count());
         }
 
         if (plot_this_step(step)) {
             plot_solution(step);
         }
     }
+    spdlog::info("Elapsed Wall Clock: {:.3}s", sw);
     finalise();
 
     return 0;
