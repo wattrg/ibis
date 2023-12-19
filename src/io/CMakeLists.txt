@@ -1,10 +1,10 @@
 add_library(
 	IO
 	STATIC
-	src/io.cpp
-	src/native.cpp
-	src/vtk.cpp
-	src/accessor.cpp
+	io/io.cpp
+	io/native.cpp
+	io/vtk.cpp
+	io/accessor.cpp
 )
 
 target_link_libraries(
@@ -13,4 +13,10 @@ target_link_libraries(
 	grid
 	spdlog::spdlog
 	gas
+)
+
+target_include_directories(
+	IO
+	PUBLIC
+	.
 )

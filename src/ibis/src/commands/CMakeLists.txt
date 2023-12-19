@@ -31,6 +31,7 @@ target_link_libraries(
         gas
         grid
         runtime_dirs
+        IO
 )
 
 

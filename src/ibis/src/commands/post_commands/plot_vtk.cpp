@@ -9,7 +9,7 @@
 
 #include <gas/flow_state.h>
 #include <grid/grid.h>
-#include "../../../src/io/src/io.h"
+#include <io/io.h>
 #include "../../config.h"
 
 template <typename T>

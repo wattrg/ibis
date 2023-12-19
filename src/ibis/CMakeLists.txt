@@ -17,6 +17,7 @@ target_link_libraries(
 	runtime_dirs
 	spdlog::spdlog
 	solver
+	IO
 )
 if (Ibis_LINK_FS)
 	target_link_libraries(ibis PUBLIC stdc++fs)

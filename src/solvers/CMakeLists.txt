@@ -8,9 +8,11 @@ target_link_libraries(
 	grid 
 	gas
 	spdlog::spdlog
+	IO
 )
 
 add_library(runge_kutta STATIC src/runge_kutta.cpp)
+
 target_link_libraries(
 	runge_kutta 
 	PUBLIC 

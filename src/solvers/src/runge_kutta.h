@@ -4,7 +4,7 @@
 #include "../../finite_volume/src/conserved_quantities.h"
 #include <gas/flow_state.h>
 #include <grid/grid.h>
-#include "../../io/src/io.h"
+#include <io/io.h>
 #include "solver.h"
 
 class RungeKutta : public Solver {
