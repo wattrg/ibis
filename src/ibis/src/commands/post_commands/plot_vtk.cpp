@@ -8,7 +8,7 @@
 #include <vector>
 
 #include <gas/flow_state.h>
-#include "../../../src/grid/src/grid.h"
+#include <grid/grid.h>
 #include "../../../src/io/src/io.h"
 #include "../../config.h"
 

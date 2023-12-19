@@ -7,7 +7,7 @@
 
 #include <gas/flow_state.h>
 #include <gas/gas_model.h>
-#include "../../src/grid/src/grid.h"
+#include <grid/grid.h>
 
 using json = nlohmann::json;
 

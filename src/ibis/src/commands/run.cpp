@@ -7,7 +7,7 @@
 #include <fstream>
 #include <nlohmann/json.hpp>
 
-#include "../../../grid/src/grid.h"
+#include <grid/grid.h>
 #include "../../../solvers/src/solver.h"
 #include "../config.h"
 

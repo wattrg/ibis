@@ -5,7 +5,7 @@
 
 #include <gas/flow_state.h>
 #include <gas/gas_model.h>
-#include "../../grid/src/grid.h"
+#include <grid/grid.h>
 #include "boundaries/boundary.h"
 #include "conserved_quantities.h"
 #include "flux_calc.h"

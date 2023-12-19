@@ -3,7 +3,7 @@
 
 #include "../../finite_volume/src/conserved_quantities.h"
 #include <gas/flow_state.h>
-#include "../../grid/src/grid.h"
+#include <grid/grid.h>
 #include "../../io/src/io.h"
 #include "solver.h"
 

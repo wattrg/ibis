@@ -19,6 +19,7 @@ target_link_libraries(
 	nlohmann_json::nlohmann_json
 	spdlog::spdlog
 	gas
+	grid
 )
 
 if (Ibis_BUILD_TESTS)
@@ -39,6 +40,7 @@ if (Ibis_BUILD_TESTS)
     	nlohmann_json::nlohmann_json
     	spdlog::spdlog
 	gas
+	grid
     )
     
     add_test(NAME finite_volume_unittest COMMAND finite_volume_unittest)

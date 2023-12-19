@@ -2,7 +2,7 @@
 #define BOUNDARY_H
 
 #include <gas/flow_state.h>
-#include "../../../grid/src/grid.h"
+#include <grid/grid.h>
 
 enum class BoundaryConditions { SupersonicInflow, SlipWall, SupersonicOutflow };
 

@@ -1,11 +1,11 @@
 add_library(
 	grid 
 	STATIC 
-	src/grid_io.cpp 
-	src/vertex.cpp 
-	src/interface.cpp 
-	src/grid.cpp 
-	src/cell.cpp
+	grid/grid_io.cpp 
+	grid/vertex.cpp 
+	grid/interface.cpp 
+	grid/grid.cpp 
+	grid/cell.cpp
 )
 
 target_link_libraries(
@@ -18,17 +18,23 @@ target_link_libraries(
 	spdlog::spdlog
 )
 
+target_include_directories(
+    grid
+    PUBLIC
+    .
+)
+
 # target_include_directories(grid PUBLIC $CMAKE_SRC_DIRECTORY/src/)
 
 if (Ibis_BUILD_TESTS)
     add_executable(
         grid_unittest 
         test/unittest.cpp 
-        src/grid_io.cpp 
-        src/grid.cpp 
-        src/interface.cpp
-        src/cell.cpp
-        src/vertex.cpp
+        grid/grid_io.cpp 
+        grid/grid.cpp 
+        grid/interface.cpp
+        grid/cell.cpp
+        grid/vertex.cpp
     )
     target_link_libraries(
         grid_unittest 
