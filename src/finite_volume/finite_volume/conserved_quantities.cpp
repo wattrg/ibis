@@ -1,4 +1,4 @@
-#include "conserved_quantities.h"
+#include <finite_volume/conserved_quantities.h>
 
 template <typename T>
 ConservedQuantities<T>::ConservedQuantities(unsigned int n, unsigned int dim)

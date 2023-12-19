@@ -4,9 +4,9 @@
 #include <nlohmann/json.hpp>
 
 #include <util/id.h>
-#include "cell.h"
-#include "grid_io.h"
-#include "interface.h"
+#include <grid/grid_io.h>
+#include <grid/interface.h>
+#include <grid/cell.h>
 
 using json = nlohmann::json;
 

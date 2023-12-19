@@ -7,7 +7,7 @@
 #include <unordered_map>
 #include <vector>
 
-#include "vertex.h"
+#include <grid/vertex.h>
 
 enum class GridFileType {
     Native,

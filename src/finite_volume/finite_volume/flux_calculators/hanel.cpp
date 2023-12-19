@@ -1,8 +1,8 @@
 #include <Kokkos_Core.hpp>
 
 #include <gas/flow_state.h>
-#include "../conserved_quantities.h"
-#include "../flux_calc.h"
+#include <finite_volume/conserved_quantities.h>
+#include <finite_volume/flux_calc.h>
 
 template <typename T>
 void hanel(FlowStates<T>& left, FlowStates<T>& right,

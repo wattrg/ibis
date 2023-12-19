@@ -1,9 +1,9 @@
-#include "runge_kutta.h"
 
 #include <spdlog/spdlog.h>
 
 #include <finite_volume/primative_conserved_conversion.h>
-#include "solver.h"
+#include <solvers/solver.h>
+#include <solvers/runge_kutta.h>
 
 RungeKutta::RungeKutta(json config, GridBlock<double> grid,
                        std::string grid_dir, std::string flow_dir)

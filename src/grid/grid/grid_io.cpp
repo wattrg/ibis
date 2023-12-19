@@ -1,10 +1,10 @@
-#include "grid_io.h"
+#include <stdexcept>
+#include <string>
 
 #include <doctest/doctest.h>
 #include <spdlog/spdlog.h>
 
-#include <stdexcept>
-#include <string>
+#include <grid/grid_io.h>
 
 GridFileType file_type_from_name(std::string file_name) {
     std::size_t pos = file_name.find_last_of(".");

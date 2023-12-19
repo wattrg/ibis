@@ -5,11 +5,8 @@
 
 #include <util/field.h>
 #include <util/id.h>
-#include "Kokkos_Core_fwd.hpp"
-#include "Kokkos_Macros.hpp"
-#include "Kokkos_MathematicalFunctions.hpp"
-#include "grid_io.h"
-#include "vertex.h"
+#include <grid/grid_io.h>
+#include <grid/vertex.h>
 
 template <typename T, class ExecSpace = Kokkos::DefaultExecutionSpace,
           class Layout = Kokkos::DefaultExecutionSpace::array_layout>

@@ -1,11 +1,9 @@
-#include "interface.h"
-
-#include <doctest/doctest.h>
-
 #include <algorithm>
 #include <functional>
 
-#include "Kokkos_Core_fwd.hpp"
+#include <doctest/doctest.h>
+
+#include <grid/interface.h>
 
 InterfaceLookup::InterfaceLookup() {
     hash_map_ = std::unordered_map<std::string, int>{};

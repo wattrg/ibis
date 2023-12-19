@@ -1,6 +1,5 @@
-#include "primative_conserved_conversion.h"
-
-#include "conserved_quantities.h"
+#include <finite_volume/primative_conserved_conversion.h>
+#include <finite_volume/conserved_quantities.h>
 
 template <typename T>
 int conserved_to_primatives(ConservedQuantities<T>& cq, FlowStates<T>& fs,

@@ -4,7 +4,7 @@
 #include <gas/flow_state.h>
 #include <gas/gas_model.h>
 #include <grid/interface.h>
-#include "conserved_quantities.h"
+#include <finite_volume/conserved_quantities.h>
 
 enum class FluxCalculator {
     Hanel,

@@ -1,8 +1,8 @@
 #ifndef VTK_FLOW_FORMAT_H
 #define VTK_FLOW_FORMAT_H
 
-#include "accessor.h"
-#include "io.h"
+#include <io/accessor.h>
+#include <io/io.h>
 
 template <typename T>
 class VtkOutput : public FVOutput<T> {

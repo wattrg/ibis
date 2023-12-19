@@ -5,7 +5,7 @@
 #include <gas/flow_state.h>
 #include <grid/grid.h>
 #include <io/io.h>
-#include "solver.h"
+#include <solvers/solver.h>
 
 class RungeKutta : public Solver {
 public:

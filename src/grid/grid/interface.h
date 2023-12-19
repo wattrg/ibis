@@ -6,9 +6,9 @@
 #include <util/field.h>
 #include <util/id.h>
 #include <util/vector3.h>
-#include "cell.h"
-#include "grid_io.h"
-#include "vertex.h"
+#include <grid/cell.h>
+#include <grid/grid_io.h>
+#include <grid/vertex.h>
 
 template <typename T, class ExecSpace = Kokkos::DefaultExecutionSpace,
           class Layout = Kokkos::DefaultExecutionSpace::array_layout>

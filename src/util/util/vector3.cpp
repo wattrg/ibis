@@ -6,7 +6,6 @@
 #include <cassert>
 #include <cmath>
 
-#include "Kokkos_Core_fwd.hpp"
 
 #define VEC3_TOL 1e-15
 

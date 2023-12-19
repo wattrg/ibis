@@ -3,9 +3,6 @@
 
 #include <Kokkos_Core.hpp>
 
-#include "Kokkos_Core_fwd.hpp"
-#include "Kokkos_Macros.hpp"
-
 template <typename T>
 struct GasState {
 public:

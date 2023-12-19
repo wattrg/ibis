@@ -1,8 +1,7 @@
-#include "finite_volume.h"
-
-#include "boundaries/boundary.h"
-#include "conserved_quantities.h"
-#include "flux_calc.h"
+#include <finite_volume/finite_volume.h>
+#include <finite_volume/boundaries/boundary.h>
+#include <finite_volume/conserved_quantities.h>
+#include <finite_volume/flux_calc.h>
 
 template <typename T>
 FiniteVolume<T>::FiniteVolume(const GridBlock<T>& grid, json config)

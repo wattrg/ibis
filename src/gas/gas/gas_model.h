@@ -3,8 +3,7 @@
 
 #include <nlohmann/json.hpp>
 
-#include "Kokkos_Core_fwd.hpp"
-#include "gas_state.h"
+#include <gas/gas_state.h>
 
 using json = nlohmann::json;
 

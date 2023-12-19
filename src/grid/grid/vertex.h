@@ -2,7 +2,6 @@
 #define VERTEX_H
 
 #include <util/vector3.h>
-#include "Kokkos_Core_fwd.hpp"
 
 template <typename T>
 struct Vertex {

@@ -1,6 +1,5 @@
-#include "id.h"
-
 #include <doctest/doctest.h>
+#include "id.h"
 
 TEST_CASE("id") {
     Id<>::mirror_type ids(std::vector<int>{1, 2, 3, 4, 5, 6},

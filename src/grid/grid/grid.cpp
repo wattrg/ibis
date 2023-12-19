@@ -1,10 +1,9 @@
-#include "grid.h"
 
 #include <doctest/doctest.h>
 
-#include "Kokkos_Core_fwd.hpp"
-#include "grid_io.h"
-#include "interface.h"
+#include <grid/grid_io.h>
+#include <grid/interface.h>
+#include <grid/grid.h>
 
 struct GridInfo {
     Vertices<double, Kokkos::DefaultHostExecutionSpace> vertices;

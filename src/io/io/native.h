@@ -1,7 +1,7 @@
 #ifndef NATIVE_FLOW_FORMAT_H
 #define NATIVE_FLOW_FORMAT_H
 
-#include "io.h"
+#include <io/io.h>
 
 template <typename T>
 class NativeInput : public FVInput<T> {

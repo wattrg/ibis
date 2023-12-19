@@ -5,7 +5,7 @@
 
 #include <finite_volume/conserved_quantities.h>
 #include <util/vector3.h>
-#include "gas_state.h"
+#include <gas/gas_state.h>
 
 template <typename T>
 struct FlowState {

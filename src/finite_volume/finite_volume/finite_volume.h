@@ -6,9 +6,9 @@
 #include <gas/flow_state.h>
 #include <gas/gas_model.h>
 #include <grid/grid.h>
-#include "boundaries/boundary.h"
-#include "conserved_quantities.h"
-#include "flux_calc.h"
+#include <finite_volume/boundaries/boundary.h>
+#include <finite_volume/conserved_quantities.h>
+#include <finite_volume/flux_calc.h>
 
 using json = nlohmann::json;
 

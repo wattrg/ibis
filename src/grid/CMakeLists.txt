@@ -8,6 +8,12 @@ add_library(
 	grid/cell.cpp
 )
 
+target_include_directories(
+    grid
+    PUBLIC
+    .
+)
+
 target_link_libraries(
 	grid 
 	PUBLIC 
@@ -17,14 +23,6 @@ target_link_libraries(
 	nlohmann_json::nlohmann_json
 	spdlog::spdlog
 )
-
-target_include_directories(
-    grid
-    PUBLIC
-    .
-)
-
-# target_include_directories(grid PUBLIC $CMAKE_SRC_DIRECTORY/src/)
 
 if (Ibis_BUILD_TESTS)
     add_executable(
@@ -36,6 +34,7 @@ if (Ibis_BUILD_TESTS)
         grid/cell.cpp
         grid/vertex.cpp
     )
+
     target_link_libraries(
         grid_unittest 
         PRIVATE 
@@ -44,6 +43,7 @@ if (Ibis_BUILD_TESTS)
         Kokkos::kokkos 
         nlohmann_json::nlohmann_json
         spdlog::spdlog
+        grid
     )
     
     add_test(NAME grid_unittest COMMAND grid_unittest)

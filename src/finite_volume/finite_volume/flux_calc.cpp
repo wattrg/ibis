@@ -1,4 +1,4 @@
-#include "flux_calc.h"
+#include <finite_volume/flux_calc.h>
 
 #include <doctest/doctest.h>
 #include <spdlog/spdlog.h>

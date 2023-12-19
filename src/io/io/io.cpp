@@ -1,4 +1,3 @@
-#include "io.h"
 
 #include <spdlog/spdlog.h>
 
@@ -8,8 +7,9 @@
 #include <iostream>
 #include <stdexcept>
 
-#include "native.h"
-#include "vtk.h"
+#include <io/io.h>
+#include <io/native.h>
+#include <io/vtk.h>
 
 std::string pad_time_index(int time_idx, unsigned long len) {
     std::string time_index = std::to_string(time_idx);
