@@ -5,8 +5,8 @@
 
 #include <nlohmann/json.hpp>
 
-#include "../../src/gas/src/flow_state.h"
-#include "../../src/gas/src/gas_model.h"
+#include <gas/flow_state.h>
+#include <gas/gas_model.h>
 #include "../../src/grid/src/grid.h"
 
 using json = nlohmann::json;

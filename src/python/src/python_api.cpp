@@ -1,10 +1,9 @@
 #include <pybind11/pybind11.h>
 
 #include "../../finite_volume/src/flux_calc.h"
-#include "../../gas/src/gas_model.h"
-#include "../../gas/src/gas_state.h"
+#include <gas/gas_model.h>
+#include <gas/gas_state.h>
 #include <util/vector3.h>
-#include "Kokkos_Core_fwd.hpp"
 
 #define DOCTEST_CONFIG_IMPLEMENT
 #include <doctest/doctest.h>

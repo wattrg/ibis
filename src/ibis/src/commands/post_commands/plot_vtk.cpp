@@ -7,7 +7,7 @@
 #include <string>
 #include <vector>
 
-#include "../../../src/gas/src/flow_state.h"
+#include <gas/flow_state.h>
 #include "../../../src/grid/src/grid.h"
 #include "../../../src/io/src/io.h"
 #include "../../config.h"

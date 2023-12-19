@@ -8,7 +8,7 @@
 #include <nlohmann/json.hpp>
 
 #include "../../finite_volume/src/finite_volume.h"
-#include "../../gas/src/flow_state.h"
+#include <gas/flow_state.h>
 
 using json = nlohmann::json;
 

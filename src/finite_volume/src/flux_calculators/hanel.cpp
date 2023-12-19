@@ -1,6 +1,6 @@
 #include <Kokkos_Core.hpp>
 
-#include "../../../gas/src/flow_state.h"
+#include <gas/flow_state.h>
 #include "../conserved_quantities.h"
 #include "../flux_calc.h"
 

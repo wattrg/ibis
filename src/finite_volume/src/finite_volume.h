@@ -3,8 +3,8 @@
 
 #include <nlohmann/json.hpp>
 
-#include "../../gas/src/flow_state.h"
-#include "../../gas/src/gas_model.h"
+#include <gas/flow_state.h>
+#include <gas/gas_model.h>
 #include "../../grid/src/grid.h"
 #include "boundaries/boundary.h"
 #include "conserved_quantities.h"

@@ -3,8 +3,7 @@
 
 #include <Kokkos_Core.hpp>
 
-#include "../../gas/src/flow_state.h"
-#include "Kokkos_Macros.hpp"
+#include <gas/flow_state.h>
 
 template <typename T>
 class ConservedQuantities {

@@ -1,8 +1,8 @@
 #ifndef FLUX_H
 #define FLUX_H
 
-#include "../../gas/src/flow_state.h"
-#include "../../gas/src/gas_model.h"
+#include <gas/flow_state.h>
+#include <gas/gas_model.h>
 #include "../../grid/src/interface.h"
 #include "conserved_quantities.h"
 

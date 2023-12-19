@@ -12,4 +12,5 @@ target_link_libraries(
 	PUBLIC
 	grid
 	spdlog::spdlog
+	gas
 )

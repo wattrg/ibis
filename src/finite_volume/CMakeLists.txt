@@ -18,6 +18,7 @@ target_link_libraries(
 	util
 	nlohmann_json::nlohmann_json
 	spdlog::spdlog
+	gas
 )
 
 if (Ibis_BUILD_TESTS)
@@ -37,6 +38,7 @@ if (Ibis_BUILD_TESTS)
     	Kokkos::kokkos
     	nlohmann_json::nlohmann_json
     	spdlog::spdlog
+	gas
     )
     
     add_test(NAME finite_volume_unittest COMMAND finite_volume_unittest)
