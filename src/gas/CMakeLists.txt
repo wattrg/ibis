@@ -1,9 +1,9 @@
 add_library(
 	gas
 	STATIC
-	src/gas_state.cpp
-	src/gas_model.cpp
-	src/flow_state.cpp
+	gas/gas_state.cpp
+	gas/gas_model.cpp
+	gas/flow_state.cpp
 )
 
 target_link_libraries(
@@ -11,4 +11,12 @@ target_link_libraries(
 	PUBLIC
 	Kokkos::kokkos 
 	nlohmann_json::nlohmann_json
+	util
+	finite_volume
+)
+
+target_include_directories(
+	gas
+	PUBLIC
+	.
 )

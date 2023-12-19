@@ -1,7 +1,7 @@
-add_subdirectory(src/commands)
+add_subdirectory(ibis/commands)
 
-add_executable(ibis src/main.cpp)
-target_include_directories(ibis PUBLIC ${CMAKE_SOURCE_DIR}/src)
+add_executable(ibis ibis/main.cpp)
+
 target_link_libraries(
 	ibis 
 	PUBLIC 
@@ -17,7 +17,11 @@ target_link_libraries(
 	runtime_dirs
 	spdlog::spdlog
 	solver
+	IO
 )
+
+set_target_properties(ibis PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
+
 if (Ibis_LINK_FS)
 	target_link_libraries(ibis PUBLIC stdc++fs)
 endif()
