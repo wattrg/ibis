@@ -28,8 +28,12 @@ static std::string HELP =
 void print_header() {
     spdlog::info("ibis - cfd solver");
     spdlog::info("git branch: {}", Ibis::GIT_BRANCH);
-    spdlog::info("git commit: {}-{}", Ibis::GIT_COMMIT_HASH,
-                 Ibis::GIT_CLEAN_STATUS);
+    if (Ibis::GIT_CLEAN_STATUS == "clean") {
+        spdlog::info("git commit: {}", Ibis::GIT_COMMIT_HASH);
+    }
+    else {
+        spdlog::info("git commit: {}-dirty", Ibis::GIT_COMMIT_HASH);
+    }
     spdlog::info("revision date: {}", Ibis::GIT_COMMIT_DATE);
     spdlog::info("build date: {}", Ibis::IBIS_BUILD_DATE);
 }
