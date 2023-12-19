@@ -3,9 +3,8 @@
 
 #include <Kokkos_Core.hpp>
 
-#include "../../finite_volume/src/conserved_quantities.h"
+#include <finite_volume/conserved_quantities.h>
 #include <util/vector3.h>
-#include "Kokkos_Core_fwd.hpp"
 #include "gas_state.h"
 
 template <typename T>

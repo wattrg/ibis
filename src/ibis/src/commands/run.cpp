@@ -1,11 +1,11 @@
 #include "run.h"
 
-#include <spdlog/spdlog.h>
-
-#include <Kokkos_Core.hpp>
 #include <cstdlib>
 #include <fstream>
+
+#include <spdlog/spdlog.h>
 #include <nlohmann/json.hpp>
+#include <Kokkos_Core.hpp>
 
 #include <grid/grid.h>
 #include <solvers/solver.h>

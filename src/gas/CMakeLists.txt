@@ -12,6 +12,7 @@ target_link_libraries(
 	Kokkos::kokkos 
 	nlohmann_json::nlohmann_json
 	util
+	finite_volume
 )
 
 target_include_directories(

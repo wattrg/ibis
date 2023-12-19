@@ -1,6 +1,6 @@
 #include <pybind11/pybind11.h>
 
-#include "../../finite_volume/src/flux_calc.h"
+#include <finite_volume/flux_calc.h>
 #include <gas/gas_model.h>
 #include <gas/gas_state.h>
 #include <util/vector3.h>

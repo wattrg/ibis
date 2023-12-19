@@ -2,7 +2,7 @@
 
 #include <spdlog/spdlog.h>
 
-#include "../../finite_volume/src/primative_conserved_conversion.h"
+#include <finite_volume/primative_conserved_conversion.h>
 #include "solver.h"
 
 RungeKutta::RungeKutta(json config, GridBlock<double> grid,

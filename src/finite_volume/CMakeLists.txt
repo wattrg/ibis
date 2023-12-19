@@ -1,13 +1,13 @@
 add_library(
 	finite_volume 
 	STATIC 
-	src/finite_volume.cpp 
-	src/flux_calc.cpp 
-	src/flux_calculators/hanel.cpp
-	src/flux_calculators/ausmdv.cpp
-	src/primative_conserved_conversion.cpp
-	src/conserved_quantities.cpp
-	src/boundaries/boundary.cpp
+	finite_volume/finite_volume.cpp 
+	finite_volume/flux_calc.cpp 
+	finite_volume/flux_calculators/hanel.cpp
+	finite_volume/flux_calculators/ausmdv.cpp
+	finite_volume/primative_conserved_conversion.cpp
+	finite_volume/conserved_quantities.cpp
+	finite_volume/boundaries/boundary.cpp
 )
 
 target_link_libraries(
@@ -22,13 +22,15 @@ target_link_libraries(
 	grid
 )
 
+target_include_directories(finite_volume PUBLIC .)
+
 if (Ibis_BUILD_TESTS)
     add_executable(
     	finite_volume_unittest 
     	test/unittest.cpp 
-    	src/flux_calc.cpp 
-    	src/flux_calculators/hanel.cpp
-    	src/flux_calculators/ausmdv.cpp
+    	finite_volume/flux_calc.cpp 
+    	finite_volume/flux_calculators/hanel.cpp
+    	finite_volume/flux_calculators/ausmdv.cpp
     )
     # target_compile_options(finite_volume_unittest -g)
     target_link_libraries(

@@ -1,7 +1,7 @@
 #ifndef RUNGE_KUTTA_H
 #define RUNGE_KUTTA_H
 
-#include "../../finite_volume/src/conserved_quantities.h"
+#include <finite_volume/conserved_quantities.h>
 #include <gas/flow_state.h>
 #include <grid/grid.h>
 #include <io/io.h>
