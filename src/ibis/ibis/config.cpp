@@ -2,8 +2,8 @@
 
 #include <spdlog/spdlog.h>
 
-#include "runtime_dirs.h"
-#include "config.h"
+#include <runtime_dirs.h>
+#include <ibis/config.h>
 
 json read_directories() {
     std::ifstream f(Ibis::RES_DIR + "/defaults/directories.json");

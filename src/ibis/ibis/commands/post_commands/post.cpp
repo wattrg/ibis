@@ -6,8 +6,8 @@
 #include <fstream>
 #include <nlohmann/json.hpp>
 
-#include "../config.h"
-#include "post_commands/plot_vtk.h"
+#include <ibis/config.h>
+#include <ibis/commands/post_commands/plot_vtk.h>
 
 using json = nlohmann::json;
 

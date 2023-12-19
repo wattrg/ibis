@@ -4,7 +4,6 @@
 #include <Kokkos_Core.hpp>
 #include <Kokkos_MathematicalFunctions.hpp>
 
-#include "Kokkos_Macros.hpp"
 #include "field.h"
 
 // A single vector with 3 components

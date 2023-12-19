@@ -1,5 +1,5 @@
 #define PY_SSIZE_T_CLEAN
-#include "prep.h"
+#include <ibis/commands/prep/prep.h>
 
 #include <Python.h>
 #include <spdlog/spdlog.h>
@@ -8,7 +8,7 @@
 #include <fstream>
 #include <iostream>
 
-#include "runtime_dirs.h"
+#include <runtime_dirs.h>
 
 int prep(int argc, char* argv[]) {
     (void)argc;

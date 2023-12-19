@@ -8,10 +8,10 @@
 #include <spdlog/sinks/stdout_color_sinks.h>
 #include <spdlog/spdlog.h>
 
-#include <ibis/commands/clean.h>
-#include <ibis/commands/post.h>
-#include <ibis/commands/prep.h>
-#include <ibis/commands/run.h>
+#include <ibis/commands/clean/clean.h>
+#include <ibis/commands/post_commands/post.h>
+#include <ibis/commands/prep/prep.h>
+#include <ibis/commands/run/run.h>
 #include <ibis_version_info.h>
 #include <runtime_dirs.h>
 

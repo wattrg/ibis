@@ -1,11 +1,11 @@
-#include "clean.h"
+#include <ibis/commands/clean/clean.h>
 
 #include <Python.h>
 #include <spdlog/spdlog.h>
 
 #include <iostream>
 
-#include "runtime_dirs.h"
+#include <runtime_dirs.h>
 
 int clean(int argc, char* argv[]) {
     (void)argc;

@@ -1,4 +1,4 @@
-#include "run.h"
+#include <ibis/commands/run/run.h>
 
 #include <cstdlib>
 #include <fstream>
@@ -9,7 +9,7 @@
 
 #include <grid/grid.h>
 #include <solvers/solver.h>
-#include "../config.h"
+#include <ibis/config.h>
 
 using json = nlohmann::json;
 

@@ -1,14 +1,14 @@
 find_package(Python COMPONENTS Interpreter Development)
 
-add_library(prep STATIC prep.cpp)
+add_library(prep STATIC prep/prep.cpp)
 target_link_libraries(prep PRIVATE Python::Python spdlog::spdlog runtime_dirs)
 target_include_directories(prep PUBLIC ../..)
 
-add_library(ibis_clean STATIC clean.cpp)
+add_library(ibis_clean STATIC clean/clean.cpp)
 target_link_libraries(ibis_clean PRIVATE Python::Python spdlog::spdlog runtime_dirs)
 target_include_directories(ibis_clean PUBLIC ../..)
 
-add_library(run STATIC run.cpp ../config.cpp)
+add_library(run STATIC run/run.cpp ../config.cpp)
 target_link_libraries(
         run PUBLIC 
         Kokkos::kokkos 
@@ -24,7 +24,7 @@ target_link_libraries(
 target_include_directories(run PUBLIC ../..)
 
 
-add_library(post STATIC post.cpp post_commands/plot_vtk.cpp ../config.cpp)
+add_library(post STATIC post_commands/post.cpp post_commands/plot_vtk.cpp ../config.cpp)
 target_link_libraries(
         post PUBLIC
         Python::Python 
@@ -42,19 +42,19 @@ target_include_directories(post PUBLIC ../..)
 add_custom_command(
 	TARGET prep POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy
-        ${CMAKE_SOURCE_DIR}/src/ibis/ibis/commands/prep.py $<TARGET_FILE_DIR:prep>
+        ${CMAKE_SOURCE_DIR}/src/ibis/ibis/commands/prep/prep.py $<TARGET_FILE_DIR:prep>
         ${CMAKE_SOURCE_DIR}/src/ibis/ibis/commands/ibis_py_utils.py $<TARGET_FILE_DIR:prep>
 )
 
 add_custom_command(
 	TARGET ibis_clean POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy
-        ${CMAKE_SOURCE_DIR}/src/ibis/ibis/commands/clean.py $<TARGET_FILE_DIR:ibis_clean>
+        ${CMAKE_SOURCE_DIR}/src/ibis/ibis/commands/clean/clean.py $<TARGET_FILE_DIR:ibis_clean>
 )
 
-install(FILES prep.py 
+install(FILES prep/prep.py 
         DESTINATION ${CMAKE_INSTALL_LIBDIR})
 install(FILES ibis_py_utils.py 
         DESTINATION ${CMAKE_INSTALL_LIBDIR})
-install(FILES clean.py
+install(FILES clean/clean.py
         DESTINATION ${CMAKE_INSTALL_LIBDIR})

@@ -4,8 +4,6 @@
 #include <Kokkos_Core.hpp>
 #include <vector>
 
-#include "Kokkos_Core_fwd.hpp"
-
 struct IdConstructor {
 public:
     IdConstructor() {
