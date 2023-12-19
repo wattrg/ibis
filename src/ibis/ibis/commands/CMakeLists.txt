@@ -2,9 +2,11 @@ find_package(Python COMPONENTS Interpreter Development)
 
 add_library(prep STATIC prep.cpp)
 target_link_libraries(prep PRIVATE Python::Python spdlog::spdlog runtime_dirs)
+target_include_directories(prep PUBLIC ../..)
 
 add_library(ibis_clean STATIC clean.cpp)
 target_link_libraries(ibis_clean PRIVATE Python::Python spdlog::spdlog runtime_dirs)
+target_include_directories(ibis_clean PUBLIC ../..)
 
 add_library(run STATIC run.cpp ../config.cpp)
 target_link_libraries(
@@ -19,6 +21,7 @@ target_link_libraries(
         spdlog::spdlog
         runtime_dirs
 )
+target_include_directories(run PUBLIC ../..)
 
 
 add_library(post STATIC post.cpp post_commands/plot_vtk.cpp ../config.cpp)
@@ -33,6 +36,7 @@ target_link_libraries(
         runtime_dirs
         IO
 )
+target_include_directories(post PUBLIC ../..)
 
 
 add_custom_command(

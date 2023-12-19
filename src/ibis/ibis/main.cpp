@@ -8,12 +8,12 @@
 #include <spdlog/sinks/stdout_color_sinks.h>
 #include <spdlog/spdlog.h>
 
-#include "commands/clean.h"
-#include "commands/post.h"
-#include "commands/prep.h"
-#include "commands/run.h"
-#include "ibis_version_info.h"
-#include "runtime_dirs.h"
+#include <ibis/commands/clean.h>
+#include <ibis/commands/post.h>
+#include <ibis/commands/prep.h>
+#include <ibis/commands/run.h>
+#include <ibis_version_info.h>
+#include <runtime_dirs.h>
 
 static std::string HELP =
     "ibis usage:\n"
