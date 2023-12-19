@@ -8,7 +8,7 @@
 #include <nlohmann/json.hpp>
 
 #include <grid/grid.h>
-#include "../../../solvers/src/solver.h"
+#include <solvers/solver.h>
 #include "../config.h"
 
 using json = nlohmann::json;

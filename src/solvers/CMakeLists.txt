@@ -1,5 +1,5 @@
-add_library(solver STATIC src/solver.cpp src/solver.h)
-# target_include_directories(solver PUBLIC ${CMAKE_SOURCE_DIR}/extern/json/single_include)
+add_library(solver STATIC solvers/solver.cpp solvers/solver.h)
+
 target_link_libraries(
 	solver 
 	PUBLIC 
@@ -11,7 +11,9 @@ target_link_libraries(
 	IO
 )
 
-add_library(runge_kutta STATIC src/runge_kutta.cpp)
+add_library(runge_kutta STATIC solvers/runge_kutta.cpp)
+
+target_include_directories(solver PUBLIC .)
 
 target_link_libraries(
 	runge_kutta 
