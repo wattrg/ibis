@@ -11,4 +11,5 @@ target_link_libraries(
 	PUBLIC
 	Kokkos::kokkos 
 	nlohmann_json::nlohmann_json
+	util
 )

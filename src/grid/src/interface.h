@@ -3,11 +3,9 @@
 
 #include <unordered_map>
 
-#include "../../util/src/field.h"
-#include "../../util/src/id.h"
-#include "../../util/src/vector3.h"
-#include "Kokkos_Core_fwd.hpp"
-#include "Kokkos_Macros.hpp"
+#include <util/field.h>
+#include <util/id.h>
+#include <util/vector3.h>
 #include "cell.h"
 #include "grid_io.h"
 #include "vertex.h"

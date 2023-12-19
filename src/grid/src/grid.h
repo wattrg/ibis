@@ -3,8 +3,7 @@
 
 #include <nlohmann/json.hpp>
 
-#include "../../util/src/id.h"
-#include "Kokkos_Core_fwd.hpp"
+#include <util/id.h>
 #include "cell.h"
 #include "grid_io.h"
 #include "interface.h"

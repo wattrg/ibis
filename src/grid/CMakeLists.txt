@@ -18,6 +18,8 @@ target_link_libraries(
 	spdlog::spdlog
 )
 
+# target_include_directories(grid PUBLIC $CMAKE_SRC_DIRECTORY/src/)
+
 if (Ibis_BUILD_TESTS)
     add_executable(
         grid_unittest 

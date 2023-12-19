@@ -3,8 +3,8 @@
 
 #include <Kokkos_Core.hpp>
 
-#include "../../util/src/field.h"
-#include "../../util/src/id.h"
+#include <util/field.h>
+#include <util/id.h>
 #include "Kokkos_Core_fwd.hpp"
 #include "Kokkos_Macros.hpp"
 #include "Kokkos_MathematicalFunctions.hpp"

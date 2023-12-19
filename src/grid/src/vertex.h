@@ -1,7 +1,7 @@
 #ifndef VERTEX_H
 #define VERTEX_H
 
-#include "../../util/src/vector3.h"
+#include <util/vector3.h>
 #include "Kokkos_Core_fwd.hpp"
 
 template <typename T>
