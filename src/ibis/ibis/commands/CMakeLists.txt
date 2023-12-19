@@ -38,14 +38,14 @@ target_link_libraries(
 add_custom_command(
 	TARGET prep POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy
-        ${CMAKE_SOURCE_DIR}/src/ibis/src/commands/prep.py $<TARGET_FILE_DIR:prep>
-        ${CMAKE_SOURCE_DIR}/src/ibis/src/commands/ibis_py_utils.py $<TARGET_FILE_DIR:prep>
+        ${CMAKE_SOURCE_DIR}/src/ibis/ibis/commands/prep.py $<TARGET_FILE_DIR:prep>
+        ${CMAKE_SOURCE_DIR}/src/ibis/ibis/commands/ibis_py_utils.py $<TARGET_FILE_DIR:prep>
 )
 
 add_custom_command(
 	TARGET ibis_clean POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy
-        ${CMAKE_SOURCE_DIR}/src/ibis/src/commands/clean.py $<TARGET_FILE_DIR:ibis_clean>
+        ${CMAKE_SOURCE_DIR}/src/ibis/ibis/commands/clean.py $<TARGET_FILE_DIR:ibis_clean>
 )
 
 install(FILES prep.py 
