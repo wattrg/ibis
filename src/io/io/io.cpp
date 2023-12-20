@@ -12,7 +12,8 @@
 
 std::string pad_time_index(int time_idx, unsigned long len) {
     std::string time_index = std::to_string(time_idx);
-    unsigned long extra_chars = len - std::min<unsigned long>(len, time_index.length());
+    unsigned long extra_chars =
+        len - std::min<unsigned long>(len, time_index.length());
     std::string padded_str = std::string(extra_chars, '0');
     return padded_str + time_index;
 }
