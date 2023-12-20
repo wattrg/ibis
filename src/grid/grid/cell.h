@@ -5,6 +5,7 @@
 
 #include <util/field.h>
 #include <util/id.h>
+#include <util/geom.h>
 #include <grid/grid_io.h>
 #include <grid/vertex.h>
 
@@ -241,11 +242,6 @@ public:
 
     void compute_volumes(
         const Vertices<T, execution_space, array_layout>& vertices) {
-        // TODO: It would be nicer to move each case in the switch
-        // to a function sitting somewhere else to keep the amount
-        // of code in this method down, and avoid duplication with
-        // computing the area of interfaces. However, this won't
-        // be trivial for the GPU.
         auto volume = volume_;
         auto shape = shape_;
         auto this_vertex_ids = vertex_ids_;
@@ -255,34 +251,21 @@ public:
             KOKKOS_LAMBDA(const int i) {
                 switch (shape(i)) {
                     case ElemType::Line:
-                        printf("Invalid cell shape");
+                        printf("Invalid cell shape: Line");
                         break;
                     case ElemType::Tri: {
                         auto vertex_ids = this_vertex_ids[i];
-                        T x1 = vertices.positions().x(vertex_ids(0));
-                        T x2 = vertices.positions().x(vertex_ids(1));
-                        T x3 = vertices.positions().x(vertex_ids(2));
-                        T y1 = vertices.positions().y(vertex_ids(0));
-                        T y2 = vertices.positions().y(vertex_ids(1));
-                        T y3 = vertices.positions().y(vertex_ids(2));
-                        T area =
-                            x1 * (y2 - y3) + x2 * (y3 - y1) + x3 * (y1 - y2);
-                        volume(i) = 0.5 * Kokkos::fabs(area);
+                        volume(i) = Ibis::area_of_triangle(
+                            vertices.positions(),
+                            vertex_ids(0), vertex_ids(1), vertex_ids(2));
                         break;
                     }
                     case ElemType::Quad: {
                         auto vertex_ids = this_vertex_ids[i];
-                        T x1 = vertices.positions().x(vertex_ids(0));
-                        T x2 = vertices.positions().x(vertex_ids(1));
-                        T x3 = vertices.positions().x(vertex_ids(2));
-                        T x4 = vertices.positions().x(vertex_ids(3));
-                        T y1 = vertices.positions().y(vertex_ids(0));
-                        T y2 = vertices.positions().y(vertex_ids(1));
-                        T y3 = vertices.positions().y(vertex_ids(2));
-                        T y4 = vertices.positions().y(vertex_ids(3));
-                        T area = x1 * y2 + x2 * y3 + x3 * y4 + x4 * y1 -
-                                 x2 * y1 - x3 * y2 - x4 * y3 - x1 * y4;
-                        volume(i) = 0.5 * Kokkos::fabs(area);
+                        volume(i) = Ibis::area_of_quadrilateral(
+                            vertices.positions(),
+                            vertex_ids(0), vertex_ids(1), 
+                            vertex_ids(2), vertex_ids(3));
                         break;
                     }
                     case ElemType::Hex:
@@ -292,7 +275,7 @@ public:
                         printf("Volume of Wedge not implemented");
                         break;
                     case ElemType::Pyramid:
-                        printf("Volume of pyramid ot implemented");
+                        printf("Volume of pyramid not implemented");
                         break;
                 }
             });

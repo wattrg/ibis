@@ -6,6 +6,7 @@
 #include <util/field.h>
 #include <util/id.h>
 #include <util/vector3.h>
+#include <util/geom.h>
 #include <grid/cell.h>
 #include <grid/grid_io.h>
 #include <grid/vertex.h>
@@ -226,41 +227,29 @@ public:
                 switch (shape(i)) {
                     case ElemType::Line: {
                         auto vertex_ids = this_vertex_ids[i];
-                        T x1 = vertices.positions().x(vertex_ids(0));
-                        T x2 = vertices.positions().x(vertex_ids(1));
-                        T y1 = vertices.positions().y(vertex_ids(0));
-                        T y2 = vertices.positions().y(vertex_ids(1));
-                        this_area(i) = Kokkos::sqrt((x2 - x1) * (x2 - x1) +
-                                                    (y2 - y1) * (y2 - y1));
+                        this_area(i) = Ibis::distance_between_points(
+                            vertices.positions(),
+                            vertex_ids(0),
+                            vertex_ids(1));
                         break;
                     }
                     case ElemType::Tri: {
                         auto vertex_ids = this_vertex_ids[i];
-                        T x1 = vertices.positions().x(vertex_ids(0));
-                        T x2 = vertices.positions().x(vertex_ids(1));
-                        T x3 = vertices.positions().y(vertex_ids(2));
-                        T y1 = vertices.positions().y(vertex_ids(0));
-                        T y2 = vertices.positions().z(vertex_ids(1));
-                        T y3 = vertices.positions().z(vertex_ids(2));
-                        T area =
-                            0.5 * Kokkos::fabs(x1 * (y2 - y3) + x2 * (y3 - y1) +
-                                               x3 * (y1 - y2));
-                        this_area(i) = area;
+                        this_area(i) = Ibis::area_of_triangle(
+                            vertices.positions(),
+                            vertex_ids(0),
+                            vertex_ids(1),
+                            vertex_ids(2));
                         break;
                     }
                     case ElemType::Quad: {
                         auto vertex_ids = this_vertex_ids[i];
-                        T x1 = vertices.positions().x(vertex_ids(0));
-                        T x2 = vertices.positions().x(vertex_ids(1));
-                        T x3 = vertices.positions().x(vertex_ids(2));
-                        T x4 = vertices.positions().x(vertex_ids(3));
-                        T y1 = vertices.positions().y(vertex_ids(0));
-                        T y2 = vertices.positions().y(vertex_ids(1));
-                        T y3 = vertices.positions().y(vertex_ids(2));
-                        T y4 = vertices.positions().y(vertex_ids(3));
-                        T area = x1 * y2 + x2 * y3 + x3 * y4 + x4 * y1 -
-                                 x2 * y1 - x3 * y2 - x4 * y3 - x1 * y4;
-                        this_area(i) = 0.5 * Kokkos::fabs(area);
+                        this_area(i) = Ibis::area_of_quadrilateral(
+                            vertices.positions(),
+                            vertex_ids(0),
+                            vertex_ids(1),
+                            vertex_ids(2),
+                            vertex_ids(3));
                         break;
                     }
                     case ElemType::Hex: {
