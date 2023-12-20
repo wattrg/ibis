@@ -1,9 +1,9 @@
 #ifndef GAS_MODEL_H
 #define GAS_MODEL_H
 
-#include <nlohmann/json.hpp>
-
 #include <gas/gas_state.h>
+
+#include <nlohmann/json.hpp>
 
 using json = nlohmann::json;
 

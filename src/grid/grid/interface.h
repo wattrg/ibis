@@ -1,15 +1,15 @@
 #ifndef INTERFACE_H
 #define INTERFACE_H
 
-#include <unordered_map>
-
-#include <util/field.h>
-#include <util/id.h>
-#include <util/vector3.h>
-#include <util/geom.h>
 #include <grid/cell.h>
 #include <grid/grid_io.h>
 #include <grid/vertex.h>
+#include <util/field.h>
+#include <util/geom.h>
+#include <util/id.h>
+#include <util/vector3.h>
+
+#include <unordered_map>
 
 template <typename T, class ExecSpace = Kokkos::DefaultExecutionSpace,
           class Layout = Kokkos::DefaultExecutionSpace::array_layout>
@@ -228,28 +228,21 @@ public:
                     case ElemType::Line: {
                         auto vertex_ids = this_vertex_ids[i];
                         this_area(i) = Ibis::distance_between_points(
-                            vertices.positions(),
-                            vertex_ids(0),
-                            vertex_ids(1));
+                            vertices.positions(), vertex_ids(0), vertex_ids(1));
                         break;
                     }
                     case ElemType::Tri: {
                         auto vertex_ids = this_vertex_ids[i];
                         this_area(i) = Ibis::area_of_triangle(
-                            vertices.positions(),
-                            vertex_ids(0),
-                            vertex_ids(1),
+                            vertices.positions(), vertex_ids(0), vertex_ids(1),
                             vertex_ids(2));
                         break;
                     }
                     case ElemType::Quad: {
                         auto vertex_ids = this_vertex_ids[i];
                         this_area(i) = Ibis::area_of_quadrilateral(
-                            vertices.positions(),
-                            vertex_ids(0),
-                            vertex_ids(1),
-                            vertex_ids(2),
-                            vertex_ids(3));
+                            vertices.positions(), vertex_ids(0), vertex_ids(1),
+                            vertex_ids(2), vertex_ids(3));
                         break;
                     }
                     case ElemType::Hex: {

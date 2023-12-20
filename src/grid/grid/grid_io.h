@@ -1,13 +1,13 @@
 #ifndef GRID_IO_H
 #define GRID_IO_H
 
+#include <grid/vertex.h>
+
 #include <fstream>
 #include <iostream>
 #include <string>
 #include <unordered_map>
 #include <vector>
-
-#include <grid/vertex.h>
 
 enum class GridFileType {
     Native,

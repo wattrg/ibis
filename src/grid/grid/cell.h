@@ -1,13 +1,13 @@
 #ifndef CELL_H
 #define CELL_H
 
-#include <Kokkos_Core.hpp>
-
-#include <util/field.h>
-#include <util/id.h>
-#include <util/geom.h>
 #include <grid/grid_io.h>
 #include <grid/vertex.h>
+#include <util/field.h>
+#include <util/geom.h>
+#include <util/id.h>
+
+#include <Kokkos_Core.hpp>
 
 template <typename T, class ExecSpace = Kokkos::DefaultExecutionSpace,
           class Layout = Kokkos::DefaultExecutionSpace::array_layout>
@@ -256,15 +256,14 @@ public:
                     case ElemType::Tri: {
                         auto vertex_ids = this_vertex_ids[i];
                         volume(i) = Ibis::area_of_triangle(
-                            vertices.positions(),
-                            vertex_ids(0), vertex_ids(1), vertex_ids(2));
+                            vertices.positions(), vertex_ids(0), vertex_ids(1),
+                            vertex_ids(2));
                         break;
                     }
                     case ElemType::Quad: {
                         auto vertex_ids = this_vertex_ids[i];
                         volume(i) = Ibis::area_of_quadrilateral(
-                            vertices.positions(),
-                            vertex_ids(0), vertex_ids(1), 
+                            vertices.positions(), vertex_ids(0), vertex_ids(1),
                             vertex_ids(2), vertex_ids(3));
                         break;
                     }

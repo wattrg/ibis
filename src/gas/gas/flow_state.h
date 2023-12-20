@@ -1,11 +1,11 @@
 #ifndef FLOW_STATE_H
 #define FLOW_STATE_H
 
-#include <Kokkos_Core.hpp>
-
 #include <finite_volume/conserved_quantities.h>
-#include <util/vector3.h>
 #include <gas/gas_state.h>
+#include <util/vector3.h>
+
+#include <Kokkos_Core.hpp>
 
 template <typename T>
 struct FlowState {

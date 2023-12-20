@@ -1,14 +1,13 @@
 #ifndef SOLVER_H
 #define SOLVER_H
 
+#include <finite_volume/finite_volume.h>
+#include <gas/flow_state.h>
 #include <string.h>
 
 #include <fstream>
 #include <iostream>
 #include <nlohmann/json.hpp>
-
-#include <finite_volume/finite_volume.h>
-#include <gas/flow_state.h>
 
 using json = nlohmann::json;
 

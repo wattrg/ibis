@@ -1,9 +1,9 @@
 #ifndef CONSERVED_QUANTITIES_H
 #define CONSERVED_QUANTITIES_H
 
-#include <Kokkos_Core.hpp>
-
 #include <gas/flow_state.h>
+
+#include <Kokkos_Core.hpp>
 
 template <typename T>
 class ConservedQuantities {

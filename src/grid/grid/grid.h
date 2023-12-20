@@ -1,12 +1,12 @@
 #ifndef GRID_H
 #define GRID_H
 
-#include <nlohmann/json.hpp>
-
-#include <util/id.h>
+#include <grid/cell.h>
 #include <grid/grid_io.h>
 #include <grid/interface.h>
-#include <grid/cell.h>
+#include <util/id.h>
+
+#include <nlohmann/json.hpp>
 
 using json = nlohmann::json;
 

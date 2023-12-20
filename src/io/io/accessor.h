@@ -1,11 +1,11 @@
 #ifndef ACCESSOR_H
 #define ACCESSOR_H
 
-#include <Kokkos_Core.hpp>
-#include <map>
-
 #include <gas/flow_state.h>
 #include <gas/gas_model.h>
+
+#include <Kokkos_Core.hpp>
+#include <map>
 
 using array_layout = Kokkos::DefaultExecutionSpace::array_layout;
 using host_mem_space = Kokkos::DefaultHostExecutionSpace::memory_space;

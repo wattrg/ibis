@@ -1,14 +1,14 @@
 #ifndef FINITE_VOLUME_H
 #define FINITE_VOLUME_H
 
-#include <nlohmann/json.hpp>
-
-#include <gas/flow_state.h>
-#include <gas/gas_model.h>
-#include <grid/grid.h>
 #include <finite_volume/boundaries/boundary.h>
 #include <finite_volume/conserved_quantities.h>
 #include <finite_volume/flux_calc.h>
+#include <gas/flow_state.h>
+#include <gas/gas_model.h>
+#include <grid/grid.h>
+
+#include <nlohmann/json.hpp>
 
 using json = nlohmann::json;
 
