@@ -51,7 +51,11 @@ else()
 endif(Ibis_BUILD_TESTS)
 
 # be picky about warnings
-add_compile_options( -Wall -Wextra -Wpedantic )
+if (MSVC)
+    add_compile_options(/W4)
+else()
+    add_compile_options( -Wall -Wextra -Wpedantic )
+endif()
 
 # add all the source code
 add_subdirectory(src/gas)
