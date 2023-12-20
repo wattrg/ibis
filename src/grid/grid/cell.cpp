@@ -1,8 +1,7 @@
 
 #include <doctest/doctest.h>
-
-#include <grid/interface.h>
 #include <grid/cell.h>
+#include <grid/interface.h>
 
 struct CellInfo {
     Vertices<double> vertices;

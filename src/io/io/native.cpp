@@ -1,5 +1,5 @@
-#include <spdlog/spdlog.h>
 #include <io/native.h>
+#include <spdlog/spdlog.h>
 
 template <typename T>
 int NativeOutput<T>::write(const typename FlowStates<T>::mirror_type& fs,

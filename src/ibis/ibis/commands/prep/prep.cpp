@@ -1,14 +1,12 @@
 #define PY_SSIZE_T_CLEAN
-#include <ibis/commands/prep/prep.h>
-
 #include <Python.h>
+#include <ibis/commands/prep/prep.h>
+#include <runtime_dirs.h>
 #include <spdlog/spdlog.h>
 
 #include <cstdlib>
 #include <fstream>
 #include <iostream>
-
-#include <runtime_dirs.h>
 
 int prep(int argc, char* argv[]) {
     (void)argc;

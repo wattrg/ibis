@@ -1,15 +1,13 @@
+#include <grid/grid.h>
 #include <ibis/commands/run/run.h>
+#include <ibis/config.h>
+#include <solvers/solver.h>
+#include <spdlog/spdlog.h>
 
+#include <Kokkos_Core.hpp>
 #include <cstdlib>
 #include <fstream>
-
-#include <spdlog/spdlog.h>
 #include <nlohmann/json.hpp>
-#include <Kokkos_Core.hpp>
-
-#include <grid/grid.h>
-#include <solvers/solver.h>
-#include <ibis/config.h>
 
 using json = nlohmann::json;
 

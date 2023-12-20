@@ -1,6 +1,6 @@
-#include <finite_volume/finite_volume.h>
 #include <finite_volume/boundaries/boundary.h>
 #include <finite_volume/conserved_quantities.h>
+#include <finite_volume/finite_volume.h>
 #include <finite_volume/flux_calc.h>
 
 template <typename T>

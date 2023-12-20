@@ -1,6 +1,5 @@
-#include <finite_volume/flux_calc.h>
-
 #include <doctest/doctest.h>
+#include <finite_volume/flux_calc.h>
 #include <spdlog/spdlog.h>
 
 #include <stdexcept>

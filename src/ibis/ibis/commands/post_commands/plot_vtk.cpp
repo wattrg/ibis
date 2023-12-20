@@ -1,16 +1,15 @@
 
+#include <gas/flow_state.h>
+#include <grid/grid.h>
+#include <ibis/commands/post_commands/plot_vtk.h>
+#include <ibis/config.h>
+#include <io/io.h>
 #include <spdlog/spdlog.h>
 
 #include <fstream>
 #include <iostream>
 #include <string>
 #include <vector>
-
-#include <gas/flow_state.h>
-#include <grid/grid.h>
-#include <io/io.h>
-#include <ibis/config.h>
-#include <ibis/commands/post_commands/plot_vtk.h>
 
 template <typename T>
 void plot_vtk(json directories) {

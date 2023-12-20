@@ -1,9 +1,8 @@
+#include <doctest/doctest.h>
+#include <grid/interface.h>
+
 #include <algorithm>
 #include <functional>
-
-#include <doctest/doctest.h>
-
-#include <grid/interface.h>
 
 InterfaceLookup::InterfaceLookup() {
     hash_map_ = std::unordered_map<std::string, int>{};

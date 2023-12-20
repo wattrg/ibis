@@ -1,8 +1,8 @@
-#include <Kokkos_Core.hpp>
-
-#include <gas/flow_state.h>
 #include <finite_volume/conserved_quantities.h>
 #include <finite_volume/flux_calc.h>
+#include <gas/flow_state.h>
+
+#include <Kokkos_Core.hpp>
 
 template <typename T>
 void ausmdv(FlowStates<T>& left, FlowStates<T>& right,

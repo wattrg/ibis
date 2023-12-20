@@ -1,9 +1,8 @@
 
-#include <spdlog/spdlog.h>
-
 #include <finite_volume/primative_conserved_conversion.h>
-#include <solvers/solver.h>
 #include <solvers/runge_kutta.h>
+#include <solvers/solver.h>
+#include <spdlog/spdlog.h>
 
 RungeKutta::RungeKutta(json config, GridBlock<double> grid,
                        std::string grid_dir, std::string flow_dir)
@@ -83,7 +82,8 @@ int RungeKutta::plot_solution(unsigned int step) {
 }
 
 void RungeKutta::print_progress(unsigned int step, double wc) {
-    spdlog::info("  step: {:>8}, t = {:.6e}, dt = {:.6e}, wc = {:.1f}s", step, t_, dt_, wc);
+    spdlog::info("  step: {:>8}, t = {:.6e}, dt = {:.6e}, wc = {:.1f}s", step,
+                 t_, dt_, wc);
 }
 std::string RungeKutta::stop_reason(unsigned int step) {
     if (t_ >= max_time_ - 1e-15)

@@ -1,9 +1,8 @@
 
 #include <doctest/doctest.h>
-
+#include <grid/grid.h>
 #include <grid/grid_io.h>
 #include <grid/interface.h>
-#include <grid/grid.h>
 
 struct GridInfo {
     Vertices<double, Kokkos::DefaultHostExecutionSpace> vertices;

@@ -4,16 +4,15 @@
 
 #define DOCTEST_CONFIG_IMPLEMENT
 #include <doctest/doctest.h>
-#include <spdlog/sinks/basic_file_sink.h>
-#include <spdlog/sinks/stdout_color_sinks.h>
-#include <spdlog/spdlog.h>
-
 #include <ibis/commands/clean/clean.h>
 #include <ibis/commands/post_commands/post.h>
 #include <ibis/commands/prep/prep.h>
 #include <ibis/commands/run/run.h>
 #include <ibis_version_info.h>
 #include <runtime_dirs.h>
+#include <spdlog/sinks/basic_file_sink.h>
+#include <spdlog/sinks/stdout_color_sinks.h>
+#include <spdlog/spdlog.h>
 
 static std::string HELP =
     "ibis usage:\n"
@@ -30,8 +29,7 @@ void print_header() {
     spdlog::info("git branch: {}", Ibis::GIT_BRANCH);
     if (Ibis::GIT_CLEAN_STATUS == "clean") {
         spdlog::info("git commit: {}", Ibis::GIT_COMMIT_HASH);
-    }
-    else {
+    } else {
         spdlog::info("git commit: {}-dirty", Ibis::GIT_COMMIT_HASH);
     }
     spdlog::info("revision date: {}", Ibis::GIT_COMMIT_DATE);

@@ -1,23 +1,24 @@
-#include <doctest/doctest.h>
 #include "geom.h"
+
+#include <doctest/doctest.h>
 
 const double EPS = 1e-15;
 
 TEST_CASE("distance_between_points") {
     // allocate positions
-    Vector3s<double> pos {"pos", 10};
+    Vector3s<double> pos{"pos", 10};
     auto pos_host = pos.host_mirror();
     for (int i = 0; i < 10; i++) {
-        pos_host.x(i) = 3*i;
+        pos_host.x(i) = 3 * i;
         pos_host.y(i) = i + 1;
-        pos_host.z(i) = 3*i - 5;
+        pos_host.z(i) = 3 * i - 5;
     }
     pos.deep_copy(pos_host);
 
     // allocate the indecies we're going to query
-    Field<int> i ("i", 5);
+    Field<int> i("i", 5);
     auto i_host = i.host_mirror();
-    Field<int> j ("j", 5);
+    Field<int> j("j", 5);
     auto j_host = j.host_mirror();
     i_host(0) = 0;
     i_host(1) = 1;
@@ -33,15 +34,16 @@ TEST_CASE("distance_between_points") {
     j.deep_copy(j_host);
 
     // do the calculations
-    Field<double> results ("results", 5);
-    Kokkos::parallel_for("distance", 5, KOKKOS_LAMBDA (const int id) {
-        results(id) = Ibis::distance_between_points(pos, i(id), j(id));
-    });
+    Field<double> results("results", 5);
+    Kokkos::parallel_for(
+        "distance", 5, KOKKOS_LAMBDA(const int id) {
+            results(id) = Ibis::distance_between_points(pos, i(id), j(id));
+        });
 
     // copy results back to the host
     auto results_host = results.host_mirror();
     results_host.deep_copy(results);
 
     // check results
-    CHECK(Kokkos::abs(results_host(0) - Kokkos::sqrt(19)) <  EPS);
+    CHECK(Kokkos::abs(results_host(0) - Kokkos::sqrt(19)) < EPS);
 }

@@ -1,13 +1,12 @@
+#include <solvers/runge_kutta.h>
+#include <solvers/solver.h>
+#include <spdlog/spdlog.h>
+#include <spdlog/stopwatch.h>
+
 #include <algorithm>
 #include <filesystem>
 #include <iostream>
-
-#include <spdlog/spdlog.h>
-#include <spdlog/stopwatch.h>
 #include <nlohmann/json.hpp>
-
-#include <solvers/solver.h>
-#include <solvers/runge_kutta.h>
 
 using json = nlohmann::json;
 

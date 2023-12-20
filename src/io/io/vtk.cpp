@@ -1,5 +1,5 @@
-#include <io/vtk.h>
 #include <io/accessor.h>
+#include <io/vtk.h>
 
 using array_layout = Kokkos::DefaultExecutionSpace::array_layout;
 using host_mem_space = Kokkos::DefaultHostExecutionSpace::memory_space;

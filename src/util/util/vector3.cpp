@@ -6,7 +6,6 @@
 #include <cassert>
 #include <cmath>
 
-
 #define VEC3_TOL 1e-15
 
 template <typename T>

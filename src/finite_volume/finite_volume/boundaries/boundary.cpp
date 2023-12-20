@@ -1,7 +1,7 @@
-#include <spdlog/spdlog.h>
-#include <Kokkos_Core.hpp>
-
 #include <finite_volume/boundaries/boundary.h>
+#include <spdlog/spdlog.h>
+
+#include <Kokkos_Core.hpp>
 
 template <typename T>
 FlowStateCopy<T>::FlowStateCopy(json flow_state) {
