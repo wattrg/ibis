@@ -32,7 +32,7 @@ T distance_between_points(const Vector3s<T, Layout, Space> &positions,
 template <typename T, class Layout, class Space>
 KOKKOS_INLINE_FUNCTION
 T area_of_triangle(const Vector3s<T, Layout, Space> &pos,
-                   const int a, const int b, connst int c) {
+                   const int a, const int b, const int c) {
     // vector from a -> b
     T ab_x = pos.x(b) - pos.x(a); 
     T ab_y = pos.y(b) - pos.y(a);
@@ -55,6 +55,8 @@ T area_of_triangle(const Vector3s<T, Layout, Space> &pos,
 
 // calculate the area of a quadrilateral with vertices
 // a, b, c, d
+// this computation could be bad if the quadrilateral
+// in question is concave...
 template <typename T, class Layout, class Space>
 KOKKOS_INLINE_FUNCTION
 T area_of_quadrilateral(const Vector3s<T, Layout, Space> &pos,
