@@ -152,7 +152,6 @@ TEST_CASE("Interface area") {
     }
 }
 
-
 TEST_CASE("Interface directions") {
     Interfaces<double> interfaces = generate_interfaces();
     auto interfaces_mirror = interfaces.host_mirror();

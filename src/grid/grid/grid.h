@@ -152,22 +152,22 @@ public:
     //                        num_ghost_cells(), dim(),
     //                        cells_.vertex_ids().num_values(),
     //                        interfaces_.vertex_ids().num_values(),
-    //                        cells_.faces().num_face_ids(), boundary_cell_sizes,
-    //                        boundary_face_sizes);
+    //                        cells_.faces().num_face_ids(),
+    //                        boundary_cell_sizes, boundary_face_sizes);
     // }
     mirror_type host_mirror() const {
         auto vertices = vertices_.host_mirror();
         auto interfaces = interfaces_.host_mirror();
         auto cells = cells_.host_mirror();
-        std::map<std::string, Field<int, array_layout, host_mirror_mem_space>> 
+        std::map<std::string, Field<int, array_layout, host_mirror_mem_space>>
             boundary_cells{};
-        std::map<std::string, Field<int, array_layout, host_mirror_mem_space>> 
+        std::map<std::string, Field<int, array_layout, host_mirror_mem_space>>
             boundary_faces{};
 
-        for (auto const & [key, val] : boundary_cells_) {
-            boundary_cells.insert({key, val.host_mirror()}); 
+        for (auto const& [key, val] : boundary_cells_) {
+            boundary_cells.insert({key, val.host_mirror()});
         }
-        for (auto const & [key, val] : boundary_faces_) {
+        for (auto const& [key, val] : boundary_faces_) {
             boundary_faces.insert({key, val.host_mirror()});
         }
 

@@ -32,8 +32,7 @@ public:
         _positions = vector_type("Vertices", num_vertices);
     }
 
-    Vertices(vector_type positions) :
-        _positions(positions) {}
+    Vertices(vector_type positions) : _positions(positions) {}
 
     void set_vertex_position(int vertex_id, Vector3<T> pos) {
         _positions(vertex_id, 0) = pos.x;

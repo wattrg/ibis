@@ -8,6 +8,7 @@
 #include <util/ragged_array.h>
 
 #include <Kokkos_Core.hpp>
+
 #include "Kokkos_Core_fwd.hpp"
 
 template <typename T, class ExecSpace = Kokkos::DefaultExecutionSpace,
@@ -43,10 +44,8 @@ public:
         Kokkos::deep_copy(face_ids_, interface_ids.data());
     }
 
-    CellFaces(const view_type offsets, view_type face_ids, view_type outsigns) :
-        offsets_(offsets),
-        face_ids_(face_ids),
-        outsigns_(outsigns) {}
+    CellFaces(const view_type offsets, view_type face_ids, view_type outsigns)
+        : offsets_(offsets), face_ids_(face_ids), outsigns_(outsigns) {}
 
     CellFaces(int number_cells, int number_face_ids) {
         offsets_ = view_type("CellFaces::offsets", number_cells + 1);
@@ -159,21 +158,20 @@ public:
           CellFaces<T, array_layout, execution_space> faces,
           Field<ElemType, array_layout, memory_space> shapes,
           Field<T, array_layout, memory_space> volume,
-          Vector3s<T, array_layout, memory_space> centroid,
-          int num_cells) :
-        faces_(faces),
-        vertex_ids_(vertices),
-        shape_(shapes),
-        volume_(volume),
-        centroid_(centroid),
-        num_cells_(num_cells){}
+          Vector3s<T, array_layout, memory_space> centroid, int num_cells)
+        : faces_(faces),
+          vertex_ids_(vertices),
+          shape_(shapes),
+          volume_(volume),
+          centroid_(centroid),
+          num_cells_(num_cells) {}
 
     Cells(int num_cells, int num_vertex_ids, int num_face_ids) {
         vertex_ids_ = Ibis::RaggedArray<int, array_layout, execution_space>(
             num_vertex_ids, num_cells);
         num_cells_ = num_cells;
-        faces_ =
-            CellFaces<T, array_layout, execution_space>(num_cells, num_face_ids);
+        faces_ = CellFaces<T, array_layout, execution_space>(num_cells,
+                                                             num_face_ids);
         shape_ = Field<ElemType, array_layout, memory_space>("Cell::shape",
                                                              num_cells);
         volume_ =
@@ -188,7 +186,8 @@ public:
         auto shapes = shape_.host_mirror();
         auto volume = volume_.host_mirror();
         auto centroid = centroid_.host_mirror();
-        return mirror_type(vertices, faces, shapes, volume, centroid, num_cells_);
+        return mirror_type(vertices, faces, shapes, volume, centroid,
+                           num_cells_);
     }
 
     template <class OtherDevice>

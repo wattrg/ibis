@@ -22,8 +22,7 @@ public:
     using vector_type = Vector3s<T, array_layout, memory_space>;
     using host_mirror_mem_space =
         Kokkos::DefaultHostExecutionSpace::memory_space;
-    using mirror_type =
-        Interfaces<T, host_execution_space, array_layout>;
+    using mirror_type = Interfaces<T, host_execution_space, array_layout>;
 
     // I have no idea why it is execution_space and not memory_space
     // here. But execution_space works and memory_space doesn't...
@@ -82,21 +81,18 @@ public:
                Field<int, array_layout, memory_space> right_cells,
                Field<T, array_layout, memory_space> area,
                Field<ElemType, array_layout, memory_space> shape,
-               vector_type norm,
-               vector_type tan1,
-               vector_type tan2,
-               vector_type centre):
-        size_(vertex_ids.num_rows()),
-        vertex_ids_(vertex_ids),
-        left_cells_(left_cells),
-        right_cells_(right_cells),
-        area_(area),
-        shape_(shape),
-        norm_(norm),
-        tan1_(tan1),
-        tan2_(tan2),
-        centre_(centre)
-    {}
+               vector_type norm, vector_type tan1, vector_type tan2,
+               vector_type centre)
+        : size_(vertex_ids.num_rows()),
+          vertex_ids_(vertex_ids),
+          left_cells_(left_cells),
+          right_cells_(right_cells),
+          area_(area),
+          shape_(shape),
+          norm_(norm),
+          tan1_(tan1),
+          tan2_(tan2),
+          centre_(centre) {}
 
     mirror_type host_mirror() const {
         auto vertex_ids = vertex_ids_.host_mirror();
@@ -108,8 +104,8 @@ public:
         auto tan1 = tan1_.host_mirror();
         auto tan2 = tan2_.host_mirror();
         auto centre = centre_.host_mirror();
-        return mirror_type(vertex_ids, left_cells, right_cells, area,
-                           shape, norm, tan1, tan2, centre);
+        return mirror_type(vertex_ids, left_cells, right_cells, area, shape,
+                           norm, tan1, tan2, centre);
     }
 
     template <class OtherSpace>
@@ -130,15 +126,10 @@ public:
     }
 
     KOKKOS_INLINE_FUNCTION
-    id_type & vertex_ids() {
-        return vertex_ids_;
-    }
+    id_type& vertex_ids() { return vertex_ids_; }
 
     KOKKOS_INLINE_FUNCTION
-    const id_type & vertex_ids()
-        const {
-        return vertex_ids_;
-    }
+    const id_type& vertex_ids() const { return vertex_ids_; }
 
     KOKKOS_INLINE_FUNCTION
     const Field<T, array_layout, memory_space>& area() const { return area_; }
@@ -153,33 +144,25 @@ public:
     Vector3s<T, array_layout, memory_space>& norm() { return norm_; }
 
     KOKKOS_INLINE_FUNCTION
-    const vector_type & norm() const {
-        return norm_;
-    }
+    const vector_type& norm() const { return norm_; }
 
     KOKKOS_INLINE_FUNCTION
-    vector_type & tan1() { return tan1_; }
+    vector_type& tan1() { return tan1_; }
 
     KOKKOS_INLINE_FUNCTION
-    const vector_type & tan1() const {
-        return tan1_;
-    }
+    const vector_type& tan1() const { return tan1_; }
 
     KOKKOS_INLINE_FUNCTION
-    vector_type & tan2() { return tan2_; }
+    vector_type& tan2() { return tan2_; }
 
     KOKKOS_INLINE_FUNCTION
-    const vector_type & tan2() const {
-        return tan2_;
-    }
+    const vector_type& tan2() const { return tan2_; }
 
     KOKKOS_INLINE_FUNCTION
-    vector_type & centre() { return centre_; }
+    vector_type& centre() { return centre_; }
 
     KOKKOS_INLINE_FUNCTION
-    const vector_type & centre() const {
-        return centre_;
-    }
+    const vector_type& centre() const { return centre_; }
 
     KOKKOS_INLINE_FUNCTION
     void attach_cell_left(const int cell_id, const int face_id) const {
