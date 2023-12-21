@@ -8,6 +8,7 @@
 #include <util/ragged_array.h>
 
 #include <Kokkos_Core.hpp>
+#include "Kokkos_Core_fwd.hpp"
 
 template <typename T, class ExecSpace = Kokkos::DefaultExecutionSpace,
           class Layout = Kokkos::DefaultExecutionSpace::array_layout>
@@ -15,20 +16,22 @@ struct Cells;
 
 template <typename T,
           class Layout = Kokkos::DefaultExecutionSpace::array_layout,
-          class Space = Kokkos::DefaultExecutionSpace::memory_space>
+          class ExecSpace = Kokkos::DefaultExecutionSpace>
 struct CellFaces {
 public:
     using array_layout = Layout;
-    using memory_space = Space;
+    using memory_space = typename ExecSpace::memory_space;
+    using execution_space = ExecSpace;
     using view_type = Kokkos::View<int*, array_layout, memory_space>;
     using mirror_view_type = typename view_type::host_mirror_type;
     using mirror_layout = typename mirror_view_type::array_layout;
     using mirror_memory_space = typename mirror_view_type::memory_space;
-    using mirror_type = CellFaces<T, array_layout, mirror_memory_space>;
+    using mirror_exec_space = Kokkos::DefaultHostExecutionSpace;
+    using mirror_type = CellFaces<T, array_layout, mirror_exec_space>;
 
     CellFaces() {}
 
-    CellFaces(const Ibis::RaggedArray<int, array_layout, memory_space>&
+    CellFaces(const Ibis::RaggedArray<int, array_layout, execution_space>&
                   interface_ids) {
         offsets_ =
             view_type("CellFaces::offsets", interface_ids.offsets().size());
@@ -40,14 +43,10 @@ public:
         Kokkos::deep_copy(face_ids_, interface_ids.data());
     }
 
-    CellFaces(const view_type offsets, view_type face_ids, view_type outsigns) {
-        offsets_ = view_type("CellFaces::offsets", offsets.size());
-        face_ids_ = view_type("CellFaces::face_ids", face_ids.size());
-        outsigns_ = view_type("CellFaces::outsigns", outsigns.size());
-        Kokkos::deep_copy(offsets_, offsets);
-        Kokkos::deep_copy(face_ids_, face_ids);
-        Kokkos::deep_copy(outsigns_, outsigns);
-    }
+    CellFaces(const view_type offsets, view_type face_ids, view_type outsigns) :
+        offsets_(offsets),
+        face_ids_(face_ids),
+        outsigns_(outsigns) {}
 
     CellFaces(int number_cells, int number_face_ids) {
         offsets_ = view_type("CellFaces::offsets", number_cells + 1);
@@ -55,8 +54,11 @@ public:
         outsigns_ = view_type("CellFaces::outsigns", number_face_ids);
     }
 
-    mirror_type host_mirror() const {
-        return mirror_type(offsets_.size(), face_ids_.size());
+    mirror_type host_mirror() {
+        auto offsets = Kokkos::create_mirror_view(offsets_);
+        auto face_ids = Kokkos::create_mirror_view(face_ids_);
+        auto outsigns = Kokkos::create_mirror_view(outsigns_);
+        return mirror_type(offsets, face_ids, outsigns);
     }
 
     bool operator==(const CellFaces& other) const {
@@ -132,12 +134,12 @@ public:
 public:
     Cells() {}
 
-    Cells(Ibis::RaggedArray<int, array_layout, memory_space> vertices,
-          Ibis::RaggedArray<int, array_layout, memory_space> interfaces,
+    Cells(Ibis::RaggedArray<int, array_layout, execution_space> vertices,
+          Ibis::RaggedArray<int, array_layout, execution_space> interfaces,
           std::vector<ElemType> shapes) {
         vertex_ids_ = vertices;
         num_cells_ = shapes.size();
-        faces_ = CellFaces<T, array_layout, memory_space>(interfaces);
+        faces_ = CellFaces<T, array_layout, execution_space>(interfaces);
         shape_ = Field<ElemType, array_layout, memory_space>("Cell::shape",
                                                              num_cells_);
         typename Field<ElemType, array_layout, memory_space>::mirror_type
@@ -153,12 +155,23 @@ public:
                                                             num_cells_);
     }
 
+    Cells(Ibis::RaggedArray<int, array_layout, execution_space> vertices,
+          CellFaces<T, array_layout, execution_space> faces,
+          Field<ElemType, array_layout, memory_space> shapes,
+          Field<T, array_layout, memory_space> volume,
+          Vector3s<T, array_layout, memory_space> centroid) :
+        faces_(faces),
+        vertex_ids_(vertices),
+        shape_(shapes),
+        volume_(volume),
+        centroid_(centroid) {}
+
     Cells(int num_cells, int num_vertex_ids, int num_face_ids) {
-        vertex_ids_ = Ibis::RaggedArray<int, array_layout, memory_space>(
+        vertex_ids_ = Ibis::RaggedArray<int, array_layout, execution_space>(
             num_vertex_ids, num_cells);
         num_cells_ = num_cells;
         faces_ =
-            CellFaces<T, array_layout, memory_space>(num_cells, num_face_ids);
+            CellFaces<T, array_layout, execution_space>(num_cells, num_face_ids);
         shape_ = Field<ElemType, array_layout, memory_space>("Cell::shape",
                                                              num_cells);
         volume_ =
@@ -167,11 +180,17 @@ public:
                                                             num_cells);
     }
 
-    mirror_type host_mirror() const {
-        int num_vertex_ids = vertex_ids_.num_values();
-        int num_face_ids = faces_.num_face_ids();
-        int num_cells = num_cells_;
-        return mirror_type(num_cells, num_vertex_ids, num_face_ids);
+    mirror_type host_mirror() {
+        // int num_vertex_ids = vertex_ids_.num_values();
+        // int num_face_ids = faces_.num_face_ids();
+        // int num_cells = num_cells_;
+        // return mirror_type(num_cells, num_vertex_ids, num_face_ids);
+        auto vertices = vertex_ids_.host_mirror();
+        auto faces = faces_.host_mirror();
+        auto shapes = shape_.host_mirror();
+        auto volume = volume_.host_mirror();
+        auto centroid = centroid_.host_mirror();
+        return mirror_type(vertices, faces, shapes, volume, centroid);
     }
 
     template <class OtherDevice>
@@ -188,7 +207,7 @@ public:
     }
 
     KOKKOS_INLINE_FUNCTION
-    const Ibis::RaggedArray<int, array_layout, memory_space>& vertex_ids()
+    const Ibis::RaggedArray<int, array_layout, execution_space>& vertex_ids()
         const {
         return vertex_ids_;
     }
@@ -284,7 +303,7 @@ public:
     }
 
     KOKKOS_INLINE_FUNCTION
-    CellFaces<T, array_layout, memory_space> faces() const { return faces_; }
+    CellFaces<T, array_layout, execution_space> faces() const { return faces_; }
 
     KOKKOS_INLINE_FUNCTION
     const Field<ElemType, array_layout, memory_space>& shapes() const {
@@ -292,8 +311,8 @@ public:
     }
 
 public:
-    CellFaces<T, array_layout, memory_space> faces_;
-    Ibis::RaggedArray<int, array_layout, memory_space> vertex_ids_;
+    CellFaces<T, array_layout, execution_space> faces_;
+    Ibis::RaggedArray<int, array_layout, execution_space> vertex_ids_;
     Field<ElemType, array_layout, memory_space> shape_;
     Field<T, array_layout, memory_space> volume_;
     Vector3s<T, array_layout, memory_space> centroid_;
