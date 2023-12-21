@@ -54,7 +54,7 @@ public:
         outsigns_ = view_type("CellFaces::outsigns", number_face_ids);
     }
 
-    mirror_type host_mirror() {
+    mirror_type host_mirror() const {
         auto offsets = Kokkos::create_mirror_view(offsets_);
         auto face_ids = Kokkos::create_mirror_view(face_ids_);
         auto outsigns = Kokkos::create_mirror_view(outsigns_);
@@ -159,12 +159,14 @@ public:
           CellFaces<T, array_layout, execution_space> faces,
           Field<ElemType, array_layout, memory_space> shapes,
           Field<T, array_layout, memory_space> volume,
-          Vector3s<T, array_layout, memory_space> centroid) :
+          Vector3s<T, array_layout, memory_space> centroid,
+          int num_cells) :
         faces_(faces),
         vertex_ids_(vertices),
         shape_(shapes),
         volume_(volume),
-        centroid_(centroid) {}
+        centroid_(centroid),
+        num_cells_(num_cells){}
 
     Cells(int num_cells, int num_vertex_ids, int num_face_ids) {
         vertex_ids_ = Ibis::RaggedArray<int, array_layout, execution_space>(
@@ -180,17 +182,13 @@ public:
                                                             num_cells);
     }
 
-    mirror_type host_mirror() {
-        // int num_vertex_ids = vertex_ids_.num_values();
-        // int num_face_ids = faces_.num_face_ids();
-        // int num_cells = num_cells_;
-        // return mirror_type(num_cells, num_vertex_ids, num_face_ids);
+    mirror_type host_mirror() const {
         auto vertices = vertex_ids_.host_mirror();
         auto faces = faces_.host_mirror();
         auto shapes = shape_.host_mirror();
         auto volume = volume_.host_mirror();
         auto centroid = centroid_.host_mirror();
-        return mirror_type(vertices, faces, shapes, volume, centroid);
+        return mirror_type(vertices, faces, shapes, volume, centroid, num_cells_);
     }
 
     template <class OtherDevice>

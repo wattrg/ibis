@@ -98,7 +98,7 @@ public:
         centre_(centre)
     {}
 
-    mirror_type host_mirror(){
+    mirror_type host_mirror() const {
         auto vertex_ids = vertex_ids_.host_mirror();
         auto left_cells = left_cells_.host_mirror();
         auto right_cells = right_cells_.host_mirror();

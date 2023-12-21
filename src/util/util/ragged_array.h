@@ -99,7 +99,7 @@ public:
     }
 
     // Create a host mirror
-    HostMirror host_mirror() {
+    HostMirror host_mirror() const {
         auto data_mirror = Kokkos::create_mirror_view(data_);
         auto offsets_mirror = Kokkos::create_mirror_view(offsets_);
         return HostMirror(data_mirror, offsets_mirror);
