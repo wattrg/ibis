@@ -6,7 +6,7 @@
 #include <grid/vertex.h>
 #include <util/field.h>
 #include <util/geom.h>
-#include <util/id.h>
+#include <util/ragged_array.h>
 #include <util/vector3.h>
 
 #include <unordered_map>
@@ -27,9 +27,9 @@ public:
 public:
     Interfaces() {}
 
-    Interfaces(IdConstructor ids, std::vector<ElemType> shapes) {
-        vertex_ids_ = Id<array_layout, memory_space>(ids);
-        size_ = vertex_ids_.size();
+    Interfaces(std::vector<std::vector<int>> ids, std::vector<ElemType> shapes) {
+        vertex_ids_ = Ibis::RaggedArray<int, array_layout, memory_space>(ids);
+        size_ = vertex_ids_.num_rows();
         shape_ = Field<ElemType, array_layout, memory_space>("Interface::shape",
                                                              shapes.size());
         auto shape_mirror = shape_.host_mirror();
@@ -61,7 +61,7 @@ public:
 
     Interfaces(int num_interfaces, int num_vertex_ids) {
         vertex_ids_ =
-            Id<array_layout, memory_space>(num_vertex_ids, num_interfaces);
+            Ibis::RaggedArray<int, array_layout, memory_space>(num_vertex_ids, num_interfaces);
         size_ = num_interfaces;
         shape_ = Field<ElemType, array_layout, memory_space>("Interface::shape",
                                                              size_);
@@ -81,7 +81,7 @@ public:
     }
 
     mirror_type host_mirror() const {
-        return mirror_type(size_, vertex_ids_.num_ids());
+        return mirror_type(size_, vertex_ids_.num_values());
     }
 
     template <class OtherSpace>
@@ -102,10 +102,10 @@ public:
     }
 
     KOKKOS_INLINE_FUNCTION
-    Id<array_layout, memory_space>& vertex_ids() { return vertex_ids_; }
+    Ibis::RaggedArray<int, array_layout, memory_space>& vertex_ids() { return vertex_ids_; }
 
     KOKKOS_INLINE_FUNCTION
-    const Id<array_layout, memory_space>& vertex_ids() const {
+    const Ibis::RaggedArray<int, array_layout, memory_space>& vertex_ids() const {
         return vertex_ids_;
     }
 
@@ -167,7 +167,7 @@ public:
     int right_cell(const int face_id) const { return right_cells_(face_id); }
 
     KOKKOS_INLINE_FUNCTION
-    int size() const { return vertex_ids_.size(); }
+    int size() const { return vertex_ids_.num_rows(); }
 
     void compute_orientations(Vertices<T, execution_space> vertices) {
         // set the face tangents in parallel
@@ -180,7 +180,7 @@ public:
             "Interfaces::compute_orientations",
             Kokkos::RangePolicy<execution_space>(0, norm_.size()),
             KOKKOS_LAMBDA(const int i) {
-                auto vertex_ids = this_vertex_ids[i];
+                auto vertex_ids = this_vertex_ids(i);
                 T x0 = vertices.positions().x(vertex_ids(0));
                 T x1 = vertices.positions().x(vertex_ids(1));
                 T y0 = vertices.positions().y(vertex_ids(0));
@@ -196,7 +196,7 @@ public:
 
                 switch (shape(i)) {
                     case ElemType::Line: {
-                        auto vertex_ids = this_vertex_ids[i];
+                        auto vertex_ids = this_vertex_ids(i);
                         this_tan2.x(i) = 0.0;
                         this_tan2.y(i) = 0.0;
                         this_tan2.z(i) = 1.0;
@@ -226,20 +226,20 @@ public:
             KOKKOS_LAMBDA(const int i) {
                 switch (shape(i)) {
                     case ElemType::Line: {
-                        auto vertex_ids = this_vertex_ids[i];
+                        auto vertex_ids = this_vertex_ids(i);
                         this_area(i) = Ibis::distance_between_points(
                             vertices.positions(), vertex_ids(0), vertex_ids(1));
                         break;
                     }
                     case ElemType::Tri: {
-                        auto vertex_ids = this_vertex_ids[i];
+                        auto vertex_ids = this_vertex_ids(i);
                         this_area(i) = Ibis::area_of_triangle(
                             vertices.positions(), vertex_ids(0), vertex_ids(1),
                             vertex_ids(2));
                         break;
                     }
                     case ElemType::Quad: {
-                        auto vertex_ids = this_vertex_ids[i];
+                        auto vertex_ids = this_vertex_ids(i);
                         this_area(i) = Ibis::area_of_quadrilateral(
                             vertices.positions(), vertex_ids(0), vertex_ids(1),
                             vertex_ids(2), vertex_ids(3));
@@ -268,7 +268,7 @@ public:
             "Interfaces::compute_centres",
             Kokkos::RangePolicy<execution_space>(0, centre_.size()),
             KOKKOS_LAMBDA(const int face_i) {
-                auto face_vertices = vertex_ids[face_i];
+                auto face_vertices = vertex_ids(face_i);
                 T x = 0.0;
                 T y = 0.0;
                 T z = 0.0;
@@ -287,8 +287,9 @@ public:
 
 public:
     int size_;
+    
     // the id's of the vertices forming each interface
-    Id<array_layout, memory_space> vertex_ids_;
+    Ibis::RaggedArray<int, array_layout, memory_space> vertex_ids_;
 
     // the cells to the left/right of the interface
     Field<int, array_layout, memory_space> left_cells_;

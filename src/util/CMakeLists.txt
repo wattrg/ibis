@@ -2,7 +2,6 @@ add_library(
     util 
     STATIC 
     util/vector3.cpp
-    util/id.cpp
     util/geom.cpp
     util/ragged_array.cpp
 )
@@ -15,7 +14,6 @@ if (Ibis_BUILD_TESTS)
 	util_unittest 
 	test/unittest.cpp 
 	util/vector3.cpp 
-	util/id.cpp
 	util/geom.cpp
 	util/ragged_array.cpp
     )

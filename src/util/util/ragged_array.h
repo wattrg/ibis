@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 #include <Kokkos_Core.hpp>
+#include "Kokkos_Macros.hpp"
 
 namespace Ibis {
 
@@ -28,11 +29,16 @@ private:
 public:
     RaggedArray() {}
 
+    RaggedArray(int num_values, int num_rows) :
+        data_("RaggedArray::data", num_values),
+        offsets_("RaggedArray::offsets", num_rows + 1)
+    {}
+
     RaggedArray(ArrayType data, OffsetType offsets) 
         : data_(data), offsets_(offsets)
     {}
 
-    RaggedArray(std::string label, std::vector<std::vector<DataType>> data) {
+    RaggedArray(std::vector<std::vector<DataType>> data) {
         // count the total number of entries
         unsigned int n = 0;
         for (const auto &row: data) {
@@ -40,8 +46,8 @@ public:
         }
 
         // allocate memory
-        data_ = ArrayType(label, n);
-        offsets_ = OffsetType("offsets", data.size()+1);
+        data_ = ArrayType("RaggedArray::data", n);
+        offsets_ = OffsetType("RaggedArray::offsets", data.size()+1);
 
         // initialise memory (on the CPU)
         auto data_host = Kokkos::create_mirror_view(data_);
@@ -115,6 +121,31 @@ public:
         Kokkos::deep_copy(data_, other.data_); 
         Kokkos::deep_copy(offsets_, other.offsets_);
     }
+
+    KOKKOS_INLINE_FUNCTION
+    int num_rows() const { return offsets_.extent(0) - 1; }
+
+    KOKKOS_INLINE_FUNCTION
+    int num_values() const { return data_.extent(0); }
+
+    const OffsetType & offsets() const {
+        return offsets_;
+    }
+
+    const ArrayType & data() const {
+        return data_;
+    }
+
+    bool operator == (const RaggedArray<DataType, Layout, Space> &other) const {
+        for (unsigned int i = 0; i < data_.extent(0); i++){
+            if (data_(i) != other.data_(i)) return false;
+        }
+
+        for (unsigned int i = 0; i < offsets_.extent(0); i++) {
+            if (offsets_(i) != other.offsets_(i)) return false;
+        }
+        return true;
+    } 
 
 private:
     ArrayType data_;

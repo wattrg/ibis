@@ -4,7 +4,6 @@
 #include <grid/cell.h>
 #include <grid/grid_io.h>
 #include <grid/interface.h>
-#include <util/id.h>
 
 #include <nlohmann/json.hpp>
 
@@ -43,9 +42,9 @@ public:
         vertices_.deep_copy(host_vertices);
 
         // some objects to assist in constructing the grid
-        IdConstructor interface_vertices = IdConstructor();
-        IdConstructor cell_vertices = IdConstructor();
-        IdConstructor cell_interface_ids = IdConstructor();
+        std::vector<std::vector<int>> interface_vertices {};
+        std::vector<std::vector<int>> cell_vertices {};
+        std::vector<std::vector<int>> cell_interface_ids {};
         InterfaceLookup interfaces = InterfaceLookup();
 
         // begin to assemble the interfaces and cells
@@ -152,8 +151,8 @@ public:
         }
         return mirror_type(
             num_vertices(), num_interfaces(), num_cells(), num_ghost_cells(),
-            dim(), cells_.vertex_ids().num_ids(),
-            interfaces_.vertex_ids().num_ids(), cells_.faces().num_face_ids(),
+            dim(), cells_.vertex_ids().num_values(),
+            interfaces_.vertex_ids().num_values(), cells_.faces().num_face_ids(),
             boundary_cell_sizes, boundary_face_sizes);
     }
 
@@ -298,7 +297,7 @@ public:
     std::vector<std::string> boundary_tags_;
 
     std::map<int, int> setup_boundaries(const GridIO& grid_io, json& boundaries,
-                                        IdConstructor& cell_vertices,
+                                        std::vector<std::vector<int>>& cell_vertices,
                                         InterfaceLookup& interfaces,
                                         std::vector<ElemType> cell_shapes) {
         (void)cell_vertices;

@@ -11,7 +11,7 @@ TEST_CASE("ragged_array") {
         {3.0, 4.0, 5.0},
         {6.0, 7.0, 8.0, 9.0}
     };    
-    Ibis::RaggedArray<double> ragged_array ("array", array);
+    Ibis::RaggedArray<double> ragged_array (array);
     auto ragged_array_host = ragged_array.host_mirror_and_copy();
 
     CHECK(ragged_array_host(0, 0) == doctest::Approx(1.0));
