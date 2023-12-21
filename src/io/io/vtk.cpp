@@ -100,7 +100,8 @@ int VtkOutput<T>::write(const typename FlowStates<T>::mirror_type& fs,
                        grid.num_vertices());
     f << "</Points>" << std::endl;
     f << "<Cells>" << std::endl;
-    write_int_view(f, grid.cells().vertex_ids().ids(), "connectivity", "Int64");
+    write_int_view(f, grid.cells().vertex_ids().data(), "connectivity",
+                   "Int64");
     write_int_view(f, grid.cells().vertex_ids().offsets(), "offsets", "Int64",
                    true);
     write_elem_type(f, grid.cells().shapes());

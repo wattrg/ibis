@@ -5,7 +5,7 @@
 #include <grid/vertex.h>
 #include <util/field.h>
 #include <util/geom.h>
-#include <util/id.h>
+#include <util/ragged_array.h>
 
 #include <Kokkos_Core.hpp>
 
@@ -28,15 +28,16 @@ public:
 
     CellFaces() {}
 
-    CellFaces(const Id<array_layout, memory_space>& interface_ids) {
+    CellFaces(const Ibis::RaggedArray<int, array_layout, memory_space>&
+                  interface_ids) {
         offsets_ =
             view_type("CellFaces::offsets", interface_ids.offsets().size());
         face_ids_ =
-            view_type("CellFaces::face_ids", interface_ids.ids().size());
+            view_type("CellFaces::face_ids", interface_ids.data().size());
         outsigns_ =
-            view_type("CellFaces::outsigns", interface_ids.ids().size());
+            view_type("CellFaces::outsigns", interface_ids.data().size());
         Kokkos::deep_copy(offsets_, interface_ids.offsets());
-        Kokkos::deep_copy(face_ids_, interface_ids.ids());
+        Kokkos::deep_copy(face_ids_, interface_ids.data());
     }
 
     CellFaces(const view_type offsets, view_type face_ids, view_type outsigns) {
@@ -131,8 +132,8 @@ public:
 public:
     Cells() {}
 
-    Cells(Id<array_layout, memory_space> vertices,
-          Id<array_layout, memory_space> interfaces,
+    Cells(Ibis::RaggedArray<int, array_layout, memory_space> vertices,
+          Ibis::RaggedArray<int, array_layout, memory_space> interfaces,
           std::vector<ElemType> shapes) {
         vertex_ids_ = vertices;
         num_cells_ = shapes.size();
@@ -153,7 +154,8 @@ public:
     }
 
     Cells(int num_cells, int num_vertex_ids, int num_face_ids) {
-        vertex_ids_ = Id<array_layout, memory_space>(num_vertex_ids, num_cells);
+        vertex_ids_ = Ibis::RaggedArray<int, array_layout, memory_space>(
+            num_vertex_ids, num_cells);
         num_cells_ = num_cells;
         faces_ =
             CellFaces<T, array_layout, memory_space>(num_cells, num_face_ids);
@@ -166,7 +168,7 @@ public:
     }
 
     mirror_type host_mirror() const {
-        int num_vertex_ids = vertex_ids_.num_ids();
+        int num_vertex_ids = vertex_ids_.num_values();
         int num_face_ids = faces_.num_face_ids();
         int num_cells = num_cells_;
         return mirror_type(num_cells, num_vertex_ids, num_face_ids);
@@ -186,7 +188,8 @@ public:
     }
 
     KOKKOS_INLINE_FUNCTION
-    const Id<array_layout, memory_space>& vertex_ids() const {
+    const Ibis::RaggedArray<int, array_layout, memory_space>& vertex_ids()
+        const {
         return vertex_ids_;
     }
 
@@ -223,7 +226,7 @@ public:
             "Cells::compute_centroid",
             Kokkos::RangePolicy<execution_space>(0, volume_.size()),
             KOKKOS_LAMBDA(const int i) {
-                auto cell_vertices = vertex_ids[i];
+                auto cell_vertices = vertex_ids(i);
                 int n_vertices = cell_vertices.size();
                 T x = 0.0;
                 T y = 0.0;
@@ -254,14 +257,14 @@ public:
                         printf("Invalid cell shape: Line");
                         break;
                     case ElemType::Tri: {
-                        auto vertex_ids = this_vertex_ids[i];
+                        auto vertex_ids = this_vertex_ids(i);
                         volume(i) = Ibis::area_of_triangle(
                             vertices.positions(), vertex_ids(0), vertex_ids(1),
                             vertex_ids(2));
                         break;
                     }
                     case ElemType::Quad: {
-                        auto vertex_ids = this_vertex_ids[i];
+                        auto vertex_ids = this_vertex_ids(i);
                         volume(i) = Ibis::area_of_quadrilateral(
                             vertices.positions(), vertex_ids(0), vertex_ids(1),
                             vertex_ids(2), vertex_ids(3));
@@ -290,7 +293,7 @@ public:
 
 public:
     CellFaces<T, array_layout, memory_space> faces_;
-    Id<array_layout, memory_space> vertex_ids_;
+    Ibis::RaggedArray<int, array_layout, memory_space> vertex_ids_;
     Field<ElemType, array_layout, memory_space> shape_;
     Field<T, array_layout, memory_space> volume_;
     Vector3s<T, array_layout, memory_space> centroid_;

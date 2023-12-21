@@ -134,11 +134,8 @@ Interfaces<double> generate_interfaces() {
         ElemType::Line, ElemType::Line, ElemType::Line, ElemType::Line,
         ElemType::Line, ElemType::Line, ElemType::Line, ElemType::Line,
     };
-    IdConstructor interface_id_constructor;
-    for (unsigned int i = 0; i < interface_id_list.size(); i++) {
-        interface_id_constructor.push_back(interface_id_list[i]);
-    }
-    Interfaces<double> interfaces(interface_id_constructor, shapes);
+
+    Interfaces<double> interfaces(interface_id_list, shapes);
     interfaces.compute_areas(vertices);
     interfaces.compute_orientations(vertices);
     interfaces.compute_centres(vertices);

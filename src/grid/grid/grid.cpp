@@ -39,30 +39,20 @@ GridInfo build_test_grid() {
         ElemType::Line, ElemType::Line, ElemType::Line, ElemType::Line,
         ElemType::Line, ElemType::Line, ElemType::Line, ElemType::Line,
     };
-    IdConstructor interface_id_constructor;
-    for (unsigned int i = 0; i < interface_id_list.size(); i++) {
-        interface_id_constructor.push_back(interface_id_list[i]);
-    }
+
     Interfaces<double, Kokkos::DefaultHostExecutionSpace> interfaces(
-        interface_id_constructor, shapes);
+        interface_id_list, shapes);
 
     std::vector<std::vector<int>> cell_interfaces_list{
         {0, 1, 2, 3},     {4, 5, 6, 1},     {7, 8, 9, 5},
         {2, 10, 11, 12},  {6, 13, 14, 10},  {9, 15, 16, 13},
         {11, 17, 18, 19}, {14, 20, 21, 17}, {16, 22, 23, 20}};
-    IdConstructor cell_interface_id_constructor;
-    for (unsigned int i = 0; i < cell_interfaces_list.size(); i++) {
-        cell_interface_id_constructor.push_back(cell_interfaces_list[i]);
-    }
 
-    IdConstructor cell_vertex_id_constructor;
     std::vector<std::vector<int>> cell_vertex_ids_raw{
         {0, 1, 5, 4},   {1, 2, 6, 5},    {2, 3, 7, 6},
         {4, 5, 9, 8},   {5, 6, 10, 9},   {6, 7, 11, 10},
         {8, 9, 13, 12}, {9, 10, 14, 13}, {10, 11, 15, 14}};
-    for (int i = 0; i < 9; i++) {
-        cell_vertex_id_constructor.push_back(cell_vertex_ids_raw[i]);
-    }
+
     std::vector<ElemType> cell_shapes{
         ElemType::Quad, ElemType::Quad, ElemType::Quad,
         ElemType::Quad, ElemType::Quad, ElemType::Quad,
@@ -70,7 +60,7 @@ GridInfo build_test_grid() {
     };
 
     Cells<double, Kokkos::DefaultHostExecutionSpace> cells(
-        cell_vertex_id_constructor, cell_interface_id_constructor, cell_shapes);
+        cell_vertex_ids_raw, cell_interfaces_list, cell_shapes);
     grid_info.vertices = vertices;
     grid_info.faces = interfaces;
     grid_info.cells = cells;
