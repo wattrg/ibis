@@ -27,7 +27,8 @@ public:
 public:
     Interfaces() {}
 
-    Interfaces(std::vector<std::vector<int>> ids, std::vector<ElemType> shapes) {
+    Interfaces(std::vector<std::vector<int>> ids,
+               std::vector<ElemType> shapes) {
         vertex_ids_ = Ibis::RaggedArray<int, array_layout, memory_space>(ids);
         size_ = vertex_ids_.num_rows();
         shape_ = Field<ElemType, array_layout, memory_space>("Interface::shape",
@@ -60,8 +61,8 @@ public:
     }
 
     Interfaces(int num_interfaces, int num_vertex_ids) {
-        vertex_ids_ =
-            Ibis::RaggedArray<int, array_layout, memory_space>(num_vertex_ids, num_interfaces);
+        vertex_ids_ = Ibis::RaggedArray<int, array_layout, memory_space>(
+            num_vertex_ids, num_interfaces);
         size_ = num_interfaces;
         shape_ = Field<ElemType, array_layout, memory_space>("Interface::shape",
                                                              size_);
@@ -102,10 +103,13 @@ public:
     }
 
     KOKKOS_INLINE_FUNCTION
-    Ibis::RaggedArray<int, array_layout, memory_space>& vertex_ids() { return vertex_ids_; }
+    Ibis::RaggedArray<int, array_layout, memory_space>& vertex_ids() {
+        return vertex_ids_;
+    }
 
     KOKKOS_INLINE_FUNCTION
-    const Ibis::RaggedArray<int, array_layout, memory_space>& vertex_ids() const {
+    const Ibis::RaggedArray<int, array_layout, memory_space>& vertex_ids()
+        const {
         return vertex_ids_;
     }
 
@@ -287,7 +291,7 @@ public:
 
 public:
     int size_;
-    
+
     // the id's of the vertices forming each interface
     Ibis::RaggedArray<int, array_layout, memory_space> vertex_ids_;
 

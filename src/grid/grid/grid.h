@@ -42,9 +42,9 @@ public:
         vertices_.deep_copy(host_vertices);
 
         // some objects to assist in constructing the grid
-        std::vector<std::vector<int>> interface_vertices {};
-        std::vector<std::vector<int>> cell_vertices {};
-        std::vector<std::vector<int>> cell_interface_ids {};
+        std::vector<std::vector<int>> interface_vertices{};
+        std::vector<std::vector<int>> cell_vertices{};
+        std::vector<std::vector<int>> cell_interface_ids{};
         InterfaceLookup interfaces = InterfaceLookup();
 
         // begin to assemble the interfaces and cells
@@ -149,11 +149,12 @@ public:
         for (auto const& [key, val] : boundary_faces_) {
             boundary_face_sizes.insert({key, val.size()});
         }
-        return mirror_type(
-            num_vertices(), num_interfaces(), num_cells(), num_ghost_cells(),
-            dim(), cells_.vertex_ids().num_values(),
-            interfaces_.vertex_ids().num_values(), cells_.faces().num_face_ids(),
-            boundary_cell_sizes, boundary_face_sizes);
+        return mirror_type(num_vertices(), num_interfaces(), num_cells(),
+                           num_ghost_cells(), dim(),
+                           cells_.vertex_ids().num_values(),
+                           interfaces_.vertex_ids().num_values(),
+                           cells_.faces().num_face_ids(), boundary_cell_sizes,
+                           boundary_face_sizes);
     }
 
     template <class OtherSpace>
@@ -296,10 +297,10 @@ public:
         boundary_faces_;
     std::vector<std::string> boundary_tags_;
 
-    std::map<int, int> setup_boundaries(const GridIO& grid_io, json& boundaries,
-                                        std::vector<std::vector<int>>& cell_vertices,
-                                        InterfaceLookup& interfaces,
-                                        std::vector<ElemType> cell_shapes) {
+    std::map<int, int> setup_boundaries(
+        const GridIO& grid_io, json& boundaries,
+        std::vector<std::vector<int>>& cell_vertices,
+        InterfaceLookup& interfaces, std::vector<ElemType> cell_shapes) {
         (void)cell_vertices;
         (void)cell_shapes;
         num_ghost_cells_ = 0;

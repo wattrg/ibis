@@ -28,7 +28,8 @@ public:
 
     CellFaces() {}
 
-    CellFaces(const Ibis::RaggedArray<int, array_layout, memory_space>& interface_ids) {
+    CellFaces(const Ibis::RaggedArray<int, array_layout, memory_space>&
+                  interface_ids) {
         offsets_ =
             view_type("CellFaces::offsets", interface_ids.offsets().size());
         face_ids_ =
@@ -133,7 +134,7 @@ public:
 
     Cells(Ibis::RaggedArray<int, array_layout, memory_space> vertices,
           Ibis::RaggedArray<int, array_layout, memory_space> interfaces,
-                                        std::vector<ElemType> shapes) {
+          std::vector<ElemType> shapes) {
         vertex_ids_ = vertices;
         num_cells_ = shapes.size();
         faces_ = CellFaces<T, array_layout, memory_space>(interfaces);
@@ -153,9 +154,8 @@ public:
     }
 
     Cells(int num_cells, int num_vertex_ids, int num_face_ids) {
-        vertex_ids_ = 
-            Ibis::RaggedArray<int, array_layout, memory_space>(num_vertex_ids, 
-                                                               num_cells);
+        vertex_ids_ = Ibis::RaggedArray<int, array_layout, memory_space>(
+            num_vertex_ids, num_cells);
         num_cells_ = num_cells;
         faces_ =
             CellFaces<T, array_layout, memory_space>(num_cells, num_face_ids);
@@ -188,7 +188,8 @@ public:
     }
 
     KOKKOS_INLINE_FUNCTION
-    const Ibis::RaggedArray<int, array_layout, memory_space>& vertex_ids() const {
+    const Ibis::RaggedArray<int, array_layout, memory_space>& vertex_ids()
+        const {
         return vertex_ids_;
     }
 
