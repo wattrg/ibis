@@ -110,7 +110,7 @@ TEST_CASE("grid cell faces") {
     auto block = block_dev.host_mirror();
     block.deep_copy(block_dev);
     CHECK(block.cells().size() == expected.cells.size());
-    for (int i = 0; i < block.cells().size(); i++) {
+    for (int i = 0; i < block.num_cells(); i++) {
         for (unsigned int j = 0; j < block.cells().faces().face_ids(i).size();
              j++) {
             CHECK(block.cells().faces().face_ids(i)(j) ==

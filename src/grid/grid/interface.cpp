@@ -144,9 +144,9 @@ Interfaces<double> generate_interfaces() {
 
 TEST_CASE("Interface area") {
     Interfaces<double> interfaces = generate_interfaces();
-    auto areas = interfaces.area();
-    auto areas_mirror = areas.host_mirror();
-    areas_mirror.deep_copy(areas);
+    auto interfaces_mirror = interfaces.host_mirror();
+    interfaces_mirror.deep_copy(interfaces);
+    auto areas_mirror = interfaces_mirror.area();
     for (int i = 0; i < interfaces.size(); i++) {
         CHECK(Kokkos::abs(areas_mirror(i) - 1.0) < 1e-14);
     }
@@ -154,9 +154,9 @@ TEST_CASE("Interface area") {
 
 TEST_CASE("Interface directions") {
     Interfaces<double> interfaces = generate_interfaces();
-    auto norms = interfaces.norm();
-    auto norm_mirror = interfaces.norm().host_mirror();
-    norm_mirror.deep_copy(norms);
+    auto interfaces_mirror = interfaces.host_mirror();
+    interfaces_mirror.deep_copy(interfaces);
+    auto norm_mirror = interfaces_mirror.norm();
     CHECK(Kokkos::abs(norm_mirror.x(0) - +0.0) < 1e-14);
     CHECK(Kokkos::abs(norm_mirror.y(0) - -1.0) < 1e-14);
     CHECK(Kokkos::abs(norm_mirror.z(0) - +0.0) < 1e-14);
@@ -183,16 +183,17 @@ TEST_CASE("Interface directions") {
 }
 
 TEST_CASE("Interface centres") {
-    Interfaces<double> interfaces = generate_interfaces();
     std::vector<double> xs = {0.5, 1.0, 0.5, 0.0, 1.5, 2.0, 1.5, 2.5,
                               3.0, 2.5, 1.0, 0.5, 0.0, 2.0, 1.5, 3.0,
                               2.5, 1.0, 0.5, 0.0, 2.0, 1.5, 3.0, 2.5};
     std::vector<double> ys = {0.0, 0.5, 1.0, 0.5, 0.0, 0.5, 1.0, 0.0,
                               0.5, 1.0, 1.5, 2.0, 1.5, 1.5, 2.0, 1.5,
                               2.0, 2.5, 3.0, 2.5, 2.5, 3.0, 2.5, 3.0};
-    auto centres = interfaces.centre();
-    auto centre_mirror = interfaces.centre().host_mirror();
-    centre_mirror.deep_copy(centres);
+
+    Interfaces<double> interfaces = generate_interfaces();
+    auto interfaces_mirror = interfaces.host_mirror();
+    interfaces_mirror.deep_copy(interfaces);
+    auto centre_mirror = interfaces_mirror.centre();
     for (unsigned int i = 0; i < xs.size(); i++) {
         CHECK(Kokkos::abs(centre_mirror.x(i) - xs[i]) < 1e-14);
         CHECK(Kokkos::abs(centre_mirror.y(i) - ys[i]) < 1e-14);

@@ -17,8 +17,7 @@ public:
     using memory_space = typename execution_space::memory_space;
     using array_layout = Layout;
     using host_execution_space = Kokkos::DefaultHostExecutionSpace;
-    using host_mirror_mem_space =
-        Kokkos::DefaultHostExecutionSpace::memory_space;
+    using host_mirror_mem_space = host_execution_space::memory_space;
     using mirror_type = GridBlock<T, host_execution_space, array_layout>;
 
 public:
@@ -140,21 +139,41 @@ public:
         }
     }
 
+    // mirror_type host_mirror() const {
+    //     std::map<std::string, int> boundary_cell_sizes{};
+    //     std::map<std::string, int> boundary_face_sizes{};
+    //     for (auto const& [key, val] : boundary_cells_) {
+    //         boundary_cell_sizes.insert({key, val.size()});
+    //     }
+    //     for (auto const& [key, val] : boundary_faces_) {
+    //         boundary_face_sizes.insert({key, val.size()});
+    //     }
+    //     return mirror_type(num_vertices(), num_interfaces(), num_cells(),
+    //                        num_ghost_cells(), dim(),
+    //                        cells_.vertex_ids().num_values(),
+    //                        interfaces_.vertex_ids().num_values(),
+    //                        cells_.faces().num_face_ids(),
+    //                        boundary_cell_sizes, boundary_face_sizes);
+    // }
     mirror_type host_mirror() const {
-        std::map<std::string, int> boundary_cell_sizes{};
-        std::map<std::string, int> boundary_face_sizes{};
+        auto vertices = vertices_.host_mirror();
+        auto interfaces = interfaces_.host_mirror();
+        auto cells = cells_.host_mirror();
+        std::map<std::string, Field<int, array_layout, host_mirror_mem_space>>
+            boundary_cells{};
+        std::map<std::string, Field<int, array_layout, host_mirror_mem_space>>
+            boundary_faces{};
+
         for (auto const& [key, val] : boundary_cells_) {
-            boundary_cell_sizes.insert({key, val.size()});
+            boundary_cells.insert({key, val.host_mirror()});
         }
         for (auto const& [key, val] : boundary_faces_) {
-            boundary_face_sizes.insert({key, val.size()});
+            boundary_faces.insert({key, val.host_mirror()});
         }
-        return mirror_type(num_vertices(), num_interfaces(), num_cells(),
-                           num_ghost_cells(), dim(),
-                           cells_.vertex_ids().num_values(),
-                           interfaces_.vertex_ids().num_values(),
-                           cells_.faces().num_face_ids(), boundary_cell_sizes,
-                           boundary_face_sizes);
+
+        return mirror_type(vertices, interfaces, cells, dim_, num_valid_cells_,
+                           num_ghost_cells_, boundary_cells, boundary_faces,
+                           boundary_tags_);
     }
 
     template <class OtherSpace>
@@ -297,6 +316,7 @@ public:
         boundary_faces_;
     std::vector<std::string> boundary_tags_;
 
+public:
     std::map<int, int> setup_boundaries(
         const GridIO& grid_io, json& boundaries,
         std::vector<std::vector<int>>& cell_vertices,

@@ -19,17 +19,21 @@ public:
     using memory_space = typename execution_space::memory_space;
     using array_layout = Layout;
     using host_execution_space = Kokkos::DefaultHostExecutionSpace;
+    using vector_type = Vector3s<T, array_layout, memory_space>;
     using host_mirror_mem_space =
         Kokkos::DefaultHostExecutionSpace::memory_space;
-    using mirror_type =
-        Interfaces<T, Kokkos::DefaultHostExecutionSpace, array_layout>;
+    using mirror_type = Interfaces<T, host_execution_space, array_layout>;
+
+    // I have no idea why it is execution_space and not memory_space
+    // here. But execution_space works and memory_space doesn't...
+    using id_type = Ibis::RaggedArray<int, array_layout, execution_space>;
 
 public:
     Interfaces() {}
 
     Interfaces(std::vector<std::vector<int>> ids,
                std::vector<ElemType> shapes) {
-        vertex_ids_ = Ibis::RaggedArray<int, array_layout, memory_space>(ids);
+        vertex_ids_ = id_type(ids);
         size_ = vertex_ids_.num_rows();
         shape_ = Field<ElemType, array_layout, memory_space>("Interface::shape",
                                                              shapes.size());
@@ -40,15 +44,11 @@ public:
         shape_.deep_copy(shape_mirror);
 
         // geometry
-        norm_ =
-            Vector3s<T, array_layout, memory_space>("Interface::norm", size_);
-        tan1_ =
-            Vector3s<T, array_layout, memory_space>("Interface::tan1", size_);
-        tan2_ =
-            Vector3s<T, array_layout, memory_space>("Interface::tan2", size_);
+        norm_ = vector_type("Interface::norm", size_);
+        tan1_ = vector_type("Interface::tan1", size_);
+        tan2_ = vector_type("Interface::tan2", size_);
+        centre_ = vector_type("Interface::centre", size_);
         area_ = Field<T, array_layout, memory_space>("Interface::area", size_);
-        centre_ =
-            Vector3s<T, array_layout, memory_space>("Interface::centre", size_);
 
         // set left and right cells to -1 to indicate they haven't
         // been connected up to any cells yet
@@ -61,19 +61,14 @@ public:
     }
 
     Interfaces(int num_interfaces, int num_vertex_ids) {
-        vertex_ids_ = Ibis::RaggedArray<int, array_layout, memory_space>(
-            num_vertex_ids, num_interfaces);
+        vertex_ids_ = id_type(num_vertex_ids, num_interfaces);
         size_ = num_interfaces;
         shape_ = Field<ElemType, array_layout, memory_space>("Interface::shape",
                                                              size_);
-        norm_ =
-            Vector3s<T, array_layout, memory_space>("Interface::norm", size_);
-        tan1_ =
-            Vector3s<T, array_layout, memory_space>("Interface::tan1", size_);
-        tan2_ =
-            Vector3s<T, array_layout, memory_space>("Interface::tan2", size_);
-        centre_ =
-            Vector3s<T, array_layout, memory_space>("Interface::centre", size_);
+        norm_ = vector_type("Interface::norm", size_);
+        tan1_ = vector_type("Interface::tan1", size_);
+        tan2_ = vector_type("Interface::tan2", size_);
+        centre_ = vector_type("Interface::centre", size_);
         area_ = Field<T, array_layout, memory_space>("Interface::area", size_);
         left_cells_ =
             Field<int, array_layout, memory_space>("Interface::left", size_);
@@ -81,8 +76,36 @@ public:
             Field<int, array_layout, memory_space>("Interface::right", size_);
     }
 
+    Interfaces(id_type vertex_ids,
+               Field<int, array_layout, memory_space> left_cells,
+               Field<int, array_layout, memory_space> right_cells,
+               Field<T, array_layout, memory_space> area,
+               Field<ElemType, array_layout, memory_space> shape,
+               vector_type norm, vector_type tan1, vector_type tan2,
+               vector_type centre)
+        : size_(vertex_ids.num_rows()),
+          vertex_ids_(vertex_ids),
+          left_cells_(left_cells),
+          right_cells_(right_cells),
+          area_(area),
+          shape_(shape),
+          norm_(norm),
+          tan1_(tan1),
+          tan2_(tan2),
+          centre_(centre) {}
+
     mirror_type host_mirror() const {
-        return mirror_type(size_, vertex_ids_.num_values());
+        auto vertex_ids = vertex_ids_.host_mirror();
+        auto left_cells = left_cells_.host_mirror();
+        auto right_cells = right_cells_.host_mirror();
+        auto area = area_.host_mirror();
+        auto shape = shape_.host_mirror();
+        auto norm = norm_.host_mirror();
+        auto tan1 = tan1_.host_mirror();
+        auto tan2 = tan2_.host_mirror();
+        auto centre = centre_.host_mirror();
+        return mirror_type(vertex_ids, left_cells, right_cells, area, shape,
+                           norm, tan1, tan2, centre);
     }
 
     template <class OtherSpace>
@@ -103,15 +126,10 @@ public:
     }
 
     KOKKOS_INLINE_FUNCTION
-    Ibis::RaggedArray<int, array_layout, memory_space>& vertex_ids() {
-        return vertex_ids_;
-    }
+    id_type& vertex_ids() { return vertex_ids_; }
 
     KOKKOS_INLINE_FUNCTION
-    const Ibis::RaggedArray<int, array_layout, memory_space>& vertex_ids()
-        const {
-        return vertex_ids_;
-    }
+    const id_type& vertex_ids() const { return vertex_ids_; }
 
     KOKKOS_INLINE_FUNCTION
     const Field<T, array_layout, memory_space>& area() const { return area_; }
@@ -126,33 +144,25 @@ public:
     Vector3s<T, array_layout, memory_space>& norm() { return norm_; }
 
     KOKKOS_INLINE_FUNCTION
-    const Vector3s<T, array_layout, memory_space>& norm() const {
-        return norm_;
-    }
+    const vector_type& norm() const { return norm_; }
 
     KOKKOS_INLINE_FUNCTION
-    Vector3s<T, array_layout, memory_space>& tan1() { return tan1_; }
+    vector_type& tan1() { return tan1_; }
 
     KOKKOS_INLINE_FUNCTION
-    const Vector3s<T, array_layout, memory_space>& tan1() const {
-        return tan1_;
-    }
+    const vector_type& tan1() const { return tan1_; }
 
     KOKKOS_INLINE_FUNCTION
-    Vector3s<T, array_layout, memory_space>& tan2() { return tan2_; }
+    vector_type& tan2() { return tan2_; }
 
     KOKKOS_INLINE_FUNCTION
-    const Vector3s<T, array_layout, memory_space>& tan2() const {
-        return tan2_;
-    }
+    const vector_type& tan2() const { return tan2_; }
 
     KOKKOS_INLINE_FUNCTION
-    Vector3s<T, array_layout, memory_space>& centre() { return centre_; }
+    vector_type& centre() { return centre_; }
 
     KOKKOS_INLINE_FUNCTION
-    const Vector3s<T, array_layout, memory_space>& centre() const {
-        return centre_;
-    }
+    const vector_type& centre() const { return centre_; }
 
     KOKKOS_INLINE_FUNCTION
     void attach_cell_left(const int cell_id, const int face_id) const {
@@ -293,7 +303,7 @@ public:
     int size_;
 
     // the id's of the vertices forming each interface
-    Ibis::RaggedArray<int, array_layout, memory_space> vertex_ids_;
+    id_type vertex_ids_;
 
     // the cells to the left/right of the interface
     Field<int, array_layout, memory_space> left_cells_;
@@ -302,10 +312,10 @@ public:
     // geometric data
     Field<T, array_layout, memory_space> area_;
     Field<ElemType, array_layout, memory_space> shape_;
-    Vector3s<T, array_layout, memory_space> norm_;
-    Vector3s<T, array_layout, memory_space> tan1_;
-    Vector3s<T, array_layout, memory_space> tan2_;
-    Vector3s<T, array_layout, memory_space> centre_;
+    vector_type norm_;
+    vector_type tan1_;
+    vector_type tan2_;
+    vector_type centre_;
 };
 
 // Efficient look-up of interface ID

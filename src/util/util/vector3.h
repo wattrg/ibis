@@ -47,6 +47,8 @@ public:
 
     Vector3s(int n) { view_ = view_type("Vector3s", n); }
 
+    Vector3s(view_type data) : view_(data) {}
+
     KOKKOS_INLINE_FUNCTION
     T& operator()(const int i, const int j) { return view_(i, j); }
 
@@ -96,8 +98,8 @@ public:
     }
 
     mirror_type host_mirror() const {
-        // return Kokkos::create_mirror_view(view_);
-        return mirror_type(view_.extent(0));
+        auto mirror_view = Kokkos::create_mirror_view(view_);
+        return mirror_type(mirror_view);
     }
 
     template <class OtherSpace>
