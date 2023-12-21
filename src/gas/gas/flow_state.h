@@ -12,8 +12,6 @@ struct FlowState {
 public:
     FlowState() {}
 
-    // ~FlowState(){}
-
     FlowState(GasState<T> gs, Vector3<T> vel) : gas_state(gs), velocity(vel) {}
 
     GasState<T> gas_state;
@@ -40,10 +38,17 @@ public:
         : gas(GasStates<T, Layout, Space>(n)),
           vel(Vector3s<T, Layout, Space>(n)) {}
 
+    FlowStates(GasStates<T, Layout, Space> gas, 
+               Vector3s<T, Layout, Space> vel) :
+        gas(gas),
+        vel(vel) {}
+
     int number_flow_states() const { return gas.size(); }
 
     mirror_type host_mirror() const {
-        return mirror_type(number_flow_states());
+        auto gas_mirror = gas.host_mirror();
+        auto vel_mirror = vel.host_mirror();
+        return mirror_type(gas_mirror, vel_mirror);
     }
 
     template <class OtherSpace>
