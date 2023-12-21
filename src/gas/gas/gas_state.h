@@ -29,7 +29,6 @@ public:
     using mirror_space = typename mirror_view_type::memory_space;
     using mirror_type = GasStates<T, mirror_layout, mirror_space>;
 
-
 public:
     GasStates() {}
 
@@ -41,13 +40,12 @@ public:
         data_ = view_type("GasStates", n, 4);
     }
 
-    GasStates(view_type gas_data) :
-        data_(gas_data),
-        rho_idx_(0),
-        pressure_idx_(1),
-        temp_idx_(2),
-        energy_idx_(3) 
-    {}
+    GasStates(view_type gas_data)
+        : data_(gas_data),
+          rho_idx_(0),
+          pressure_idx_(1),
+          temp_idx_(2),
+          energy_idx_(3) {}
 
     KOKKOS_INLINE_FUNCTION
     T& rho(const int cell_i) const { return data_(cell_i, rho_idx_); }
@@ -81,9 +79,9 @@ public:
         energy(i) = gs.energy;
     }
 
-    mirror_type host_mirror() const { 
+    mirror_type host_mirror() const {
         mirror_view_type data = Kokkos::create_mirror_view(data_);
-        return mirror_type(data); 
+        return mirror_type(data);
     }
 
     template <class OtherSpace>

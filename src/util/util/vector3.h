@@ -47,8 +47,7 @@ public:
 
     Vector3s(int n) { view_ = view_type("Vector3s", n); }
 
-    Vector3s(view_type data) :
-        view_(data) {}
+    Vector3s(view_type data) : view_(data) {}
 
     KOKKOS_INLINE_FUNCTION
     T& operator()(const int i, const int j) { return view_(i, j); }

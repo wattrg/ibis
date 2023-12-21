@@ -38,10 +38,8 @@ public:
         : gas(GasStates<T, Layout, Space>(n)),
           vel(Vector3s<T, Layout, Space>(n)) {}
 
-    FlowStates(GasStates<T, Layout, Space> gas, 
-               Vector3s<T, Layout, Space> vel) :
-        gas(gas),
-        vel(vel) {}
+    FlowStates(GasStates<T, Layout, Space> gas, Vector3s<T, Layout, Space> vel)
+        : gas(gas), vel(vel) {}
 
     int number_flow_states() const { return gas.size(); }
 
