@@ -32,6 +32,9 @@ public:
         _positions = vector_type("Vertices", num_vertices);
     }
 
+    Vertices(vector_type positions) :
+        _positions(positions) {}
+
     void set_vertex_position(int vertex_id, Vector3<T> pos) {
         _positions(vertex_id, 0) = pos.x;
         _positions(vertex_id, 1) = pos.y;
@@ -53,7 +56,10 @@ public:
     KOKKOS_INLINE_FUNCTION
     int size() const { return _positions.size(); }
 
-    mirror_type host_mirror() const { return mirror_type(_positions.size()); }
+    mirror_type host_mirror() const {
+        auto mirror_positions = _positions.host_mirror();
+        return mirror_type(mirror_positions);
+    }
 
     template <class OtherSpace>
     void deep_copy(const Vertices<T, OtherSpace> &other) {
