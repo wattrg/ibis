@@ -61,7 +61,7 @@ CellInfo generate_cells() {
         ElemType::Quad, ElemType::Quad, ElemType::Quad,
     };
 
-    Cells<double> cells(cell_vertex_ids_raw, cell_interfaces_list, cell_shapes);
+    Cells<double> cells(cell_vertex_ids_raw, cell_interfaces_list, cell_shapes, 9, 0);
     CellInfo info;
     info.vertices = vertices;
     info.interfaces = interfaces;
@@ -77,7 +77,7 @@ TEST_CASE("cell volume") {
     auto cells_mirror = cells.host_mirror();
     cells_mirror.deep_copy(cells);
 
-    for (int i = 0; i < cells.size(); i++) {
+    for (int i = 0; i < cells.num_valid_cells(); i++) {
         CHECK(Kokkos::fabs(cells_mirror.volume(i) - 1.0) < 1e-14);
     }
 }
@@ -96,7 +96,7 @@ TEST_CASE("cell_centre") {
     std::vector<double> y_values = {0.5, 0.5, 0.5, 1.5, 1.5,
                                     1.5, 2.5, 2.5, 2.5};
 
-    for (int i = 0; i < cells.size(); i++) {
+    for (int i = 0; i < cells.num_valid_cells(); i++) {
         CHECK(Kokkos::fabs(cells_mirror.centroids().x(i) - x_values[i]) <
               1e-14);
         CHECK(Kokkos::fabs(cells_mirror.centroids().y(i) - y_values[i]) <

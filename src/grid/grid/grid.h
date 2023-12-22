@@ -63,7 +63,7 @@ public:
         interfaces_ = Interfaces<T, execution_space, array_layout>(
             num_faces, num_face_vertex_ids);
         cells_ = Cells<T, execution_space, array_layout>(
-            num_valid_cells, num_cell_vertex_ids, num_face_ids);
+            num_valid_cells, num_ghost_cells, num_cell_vertex_ids, num_face_ids);
         boundary_cells_ =
             std::map<std::string, Field<int, array_layout, memory_space>>{};
         boundary_faces_ =
@@ -135,7 +135,8 @@ public:
             interface_vertices, interface_shapes);
 
         cells_ = Cells<T, execution_space, array_layout>(
-            cell_vertices, cell_interface_ids, cell_shapes);
+            cell_vertices, cell_interface_ids, cell_shapes, num_valid_cells_,
+            num_ghost_cells_);
 
         compute_geometric_data();
         compute_interface_connectivity(ghost_cell_map);

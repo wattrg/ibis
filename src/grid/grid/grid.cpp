@@ -60,7 +60,7 @@ GridInfo build_test_grid() {
     };
 
     Cells<double, Kokkos::DefaultHostExecutionSpace> cells(
-        cell_vertex_ids_raw, cell_interfaces_list, cell_shapes);
+        cell_vertex_ids_raw, cell_interfaces_list, cell_shapes, 9, 0);
     grid_info.vertices = vertices;
     grid_info.faces = interfaces;
     grid_info.cells = cells;
@@ -109,7 +109,7 @@ TEST_CASE("grid cell faces") {
     GridBlock<double> block_dev("../../../src/grid/test/grid.su2", config);
     auto block = block_dev.host_mirror();
     block.deep_copy(block_dev);
-    CHECK(block.cells().size() == expected.cells.size());
+    CHECK(block.cells().num_valid_cells() == expected.cells.num_valid_cells());
     for (int i = 0; i < block.num_cells(); i++) {
         for (unsigned int j = 0; j < block.cells().faces().face_ids(i).size();
              j++) {
@@ -143,12 +143,12 @@ TEST_CASE("grid cell outsigns") {
     GridBlock<double> block_dev("../../../src/grid/test/grid.su2", config);
     auto block = block_dev.host_mirror();
     block.deep_copy(block_dev);
-    CHECK(block.cells().size() == expected.cells.size());
+    CHECK(block.cells().num_valid_cells() == expected.cells.num_valid_cells());
     std::vector<std::vector<int>> outsigns = {
         {1, 1, 1, 1},  {1, 1, 1, -1},  {1, 1, 1, -1},
         {-1, 1, 1, 1}, {-1, 1, 1, -1}, {-1, 1, 1, -1},
         {-1, 1, 1, 1}, {-1, 1, 1, -1}, {-1, 1, 1, -1}};
-    for (int i = 0; i < block.cells().size(); i++) {
+    for (int i = 0; i < block.cells().num_valid_cells(); i++) {
         for (unsigned int j = 0; j < block.cells().faces().outsigns(i).size();
              j++) {
             CHECK(block.cells().faces().outsigns(i)(j) == outsigns[i][j]);

@@ -10,6 +10,7 @@
 #include <Kokkos_Core.hpp>
 
 #include "Kokkos_Core_fwd.hpp"
+#include "Kokkos_Macros.hpp"
 
 template <typename T, class ExecSpace = Kokkos::DefaultExecutionSpace,
           class Layout = Kokkos::DefaultExecutionSpace::array_layout>
@@ -136,13 +137,13 @@ public:
     Cells(Ibis::RaggedArray<int, array_layout, execution_space> vertices,
           Ibis::RaggedArray<int, array_layout, execution_space> interfaces,
           std::vector<ElemType> shapes, int num_valid_cells, 
-          int num_ghost_celsl) {
+          int num_ghost_cells) {
         vertex_ids_ = vertices;
         num_valid_cells_ = num_valid_cells;
         num_ghost_cells_ = num_ghost_cells;
         faces_ = CellFaces<T, array_layout, execution_space>(interfaces);
         shape_ = Field<ElemType, array_layout, memory_space>("Cell::shape",
-                                                             num_cells_);
+                                                             num_valid_cells_);
         typename Field<ElemType, array_layout, memory_space>::mirror_type
             shape_mirror("Cell::shape", num_valid_cells_);
         for (int i = 0; i < num_valid_cells_; i++) {
@@ -150,10 +151,11 @@ public:
         }
         shape_.deep_copy(shape_mirror);
 
+        int total_cells = num_valid_cells_ + num_ghost_cells_;
         volume_ =
-            Field<T, array_layout, memory_space>("Cell::Volume", num_cells_);
+            Field<T, array_layout, memory_space>("Cell::Volume", total_cells);
         centroid_ = Vector3s<T, array_layout, memory_space>("Cell::centroids",
-                                                            num_cells_);
+                                                            total_cells);
     }
 
     Cells(Ibis::RaggedArray<int, array_layout, execution_space> vertices,
@@ -174,14 +176,15 @@ public:
           int num_face_ids) {
         vertex_ids_ = Ibis::RaggedArray<int, array_layout, execution_space>(
             num_vertex_ids, num_valid_cells);
-        faces_ = CellFaces<T, array_layout, execution_space>(num_cells,
+        faces_ = CellFaces<T, array_layout, execution_space>(num_valid_cells,
                                                              num_face_ids);
         shape_ = Field<ElemType, array_layout, memory_space>("Cell::shape",
-                                                             num_cells);
+                                                             num_valid_cells);
+        int total_cells = num_valid_cells + num_ghost_cells;
         volume_ =
-            Field<T, array_layout, memory_space>("Cell::Volume", num_cells);
+            Field<T, array_layout, memory_space>("Cell::Volume", total_cells);
         centroid_ = Vector3s<T, array_layout, memory_space>("Cells::centroids",
-                                                            num_cells);
+                                                            total_cells);
         num_valid_cells_ = num_valid_cells;
         num_ghost_cells_ = num_ghost_cells;
     }
@@ -193,7 +196,7 @@ public:
         auto volume = volume_.host_mirror();
         auto centroid = centroid_.host_mirror();
         return mirror_type(vertices, faces, shapes, volume, centroid,
-                           num_cells_);
+                           num_valid_cells_, num_ghost_cells_);
     }
 
     template <class OtherDevice>
@@ -220,6 +223,9 @@ public:
 
     KOKKOS_INLINE_FUNCTION
     int num_ghost_cells() const { return num_ghost_cells_; }
+
+    KOKKOS_INLINE_FUNCTION
+    int num_total_cells() const { return num_valid_cells_ + num_ghost_cells_; }
 
     KOKKOS_INLINE_FUNCTION
     const T& volume(const int i) const { return volume_(i); }
@@ -249,7 +255,7 @@ public:
         auto vertex_ids = vertex_ids_;
         Kokkos::parallel_for(
             "Cells::compute_centroid",
-            Kokkos::RangePolicy<execution_space>(0, volume_.size()),
+            Kokkos::RangePolicy<execution_space>(0, num_valid_cells_),
             KOKKOS_LAMBDA(const int i) {
                 auto cell_vertices = vertex_ids(i);
                 int n_vertices = cell_vertices.size();
@@ -275,7 +281,7 @@ public:
         auto this_vertex_ids = vertex_ids_;
         Kokkos::parallel_for(
             "Cells::compute_volume",
-            Kokkos::RangePolicy<execution_space>(0, volume_.size()),
+            Kokkos::RangePolicy<execution_space>(0, num_valid_cells_),
             KOKKOS_LAMBDA(const int i) {
                 switch (shape(i)) {
                     case ElemType::Line:
