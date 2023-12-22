@@ -27,67 +27,6 @@ public:
         init_grid_block(grid_io, config);
     }
 
-    void init_grid_block(const GridIO& grid_io, json& config) {
-        dim_ = grid_io.dim();
-        json boundaries = config.at("boundaries");
-
-        // set the positions of the vertices
-        std::vector<Vertex<double>> vertices = grid_io.vertices();
-        vertices_ = Vertices<T, execution_space, array_layout>(vertices.size());
-        auto host_vertices = vertices_.host_mirror();
-        for (unsigned int i = 0; i < vertices.size(); i++) {
-            host_vertices.set_vertex_position(i, vertices[i].pos());
-        }
-        vertices_.deep_copy(host_vertices);
-
-        // some objects to assist in constructing the grid
-        std::vector<std::vector<int>> interface_vertices{};
-        std::vector<std::vector<int>> cell_vertices{};
-        std::vector<std::vector<int>> cell_interface_ids{};
-        InterfaceLookup interfaces = InterfaceLookup();
-
-        // begin to assemble the interfaces and cells
-        std::vector<ElemIO> cells = grid_io.cells();
-        std::vector<ElemType> cell_shapes{};
-        std::vector<ElemType> interface_shapes{};
-        num_valid_cells_ = cells.size();
-        for (unsigned int cell_i = 0; cell_i < cells.size(); cell_i++) {
-            cell_vertices.push_back(cells[cell_i].vertex_ids());
-            cell_shapes.push_back(cells[cell_i].cell_type());
-
-            std::vector<ElemIO> cell_interfaces = cells[cell_i].interfaces();
-            std::vector<int> cell_face_ids{};
-            for (unsigned int face_i = 0; face_i < cell_interfaces.size();
-                 face_i++) {
-                std::vector<int> face_vertices =
-                    cell_interfaces[face_i].vertex_ids();
-
-                // if this interface already exists, we use the existing one
-                // if the interface doesn't exist, we make a new one
-                int face_id = interfaces.id(face_vertices);
-                if (face_id == -1) {
-                    face_id = interfaces.insert(face_vertices);
-                    interface_vertices.push_back(face_vertices);
-                    interface_shapes.push_back(
-                        cell_interfaces[face_i].cell_type());
-                }
-                cell_face_ids.push_back(face_id);
-            }
-            cell_interface_ids.push_back(cell_face_ids);
-        }
-
-        std::map<int, int> ghost_cell_map = setup_boundaries(
-            grid_io, boundaries, cell_vertices, interfaces, cell_shapes);
-
-        interfaces_ = Interfaces<T, execution_space, array_layout>(
-            interface_vertices, interface_shapes);
-        cells_ = Cells<T, execution_space, array_layout>(
-            cell_vertices, cell_interface_ids, cell_shapes);
-
-        compute_geometric_data();
-        compute_interface_connectivity(ghost_cell_map);
-    }
-
     GridBlock(std::string file_name, json& config) {
         init_grid_block(GridIO(file_name), config);
     }
@@ -139,115 +78,68 @@ public:
         }
     }
 
-    // mirror_type host_mirror() const {
-    //     std::map<std::string, int> boundary_cell_sizes{};
-    //     std::map<std::string, int> boundary_face_sizes{};
-    //     for (auto const& [key, val] : boundary_cells_) {
-    //         boundary_cell_sizes.insert({key, val.size()});
-    //     }
-    //     for (auto const& [key, val] : boundary_faces_) {
-    //         boundary_face_sizes.insert({key, val.size()});
-    //     }
-    //     return mirror_type(num_vertices(), num_interfaces(), num_cells(),
-    //                        num_ghost_cells(), dim(),
-    //                        cells_.vertex_ids().num_values(),
-    //                        interfaces_.vertex_ids().num_values(),
-    //                        cells_.faces().num_face_ids(),
-    //                        boundary_cell_sizes, boundary_face_sizes);
-    // }
-    mirror_type host_mirror() const {
-        auto vertices = vertices_.host_mirror();
-        auto interfaces = interfaces_.host_mirror();
-        auto cells = cells_.host_mirror();
-        std::map<std::string, Field<int, array_layout, host_mirror_mem_space>>
-            boundary_cells{};
-        std::map<std::string, Field<int, array_layout, host_mirror_mem_space>>
-            boundary_faces{};
+    void init_grid_block(const GridIO& grid_io, json& config) {
+        dim_ = grid_io.dim();
+        json boundaries = config.at("boundaries");
 
-        for (auto const& [key, val] : boundary_cells_) {
-            boundary_cells.insert({key, val.host_mirror()});
+        // set the positions of the vertices
+        std::vector<Vertex<double>> vertices = grid_io.vertices();
+        vertices_ = Vertices<T, execution_space, array_layout>(vertices.size());
+        auto host_vertices = vertices_.host_mirror();
+        for (unsigned int i = 0; i < vertices.size(); i++) {
+            host_vertices.set_vertex_position(i, vertices[i].pos());
         }
-        for (auto const& [key, val] : boundary_faces_) {
-            boundary_faces.insert({key, val.host_mirror()});
+        vertices_.deep_copy(host_vertices);
+
+        // some objects to assist in constructing the grid
+        std::vector<std::vector<int>> interface_vertices{};
+        std::vector<std::vector<int>> cell_vertices{};
+        std::vector<std::vector<int>> cell_interface_ids{};
+        InterfaceLookup interfaces = InterfaceLookup();
+
+        // begin to assemble the interfaces and cells
+        std::vector<ElemIO> cells = grid_io.cells();
+        std::vector<ElemType> cell_shapes{};
+        std::vector<ElemType> interface_shapes{};
+        num_valid_cells_ = cells.size();
+        for (unsigned int cell_i = 0; cell_i < cells.size(); cell_i++) {
+            cell_vertices.push_back(cells[cell_i].vertex_ids());
+            cell_shapes.push_back(cells[cell_i].cell_type());
+
+            std::vector<ElemIO> cell_interfaces = cells[cell_i].interfaces();
+            std::vector<int> cell_face_ids{};
+            for (unsigned int face_i = 0; face_i < cell_interfaces.size();
+                 face_i++) {
+                std::vector<int> face_vertices =
+                    cell_interfaces[face_i].vertex_ids();
+
+                // if this interface already exists, we use the existing one
+                // if the interface doesn't exist, we make a new one
+                int face_id = interfaces.id(face_vertices);
+                if (face_id == -1) {
+                    face_id = interfaces.insert(face_vertices);
+                    interface_vertices.push_back(face_vertices);
+                    interface_shapes.push_back(
+                        cell_interfaces[face_i].cell_type());
+                }
+                cell_face_ids.push_back(face_id);
+            }
+            cell_interface_ids.push_back(cell_face_ids);
         }
 
-        return mirror_type(vertices, interfaces, cells, dim_, num_valid_cells_,
-                           num_ghost_cells_, boundary_cells, boundary_faces,
-                           boundary_tags_);
+        std::map<int, int> ghost_cell_map = setup_boundaries(
+            grid_io, boundaries, cell_vertices, interfaces, 
+            cell_shapes);
+
+        interfaces_ = Interfaces<T, execution_space, array_layout>(
+            interface_vertices, interface_shapes);
+
+        cells_ = Cells<T, execution_space, array_layout>(
+            cell_vertices, cell_interface_ids, cell_shapes);
+
+        compute_geometric_data();
+        compute_interface_connectivity(ghost_cell_map);
     }
-
-    template <class OtherSpace>
-    void deep_copy(const GridBlock<T, OtherSpace, Layout>& other) {
-        vertices_.deep_copy(other.vertices_);
-        interfaces_.deep_copy(other.interfaces_);
-        cells_.deep_copy(other.cells_);
-        for (unsigned int i = 0; i < boundary_tags_.size(); i++) {
-            std::string tag = boundary_tags_[i];
-            boundary_cells_.at(tag).deep_copy(other.boundary_cells_.at(tag));
-            boundary_faces_.at(tag).deep_copy(other.boundary_faces_.at(tag));
-        }
-    }
-
-    bool operator==(const GridBlock& other) const {
-        return (vertices_ == other.vertices_) &&
-               (interfaces_ == other.interfaces_) && (cells_ == other.cells_);
-    }
-
-    void compute_geometric_data() {
-        cells_.compute_centroids(vertices_);
-        cells_.compute_volumes(vertices_);
-        interfaces_.compute_centres(vertices_);
-        interfaces_.compute_areas(vertices_);
-        interfaces_.compute_orientations(vertices_);
-    }
-
-    KOKKOS_INLINE_FUNCTION
-    Vertices<T, execution_space, array_layout>& vertices() { return vertices_; }
-
-    KOKKOS_INLINE_FUNCTION
-    const Vertices<T, execution_space, array_layout>& vertices() const {
-        return vertices_;
-    }
-
-    int num_vertices() const { return vertices_.size(); }
-
-    KOKKOS_INLINE_FUNCTION
-    Interfaces<T, execution_space, array_layout>& interfaces() {
-        return interfaces_;
-    }
-
-    KOKKOS_INLINE_FUNCTION
-    const Interfaces<T, execution_space, array_layout>& interfaces() const {
-        return interfaces_;
-    }
-
-    int num_interfaces() const { return interfaces_.size(); }
-
-    KOKKOS_INLINE_FUNCTION
-    Cells<T, execution_space, array_layout>& cells() { return cells_; }
-
-    KOKKOS_INLINE_FUNCTION
-    const Cells<T, execution_space, array_layout>& cells() const {
-        return cells_;
-    }
-
-    int num_cells() const { return num_valid_cells_; }
-    int num_ghost_cells() const { return num_ghost_cells_; }
-    int num_total_cells() const { return num_valid_cells_ + num_ghost_cells_; }
-
-    KOKKOS_INLINE_FUNCTION
-    bool is_valid(const int i) const { return i < num_valid_cells_; }
-
-    const Field<int, array_layout, memory_space>& boundary_faces(
-        std::string boundary_tag) const {
-        return boundary_faces_.at(boundary_tag);
-    }
-
-    const std::vector<std::string>& boundary_tags() const {
-        return boundary_tags_;
-    }
-
-    int dim() const { return dim_; }
 
     void compute_interface_connectivity(std::map<int, int> ghost_cells) {
         auto this_interfaces = interfaces_;
@@ -303,24 +195,113 @@ public:
         interfaces_.deep_copy(interfaces_host);
     }
 
-public:
-    Vertices<T, execution_space, array_layout> vertices_;
-    Interfaces<T, execution_space, array_layout> interfaces_;
-    Cells<T, execution_space, array_layout> cells_;
-    int dim_;
-    int num_valid_cells_;
-    int num_ghost_cells_;
-    std::map<std::string, Field<int, array_layout, memory_space>>
-        boundary_cells_;
-    std::map<std::string, Field<int, array_layout, memory_space>>
-        boundary_faces_;
-    std::vector<std::string> boundary_tags_;
+    void compute_geometric_data() {
+        cells_.compute_centroids(vertices_);
+        cells_.compute_volumes(vertices_);
+        interfaces_.compute_centres(vertices_);
+        interfaces_.compute_areas(vertices_);
+        interfaces_.compute_orientations(vertices_);
+    }
+
+    mirror_type host_mirror() const {
+        auto vertices = vertices_.host_mirror();
+        auto interfaces = interfaces_.host_mirror();
+        auto cells = cells_.host_mirror();
+        std::map<std::string, Field<int, array_layout, host_mirror_mem_space>>
+            boundary_cells{};
+        std::map<std::string, Field<int, array_layout, host_mirror_mem_space>>
+            boundary_faces{};
+
+        for (auto const& [key, val] : boundary_cells_) {
+            boundary_cells.insert({key, val.host_mirror()});
+        }
+        for (auto const& [key, val] : boundary_faces_) {
+            boundary_faces.insert({key, val.host_mirror()});
+        }
+
+        return mirror_type(vertices, interfaces, cells, dim_, num_valid_cells_,
+                           num_ghost_cells_, boundary_cells, boundary_faces,
+                           boundary_tags_);
+    }
+
+    template <class OtherSpace>
+    void deep_copy(const GridBlock<T, OtherSpace, Layout>& other) {
+        vertices_.deep_copy(other.vertices_);
+        interfaces_.deep_copy(other.interfaces_);
+        cells_.deep_copy(other.cells_);
+        for (unsigned int i = 0; i < boundary_tags_.size(); i++) {
+            std::string tag = boundary_tags_[i];
+            boundary_cells_.at(tag).deep_copy(other.boundary_cells_.at(tag));
+            boundary_faces_.at(tag).deep_copy(other.boundary_faces_.at(tag));
+        }
+    }
+
+    bool operator==(const GridBlock& other) const {
+        return (vertices_ == other.vertices_) &&
+               (interfaces_ == other.interfaces_) && (cells_ == other.cells_);
+    }
+
+    KOKKOS_INLINE_FUNCTION
+    Vertices<T, execution_space, array_layout>& vertices() { return vertices_; }
+
+    KOKKOS_INLINE_FUNCTION
+    const Vertices<T, execution_space, array_layout>& vertices() const {
+        return vertices_;
+    }
+
+    int num_vertices() const { return vertices_.size(); }
+
+    KOKKOS_INLINE_FUNCTION
+    Interfaces<T, execution_space, array_layout>& interfaces() {
+        return interfaces_;
+    }
+
+    KOKKOS_INLINE_FUNCTION
+    const Interfaces<T, execution_space, array_layout>& interfaces() const {
+        return interfaces_;
+    }
+
+    int num_interfaces() const { return interfaces_.size(); }
+
+    KOKKOS_INLINE_FUNCTION
+    Cells<T, execution_space, array_layout>& cells() { return cells_; }
+
+    KOKKOS_INLINE_FUNCTION
+    const Cells<T, execution_space, array_layout>& cells() const {
+        return cells_;
+    }
+
+    int num_cells() const { return num_valid_cells_; }
+    int num_ghost_cells() const { return num_ghost_cells_; }
+    int num_total_cells() const { return num_valid_cells_ + num_ghost_cells_; }
+
+    KOKKOS_INLINE_FUNCTION
+    bool is_valid(const int i) const { return i < num_valid_cells_; }
+
+    const Field<int, array_layout, memory_space>& boundary_faces(
+        std::string boundary_tag) const {
+        return boundary_faces_.at(boundary_tag);
+    }
+
+    const std::vector<std::string>& boundary_tags() const {
+        return boundary_tags_;
+    }
+
+    int dim() const { return dim_; }
+
+
+    // this method requires the interface connectivity be set up correctly
+    void compute_cell_neighbours() {
+         
+    }
 
 public:
-    std::map<int, int> setup_boundaries(
-        const GridIO& grid_io, json& boundaries,
-        std::vector<std::vector<int>>& cell_vertices,
-        InterfaceLookup& interfaces, std::vector<ElemType> cell_shapes) {
+    std::map<int, int> 
+    setup_boundaries(const GridIO& grid_io, 
+                     json& boundaries,
+                     std::vector<std::vector<int>>& cell_vertices,
+                     InterfaceLookup& interfaces, 
+                     std::vector<ElemType> cell_shapes) {
         (void)cell_vertices;
         (void)cell_shapes;
         num_ghost_cells_ = 0;
@@ -341,10 +322,6 @@ public:
                 int face_id = interfaces.id(bc_faces[boundary_i].vertex_ids());
                 boundary_faces.push_back(face_id);
                 if (boundary_config.at("ghost_cells") == true) {
-                    // currently we're not going to actually build a 'cell',
-                    // just
-                    // cell_vertices.push_back({-1, -1});
-                    // cell_shapes.push_back(ElemType::Line);
                     int ghost_cell_id = num_valid_cells_ + num_ghost_cells_;
                     num_ghost_cells_++;
                     boundary_cells.push_back(ghost_cell_id);
@@ -365,6 +342,20 @@ public:
         }
         return ghost_cell_map;
     }
+
+public:
+    Vertices<T, execution_space, array_layout> vertices_;
+    Interfaces<T, execution_space, array_layout> interfaces_;
+    Cells<T, execution_space, array_layout> cells_;
+    int dim_;
+    int num_valid_cells_;
+    int num_ghost_cells_;
+    std::map<std::string, Field<int, array_layout, memory_space>>
+        boundary_cells_;
+    std::map<std::string, Field<int, array_layout, memory_space>>
+        boundary_faces_;
+    std::vector<std::string> boundary_tags_;
+
 };
 
 #endif

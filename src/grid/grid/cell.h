@@ -135,15 +135,17 @@ public:
 
     Cells(Ibis::RaggedArray<int, array_layout, execution_space> vertices,
           Ibis::RaggedArray<int, array_layout, execution_space> interfaces,
-          std::vector<ElemType> shapes) {
+          std::vector<ElemType> shapes, int num_valid_cells, 
+          int num_ghost_celsl) {
         vertex_ids_ = vertices;
-        num_cells_ = shapes.size();
+        num_valid_cells_ = num_valid_cells;
+        num_ghost_cells_ = num_ghost_cells;
         faces_ = CellFaces<T, array_layout, execution_space>(interfaces);
         shape_ = Field<ElemType, array_layout, memory_space>("Cell::shape",
                                                              num_cells_);
         typename Field<ElemType, array_layout, memory_space>::mirror_type
-            shape_mirror("Cell::shape", num_cells_);
-        for (int i = 0; i < num_cells_; i++) {
+            shape_mirror("Cell::shape", num_valid_cells_);
+        for (int i = 0; i < num_valid_cells_; i++) {
             shape_mirror(i) = shapes[i];
         }
         shape_.deep_copy(shape_mirror);
@@ -158,18 +160,20 @@ public:
           CellFaces<T, array_layout, execution_space> faces,
           Field<ElemType, array_layout, memory_space> shapes,
           Field<T, array_layout, memory_space> volume,
-          Vector3s<T, array_layout, memory_space> centroid, int num_cells)
+          Vector3s<T, array_layout, memory_space> centroid, int num_valid_cells,
+          int num_ghost_cells)
         : faces_(faces),
           vertex_ids_(vertices),
           shape_(shapes),
           volume_(volume),
           centroid_(centroid),
-          num_cells_(num_cells) {}
+          num_valid_cells_(num_valid_cells),
+          num_ghost_cells_(num_ghost_cells){}
 
-    Cells(int num_cells, int num_vertex_ids, int num_face_ids) {
+    Cells(int num_valid_cells, int num_ghost_cells, int num_vertex_ids, 
+          int num_face_ids) {
         vertex_ids_ = Ibis::RaggedArray<int, array_layout, execution_space>(
-            num_vertex_ids, num_cells);
-        num_cells_ = num_cells;
+            num_vertex_ids, num_valid_cells);
         faces_ = CellFaces<T, array_layout, execution_space>(num_cells,
                                                              num_face_ids);
         shape_ = Field<ElemType, array_layout, memory_space>("Cell::shape",
@@ -178,6 +182,8 @@ public:
             Field<T, array_layout, memory_space>("Cell::Volume", num_cells);
         centroid_ = Vector3s<T, array_layout, memory_space>("Cells::centroids",
                                                             num_cells);
+        num_valid_cells_ = num_valid_cells;
+        num_ghost_cells_ = num_ghost_cells;
     }
 
     mirror_type host_mirror() const {
@@ -210,7 +216,10 @@ public:
     }
 
     KOKKOS_INLINE_FUNCTION
-    int size() const { return num_cells_; }
+    int num_valid_cells() const { return num_valid_cells_; }
+
+    KOKKOS_INLINE_FUNCTION
+    int num_ghost_cells() const { return num_ghost_cells_; }
 
     KOKKOS_INLINE_FUNCTION
     const T& volume(const int i) const { return volume_(i); }
@@ -310,11 +319,13 @@ public:
 public:
     CellFaces<T, array_layout, execution_space> faces_;
     Ibis::RaggedArray<int, array_layout, execution_space> vertex_ids_;
+    Ibis::RaggedArray<int, array_layout, execution_space> neighbour_cells_;
     Field<ElemType, array_layout, memory_space> shape_;
     Field<T, array_layout, memory_space> volume_;
     Vector3s<T, array_layout, memory_space> centroid_;
 
-    int num_cells_;
+    int num_valid_cells_;
+    int num_ghost_cells_;
 };
 
 #endif
