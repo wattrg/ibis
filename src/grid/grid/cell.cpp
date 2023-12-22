@@ -61,7 +61,8 @@ CellInfo generate_cells() {
         ElemType::Quad, ElemType::Quad, ElemType::Quad,
     };
 
-    Cells<double> cells(cell_vertex_ids_raw, cell_interfaces_list, cell_shapes, 9, 0);
+    Cells<double> cells(cell_vertex_ids_raw, cell_interfaces_list, cell_shapes,
+                        9, 0);
     CellInfo info;
     info.vertices = vertices;
     info.interfaces = interfaces;

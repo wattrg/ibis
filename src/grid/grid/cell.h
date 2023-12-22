@@ -136,7 +136,7 @@ public:
 
     Cells(Ibis::RaggedArray<int, array_layout, execution_space> vertices,
           Ibis::RaggedArray<int, array_layout, execution_space> interfaces,
-          std::vector<ElemType> shapes, int num_valid_cells, 
+          std::vector<ElemType> shapes, int num_valid_cells,
           int num_ghost_cells) {
         vertex_ids_ = vertices;
         num_valid_cells_ = num_valid_cells;
@@ -170,9 +170,9 @@ public:
           volume_(volume),
           centroid_(centroid),
           num_valid_cells_(num_valid_cells),
-          num_ghost_cells_(num_ghost_cells){}
+          num_ghost_cells_(num_ghost_cells) {}
 
-    Cells(int num_valid_cells, int num_ghost_cells, int num_vertex_ids, 
+    Cells(int num_valid_cells, int num_ghost_cells, int num_vertex_ids,
           int num_face_ids) {
         vertex_ids_ = Ibis::RaggedArray<int, array_layout, execution_space>(
             num_vertex_ids, num_valid_cells);

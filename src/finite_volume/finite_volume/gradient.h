@@ -1,17 +1,18 @@
 #ifndef GRADIENT_H
 #define GRADIENT_H
 
-#include <Kokkos_Core.hpp>
-#include <util/ragged_array.h>
 #include <grid/grid.h>
+#include <util/ragged_array.h>
+
+#include <Kokkos_Core.hpp>
 
 template <typename T>
-struct Gradients{
-    Kokkos::View<T**> gradients;
+struct Gradients {
+    Kokkos::View<T **> gradients;
 };
 
 template <typename T>
-class WLSGradient{
+class WLSGradient {
 public:
     WLSGradient(const GridBlock<T> &block);
 

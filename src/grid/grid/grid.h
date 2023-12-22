@@ -63,7 +63,8 @@ public:
         interfaces_ = Interfaces<T, execution_space, array_layout>(
             num_faces, num_face_vertex_ids);
         cells_ = Cells<T, execution_space, array_layout>(
-            num_valid_cells, num_ghost_cells, num_cell_vertex_ids, num_face_ids);
+            num_valid_cells, num_ghost_cells, num_cell_vertex_ids,
+            num_face_ids);
         boundary_cells_ =
             std::map<std::string, Field<int, array_layout, memory_space>>{};
         boundary_faces_ =
@@ -128,8 +129,7 @@ public:
         }
 
         std::map<int, int> ghost_cell_map = setup_boundaries(
-            grid_io, boundaries, cell_vertices, interfaces, 
-            cell_shapes);
+            grid_io, boundaries, cell_vertices, interfaces, cell_shapes);
 
         interfaces_ = Interfaces<T, execution_space, array_layout>(
             interface_vertices, interface_shapes);
@@ -294,61 +294,56 @@ public:
 
     int dim() const { return dim_; }
 
-
     // this method requires the interface connectivity be set up correctly
-    void compute_cell_neighbours() {
-         
-    }
+    void compute_cell_neighbours() {}
 
     // compute the cell centres of ghost cells by mirroring the cell
     // centre of the valid cell about the interface
     // needs to be called after setup_boundaries, compute_geometric_data,
     // and compute_interface_connectivity
     void compute_ghost_cell_centres() {
-        for (auto & boundary : boundary_faces_) {
+        for (auto& boundary : boundary_faces_) {
             auto boundary_faces = boundary_faces_[boundary.first];
-            Kokkos::parallel_for("ghost_cell_centres", boundary_faces.size(), 
-                                 KOKKOS_LAMBDA (const int face_i) {
-                // get the id of the cell to the left and right 
-                // of this interface
-                int iface = boundary_faces(face_i);
-                int left_cell = interfaces_.left_cell(iface);
-                int right_cell = interfaces_.right_cell(iface);
-                int valid_cell;
-                int ghost_cell;
-                if (is_valid(left_cell)){
-                    valid_cell = left_cell;
-                    ghost_cell = right_cell;
-                }
-                else {
-                    valid_cell = right_cell;
-                    ghost_cell = left_cell;
-                }
+            Kokkos::parallel_for(
+                "ghost_cell_centres", boundary_faces.size(),
+                KOKKOS_LAMBDA(const int face_i) {
+                    // get the id of the cell to the left and right
+                    // of this interface
+                    int iface = boundary_faces(face_i);
+                    int left_cell = interfaces_.left_cell(iface);
+                    int right_cell = interfaces_.right_cell(iface);
+                    int valid_cell;
+                    int ghost_cell;
+                    if (is_valid(left_cell)) {
+                        valid_cell = left_cell;
+                        ghost_cell = right_cell;
+                    } else {
+                        valid_cell = right_cell;
+                        ghost_cell = left_cell;
+                    }
 
-                // compute the vector from the valid cell centre to the
-                // centre of the interface
-                T face_x = interfaces_.centre().x(iface);
-                T face_y = interfaces_.centre().y(iface);
-                T face_z = interfaces_.centre().z(iface);
-                T dx = face_x - cells_.centroids().x(valid_cell);
-                T dy = face_y - cells_.centroids().y(valid_cell);
-                T dz = face_z - cells_.centroids().z(valid_cell);
+                    // compute the vector from the valid cell centre to the
+                    // centre of the interface
+                    T face_x = interfaces_.centre().x(iface);
+                    T face_y = interfaces_.centre().y(iface);
+                    T face_z = interfaces_.centre().z(iface);
+                    T dx = face_x - cells_.centroids().x(valid_cell);
+                    T dy = face_y - cells_.centroids().y(valid_cell);
+                    T dz = face_z - cells_.centroids().z(valid_cell);
 
-                // extrapolate the ghost cell centre
-                cells_.centroids().x(ghost_cell) = face_x + dx;
-                cells_.centroids().y(ghost_cell) = face_y + dy;
-                cells_.centroids().z(ghost_cell) = face_z + dz;
-            });
+                    // extrapolate the ghost cell centre
+                    cells_.centroids().x(ghost_cell) = face_x + dx;
+                    cells_.centroids().y(ghost_cell) = face_y + dy;
+                    cells_.centroids().z(ghost_cell) = face_z + dz;
+                });
         }
     }
 
 public:
-    std::map<int, int> 
-    setup_boundaries(const GridIO& grid_io, 
-                     json& boundaries,
-                     std::vector<std::vector<int>>& cell_vertices,
-                     InterfaceLookup& interfaces, 
-                     std::vector<ElemType> cell_shapes) {
+    std::map<int, int> setup_boundaries(
+        const GridIO& grid_io, json& boundaries,
+        std::vector<std::vector<int>>& cell_vertices,
+        InterfaceLookup& interfaces, std::vector<ElemType> cell_shapes) {
         (void)cell_vertices;
         (void)cell_shapes;
         num_ghost_cells_ = 0;
@@ -402,7 +397,6 @@ public:
     std::map<std::string, Field<int, array_layout, memory_space>>
         boundary_faces_;
     std::vector<std::string> boundary_tags_;
-
 };
 
 #endif
