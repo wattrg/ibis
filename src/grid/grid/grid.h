@@ -140,6 +140,7 @@ public:
 
         compute_geometric_data();
         compute_interface_connectivity(ghost_cell_map);
+        compute_ghost_cell_centres();
     }
 
     void compute_interface_connectivity(std::map<int, int> ghost_cells) {
@@ -279,6 +280,9 @@ public:
     KOKKOS_INLINE_FUNCTION
     bool is_valid(const int i) const { return i < num_valid_cells_; }
 
+    KOKKOS_INLINE_FUNCTION
+    bool is_ghost(const int i) const { return i >= num_valid_cells_; }
+
     const Field<int, array_layout, memory_space>& boundary_faces(
         std::string boundary_tag) const {
         return boundary_faces_.at(boundary_tag);
@@ -294,6 +298,48 @@ public:
     // this method requires the interface connectivity be set up correctly
     void compute_cell_neighbours() {
          
+    }
+
+    // compute the cell centres of ghost cells by mirroring the cell
+    // centre of the valid cell about the interface
+    // needs to be called after setup_boundaries, compute_geometric_data,
+    // and compute_interface_connectivity
+    void compute_ghost_cell_centres() {
+        for (auto & boundary : boundary_faces_) {
+            auto boundary_faces = boundary_faces_[boundary.first];
+            Kokkos::parallel_for("ghost_cell_centres", boundary_faces.size(), 
+                                 KOKKOS_LAMBDA (const int face_i) {
+                // get the id of the cell to the left and right 
+                // of this interface
+                int iface = boundary_faces(face_i);
+                int left_cell = interfaces_.left_cell(iface);
+                int right_cell = interfaces_.right_cell(iface);
+                int valid_cell;
+                int ghost_cell;
+                if (is_valid(left_cell)){
+                    valid_cell = left_cell;
+                    ghost_cell = right_cell;
+                }
+                else {
+                    valid_cell = right_cell;
+                    ghost_cell = left_cell;
+                }
+
+                // compute the vector from the valid cell centre to the
+                // centre of the interface
+                T face_x = interfaces_.centre().x(iface);
+                T face_y = interfaces_.centre().y(iface);
+                T face_z = interfaces_.centre().z(iface);
+                T dx = face_x - cells_.centroids().x(valid_cell);
+                T dy = face_y - cells_.centroids().y(valid_cell);
+                T dz = face_z - cells_.centroids().z(valid_cell);
+
+                // extrapolate the ghost cell centre
+                cells_.centroids().x(ghost_cell) = face_x + dx;
+                cells_.centroids().y(ghost_cell) = face_y + dy;
+                cells_.centroids().z(ghost_cell) = face_z + dz;
+            });
+        }
     }
 
 public:
