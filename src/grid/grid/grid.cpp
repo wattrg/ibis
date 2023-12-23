@@ -156,6 +156,18 @@ TEST_CASE("grid cell outsigns") {
     }
 }
 
+TEST_CASE("cell neighbours") {
+    json config = build_config();
+    GridBlock<double> block_dev("../../../src/grid/test/grid.su2", config);
+    auto block_host = block_dev.host_mirror();
+    block_host.deep_copy(block_dev);
+
+    CHECK(block_host.cells().neighbour_cells(0, 1) == 1);
+    CHECK(block_host.cells().neighbour_cells(0, 2) == 3);
+    CHECK(block_host.cells().neighbour_cells(4, 0) == 1);
+    CHECK(block_host.cells().neighbour_cells(8, 3) == 7);
+}
+
 TEST_CASE("ghost cell centres") {
     json config = build_config();
     GridBlock<double> block_dev("../../../src/grid/test/grid.su2", config);

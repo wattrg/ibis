@@ -142,9 +142,11 @@ public:
         num_valid_cells_ = num_valid_cells;
         num_ghost_cells_ = num_ghost_cells;
         faces_ = CellFaces<T, array_layout, execution_space>(interfaces);
+        
+        // this initially sets the incorrect neighbour cells, so we
+        // have to be careful to overwrite them properly
         neighbour_cells_ =
-            Ibis::RaggedArray<int, array_layout, execution_space>(
-                interfaces.num_values(), interfaces.num_rows());
+            Ibis::RaggedArray<int, array_layout, execution_space>(interfaces);
         shape_ = Field<ElemType, array_layout, memory_space>("Cell::shape",
                                                              num_valid_cells_);
         typename Field<ElemType, array_layout, memory_space>::mirror_type
@@ -177,26 +179,6 @@ public:
           num_valid_cells_(num_valid_cells),
           num_ghost_cells_(num_ghost_cells) {}
 
-    Cells(int num_valid_cells, int num_ghost_cells, int num_vertex_ids,
-          int num_face_ids) {
-        vertex_ids_ = Ibis::RaggedArray<int, array_layout, execution_space>(
-            num_vertex_ids, num_valid_cells);
-        faces_ = CellFaces<T, array_layout, execution_space>(num_valid_cells,
-                                                             num_face_ids);
-        neighbour_cells_ =
-            Ibis::RaggedArray<int, array_layout, execution_space>(
-                num_face_ids, num_valid_cells);
-        shape_ = Field<ElemType, array_layout, memory_space>("Cell::shape",
-                                                             num_valid_cells);
-        int total_cells = num_valid_cells + num_ghost_cells;
-        volume_ =
-            Field<T, array_layout, memory_space>("Cell::Volume", total_cells);
-        centroid_ = Vector3s<T, array_layout, memory_space>("Cells::centroids",
-                                                            total_cells);
-        num_valid_cells_ = num_valid_cells;
-        num_ghost_cells_ = num_ghost_cells;
-    }
-
     mirror_type host_mirror() const {
         auto vertices = vertex_ids_.host_mirror();
         auto faces = faces_.host_mirror();
@@ -215,6 +197,7 @@ public:
         shape_.deep_copy(other.shape_);
         volume_.deep_copy(other.volume_);
         centroid_.deep_copy(other.centroid_);
+        neighbour_cells_.deep_copy(other.neighbour_cells_);
     }
 
     bool operator==(const Cells& other) const {
@@ -335,6 +318,19 @@ public:
     void set_cell_neighbour(int cell_i, int face_i, int neighbour) const {
         neighbour_cells_(cell_i, face_i) = neighbour;
     }
+
+    KOKKOS_INLINE_FUNCTION
+    int neighbour_cells(const int cell_i, const int face_i) const {
+        return neighbour_cells_(cell_i, face_i);
+    }
+
+    KOKKOS_INLINE_FUNCTION
+    auto neighbour_cells(const int cell_i) const {
+        return neighbour_cells_(cell_i);
+    }
+
+    KOKKOS_INLINE_FUNCTION
+    auto neighbour_cells() const { return neighbour_cells_; }
 
 public:
     CellFaces<T, array_layout, execution_space> faces_;

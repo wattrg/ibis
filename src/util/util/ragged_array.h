@@ -142,6 +142,41 @@ public:
         return true;
     }
 
+    std::string to_string() const {
+        std::string result = "RaggedArray(offsets(";
+        result.append(std::to_string(offsets_.extent(0)));
+        result.append(") = [");
+        for (unsigned int i = 0; i < offsets_.extent(0); i++) {
+            result.append(std::to_string(offsets_(i)));
+            result.append(", ");
+        }
+        result.append("], data(");
+        result.append(std::to_string(data_.extent(0)));
+        result.append(") = [");
+        for (unsigned int i = 0; i < data_.extent(0); i++) {
+            result.append(std::to_string(data_(i)));
+            result.append(", ");
+        }
+        result.append("], ragged array = ");
+
+        result.append("[");
+        for (int row = 0; row < num_rows(); row++) {
+            int first = offsets_(row);
+            int last = offsets_(row + 1);
+            auto row_data =
+                Kokkos::subview(data_, Kokkos::make_pair(first, last));
+            result.append("[");
+            // int size = last - first;
+            for (int col = 0; col < row_data.size(); col++) {
+                result.append(std::to_string(row_data(col)));
+                result.append(", ");
+            }
+            result.append("], ");
+        }
+        result.append("])");
+        return result;
+    }
+
 private:
     ArrayType data_;
     OffsetType offsets_;
