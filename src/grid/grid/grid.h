@@ -36,7 +36,7 @@ public:
               Cells<T, execution_space, array_layout> cells, int dim,
               int num_valid_cells, int num_ghost_cells,
               std::map<std::string, Field<int, array_layout, memory_space>>
-                  boundary_cells,
+                  ghost_cells,
               std::map<std::string, Field<int, array_layout, memory_space>>
                   boundary_faces,
               std::vector<std::string> boundary_tags)
@@ -46,14 +46,14 @@ public:
           dim_(dim),
           num_valid_cells_(num_valid_cells),
           num_ghost_cells_(num_ghost_cells),
-          boundary_cells_(boundary_cells),
+          ghost_cells_(ghost_cells),
           boundary_faces_(boundary_faces),
           boundary_tags_(boundary_tags) {}
 
     GridBlock(int num_vertices, int num_faces, int num_valid_cells,
               int num_ghost_cells, int dim, int num_cell_vertex_ids,
               int num_face_vertex_ids, int num_face_ids,
-              std::map<std::string, int> boundary_cell_sizes,
+              std::map<std::string, int> ghost_cell_sizes,
               std::map<std::string, int> boundary_face_sizes) {
         num_valid_cells_ = num_valid_cells;
         num_ghost_cells_ = num_ghost_cells;
@@ -65,12 +65,12 @@ public:
         cells_ = Cells<T, execution_space, array_layout>(
             num_valid_cells, num_ghost_cells, num_cell_vertex_ids,
             num_face_ids);
-        boundary_cells_ =
+        ghost_cells_ =
             std::map<std::string, Field<int, array_layout, memory_space>>{};
         boundary_faces_ =
             std::map<std::string, Field<int, array_layout, memory_space>>{};
-        for (auto const& [key, val] : boundary_cell_sizes) {
-            boundary_cells_.insert(
+        for (auto const& [key, val] : ghost_cell_sizes) {
+            ghost_cells_.insert(
                 {key, Field<int, array_layout, memory_space>("bc_cells", val)});
         }
         for (auto const& [key, val] : boundary_face_sizes) {
@@ -210,19 +210,19 @@ public:
         auto interfaces = interfaces_.host_mirror();
         auto cells = cells_.host_mirror();
         std::map<std::string, Field<int, array_layout, host_mirror_mem_space>>
-            boundary_cells{};
+            ghost_cells{};
         std::map<std::string, Field<int, array_layout, host_mirror_mem_space>>
             boundary_faces{};
 
-        for (auto const& [key, val] : boundary_cells_) {
-            boundary_cells.insert({key, val.host_mirror()});
+        for (auto const& [key, val] : ghost_cells_) {
+            ghost_cells.insert({key, val.host_mirror()});
         }
         for (auto const& [key, val] : boundary_faces_) {
             boundary_faces.insert({key, val.host_mirror()});
         }
 
         return mirror_type(vertices, interfaces, cells, dim_, num_valid_cells_,
-                           num_ghost_cells_, boundary_cells, boundary_faces,
+                           num_ghost_cells_, ghost_cells, boundary_faces,
                            boundary_tags_);
     }
 
@@ -233,7 +233,7 @@ public:
         cells_.deep_copy(other.cells_);
         for (unsigned int i = 0; i < boundary_tags_.size(); i++) {
             std::string tag = boundary_tags_[i];
-            boundary_cells_.at(tag).deep_copy(other.boundary_cells_.at(tag));
+            ghost_cells_.at(tag).deep_copy(other.ghost_cells_.at(tag));
             boundary_faces_.at(tag).deep_copy(other.boundary_faces_.at(tag));
         }
     }
@@ -286,6 +286,11 @@ public:
     const Field<int, array_layout, memory_space>& boundary_faces(
         std::string boundary_tag) const {
         return boundary_faces_.at(boundary_tag);
+    }
+
+    const Field<int, array_layout, memory_space>& ghost_cells(
+        std::string boundary_tag) const {
+        return ghost_cells_.at(boundary_tag);
     }
 
     const std::vector<std::string>& boundary_tags() const {
@@ -357,7 +362,7 @@ public:
 
             // loop over all the boundary faces for this boundary, keeping
             // track of which ones belong to this boundary
-            std::vector<int> boundary_cells{};
+            std::vector<int> ghost_cells{};
             std::vector<int> boundary_faces{};
             for (unsigned int boundary_i = 0; boundary_i < bc_faces.size();
                  boundary_i++) {
@@ -366,7 +371,7 @@ public:
                 if (boundary_config.at("ghost_cells") == true) {
                     int ghost_cell_id = num_valid_cells_ + num_ghost_cells_;
                     num_ghost_cells_++;
-                    boundary_cells.push_back(ghost_cell_id);
+                    ghost_cells.push_back(ghost_cell_id);
                     ghost_cell_map.insert({face_id, ghost_cell_id});
                 } else {
                     ghost_cell_map.insert({face_id, -1});  // no ghost cell
@@ -375,9 +380,9 @@ public:
 
             // keep track of which faces/cells belong to
             // which boundary
-            boundary_cells_.insert(
+            ghost_cells_.insert(
                 {bc_label, Field<int, array_layout, memory_space>(
-                               "bc_cells", boundary_cells)});
+                               "bc_cells", ghost_cells)});
             boundary_faces_.insert(
                 {bc_label, Field<int, array_layout, memory_space>(
                                "bc_faces", boundary_faces)});
@@ -392,8 +397,7 @@ public:
     int dim_;
     int num_valid_cells_;
     int num_ghost_cells_;
-    std::map<std::string, Field<int, array_layout, memory_space>>
-        boundary_cells_;
+    std::map<std::string, Field<int, array_layout, memory_space>> ghost_cells_;
     std::map<std::string, Field<int, array_layout, memory_space>>
         boundary_faces_;
     std::vector<std::string> boundary_tags_;
