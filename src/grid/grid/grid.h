@@ -7,6 +7,8 @@
 
 #include <nlohmann/json.hpp>
 
+#include "Kokkos_Macros.hpp"
+
 using json = nlohmann::json;
 
 template <typename T, class ExecSpace = Kokkos::DefaultExecutionSpace,
@@ -140,6 +142,7 @@ public:
 
         compute_geometric_data();
         compute_interface_connectivity(ghost_cell_map);
+        compute_cell_neighbours();
         compute_ghost_cell_centres();
     }
 
@@ -300,13 +303,35 @@ public:
     int dim() const { return dim_; }
 
     // this method requires the interface connectivity be set up correctly
-    void compute_cell_neighbours() {}
+    void compute_cell_neighbours() {
+        auto this_interfaces = interfaces_;
+        auto this_cells = cells_;
+        Kokkos::parallel_for(
+            "cell neighbours", num_cells(), KOKKOS_LAMBDA(const int cell_i) {
+                auto cell_faces = this_cells.faces().face_ids(cell_i);
+                for (unsigned int face_i = 0; face_i < cell_faces.size();
+                     face_i++) {
+                    int iface = cell_faces(face_i);
+                    int neighbour;
+                    int left_cell = this_interfaces.left_cell(iface);
+                    if (left_cell == cell_i) {
+                        neighbour = this_interfaces.right_cell(iface);
+                    } else {
+                        neighbour = left_cell;
+                    }
+                    this_cells.set_cell_neighbour(cell_i, face_i, neighbour);
+                }
+            });
+    }
 
     // compute the cell centres of ghost cells by mirroring the cell
     // centre of the valid cell about the interface
     // needs to be called after setup_boundaries, compute_geometric_data,
     // and compute_interface_connectivity
     void compute_ghost_cell_centres() {
+        auto this_interfaces = interfaces_;
+        auto this_cells = cells_;
+        int num_valid_cells = num_valid_cells_;
         for (auto& boundary : boundary_faces_) {
             auto boundary_faces = boundary_faces_[boundary.first];
             Kokkos::parallel_for(
@@ -315,11 +340,11 @@ public:
                     // get the id of the cell to the left and right
                     // of this interface
                     int iface = boundary_faces(face_i);
-                    int left_cell = interfaces_.left_cell(iface);
-                    int right_cell = interfaces_.right_cell(iface);
+                    int left_cell = this_interfaces.left_cell(iface);
+                    int right_cell = this_interfaces.right_cell(iface);
                     int valid_cell;
                     int ghost_cell;
-                    if (is_valid(left_cell)) {
+                    if (left_cell < num_valid_cells) {
                         valid_cell = left_cell;
                         ghost_cell = right_cell;
                     } else {
@@ -329,17 +354,17 @@ public:
 
                     // compute the vector from the valid cell centre to the
                     // centre of the interface
-                    T face_x = interfaces_.centre().x(iface);
-                    T face_y = interfaces_.centre().y(iface);
-                    T face_z = interfaces_.centre().z(iface);
-                    T dx = face_x - cells_.centroids().x(valid_cell);
-                    T dy = face_y - cells_.centroids().y(valid_cell);
-                    T dz = face_z - cells_.centroids().z(valid_cell);
+                    T face_x = this_interfaces.centre().x(iface);
+                    T face_y = this_interfaces.centre().y(iface);
+                    T face_z = this_interfaces.centre().z(iface);
+                    T dx = face_x - this_cells.centroids().x(valid_cell);
+                    T dy = face_y - this_cells.centroids().y(valid_cell);
+                    T dz = face_z - this_cells.centroids().z(valid_cell);
 
                     // extrapolate the ghost cell centre
-                    cells_.centroids().x(ghost_cell) = face_x + dx;
-                    cells_.centroids().y(ghost_cell) = face_y + dy;
-                    cells_.centroids().z(ghost_cell) = face_z + dz;
+                    this_cells.centroids().x(ghost_cell) = face_x + dx;
+                    this_cells.centroids().y(ghost_cell) = face_y + dy;
+                    this_cells.centroids().z(ghost_cell) = face_z + dz;
                 });
         }
     }

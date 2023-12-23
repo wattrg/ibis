@@ -68,19 +68,19 @@ public:
         Kokkos::deep_copy(offsets_, offsets_host);
     }
 
-    // Read-only value at (row, col)
+    // Read-write value at (row, col)
     KOKKOS_INLINE_FUNCTION
-    DataType &operator()(const int row, const int col) {
+    DataType &operator()(const int row, const int col) const {
         int index = offsets_(row) + col;
         return data_(index);
     }
 
-    // Read-write value at (row, col)
-    KOKKOS_INLINE_FUNCTION
-    const DataType &operator()(const int row, const int col) const {
-        int index = offsets_(row) + col;
-        return data_(index);
-    }
+    // Read-only value at (row, col)
+    // KOKKOS_INLINE_FUNCTION
+    // const DataType &operator()(const int row, const int col) const {
+    //     int index = offsets_(row) + col;
+    //     return data_(index);
+    // }
 
     // Read-write view to a particular row
     KOKKOS_INLINE_FUNCTION

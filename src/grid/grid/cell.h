@@ -142,6 +142,9 @@ public:
         num_valid_cells_ = num_valid_cells;
         num_ghost_cells_ = num_ghost_cells;
         faces_ = CellFaces<T, array_layout, execution_space>(interfaces);
+        neighbour_cells_ =
+            Ibis::RaggedArray<int, array_layout, execution_space>(
+                interfaces.num_values(), interfaces.num_rows());
         shape_ = Field<ElemType, array_layout, memory_space>("Cell::shape",
                                                              num_valid_cells_);
         typename Field<ElemType, array_layout, memory_space>::mirror_type
@@ -160,12 +163,14 @@ public:
 
     Cells(Ibis::RaggedArray<int, array_layout, execution_space> vertices,
           CellFaces<T, array_layout, execution_space> faces,
+          Ibis::RaggedArray<int, array_layout, execution_space> neighbours,
           Field<ElemType, array_layout, memory_space> shapes,
           Field<T, array_layout, memory_space> volume,
           Vector3s<T, array_layout, memory_space> centroid, int num_valid_cells,
           int num_ghost_cells)
         : faces_(faces),
           vertex_ids_(vertices),
+          neighbour_cells_(neighbours),
           shape_(shapes),
           volume_(volume),
           centroid_(centroid),
@@ -178,6 +183,9 @@ public:
             num_vertex_ids, num_valid_cells);
         faces_ = CellFaces<T, array_layout, execution_space>(num_valid_cells,
                                                              num_face_ids);
+        neighbour_cells_ =
+            Ibis::RaggedArray<int, array_layout, execution_space>(
+                num_face_ids, num_valid_cells);
         shape_ = Field<ElemType, array_layout, memory_space>("Cell::shape",
                                                              num_valid_cells);
         int total_cells = num_valid_cells + num_ghost_cells;
@@ -192,11 +200,12 @@ public:
     mirror_type host_mirror() const {
         auto vertices = vertex_ids_.host_mirror();
         auto faces = faces_.host_mirror();
+        auto neighbours = neighbour_cells_.host_mirror();
         auto shapes = shape_.host_mirror();
         auto volume = volume_.host_mirror();
         auto centroid = centroid_.host_mirror();
-        return mirror_type(vertices, faces, shapes, volume, centroid,
-                           num_valid_cells_, num_ghost_cells_);
+        return mirror_type(vertices, faces, neighbours, shapes, volume,
+                           centroid, num_valid_cells_, num_ghost_cells_);
     }
 
     template <class OtherDevice>
@@ -320,6 +329,11 @@ public:
     KOKKOS_INLINE_FUNCTION
     const Field<ElemType, array_layout, memory_space>& shapes() const {
         return shape_;
+    }
+
+    KOKKOS_INLINE_FUNCTION
+    void set_cell_neighbour(int cell_i, int face_i, int neighbour) const {
+        neighbour_cells_(cell_i, face_i) = neighbour;
     }
 
 public:
