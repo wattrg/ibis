@@ -9,8 +9,6 @@
 
 #include <Kokkos_Core.hpp>
 
-#include "Kokkos_Core_fwd.hpp"
-#include "Kokkos_Macros.hpp"
 
 template <typename T, class ExecSpace = Kokkos::DefaultExecutionSpace,
           class Layout = Kokkos::DefaultExecutionSpace::array_layout>
@@ -147,6 +145,7 @@ public:
         // have to be careful to overwrite them properly
         neighbour_cells_ =
             Ibis::RaggedArray<int, array_layout, execution_space>(interfaces);
+
         shape_ = Field<ElemType, array_layout, memory_space>("Cell::shape",
                                                              num_valid_cells_);
         typename Field<ElemType, array_layout, memory_space>::mirror_type
