@@ -254,6 +254,7 @@ public:
         return vertices_;
     }
 
+    KOKKOS_INLINE_FUNCTION
     int num_vertices() const { return vertices_.size(); }
 
     KOKKOS_INLINE_FUNCTION
@@ -266,6 +267,7 @@ public:
         return interfaces_;
     }
 
+    KOKKOS_INLINE_FUNCTION
     int num_interfaces() const { return interfaces_.size(); }
 
     KOKKOS_INLINE_FUNCTION
@@ -276,8 +278,13 @@ public:
         return cells_;
     }
 
+    KOKKOS_INLINE_FUNCTION
     int num_cells() const { return num_valid_cells_; }
+
+    KOKKOS_INLINE_FUNCTION
     int num_ghost_cells() const { return num_ghost_cells_; }
+
+    KOKKOS_INLINE_FUNCTION
     int num_total_cells() const { return num_valid_cells_ + num_ghost_cells_; }
 
     KOKKOS_INLINE_FUNCTION
@@ -300,6 +307,7 @@ public:
         return boundary_tags_;
     }
 
+    KOKKOS_INLINE_FUNCTION
     int dim() const { return dim_; }
 
     // this method requires the interface connectivity be set up correctly

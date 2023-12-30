@@ -10,7 +10,7 @@ template <typename T, class ExecSpace = Kokkos::DefaultExecutionSpace,
 class Layout = Kokkos::DefaultExecutionSpace::array_layout>
 class WLSGradient {
 public:
-    WLSGradient(const GridBlock<T> &block) {
+    WLSGradient(const GridBlock<T, ExecSpace, Layout> &block) {
         int num_connections = block.cells().neighbour_cells().num_values();
         typename Ibis::RaggedArray<T, Layout, ExecSpace>::ArrayType w1 ("weights", num_connections);
         typename Ibis::RaggedArray<T, Layout, ExecSpace>::ArrayType w2 ("weights", num_connections);
@@ -23,12 +23,14 @@ public:
     }
 
     template <class SubView>
-    void compute_gradients(const GridBlock<T> &block, const SubView values, 
+    void compute_gradients(const GridBlock<T, ExecSpace, Layout> &block, 
+                           const SubView values, 
                            SubView grad_x, SubView grad_y, SubView grad_z) {
+        auto cells = block.cells();
         Kokkos::parallel_for(
             "WLSGradient::compute_gradients", block.num_cells(),
             KOKKOS_CLASS_LAMBDA (const int i) {
-                auto neighbours = block.cells().neighbour_cells(i);
+                auto neighbours = cells.neighbour_cells(i);
                 T grad_x_ = 0.0;
                 T grad_y_ = 0.0;
                 T grad_z_ = 0.0;
@@ -36,9 +38,9 @@ public:
                 for (unsigned int j = 0; j < neighbours.size(); j++) {
                     int neighbour_j = neighbours(j);
                     T diff_u = values(neighbour_j) - u_i;
-                    grad_x += w_1_(neighbour_j) * diff_u;
-                    grad_y += w_2_(neighbour_j) * diff_u;
-                    grad_z += w_3_(neighbour_j) * diff_u;
+                    grad_x_ += w_1_(i, neighbour_j) * diff_u;
+                    grad_y_ += w_2_(i, neighbour_j) * diff_u;
+                    grad_z_ += w_3_(i, neighbour_j) * diff_u;
                 }
                 grad_x(i) = grad_x_; 
                 grad_y(i) = grad_y_;
@@ -46,26 +48,27 @@ public:
             });
     }
 
-private:
-    void compute_workspace_(const GridBlock<T> &block) {
+public:
+    void compute_workspace_(const GridBlock<T, ExecSpace, Layout> &block) {
+        auto cells = block.cells();
         Kokkos::parallel_for(
             "WLSGradient::compute_workspace_::r", block.num_cells(),
             KOKKOS_CLASS_LAMBDA (const int i) {
-            auto neighbours = block.cells().neighbour_cells(i);
+            auto neighbours = cells.neighbour_cells(i);
             T sum_dxdx = 0.0;
             T sum_dxdy = 0.0;
             T sum_dxdz = 0.0;
             T sum_dydy = 0.0;
             T sum_dydz = 0.0;
             T sum_dzdz = 0.0;
-            T xi = block.cells().centroids().x(i);
-            T yi = block.cells().centroids().y(i);
-            T zi = block.cells().centroids().z(i);
+            T xi = cells.centroids().x(i);
+            T yi = cells.centroids().y(i);
+            T zi = cells.centroids().z(i);
             for (unsigned int j = 0; j < neighbours.size(); j++) {
                 int neighbour_j = neighbours(j);
-                T dx = block.cells().centroids().x(neighbour_j) - xi;
-                T dy = block.cells().centroids().y(neighbour_j) - yi;
-                T dz = block.cells().centroids().z(neighbour_j) - zi;
+                T dx = cells.centroids().x(neighbour_j) - xi;
+                T dy = cells.centroids().y(neighbour_j) - yi;
+                T dz = cells.centroids().z(neighbour_j) - zi;
                 sum_dxdx += dx*dx;
                 sum_dxdy += dx*dy;
                 sum_dxdz += dx*dz;
@@ -83,9 +86,9 @@ private:
 
             for (unsigned int j = 0; j < neighbours.size(); j++) {
                 int neighbour_j = neighbours(j);
-                T dx = block.cells().centroids().x(neighbour_j) - xi;
-                T dy = block.cells().centroids().y(neighbour_j) - yi;
-                T dz = block.cells().centroids().z(neighbour_j) - zi;
+                T dx = cells.centroids().x(neighbour_j) - xi;
+                T dy = cells.centroids().y(neighbour_j) - yi;
+                T dz = cells.centroids().z(neighbour_j) - zi;
                 T alpha_1 = dx / (r11 * r11);
                 T alpha_2 = 1.0 / (r22*r22) * (dx - r12*r11*dx);
                 T alpha_3 = 1.0 / (r33 * r33) * (dz - r23*r22*dy + beta*dx);
@@ -96,7 +99,7 @@ private:
         });
     }
 
-private:
+public:
     Ibis::RaggedArray<T, Layout, ExecSpace> w_1_;
     Ibis::RaggedArray<T, Layout, ExecSpace> w_2_;
     Ibis::RaggedArray<T, Layout, ExecSpace> w_3_;
