@@ -9,7 +9,6 @@
 
 #include <Kokkos_Core.hpp>
 
-
 template <typename T, class ExecSpace = Kokkos::DefaultExecutionSpace,
           class Layout = Kokkos::DefaultExecutionSpace::array_layout>
 struct Cells;
@@ -140,7 +139,7 @@ public:
         num_valid_cells_ = num_valid_cells;
         num_ghost_cells_ = num_ghost_cells;
         faces_ = CellFaces<T, array_layout, execution_space>(interfaces);
-        
+
         // this initially sets the incorrect neighbour cells, so we
         // have to be careful to overwrite them properly
         neighbour_cells_ =

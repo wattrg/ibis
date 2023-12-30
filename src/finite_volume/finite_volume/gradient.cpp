@@ -1,8 +1,9 @@
-#include <Kokkos_Core.hpp>
 #include <doctest/doctest.h>
-#include <nlohmann/json.hpp>
 #include <finite_volume/gradient.h>
 #include <grid/grid.h>
+
+#include <Kokkos_Core.hpp>
+#include <nlohmann/json.hpp>
 
 json build_config() {
     json config{};
@@ -26,7 +27,7 @@ TEST_CASE("gradient") {
     GridBlock<double> block_dev("../../../src/grid/test/grid.su2", config);
     auto block_host = block_dev.host_mirror();
     WLSGradient<double> wls_gradient(block_dev);
-    Kokkos::View<double*> values ("values", 21);
+    Kokkos::View<double*> values("values", 21);
     auto values_host = Kokkos::create_mirror_view(values);
     values_host(0) = 1.0;
     values_host(1) = 2.0;
@@ -39,9 +40,9 @@ TEST_CASE("gradient") {
     values_host(8) = 3.0;
     Kokkos::deep_copy(values, values_host);
 
-    Kokkos::View<double*> grad_x ("grad_x", 9);
-    Kokkos::View<double*> grad_y ("grad_y", 9);
-    Kokkos::View<double*> grad_z ("grad_z", 9);
+    Kokkos::View<double*> grad_x("grad_x", 9);
+    Kokkos::View<double*> grad_y("grad_y", 9);
+    Kokkos::View<double*> grad_z("grad_z", 9);
     wls_gradient.compute_gradients(block_dev, values, grad_x, grad_y, grad_z);
     auto grad_x_host = Kokkos::create_mirror_view(grad_x);
     auto grad_y_host = Kokkos::create_mirror_view(grad_y);
