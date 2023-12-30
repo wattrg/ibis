@@ -51,6 +51,7 @@ public:
 public:
     void compute_workspace_(const GridBlock<T, ExecSpace, Layout> &block) {
         auto cells = block.cells();
+        int dim = block.dim();
         Kokkos::parallel_for(
             "WLSGradient::compute_workspace_::r", block.num_cells(),
             KOKKOS_CLASS_LAMBDA (const int i) {
@@ -91,7 +92,10 @@ public:
                 T dz = cells.centroids().z(neighbour_j) - zi;
                 T alpha_1 = dx / (r11 * r11);
                 T alpha_2 = 1.0 / (r22*r22) * (dx - r12*r11*dx);
-                T alpha_3 = 1.0 / (r33 * r33) * (dz - r23*r22*dy + beta*dx);
+                T alpha_3 = 0.0;
+                if (dim == 3) {
+                    alpha_3 = 1.0 / (r33 * r33) * (dz - r23*r22*dy + beta*dx);
+                }
                 w_1_(i, j) = alpha_1 - r12 / r11 * alpha_2 + beta * alpha_3;
                 w_2_(i, j) = alpha_2 - r23 / r22 * alpha_3;
                 w_3_(i, j) = alpha_3;
