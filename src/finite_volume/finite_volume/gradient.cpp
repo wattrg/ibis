@@ -37,7 +37,7 @@ TEST_CASE("gradient") {
     values_host(6) = 1.0;
     values_host(7) = 2.0;
     values_host(8) = 3.0;
-    // auto bottom_ghost_cells = block_host.ghost_cells("slip_wall_bottom");
+    Kokkos::deep_copy(values, values_host);
 
     Kokkos::View<double*> grad_x ("grad_x", 9);
     Kokkos::View<double*> grad_y ("grad_y", 9);
@@ -45,6 +45,8 @@ TEST_CASE("gradient") {
     wls_gradient.compute_gradients(block_dev, values, grad_x, grad_y, grad_z);
     auto grad_x_host = Kokkos::create_mirror_view(grad_x);
     auto grad_y_host = Kokkos::create_mirror_view(grad_y);
+    Kokkos::deep_copy(grad_x_host, grad_x);
+    Kokkos::deep_copy(grad_y_host, grad_y);
     CHECK(grad_x_host(4) == doctest::Approx(1.0));
     CHECK(grad_y_host(4) == doctest::Approx(0.0));
 }
