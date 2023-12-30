@@ -5,12 +5,6 @@
 #include <util/ragged_array.h>
 
 #include <Kokkos_Core.hpp>
-#include "Kokkos_Core_fwd.hpp"
-
-template <typename T>
-struct Gradients {
-    Kokkos::View<T **> gradients;
-};
 
 template <typename T, class ExecSpace = Kokkos::DefaultExecutionSpace,
 class Layout = Kokkos::DefaultExecutionSpace::array_layout>
@@ -18,21 +12,44 @@ class WLSGradient {
 public:
     WLSGradient(const GridBlock<T> &block) {
         int num_connections = block.cells().neighbour_cells().num_values();
-        typename Ibis::RaggedArray<T, Layout, ExecSpace>::ArrayType w ("weights", num_connections);
+        typename Ibis::RaggedArray<T, Layout, ExecSpace>::ArrayType w1 ("weights", num_connections);
+        typename Ibis::RaggedArray<T, Layout, ExecSpace>::ArrayType w2 ("weights", num_connections);
+        typename Ibis::RaggedArray<T, Layout, ExecSpace>::ArrayType w3 ("weights", num_connections);
         auto offsets = block.cells().neighbour_cells().offsets(); 
-        w_1_ = Ibis::RaggedArray<T, Layout, ExecSpace>(w, offsets);
-        w_2_ = Ibis::RaggedArray<T, Layout, ExecSpace>(w, offsets);
-        w_3_ = Ibis::RaggedArray<T, Layout, ExecSpace>(w, offsets);
+        w_1_ = Ibis::RaggedArray<T, Layout, ExecSpace>(w1, offsets);
+        w_2_ = Ibis::RaggedArray<T, Layout, ExecSpace>(w2, offsets);
+        w_3_ = Ibis::RaggedArray<T, Layout, ExecSpace>(w3, offsets);
         compute_workspace_(block);
     }
 
     template <class SubView>
-    void compute_gradients(const SubView values, SubView gradients);
+    void compute_gradients(const GridBlock<T> &block, const SubView values, 
+                           SubView grad_x, SubView grad_y, SubView grad_z) {
+        Kokkos::parallel_for(
+            "WLSGradient::compute_gradients", block.num_cells(),
+            KOKKOS_CLASS_LAMBDA (const int i) {
+                auto neighbours = block.cells().neighbour_cells(i);
+                T grad_x_ = 0.0;
+                T grad_y_ = 0.0;
+                T grad_z_ = 0.0;
+                T u_i = values(i);
+                for (unsigned int j = 0; j < neighbours.size(); j++) {
+                    int neighbour_j = neighbours(j);
+                    T diff_u = values(neighbour_j) - u_i;
+                    grad_x += w_1_(neighbour_j) * diff_u;
+                    grad_y += w_2_(neighbour_j) * diff_u;
+                    grad_z += w_3_(neighbour_j) * diff_u;
+                }
+                grad_x(i) = grad_x_; 
+                grad_y(i) = grad_y_;
+                grad_z(i) = grad_z_;
+            });
+    }
 
 private:
     void compute_workspace_(const GridBlock<T> &block) {
         Kokkos::parallel_for(
-            "WLSGradient::compute_workspace_::r", w_1_.num_rows(),
+            "WLSGradient::compute_workspace_::r", block.num_cells(),
             KOKKOS_CLASS_LAMBDA (const int i) {
             auto neighbours = block.cells().neighbour_cells(i);
             T sum_dxdx = 0.0;
