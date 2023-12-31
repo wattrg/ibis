@@ -394,7 +394,7 @@ public:
             json boundary_config = boundaries.at(bc_label);
 
             // loop over all the boundary faces for this boundary, keeping
-            // track of which ones belong to this boundary
+            // track of which cells and faces belong to this boundary
             std::vector<int> ghost_cells{};
             std::vector<int> boundary_faces{};
             for (unsigned int boundary_i = 0; boundary_i < bc_faces.size();
