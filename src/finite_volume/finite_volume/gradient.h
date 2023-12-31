@@ -5,6 +5,7 @@
 #include <util/ragged_array.h>
 
 #include <Kokkos_Core.hpp>
+
 #include "Kokkos_Macros.hpp"
 
 template <typename T, class ExecSpace = Kokkos::DefaultExecutionSpace,
@@ -12,16 +13,18 @@ template <typename T, class ExecSpace = Kokkos::DefaultExecutionSpace,
 class WLSGradient {
 public:
     using memory_space = typename ExecSpace::memory_space;
+
 public:
-    WLSGradient(const GridBlock<T, ExecSpace, Layout> &block) {
+    WLSGradient(const GridBlock<T, ExecSpace, Layout>& block) {
         int num_cells = block.num_cells();
         int num_rs = block.dim() == 2 ? 3 : 6;
-        r_ = Kokkos::View<T**, Layout, memory_space> ("WLSGradient::r", num_cells, num_rs);
+        r_ = Kokkos::View<T**, Layout, memory_space>("WLSGradient::r",
+                                                     num_cells, num_rs);
         compute_workspace_(block);
     }
 
     template <class SubView>
-    void compute_gradients(const GridBlock<T, ExecSpace, Layout> &block,
+    void compute_gradients(const GridBlock<T, ExecSpace, Layout>& block,
                            const SubView values, SubView grad_x, SubView grad_y,
                            SubView grad_z) {
         auto cells = block.cells();
@@ -68,7 +71,6 @@ public:
                     grad_x_ += w_1 * diff_u;
                     grad_y_ += w_2 * diff_u;
                     grad_z_ += w_3 * diff_u;
-
                 }
                 grad_x(i) = grad_x_;
                 grad_y(i) = grad_y_;
@@ -77,7 +79,7 @@ public:
     }
 
 public:
-    void compute_workspace_(const GridBlock<T, ExecSpace, Layout> &block) {
+    void compute_workspace_(const GridBlock<T, ExecSpace, Layout>& block) {
         auto cells = block.cells();
         int dim = block.dim();
         Kokkos::parallel_for(
@@ -124,68 +126,43 @@ public:
 
 public:
     Kokkos::View<T**, Layout, memory_space> r_;
-    
 
 public:
     KOKKOS_INLINE_FUNCTION
-    T& r_11_(const int cell_i) {
-        return r_(cell_i, 0);
-    }
+    T& r_11_(const int cell_i) { return r_(cell_i, 0); }
 
     KOKKOS_INLINE_FUNCTION
-    T& r_11_(const int cell_i) const {
-        return r_(cell_i, 0);
-    }
+    T& r_11_(const int cell_i) const { return r_(cell_i, 0); }
 
     KOKKOS_INLINE_FUNCTION
-    T& r_12_(const int cell_i) {
-        return r_(cell_i, 1);
-    }
+    T& r_12_(const int cell_i) { return r_(cell_i, 1); }
 
     KOKKOS_INLINE_FUNCTION
-    T& r_12_(const int cell_i) const {
-        return r_(cell_i, 1);
-    }
+    T& r_12_(const int cell_i) const { return r_(cell_i, 1); }
 
     KOKKOS_INLINE_FUNCTION
-    T& r_22_(const int cell_i) {
-        return r_(cell_i, 2);
-    }
+    T& r_22_(const int cell_i) { return r_(cell_i, 2); }
 
     KOKKOS_INLINE_FUNCTION
-    T& r_22_(const int cell_i) const {
-        return r_(cell_i, 2);
-    }
+    T& r_22_(const int cell_i) const { return r_(cell_i, 2); }
 
     KOKKOS_INLINE_FUNCTION
-    T& r_13_(const int cell_i) {
-        return r_(cell_i, 3);
-    }
+    T& r_13_(const int cell_i) { return r_(cell_i, 3); }
 
     KOKKOS_INLINE_FUNCTION
-    T& r_13_(const int cell_i) const {
-        return r_(cell_i, 3);
-    }
+    T& r_13_(const int cell_i) const { return r_(cell_i, 3); }
 
     KOKKOS_INLINE_FUNCTION
-    T& r_23_(const int cell_i) {
-        return r_(cell_i, 4);
-    }
+    T& r_23_(const int cell_i) { return r_(cell_i, 4); }
 
     KOKKOS_INLINE_FUNCTION
-    T& r_23_(const int cell_i) const {
-        return r_(cell_i, 4);
-    }
+    T& r_23_(const int cell_i) const { return r_(cell_i, 4); }
 
     KOKKOS_INLINE_FUNCTION
-    T& r_33_(const int cell_i) {
-        return r_(cell_i, 5);
-    }
+    T& r_33_(const int cell_i) { return r_(cell_i, 5); }
 
     KOKKOS_INLINE_FUNCTION
-    T& r_33_(const int cell_i) const {
-        return r_(cell_i, 5);
-    }
+    T& r_33_(const int cell_i) const { return r_(cell_i, 5); }
 };
 
 #endif
