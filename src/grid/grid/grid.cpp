@@ -60,7 +60,7 @@ GridInfo build_test_grid() {
     };
 
     Cells<double, Kokkos::DefaultHostExecutionSpace> cells(
-        cell_vertex_ids_raw, cell_interfaces_list, cell_shapes);
+        cell_vertex_ids_raw, cell_interfaces_list, cell_shapes, 9, 0);
     grid_info.vertices = vertices;
     grid_info.faces = interfaces;
     grid_info.cells = cells;
@@ -73,9 +73,9 @@ json build_config() {
     json slip_wall{};
     json inflow{};
     json outflow{};
-    slip_wall["ghost_cells"] = false;
-    inflow["ghost_cells"] = false;
-    outflow["ghost_cells"] = false;
+    slip_wall["ghost_cells"] = true;
+    inflow["ghost_cells"] = true;
+    outflow["ghost_cells"] = true;
     boundaries["slip_wall_bottom"] = slip_wall;
     boundaries["slip_wall_top"] = slip_wall;
     boundaries["inflow"] = inflow;
@@ -109,7 +109,7 @@ TEST_CASE("grid cell faces") {
     GridBlock<double> block_dev("../../../src/grid/test/grid.su2", config);
     auto block = block_dev.host_mirror();
     block.deep_copy(block_dev);
-    CHECK(block.cells().size() == expected.cells.size());
+    CHECK(block.cells().num_valid_cells() == expected.cells.num_valid_cells());
     for (int i = 0; i < block.num_cells(); i++) {
         for (unsigned int j = 0; j < block.cells().faces().face_ids(i).size();
              j++) {
@@ -143,15 +143,102 @@ TEST_CASE("grid cell outsigns") {
     GridBlock<double> block_dev("../../../src/grid/test/grid.su2", config);
     auto block = block_dev.host_mirror();
     block.deep_copy(block_dev);
-    CHECK(block.cells().size() == expected.cells.size());
+    CHECK(block.cells().num_valid_cells() == expected.cells.num_valid_cells());
     std::vector<std::vector<int>> outsigns = {
         {1, 1, 1, 1},  {1, 1, 1, -1},  {1, 1, 1, -1},
         {-1, 1, 1, 1}, {-1, 1, 1, -1}, {-1, 1, 1, -1},
         {-1, 1, 1, 1}, {-1, 1, 1, -1}, {-1, 1, 1, -1}};
-    for (int i = 0; i < block.cells().size(); i++) {
+    for (int i = 0; i < block.cells().num_valid_cells(); i++) {
         for (unsigned int j = 0; j < block.cells().faces().outsigns(i).size();
              j++) {
             CHECK(block.cells().faces().outsigns(i)(j) == outsigns[i][j]);
         }
     }
+}
+
+TEST_CASE("cell neighbours") {
+    json config = build_config();
+    GridBlock<double> block_dev("../../../src/grid/test/grid.su2", config);
+    auto block_host = block_dev.host_mirror();
+    block_host.deep_copy(block_dev);
+
+    CHECK(block_host.cells().neighbour_cells(0, 1) == 1);
+    CHECK(block_host.cells().neighbour_cells(0, 2) == 3);
+    CHECK(block_host.cells().neighbour_cells(4, 0) == 1);
+    CHECK(block_host.cells().neighbour_cells(8, 3) == 7);
+}
+
+TEST_CASE("ghost cell centres") {
+    json config = build_config();
+    GridBlock<double> block_dev("../../../src/grid/test/grid.su2", config);
+    auto block_host = block_dev.host_mirror();
+    block_host.deep_copy(block_dev);
+
+    // test the inflow cells
+    auto inflow_ghost_cells = block_host.ghost_cells("inflow");
+    int ghost_cell = inflow_ghost_cells(0);
+    CHECK(block_host.cells().centroids().x(ghost_cell) == -0.5);
+    CHECK(block_host.cells().centroids().y(ghost_cell) == 0.5);
+    CHECK(block_host.cells().centroids().z(ghost_cell) == 0.0);
+
+    ghost_cell = inflow_ghost_cells(1);
+    CHECK(block_host.cells().centroids().x(ghost_cell) == -0.5);
+    CHECK(block_host.cells().centroids().y(ghost_cell) == 1.5);
+    CHECK(block_host.cells().centroids().z(ghost_cell) == 0.0);
+
+    ghost_cell = inflow_ghost_cells(2);
+    CHECK(block_host.cells().centroids().x(ghost_cell) == -0.5);
+    CHECK(block_host.cells().centroids().y(ghost_cell) == 2.5);
+    CHECK(block_host.cells().centroids().z(ghost_cell) == 0.0);
+
+    // test slip_wall_bottom
+    auto bottom_ghost_cells = block_host.ghost_cells("slip_wall_bottom");
+    ghost_cell = bottom_ghost_cells(0);
+    CHECK(block_host.cells().centroids().x(ghost_cell) == 0.5);
+    CHECK(block_host.cells().centroids().y(ghost_cell) == -0.5);
+    CHECK(block_host.cells().centroids().z(ghost_cell) == 0.0);
+
+    ghost_cell = bottom_ghost_cells(1);
+    CHECK(block_host.cells().centroids().x(ghost_cell) == 1.5);
+    CHECK(block_host.cells().centroids().y(ghost_cell) == -0.5);
+    CHECK(block_host.cells().centroids().z(ghost_cell) == 0.0);
+
+    ghost_cell = bottom_ghost_cells(2);
+    CHECK(block_host.cells().centroids().x(ghost_cell) == 2.5);
+    CHECK(block_host.cells().centroids().y(ghost_cell) == -0.5);
+    CHECK(block_host.cells().centroids().z(ghost_cell) == 0.0);
+
+    // test outflow
+    auto outflow_ghost_cells = block_host.ghost_cells("outflow");
+    ghost_cell = outflow_ghost_cells(0);
+    CHECK(block_host.cells().centroids().x(ghost_cell) == 3.5);
+    CHECK(block_host.cells().centroids().y(ghost_cell) == 0.5);
+    CHECK(block_host.cells().centroids().z(ghost_cell) == 0.0);
+
+    ghost_cell = outflow_ghost_cells(1);
+    CHECK(block_host.cells().centroids().x(ghost_cell) == 3.5);
+    CHECK(block_host.cells().centroids().y(ghost_cell) == 1.5);
+    CHECK(block_host.cells().centroids().z(ghost_cell) == 0.0);
+
+    ghost_cell = outflow_ghost_cells(2);
+    CHECK(block_host.cells().centroids().x(ghost_cell) == 3.5);
+    CHECK(block_host.cells().centroids().y(ghost_cell) == 2.5);
+    CHECK(block_host.cells().centroids().z(ghost_cell) == 0.0);
+
+    // test slip_wall_top
+    auto top_ghost_cells = block_host.ghost_cells("slip_wall_top");
+    ghost_cell = top_ghost_cells(0);
+    CHECK(block_host.cells().centroids().x(ghost_cell) == 0.5);
+    CHECK(block_host.cells().centroids().y(ghost_cell) == 3.5);
+    CHECK(block_host.cells().centroids().z(ghost_cell) == 0.0);
+
+    ghost_cell = top_ghost_cells(1);
+    CHECK(block_host.cells().centroids().x(ghost_cell) == 1.5);
+    CHECK(block_host.cells().centroids().y(ghost_cell) == 3.5);
+    CHECK(block_host.cells().centroids().z(ghost_cell) == 0.0);
+
+    ghost_cell = top_ghost_cells(2);
+    CHECK(block_host.cells().centroids().x(ghost_cell) == 2.5);
+    CHECK(block_host.cells().centroids().y(ghost_cell) == 3.5);
+    CHECK(block_host.cells().centroids().z(ghost_cell) == 0.0);
 }

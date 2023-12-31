@@ -60,6 +60,16 @@ public:
 
     void deep_copy(T value) { Kokkos::deep_copy(view_, value); }
 
+    std::string to_string() const {
+        std::string result = "Field(";
+        for (unsigned int i = 0; i < view_.size(); i++) {
+            result.append(std::to_string(view_(i)));
+            result.append(",");
+        }
+        result.append(")");
+        return result;
+    }
+
 public:
     view_type view_;
 };
