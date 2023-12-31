@@ -15,7 +15,8 @@ class WLSGradient {
 public:
     using memory_space = typename ExecSpace::memory_space;
     using view_type = Kokkos::View<T**, Layout, memory_space>;
-    using HostMirror = WLSGradient<T, Kokkos::DefaultHostExecutionSpace, Layout>;
+    using HostMirror =
+        WLSGradient<T, Kokkos::DefaultHostExecutionSpace, Layout>;
 
 public:
     WLSGradient(const GridBlock<T, ExecSpace, Layout>& block) {
@@ -26,7 +27,7 @@ public:
         compute_workspace_(block);
     }
 
-    WLSGradient(view_type rs) : r_(rs) {} 
+    WLSGradient(view_type rs) : r_(rs) {}
 
     template <class SubView>
     void compute_gradients(const GridBlock<T, ExecSpace, Layout>& block,
@@ -131,13 +132,13 @@ public:
 
 public:
     HostMirror host_mirror() const {
-        auto r_mirror = Kokkos::create_mirror_view(r_); 
+        auto r_mirror = Kokkos::create_mirror_view(r_);
         return HostMirror(r_mirror);
     }
 
     template <class OtherSpace>
-    void deep_copy(const WLSGradient<T, OtherSpace, Layout> &other) {
-        Kokkos::deep_copy(r_, other.r_); 
+    void deep_copy(const WLSGradient<T, OtherSpace, Layout>& other) {
+        Kokkos::deep_copy(r_, other.r_);
     }
 
 public:

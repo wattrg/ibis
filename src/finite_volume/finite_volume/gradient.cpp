@@ -29,7 +29,7 @@ TEST_CASE("gradient") {
     block_host.deep_copy(block_dev);
     WLSGradient<double> wls_gradient(block_dev);
 
-    // check host mirror compiles 
+    // check host mirror compiles
     auto gradient_host = wls_gradient.host_mirror();
     gradient_host.deep_copy(wls_gradient);
 
