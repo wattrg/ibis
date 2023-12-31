@@ -28,6 +28,12 @@ TEST_CASE("gradient") {
     auto block_host = block_dev.host_mirror();
     block_host.deep_copy(block_dev);
     WLSGradient<double> wls_gradient(block_dev);
+
+    // check host mirror compiles 
+    auto gradient_host = wls_gradient.host_mirror();
+    gradient_host.deep_copy(wls_gradient);
+
+    // fill in values to find the gradient of
     Kokkos::View<double*> values("values", 21);
     auto values_host = Kokkos::create_mirror_view(values);
     values_host(0) = 1.0;

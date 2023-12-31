@@ -6,6 +6,7 @@
 
 #include <Kokkos_Core.hpp>
 
+#include "Kokkos_Core_fwd.hpp"
 #include "Kokkos_Macros.hpp"
 
 template <typename T, class ExecSpace = Kokkos::DefaultExecutionSpace,
@@ -13,6 +14,8 @@ template <typename T, class ExecSpace = Kokkos::DefaultExecutionSpace,
 class WLSGradient {
 public:
     using memory_space = typename ExecSpace::memory_space;
+    using view_type = Kokkos::View<T**, Layout, memory_space>;
+    using HostMirror = WLSGradient<T, Kokkos::DefaultHostExecutionSpace, Layout>;
 
 public:
     WLSGradient(const GridBlock<T, ExecSpace, Layout>& block) {
@@ -22,6 +25,8 @@ public:
                                                      num_cells, num_rs);
         compute_workspace_(block);
     }
+
+    WLSGradient(view_type rs) : r_(rs) {} 
 
     template <class SubView>
     void compute_gradients(const GridBlock<T, ExecSpace, Layout>& block,
@@ -125,7 +130,18 @@ public:
     }
 
 public:
-    Kokkos::View<T**, Layout, memory_space> r_;
+    HostMirror host_mirror() const {
+        auto r_mirror = Kokkos::create_mirror_view(r_); 
+        return HostMirror(r_mirror);
+    }
+
+    template <class OtherSpace>
+    void deep_copy(const WLSGradient<T, OtherSpace, Layout> &other) {
+        Kokkos::deep_copy(r_, other.r_); 
+    }
+
+public:
+    view_type r_;
 
 public:
     KOKKOS_INLINE_FUNCTION
