@@ -33,7 +33,8 @@ public:
 
     template <class SubView>
     void compute_gradients(const GridBlock<T, ExecSpace, Layout>& block,
-                           const SubView values, Vector3s<T, Layout, memory_space> grad) {
+                           const SubView values,
+                           Vector3s<T, Layout, memory_space> grad) {
         auto cells = block.cells();
         int dim = block.dim();
         Kokkos::parallel_for(

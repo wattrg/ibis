@@ -8,9 +8,9 @@
 #include <gas/flow_state.h>
 #include <gas/gas_model.h>
 #include <grid/grid.h>
+#include <spdlog/spdlog.h>
 
 #include <nlohmann/json.hpp>
-#include <spdlog/spdlog.h>
 
 using json = nlohmann::json;
 
@@ -34,8 +34,7 @@ public:
                                      const GridBlock<T>& grid);
     void reconstruct(FlowStates<T>& flow_states, const GridBlock<T>& grid,
                      unsigned int order);
-    void copy_reconstruct(FlowStates<T>& flow_states, 
-                          const GridBlock<T>& grid);
+    void copy_reconstruct(FlowStates<T>& flow_states, const GridBlock<T>& grid);
     void linear_reconstruct(FlowStates<T>& flow_states,
                             const GridBlock<T>& grid);
     void flux_surface_integral(const GridBlock<T>& grid,
