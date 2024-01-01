@@ -300,7 +300,9 @@ int FiniteVolume<T>::count_bad_cells(const FlowStates<T>& fs,
     Kokkos::parallel_reduce(
         "FiniteVolume::count_bad_cells", num_cells,
         KOKKOS_LAMBDA(const int cell_i, int& n_bad_cells_utd) {
-            if (fs.gas.temp(cell_i) < 0.0 || fs.gas.rho(cell_i) < 0.0 || Kokkos::isnan(fs.gas.rho(cell_i)) || Kokkos::isinf(fs.gas.rho(cell_i))) {
+            if (fs.gas.temp(cell_i) < 0.0 || fs.gas.rho(cell_i) < 0.0 ||
+                Kokkos::isnan(fs.gas.rho(cell_i)) ||
+                Kokkos::isinf(fs.gas.rho(cell_i))) {
                 n_bad_cells_utd += 1;
             }
         },
