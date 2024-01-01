@@ -33,10 +33,10 @@ public:
     void apply_pre_reconstruction_bc(FlowStates<T>& fs,
                                      const GridBlock<T>& grid);
     void reconstruct(FlowStates<T>& flow_states, const GridBlock<T>& grid,
-                     unsigned int order);
+                     IdealGas<T>& gas_model, unsigned int order);
     void copy_reconstruct(FlowStates<T>& flow_states, const GridBlock<T>& grid);
     void linear_reconstruct(FlowStates<T>& flow_states,
-                            const GridBlock<T>& grid);
+                            const GridBlock<T>& grid, IdealGas<T>& gas_model);
     void flux_surface_integral(const GridBlock<T>& grid,
                                ConservedQuantities<T>& dudt);
     void compute_flux(const GridBlock<T>& grid, IdealGas<T>& gas_model);
@@ -68,7 +68,7 @@ private:
     Vector3s<T> grad_vz_;
 
     // gas model
-    IdealGas<T> gas_model_;
+    // IdealGas<T> gas_model_;
 };
 
 #endif

@@ -1,8 +1,13 @@
-flow_state = FlowState(rho=1.225, T=300.0, vx=1000.0, vy=500.0)
+gas_model = get_gas_model("ideal_air")
+gas_state = GasState()
+gas_state.T = 300
+gas_state.rho = 1.225
+gas_model.update_thermo_from_rhoT(gas_state)
+flow_state = FlowState(gas=gas_state, vx=1000.0, vy=500.0)
 
 config.convective_flux = ConvectiveFlux(
     flux_calculator = FluxCalculator.Hanel,
-    reconstruction_order = 1
+    reconstruction_order = 2
 )
 
 config.solver = RungeKutta(
