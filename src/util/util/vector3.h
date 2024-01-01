@@ -4,6 +4,7 @@
 #include <Kokkos_Core.hpp>
 #include <Kokkos_MathematicalFunctions.hpp>
 
+#include "Kokkos_Macros.hpp"
 #include "field.h"
 
 // A single vector with 3 components
@@ -62,16 +63,25 @@ public:
     T& x(const int i) const { return view_(i, 0); }
 
     KOKKOS_INLINE_FUNCTION
+    auto x() { return Kokkos::subview(view_, Kokkos::ALL, 0); }
+
+    KOKKOS_INLINE_FUNCTION
     T& y(const int i) { return view_(i, 1); }
 
     KOKKOS_INLINE_FUNCTION
     T& y(const int i) const { return view_(i, 1); }
 
     KOKKOS_INLINE_FUNCTION
+    auto y() { return Kokkos::subview(view_, Kokkos::ALL, 1); }
+
+    KOKKOS_INLINE_FUNCTION
     T& z(const int i) { return view_(i, 2); }
 
     KOKKOS_INLINE_FUNCTION
     T& z(const int i) const { return view_(i, 2); }
+
+    KOKKOS_INLINE_FUNCTION
+    auto z() { return Kokkos::subview(view_, Kokkos::ALL, 2); }
 
     KOKKOS_INLINE_FUNCTION
     void copy_vector(const Vector3<T>& vector, const int i) {

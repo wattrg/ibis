@@ -2,6 +2,8 @@
 #include <finite_volume/conserved_quantities.h>
 #include <finite_volume/finite_volume.h>
 #include <finite_volume/flux_calc.h>
+#include <stdexcept>
+#include "finite_volume/gradient.h"
 
 template <typename T>
 FiniteVolume<T>::FiniteVolume(const GridBlock<T>& grid, json config)
@@ -13,6 +15,15 @@ FiniteVolume<T>::FiniteVolume(const GridBlock<T>& grid, json config)
     reconstruction_order_ = convective_flux_config.at("reconstruction_order");
     flux_calculator_ = flux_calculator_from_string(
         convective_flux_config.at("flux_calculator"));
+
+    if (reconstruction_order_ == 2) {
+        grad_calc_ = WLSGradient<T>(grid);
+        grad_p_ = Vector3s<T>("FV::grad_p", grid.num_cells());
+        grad_rho_ = Vector3s<T>("FV::grad_rho", grid.num_cells());
+        grad_vx_ = Vector3s<T>("FV::grad_vx", grid.num_cells());
+        grad_vy_ = Vector3s<T>("FV::grad_vy", grid.num_cells());
+        grad_vz_ = Vector3s<T>("FV::grad_vz", grid.num_cells());
+    }
 
     std::vector<std::string> boundary_tags = grid.boundary_tags();
     json boundaries_config = config.at("grid").at("boundaries");
@@ -89,6 +100,22 @@ void FiniteVolume<T>::reconstruct(FlowStates<T>& flow_states,
                                   const GridBlock<T>& grid,
                                   unsigned int order) {
     (void)order;
+    switch (order) {
+        case 1:
+            copy_reconstruct(flow_states, grid);
+            break; 
+        case 2:
+            linear_reconstruct(flow_states, grid);
+            break;
+        default:
+            spdlog::error("Invalid reconstruction order {}", order);
+            throw std::runtime_error("Invalid reconstruction order");
+    }
+}
+
+template <typename T>
+void FiniteVolume<T>::copy_reconstruct(FlowStates<T>& flow_states,
+                                       const GridBlock<T>& grid) {
     int n_faces = grid.num_interfaces();
     FlowStates<T> this_left = left_;
     FlowStates<T> this_right = right_;
@@ -115,6 +142,67 @@ void FiniteVolume<T>::reconstruct(FlowStates<T>& flow_states,
             this_right.vel.y(i_face) = flow_states.vel.y(right);
             this_right.vel.z(i_face) = flow_states.vel.z(right);
         });
+}
+
+template <typename T>
+KOKKOS_INLINE_FUNCTION
+T linear_interpolate(T value, Vector3s<T> grad, T dx, T dy, T dz, int i) {
+    return value + grad.x(i) * dx + grad.y(i) * dy + grad.z(i) * dz;
+}
+
+template <typename T>
+void FiniteVolume<T>::linear_reconstruct(FlowStates<T>& flow_states,
+                                         const GridBlock<T>& grid) {
+    grad_calc_.compute_gradients(grid, flow_states.gas.pressure(), grad_p_);
+    grad_calc_.compute_gradients(grid, flow_states.gas.rho(), grad_rho_);
+    grad_calc_.compute_gradients(grid, flow_states.vel.x(), grad_vx_);
+    grad_calc_.compute_gradients(grid, flow_states.vel.y(), grad_vy_);
+    grad_calc_.compute_gradients(grid, flow_states.vel.z(), grad_vz_);
+
+    auto cells = grid.cells();
+    auto faces = grid.interfaces();
+    auto left = left_;
+    auto right = right_;
+    auto grad_p = grad_p_;
+    auto grad_rho = grad_rho_;
+    auto grad_vx = grad_vx_;
+    auto grad_vy = grad_vy_;
+    auto grad_vz = grad_vz_;
+    auto gas_model = gas_model_;
+    Kokkos::parallel_for(
+        "FV::linear_reconstruct", grid.num_interfaces(), KOKKOS_LAMBDA (const int i_face) {
+        int left_cell = faces.left_cell(i_face);
+        T dx = faces.centre().x(i_face) - cells.centroids().x(left_cell);
+        T dy = faces.centre().y(i_face) - cells.centroids().y(left_cell);
+        T dz = faces.centre().z(i_face) - cells.centroids().z(left_cell);
+        left.gas.pressure(i_face) = linear_interpolate(flow_states.gas.pressure(left_cell), 
+                                                       grad_p, dx, dy, dz, left_cell);
+        left.gas.rho(i_face) = linear_interpolate(flow_states.gas.rho(left_cell), 
+                                                  grad_rho, dx, dy, dz, left_cell);
+        left.vel.x(i_face) = linear_interpolate(flow_states.vel.x(left_cell),
+                                                grad_vx, dx, dy, dz, left_cell);
+        left.vel.y(i_face) = linear_interpolate(flow_states.vel.y(left_cell),
+                                                grad_vy, dx, dy, dz, left_cell);
+        left.vel.z(i_face) = linear_interpolate(flow_states.vel.z(left_cell),
+                                                grad_vz, dx, dy, dz, left_cell);
+        gas_model.update_thermo_from_rhop(left.gas, i_face);
+
+        int right_cell = faces.right_cell(i_face);
+        dx = faces.centre().x(i_face) - cells.centroids().x(right_cell);
+        dy = faces.centre().y(i_face) - cells.centroids().y(right_cell);
+        dz = faces.centre().z(i_face) - cells.centroids().z(right_cell);
+        right.gas.pressure(i_face) = linear_interpolate(flow_states.gas.pressure(right_cell), 
+                                                       grad_p, dx, dy, dz, right_cell);
+        right.gas.rho(i_face) = linear_interpolate(flow_states.gas.rho(right_cell), 
+                                                  grad_rho, dx, dy, dz, right_cell);
+        right.vel.x(i_face) = linear_interpolate(flow_states.vel.x(right_cell),
+                                                grad_vx, dx, dy, dz, right_cell);
+        right.vel.y(i_face) = linear_interpolate(flow_states.vel.y(right_cell),
+                                                grad_vy, dx, dy, dz, right_cell);
+        right.vel.z(i_face) = linear_interpolate(flow_states.vel.z(right_cell),
+                                                grad_vz, dx, dy, dz, right_cell);
+        gas_model.update_thermo_from_rhop(right.gas, i_face);
+    });
 }
 
 template <typename T>

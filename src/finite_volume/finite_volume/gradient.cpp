@@ -67,13 +67,12 @@ TEST_CASE("gradient") {
     Kokkos::View<double*> grad_x("grad_x", 9);
     Kokkos::View<double*> grad_y("grad_y", 9);
     Kokkos::View<double*> grad_z("grad_z", 9);
-    wls_gradient.compute_gradients(block_dev, values, grad_x, grad_y, grad_z);
-    auto grad_x_host = Kokkos::create_mirror_view(grad_x);
-    auto grad_y_host = Kokkos::create_mirror_view(grad_y);
-    Kokkos::deep_copy(grad_x_host, grad_x);
-    Kokkos::deep_copy(grad_y_host, grad_y);
+    Vector3s<double> grad(9);
+    wls_gradient.compute_gradients(block_dev, values, grad);
+    auto grad_host = grad.host_mirror();
+    grad_host.deep_copy(grad);
     for (int i = 0; i < 9; i++) {
-        CHECK(grad_x_host(i) == doctest::Approx(1.0));
-        CHECK(grad_y_host(i) == doctest::Approx(0.5));
+        CHECK(grad_host.x(i) == doctest::Approx(1.0));
+        CHECK(grad_host.y(i) == doctest::Approx(0.5));
     }
 }

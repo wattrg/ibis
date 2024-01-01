@@ -19,6 +19,8 @@ public:
         WLSGradient<T, Kokkos::DefaultHostExecutionSpace, Layout>;
 
 public:
+    WLSGradient() {}
+
     WLSGradient(const GridBlock<T, ExecSpace, Layout>& block) {
         int num_cells = block.num_cells();
         int num_rs = block.dim() == 2 ? 3 : 6;
@@ -31,8 +33,7 @@ public:
 
     template <class SubView>
     void compute_gradients(const GridBlock<T, ExecSpace, Layout>& block,
-                           const SubView values, SubView grad_x, SubView grad_y,
-                           SubView grad_z) {
+                           const SubView values, Vector3s<T, Layout, memory_space> grad) {
         auto cells = block.cells();
         int dim = block.dim();
         Kokkos::parallel_for(
@@ -78,9 +79,9 @@ public:
                     grad_y_ += w_2 * diff_u;
                     grad_z_ += w_3 * diff_u;
                 }
-                grad_x(i) = grad_x_;
-                grad_y(i) = grad_y_;
-                grad_z(i) = grad_z_;
+                grad.x(i) = grad_x_;
+                grad.y(i) = grad_y_;
+                grad.z(i) = grad_z_;
             });
     }
 
