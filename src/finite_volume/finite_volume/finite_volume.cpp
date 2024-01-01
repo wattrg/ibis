@@ -100,8 +100,7 @@ void FiniteVolume<T>::apply_pre_reconstruction_bc(FlowStates<T>& fs,
 template <typename T>
 void FiniteVolume<T>::reconstruct(FlowStates<T>& flow_states,
                                   const GridBlock<T>& grid,
-                                  IdealGas<T>& gas_model,
-                                  unsigned int order) {
+                                  IdealGas<T>& gas_model, unsigned int order) {
     (void)order;
     switch (order) {
         case 1:
@@ -159,7 +158,6 @@ KOKKOS_INLINE_FUNCTION T linear_interpolate(T value, Vector3s<T> grad, T dx,
         grad_z = grad.z(i);
     }
 
-
     return value + grad_x * dx + grad_y * dy + grad_z * dz;
 }
 
@@ -197,12 +195,15 @@ void FiniteVolume<T>::linear_reconstruct(FlowStates<T>& flow_states,
             left.gas.rho(i_face) =
                 linear_interpolate(flow_states.gas.rho(left_cell), grad_rho, dx,
                                    dy, dz, left_cell, left_valid);
-            left.vel.x(i_face) = linear_interpolate(
-                flow_states.vel.x(left_cell), grad_vx, dx, dy, dz, left_cell, left_valid);
-            left.vel.y(i_face) = linear_interpolate(
-                flow_states.vel.y(left_cell), grad_vy, dx, dy, dz, left_cell, left_valid);
-            left.vel.z(i_face) = linear_interpolate(
-                flow_states.vel.z(left_cell), grad_vz, dx, dy, dz, left_cell, left_valid);
+            left.vel.x(i_face) =
+                linear_interpolate(flow_states.vel.x(left_cell), grad_vx, dx,
+                                   dy, dz, left_cell, left_valid);
+            left.vel.y(i_face) =
+                linear_interpolate(flow_states.vel.y(left_cell), grad_vy, dx,
+                                   dy, dz, left_cell, left_valid);
+            left.vel.z(i_face) =
+                linear_interpolate(flow_states.vel.z(left_cell), grad_vz, dx,
+                                   dy, dz, left_cell, left_valid);
             gas_model.update_thermo_from_rhop(left.gas, i_face);
 
             int right_cell = faces.right_cell(i_face);
@@ -216,12 +217,15 @@ void FiniteVolume<T>::linear_reconstruct(FlowStates<T>& flow_states,
             right.gas.rho(i_face) =
                 linear_interpolate(flow_states.gas.rho(right_cell), grad_rho,
                                    dx, dy, dz, right_cell, right_valid);
-            right.vel.x(i_face) = linear_interpolate(
-                flow_states.vel.x(right_cell), grad_vx, dx, dy, dz, right_cell, right_valid);
-            right.vel.y(i_face) = linear_interpolate(
-                flow_states.vel.y(right_cell), grad_vy, dx, dy, dz, right_cell, right_valid);
-            right.vel.z(i_face) = linear_interpolate(
-                flow_states.vel.z(right_cell), grad_vz, dx, dy, dz, right_cell, right_valid);
+            right.vel.x(i_face) =
+                linear_interpolate(flow_states.vel.x(right_cell), grad_vx, dx,
+                                   dy, dz, right_cell, right_valid);
+            right.vel.y(i_face) =
+                linear_interpolate(flow_states.vel.y(right_cell), grad_vy, dx,
+                                   dy, dz, right_cell, right_valid);
+            right.vel.z(i_face) =
+                linear_interpolate(flow_states.vel.z(right_cell), grad_vz, dx,
+                                   dy, dz, right_cell, right_valid);
             gas_model.update_thermo_from_rhop(right.gas, i_face);
         });
 }
