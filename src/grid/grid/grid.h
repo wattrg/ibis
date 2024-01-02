@@ -5,9 +5,8 @@
 #include <grid/grid_io.h>
 #include <grid/interface.h>
 
+#include <limits>
 #include <nlohmann/json.hpp>
-
-#include "Kokkos_Macros.hpp"
 
 using json = nlohmann::json;
 
@@ -35,11 +34,11 @@ public:
 
     GridBlock(Vertices<T, execution_space, array_layout> vertices,
               Interfaces<T, execution_space, array_layout> interfaces,
-              Cells<T, execution_space, array_layout> cells, int dim,
-              int num_valid_cells, int num_ghost_cells,
-              std::map<std::string, Field<int, array_layout, memory_space>>
+              Cells<T, execution_space, array_layout> cells, size_t dim,
+              size_t num_valid_cells, size_t num_ghost_cells,
+              std::map<std::string, Field<size_t, array_layout, memory_space>>
                   ghost_cells,
-              std::map<std::string, Field<int, array_layout, memory_space>>
+              std::map<std::string, Field<size_t, array_layout, memory_space>>
                   boundary_faces,
               std::vector<std::string> boundary_tags)
         : vertices_(vertices),
@@ -52,11 +51,11 @@ public:
           boundary_faces_(boundary_faces),
           boundary_tags_(boundary_tags) {}
 
-    GridBlock(int num_vertices, int num_faces, int num_valid_cells,
-              int num_ghost_cells, int dim, int num_cell_vertex_ids,
-              int num_face_vertex_ids, int num_face_ids,
-              std::map<std::string, int> ghost_cell_sizes,
-              std::map<std::string, int> boundary_face_sizes) {
+    GridBlock(size_t num_vertices, size_t num_faces, size_t num_valid_cells,
+              size_t num_ghost_cells, size_t dim, size_t num_cell_vertex_ids,
+              size_t num_face_vertex_ids, size_t num_face_ids,
+              std::map<std::string, size_t> ghost_cell_sizes,
+              std::map<std::string, size_t> boundary_face_sizes) {
         num_valid_cells_ = num_valid_cells;
         num_ghost_cells_ = num_ghost_cells;
         dim_ = dim;
@@ -68,16 +67,17 @@ public:
             num_valid_cells, num_ghost_cells, num_cell_vertex_ids,
             num_face_ids);
         ghost_cells_ =
-            std::map<std::string, Field<int, array_layout, memory_space>>{};
+            std::map<std::string, Field<size_t, array_layout, memory_space>>{};
         boundary_faces_ =
-            std::map<std::string, Field<int, array_layout, memory_space>>{};
+            std::map<std::string, Field<size_t, array_layout, memory_space>>{};
         for (auto const& [key, val] : ghost_cell_sizes) {
-            ghost_cells_.insert(
-                {key, Field<int, array_layout, memory_space>("bc_cells", val)});
+            ghost_cells_.insert({key, Field<size_t, array_layout, memory_space>(
+                                          "bc_cells", val)});
         }
         for (auto const& [key, val] : boundary_face_sizes) {
             boundary_faces_.insert(
-                {key, Field<int, array_layout, memory_space>("bc_faces", val)});
+                {key,
+                 Field<size_t, array_layout, memory_space>("bc_faces", val)});
         }
     }
 
@@ -89,15 +89,15 @@ public:
         std::vector<Vertex<double>> vertices = grid_io.vertices();
         vertices_ = Vertices<T, execution_space, array_layout>(vertices.size());
         auto host_vertices = vertices_.host_mirror();
-        for (unsigned int i = 0; i < vertices.size(); i++) {
+        for (size_t i = 0; i < vertices.size(); i++) {
             host_vertices.set_vertex_position(i, vertices[i].pos());
         }
         vertices_.deep_copy(host_vertices);
 
         // some objects to assist in constructing the grid
-        std::vector<std::vector<int>> interface_vertices{};
-        std::vector<std::vector<int>> cell_vertices{};
-        std::vector<std::vector<int>> cell_interface_ids{};
+        std::vector<std::vector<size_t>> interface_vertices{};
+        std::vector<std::vector<size_t>> cell_vertices{};
+        std::vector<std::vector<size_t>> cell_interface_ids{};
         InterfaceLookup interfaces = InterfaceLookup();
 
         // begin to assemble the interfaces and cells
@@ -105,21 +105,20 @@ public:
         std::vector<ElemType> cell_shapes{};
         std::vector<ElemType> interface_shapes{};
         num_valid_cells_ = cells.size();
-        for (unsigned int cell_i = 0; cell_i < cells.size(); cell_i++) {
+        for (size_t cell_i = 0; cell_i < cells.size(); cell_i++) {
             cell_vertices.push_back(cells[cell_i].vertex_ids());
             cell_shapes.push_back(cells[cell_i].cell_type());
 
             std::vector<ElemIO> cell_interfaces = cells[cell_i].interfaces();
-            std::vector<int> cell_face_ids{};
-            for (unsigned int face_i = 0; face_i < cell_interfaces.size();
-                 face_i++) {
-                std::vector<int> face_vertices =
+            std::vector<size_t> cell_face_ids{};
+            for (size_t face_i = 0; face_i < cell_interfaces.size(); face_i++) {
+                std::vector<size_t> face_vertices =
                     cell_interfaces[face_i].vertex_ids();
 
                 // if this interface already exists, we use the existing one
                 // if the interface doesn't exist, we make a new one
-                int face_id = interfaces.id(face_vertices);
-                if (face_id == -1) {
+                size_t face_id = interfaces.id(face_vertices);
+                if (face_id == std::numeric_limits<size_t>::max()) {
                     face_id = interfaces.insert(face_vertices);
                     interface_vertices.push_back(face_vertices);
                     interface_shapes.push_back(
@@ -130,7 +129,7 @@ public:
             cell_interface_ids.push_back(cell_face_ids);
         }
 
-        std::map<int, int> ghost_cell_map = setup_boundaries(
+        std::map<size_t, size_t> ghost_cell_map = setup_boundaries(
             grid_io, boundaries, cell_vertices, interfaces, cell_shapes);
 
         interfaces_ = Interfaces<T, execution_space, array_layout>(
@@ -146,20 +145,19 @@ public:
         compute_ghost_cell_centres();
     }
 
-    void compute_interface_connectivity(std::map<int, int> ghost_cells) {
+    void compute_interface_connectivity(std::map<size_t, size_t> ghost_cells) {
         auto this_interfaces = interfaces_;
         auto this_cells = cells_;
         Kokkos::parallel_for(
             "compute_interface_connectivity",
             Kokkos::RangePolicy<execution_space>(0, num_valid_cells_),
-            KOKKOS_LAMBDA(const int cell_i) {
+            KOKKOS_LAMBDA(const size_t cell_i) {
                 auto face_ids = this_cells.faces().face_ids(cell_i);
                 T cell_x = this_cells.centroids().x(cell_i);
                 T cell_y = this_cells.centroids().y(cell_i);
                 T cell_z = this_cells.centroids().z(cell_i);
-                for (unsigned int face_i = 0; face_i < face_ids.size();
-                     face_i++) {
-                    int face_id = face_ids[face_i];
+                for (size_t face_i = 0; face_i < face_ids.size(); face_i++) {
+                    size_t face_id = face_ids[face_i];
 
                     // vector from the face centre to the cell centre
                     T dx = this_interfaces.centre().x(face_id) - cell_x;
@@ -191,7 +189,8 @@ public:
         for (auto boundary : ghost_cells) {
             int face_id = boundary.first;
             int ghost_cell_id = boundary.second;
-            if (interfaces_host.left_cell(face_id) < 0) {
+            if (interfaces_host.left_cell(face_id) ==
+                std::numeric_limits<size_t>::max()) {
                 interfaces_host.attach_cell_left(ghost_cell_id, face_id);
             } else {
                 interfaces_host.attach_cell_right(ghost_cell_id, face_id);
@@ -212,9 +211,11 @@ public:
         auto vertices = vertices_.host_mirror();
         auto interfaces = interfaces_.host_mirror();
         auto cells = cells_.host_mirror();
-        std::map<std::string, Field<int, array_layout, host_mirror_mem_space>>
+        std::map<std::string,
+                 Field<size_t, array_layout, host_mirror_mem_space>>
             ghost_cells{};
-        std::map<std::string, Field<int, array_layout, host_mirror_mem_space>>
+        std::map<std::string,
+                 Field<size_t, array_layout, host_mirror_mem_space>>
             boundary_faces{};
 
         for (auto const& [key, val] : ghost_cells_) {
@@ -234,7 +235,7 @@ public:
         vertices_.deep_copy(other.vertices_);
         interfaces_.deep_copy(other.interfaces_);
         cells_.deep_copy(other.cells_);
-        for (unsigned int i = 0; i < boundary_tags_.size(); i++) {
+        for (size_t i = 0; i < boundary_tags_.size(); i++) {
             std::string tag = boundary_tags_[i];
             ghost_cells_.at(tag).deep_copy(other.ghost_cells_.at(tag));
             boundary_faces_.at(tag).deep_copy(other.boundary_faces_.at(tag));
@@ -255,7 +256,7 @@ public:
     }
 
     KOKKOS_INLINE_FUNCTION
-    int num_vertices() const { return vertices_.size(); }
+    size_t num_vertices() const { return vertices_.size(); }
 
     KOKKOS_INLINE_FUNCTION
     Interfaces<T, execution_space, array_layout>& interfaces() {
@@ -268,7 +269,7 @@ public:
     }
 
     KOKKOS_INLINE_FUNCTION
-    int num_interfaces() const { return interfaces_.size(); }
+    size_t num_interfaces() const { return interfaces_.size(); }
 
     KOKKOS_INLINE_FUNCTION
     Cells<T, execution_space, array_layout>& cells() { return cells_; }
@@ -279,26 +280,28 @@ public:
     }
 
     KOKKOS_INLINE_FUNCTION
-    int num_cells() const { return num_valid_cells_; }
+    size_t num_cells() const { return num_valid_cells_; }
 
     KOKKOS_INLINE_FUNCTION
-    int num_ghost_cells() const { return num_ghost_cells_; }
+    size_t num_ghost_cells() const { return num_ghost_cells_; }
 
     KOKKOS_INLINE_FUNCTION
-    int num_total_cells() const { return num_valid_cells_ + num_ghost_cells_; }
+    size_t num_total_cells() const {
+        return num_valid_cells_ + num_ghost_cells_;
+    }
 
     KOKKOS_INLINE_FUNCTION
-    bool is_valid(const int i) const { return i < num_valid_cells_; }
+    bool is_valid(const size_t i) const { return i < num_valid_cells_; }
 
     KOKKOS_INLINE_FUNCTION
-    bool is_ghost(const int i) const { return i >= num_valid_cells_; }
+    bool is_ghost(const size_t i) const { return i >= num_valid_cells_; }
 
-    const Field<int, array_layout, memory_space>& boundary_faces(
+    const Field<size_t, array_layout, memory_space>& boundary_faces(
         std::string boundary_tag) const {
         return boundary_faces_.at(boundary_tag);
     }
 
-    const Field<int, array_layout, memory_space>& ghost_cells(
+    const Field<size_t, array_layout, memory_space>& ghost_cells(
         std::string boundary_tag) const {
         return ghost_cells_.at(boundary_tag);
     }
@@ -308,20 +311,19 @@ public:
     }
 
     KOKKOS_INLINE_FUNCTION
-    int dim() const { return dim_; }
+    size_t dim() const { return dim_; }
 
     // this method requires the interface connectivity be set up correctly
     void compute_cell_neighbours() {
         auto this_interfaces = interfaces_;
         auto this_cells = cells_;
         Kokkos::parallel_for(
-            "cell neighbours", num_cells(), KOKKOS_LAMBDA(const int cell_i) {
+            "cell neighbours", num_cells(), KOKKOS_LAMBDA(const size_t cell_i) {
                 auto cell_faces = this_cells.faces().face_ids(cell_i);
-                for (unsigned int face_i = 0; face_i < cell_faces.size();
-                     face_i++) {
-                    int iface = cell_faces(face_i);
-                    int neighbour;
-                    int left_cell = this_interfaces.left_cell(iface);
+                for (size_t face_i = 0; face_i < cell_faces.size(); face_i++) {
+                    size_t iface = cell_faces(face_i);
+                    size_t neighbour;
+                    size_t left_cell = this_interfaces.left_cell(iface);
                     if (left_cell == cell_i) {
                         neighbour = this_interfaces.right_cell(iface);
                     } else {
@@ -339,19 +341,19 @@ public:
     void compute_ghost_cell_centres() {
         auto this_interfaces = interfaces_;
         auto this_cells = cells_;
-        int num_valid_cells = num_valid_cells_;
+        size_t num_valid_cells = num_valid_cells_;
         for (auto& boundary : boundary_faces_) {
             auto boundary_faces = boundary_faces_[boundary.first];
             Kokkos::parallel_for(
                 "ghost_cell_centres", boundary_faces.size(),
-                KOKKOS_LAMBDA(const int face_i) {
+                KOKKOS_LAMBDA(const size_t face_i) {
                     // get the id of the cell to the left and right
                     // of this interface
-                    int iface = boundary_faces(face_i);
-                    int left_cell = this_interfaces.left_cell(iface);
-                    int right_cell = this_interfaces.right_cell(iface);
-                    int valid_cell;
-                    int ghost_cell;
+                    size_t iface = boundary_faces(face_i);
+                    size_t left_cell = this_interfaces.left_cell(iface);
+                    size_t right_cell = this_interfaces.right_cell(iface);
+                    size_t valid_cell;
+                    size_t ghost_cell;
                     if (left_cell < num_valid_cells) {
                         valid_cell = left_cell;
                         ghost_cell = right_cell;
@@ -378,14 +380,14 @@ public:
     }
 
 public:
-    std::map<int, int> setup_boundaries(
+    std::map<size_t, size_t> setup_boundaries(
         const GridIO& grid_io, json& boundaries,
-        std::vector<std::vector<int>>& cell_vertices,
+        std::vector<std::vector<size_t>>& cell_vertices,
         InterfaceLookup& interfaces, std::vector<ElemType> cell_shapes) {
         (void)cell_vertices;
         (void)cell_shapes;
         num_ghost_cells_ = 0;
-        std::map<int, int> ghost_cell_map;  // face_id -> ghost_cell_id
+        std::map<size_t, size_t> ghost_cell_map;  // face_id -> ghost_cell_id
         for (auto bc : grid_io.bcs()) {
             // unpack the boundary data from the grid_io object
             std::string bc_label = bc.first;
@@ -395,14 +397,15 @@ public:
 
             // loop over all the boundary faces for this boundary, keeping
             // track of which cells and faces belong to this boundary
-            std::vector<int> ghost_cells{};
-            std::vector<int> boundary_faces{};
-            for (unsigned int boundary_i = 0; boundary_i < bc_faces.size();
+            std::vector<size_t> ghost_cells{};
+            std::vector<size_t> boundary_faces{};
+            for (size_t boundary_i = 0; boundary_i < bc_faces.size();
                  boundary_i++) {
-                int face_id = interfaces.id(bc_faces[boundary_i].vertex_ids());
+                size_t face_id =
+                    interfaces.id(bc_faces[boundary_i].vertex_ids());
                 boundary_faces.push_back(face_id);
                 if (boundary_config.at("ghost_cells") == true) {
-                    int ghost_cell_id = num_valid_cells_ + num_ghost_cells_;
+                    size_t ghost_cell_id = num_valid_cells_ + num_ghost_cells_;
                     num_ghost_cells_++;
                     ghost_cells.push_back(ghost_cell_id);
                     ghost_cell_map.insert({face_id, ghost_cell_id});
@@ -414,10 +417,10 @@ public:
             // keep track of which faces/cells belong to
             // which boundary
             ghost_cells_.insert(
-                {bc_label, Field<int, array_layout, memory_space>(
+                {bc_label, Field<size_t, array_layout, memory_space>(
                                "bc_cells", ghost_cells)});
             boundary_faces_.insert(
-                {bc_label, Field<int, array_layout, memory_space>(
+                {bc_label, Field<size_t, array_layout, memory_space>(
                                "bc_faces", boundary_faces)});
         }
         return ghost_cell_map;
@@ -427,11 +430,12 @@ public:
     Vertices<T, execution_space, array_layout> vertices_;
     Interfaces<T, execution_space, array_layout> interfaces_;
     Cells<T, execution_space, array_layout> cells_;
-    int dim_;
-    int num_valid_cells_;
-    int num_ghost_cells_;
-    std::map<std::string, Field<int, array_layout, memory_space>> ghost_cells_;
-    std::map<std::string, Field<int, array_layout, memory_space>>
+    size_t dim_;
+    size_t num_valid_cells_;
+    size_t num_ghost_cells_;
+    std::map<std::string, Field<size_t, array_layout, memory_space>>
+        ghost_cells_;
+    std::map<std::string, Field<size_t, array_layout, memory_space>>
         boundary_faces_;
     std::vector<std::string> boundary_tags_;
 };

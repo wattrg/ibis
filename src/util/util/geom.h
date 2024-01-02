@@ -3,7 +3,6 @@
 
 #include <Kokkos_Core.hpp>
 
-#include "Kokkos_Macros.hpp"
 #include "vector3.h"
 
 namespace Ibis {
@@ -12,8 +11,9 @@ namespace Ibis {
 // The i and j are indices into `positions`, which contains
 // the actual positions of all the points
 template <typename T, class Layout, class Space>
-KOKKOS_INLINE_FUNCTION T distance_between_points(
-    const Vector3s<T, Layout, Space> &positions, const int i, const int j) {
+KOKKOS_INLINE_FUNCTION T
+distance_between_points(const Vector3s<T, Layout, Space> &positions,
+                        const size_t i, const size_t j) {
     T xi = positions.x(i);
     T xj = positions.x(j);
     T yi = positions.y(i);
@@ -31,8 +31,8 @@ KOKKOS_INLINE_FUNCTION T distance_between_points(
 // calculate the area of a triangle with vertices a, b, and c
 template <typename T, class Layout, class Space>
 KOKKOS_INLINE_FUNCTION T area_of_triangle(const Vector3s<T, Layout, Space> &pos,
-                                          const int a, const int b,
-                                          const int c) {
+                                          const size_t a, const size_t b,
+                                          const size_t c) {
     // vector from a -> b
     T ab_x = pos.x(b) - pos.x(a);
     T ab_y = pos.y(b) - pos.y(a);
@@ -58,8 +58,8 @@ KOKKOS_INLINE_FUNCTION T area_of_triangle(const Vector3s<T, Layout, Space> &pos,
 // in question is concave...
 template <typename T, class Layout, class Space>
 KOKKOS_INLINE_FUNCTION T
-area_of_quadrilateral(const Vector3s<T, Layout, Space> &pos, const int a,
-                      const int b, const int c, const int d) {
+area_of_quadrilateral(const Vector3s<T, Layout, Space> &pos, const size_t a,
+                      const size_t b, const size_t c, const size_t d) {
     T a1 = area_of_triangle(pos, a, b, c);
     T a2 = area_of_triangle(pos, a, c, d);
     return a1 + a2;

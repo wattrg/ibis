@@ -24,7 +24,7 @@ int NativeOutput<T>::write(const typename FlowStates<T>::mirror_type& fs,
         return 1;
     }
     temp << std::fixed << std::setprecision(16);
-    for (int cell_i = 0; cell_i < grid.num_cells(); cell_i++) {
+    for (size_t cell_i = 0; cell_i < grid.num_cells(); cell_i++) {
         temp << fs.gas.temp(cell_i) << std::endl;
         ;
     }
@@ -36,7 +36,7 @@ int NativeOutput<T>::write(const typename FlowStates<T>::mirror_type& fs,
         return 1;
     }
     pressure << std::fixed << std::setprecision(16);
-    for (int cell_i = 0; cell_i < grid.num_cells(); cell_i++) {
+    for (size_t cell_i = 0; cell_i < grid.num_cells(); cell_i++) {
         pressure << fs.gas.pressure(cell_i) << std::endl;
         ;
     }
@@ -48,7 +48,7 @@ int NativeOutput<T>::write(const typename FlowStates<T>::mirror_type& fs,
         return 1;
     }
     vx << std::fixed << std::setprecision(16);
-    for (int cell_i = 0; cell_i < grid.num_cells(); cell_i++) {
+    for (size_t cell_i = 0; cell_i < grid.num_cells(); cell_i++) {
         vx << fs.vel.x(cell_i) << std::endl;
         ;
     }
@@ -60,7 +60,7 @@ int NativeOutput<T>::write(const typename FlowStates<T>::mirror_type& fs,
         return 1;
     }
     vy << std::fixed << std::setprecision(16);
-    for (int cell_i = 0; cell_i < grid.num_cells(); cell_i++) {
+    for (size_t cell_i = 0; cell_i < grid.num_cells(); cell_i++) {
         vy << fs.vel.y(cell_i) << std::endl;
         ;
     }
@@ -72,7 +72,7 @@ int NativeOutput<T>::write(const typename FlowStates<T>::mirror_type& fs,
         return 1;
     }
     vz << std::fixed << std::setprecision(16);
-    for (int cell_i = 0; cell_i < grid.num_cells(); cell_i++) {
+    for (size_t cell_i = 0; cell_i < grid.num_cells(); cell_i++) {
         vz << fs.vel.z(cell_i) << std::endl;
         ;
     }
@@ -87,7 +87,7 @@ int NativeInput<T>::read(typename FlowStates<T>::mirror_type& fs,
                          const typename GridBlock<T>::mirror_type& grid,
                          const IdealGas<T>& gas_model, std::string dir,
                          json& meta_data) {
-    int num_cells = grid.num_cells();
+    size_t num_cells = grid.num_cells();
     std::ifstream meta_f(dir + "/meta_data.json");
     if (!meta_f) {
         spdlog::error("Unable to load {}", dir + "/meta_dta.json");
@@ -102,7 +102,7 @@ int NativeInput<T>::read(typename FlowStates<T>::mirror_type& fs,
         spdlog::error("Unable to load {}", dir + "/T");
         return 1;
     }
-    int cell_i = 0;
+    size_t cell_i = 0;
     while (getline(temp, line)) {
         fs.gas.temp(cell_i) = stod(line);
         cell_i++;
@@ -152,7 +152,7 @@ int NativeInput<T>::read(typename FlowStates<T>::mirror_type& fs,
 
     // gas_model.update_thermo_from_pT(fs.gas);
 
-    for (int cell_i = 0; cell_i < num_cells; cell_i++) {
+    for (size_t cell_i = 0; cell_i < num_cells; cell_i++) {
         gas_model.update_thermo_from_pT(fs.gas, cell_i);
     }
 

@@ -42,56 +42,56 @@ public:
 
     // ~Vector3s(){}
 
-    Vector3s(std::string description, int n) {
+    Vector3s(std::string description, size_t n) {
         view_ = view_type(description, n);
     }
 
-    Vector3s(int n) { view_ = view_type("Vector3s", n); }
+    Vector3s(size_t n) { view_ = view_type("Vector3s", n); }
 
     Vector3s(view_type data) : view_(data) {}
 
     KOKKOS_INLINE_FUNCTION
-    T& operator()(const int i, const int j) { return view_(i, j); }
+    T& operator()(const size_t i, const size_t j) { return view_(i, j); }
 
     KOKKOS_INLINE_FUNCTION
-    T& operator()(const int i, const int j) const { return view_(i, j); }
+    T& operator()(const size_t i, const size_t j) const { return view_(i, j); }
 
     KOKKOS_INLINE_FUNCTION
-    T& x(const int i) { return view_(i, 0); }
+    T& x(const size_t i) { return view_(i, 0); }
 
     KOKKOS_INLINE_FUNCTION
-    T& x(const int i) const { return view_(i, 0); }
+    T& x(const size_t i) const { return view_(i, 0); }
 
     KOKKOS_INLINE_FUNCTION
     auto x() { return Kokkos::subview(view_, Kokkos::ALL, 0); }
 
     KOKKOS_INLINE_FUNCTION
-    T& y(const int i) { return view_(i, 1); }
+    T& y(const size_t i) { return view_(i, 1); }
 
     KOKKOS_INLINE_FUNCTION
-    T& y(const int i) const { return view_(i, 1); }
+    T& y(const size_t i) const { return view_(i, 1); }
 
     KOKKOS_INLINE_FUNCTION
     auto y() { return Kokkos::subview(view_, Kokkos::ALL, 1); }
 
     KOKKOS_INLINE_FUNCTION
-    T& z(const int i) { return view_(i, 2); }
+    T& z(const size_t i) { return view_(i, 2); }
 
     KOKKOS_INLINE_FUNCTION
-    T& z(const int i) const { return view_(i, 2); }
+    T& z(const size_t i) const { return view_(i, 2); }
 
     KOKKOS_INLINE_FUNCTION
     auto z() { return Kokkos::subview(view_, Kokkos::ALL, 2); }
 
     KOKKOS_INLINE_FUNCTION
-    void copy_vector(const Vector3<T>& vector, const int i) {
+    void copy_vector(const Vector3<T>& vector, const size_t i) {
         x(i) = vector.x;
         y(i) = vector.y;
         z(i) = vector.z;
     }
 
     KOKKOS_INLINE_FUNCTION
-    int size() const { return view_.extent(0); }
+    size_t size() const { return view_.extent(0); }
 
     KOKKOS_INLINE_FUNCTION
     bool operator==(const Vector3s& other) const {
@@ -99,7 +99,7 @@ public:
             return false;
         }
 
-        for (int i = 0; i < this->size(); i++) {
+        for (size_t i = 0; i < this->size(); i++) {
             if (fabs(view_(i, 0) - other.view_(i, 0)) > 1e-14) return false;
             if (fabs(view_(i, 1) - other.view_(i, 1)) > 1e-14) return false;
             if (fabs(view_(i, 2) - other.view_(i, 2)) > 1e-14) return false;
@@ -123,7 +123,7 @@ public:
 
 template <typename T>
 KOKKOS_INLINE_FUNCTION T dot(const Vector3s<T>& a, const Vector3s<T>& b,
-                             const int i) {
+                             const size_t i) {
     return a.x(i) * b.x(i) + a.y(i) * b.y(i) + a.z(i) * b.z(i);
 }
 
@@ -131,7 +131,7 @@ template <typename T, class ExecSpace, class Layout>
 KOKKOS_INLINE_FUNCTION void cross(const Vector3s<T, ExecSpace, Layout>& a,
                                   const Vector3s<T, ExecSpace, Layout>& b,
                                   const Vector3s<T, ExecSpace, Layout>& c,
-                                  const int i) {
+                                  const size_t i) {
     c.x(i) = a.y(i) * b.z(i) - a.z(i) * b.y(i);
     c.y(i) = a.z(i) * b.x(i) - a.x(i) * b.z(i);
     c.z(i) = a.x(i) * b.y(i) - a.y(i) * b.x(i);
