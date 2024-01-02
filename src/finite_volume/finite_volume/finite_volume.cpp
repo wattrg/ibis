@@ -16,7 +16,7 @@ FiniteVolume<T>::FiniteVolume(const GridBlock<T>& grid, json config)
 
     std::vector<std::string> boundary_tags = grid.boundary_tags();
     json boundaries_config = config.at("grid").at("boundaries");
-    for (unsigned int bi = 0; bi < boundary_tags.size(); bi++) {
+    for (size_t bi = 0; bi < boundary_tags.size(); bi++) {
         // build the actual boundary condition
         json boundary_config = boundaries_config.at(boundary_tags[bi]);
         std::shared_ptr<BoundaryCondition<T>> boundary(
@@ -29,7 +29,7 @@ FiniteVolume<T>::FiniteVolume(const GridBlock<T>& grid, json config)
 }
 
 template <typename T>
-int FiniteVolume<T>::compute_dudt(FlowStates<T>& flow_state,
+size_t FiniteVolume<T>::compute_dudt(FlowStates<T>& flow_state,
                                   const GridBlock<T>& grid,
                                   ConservedQuantities<T>& dudt,
                                   IdealGas<T>& gas_model) {
@@ -44,7 +44,7 @@ template <typename T>
 double FiniteVolume<T>::estimate_dt(const FlowStates<T>& flow_state,
                                     GridBlock<T>& grid,
                                     IdealGas<T>& gas_model) {
-    int num_cells = grid.num_cells();
+    size_t num_cells = grid.num_cells();
     CellFaces<T> cell_interfaces = grid.cells().faces();
     Interfaces<T> interfaces = grid.interfaces();
     Cells<T> cells = grid.cells();
@@ -53,12 +53,12 @@ double FiniteVolume<T>::estimate_dt(const FlowStates<T>& flow_state,
     double dt;
     Kokkos::parallel_reduce(
         "FV::signal_frequency", num_cells,
-        KOKKOS_LAMBDA(const int cell_i, double& dt_utd) {
+        KOKKOS_LAMBDA(const size_t cell_i, double& dt_utd) {
             auto cell_face_ids = cell_interfaces.face_ids(cell_i);
             T spectral_radii = 0.0;
-            for (unsigned int face_idx = 0; face_idx < cell_face_ids.size();
+            for (size_t face_idx = 0; face_idx < cell_face_ids.size();
                  face_idx++) {
-                int i_face = cell_face_ids(face_idx);
+                size_t i_face = cell_face_ids(face_idx);
                 T dot = flow_state.vel.x(cell_i) * interfaces.norm().x(i_face) +
                         flow_state.vel.y(cell_i) * interfaces.norm().y(i_face) +
                         flow_state.vel.z(cell_i) * interfaces.norm().z(i_face);
@@ -77,9 +77,9 @@ double FiniteVolume<T>::estimate_dt(const FlowStates<T>& flow_state,
 template <typename T>
 void FiniteVolume<T>::apply_pre_reconstruction_bc(FlowStates<T>& fs,
                                                   const GridBlock<T>& grid) {
-    for (unsigned int i = 0; i < bcs_.size(); i++) {
+    for (size_t i = 0; i < bcs_.size(); i++) {
         std::shared_ptr<BoundaryCondition<T>> bc = bcs_[i];
-        Field<int> bc_faces = bc_interfaces_[i];
+        Field<size_t> bc_faces = bc_interfaces_[i];
         bc->apply_pre_reconstruction(fs, grid, bc_faces);
     }
 }
@@ -87,16 +87,16 @@ void FiniteVolume<T>::apply_pre_reconstruction_bc(FlowStates<T>& fs,
 template <typename T>
 void FiniteVolume<T>::reconstruct(FlowStates<T>& flow_states,
                                   const GridBlock<T>& grid,
-                                  unsigned int order) {
+                                  size_t order) {
     (void)order;
-    int n_faces = grid.num_interfaces();
+    size_t n_faces = grid.num_interfaces();
     FlowStates<T> this_left = left_;
     FlowStates<T> this_right = right_;
     Interfaces<T> interfaces = grid.interfaces();
     Kokkos::parallel_for(
-        "Reconstruct", n_faces, KOKKOS_LAMBDA(const int i_face) {
+        "Reconstruct", n_faces, KOKKOS_LAMBDA(const size_t i_face) {
             // copy left flow states
-            int left = interfaces.left_cell(i_face);
+            size_t left = interfaces.left_cell(i_face);
             this_left.gas.temp(i_face) = flow_states.gas.temp(left);
             this_left.gas.pressure(i_face) = flow_states.gas.pressure(left);
             this_left.gas.rho(i_face) = flow_states.gas.rho(left);
@@ -106,7 +106,7 @@ void FiniteVolume<T>::reconstruct(FlowStates<T>& flow_states,
             this_left.vel.z(i_face) = flow_states.vel.z(left);
 
             // copy right flow states
-            int right = interfaces.right_cell(i_face);
+            size_t right = interfaces.right_cell(i_face);
             this_right.gas.temp(i_face) = flow_states.gas.temp(right);
             this_right.gas.pressure(i_face) = flow_states.gas.pressure(right);
             this_right.gas.rho(i_face) = flow_states.gas.rho(right);
@@ -142,7 +142,7 @@ void FiniteVolume<T>::compute_flux(const GridBlock<T>& grid,
     Vector3s<T> tan2 = faces.tan2();
     ConservedQuantities<T> flux = flux_;
     Kokkos::parallel_for(
-        "flux::transform_to_global", faces.size(), KOKKOS_LAMBDA(const int i) {
+        "flux::transform_to_global", faces.size(), KOKKOS_LAMBDA(const size_t i) {
             T px = flux.momentum_x(i);
             T py = flux.momentum_y(i);
             T pz = 0.0;
@@ -167,17 +167,17 @@ void FiniteVolume<T>::flux_surface_integral(const GridBlock<T>& grid,
     CellFaces<T> cell_faces = grid.cells().faces();
     Interfaces<T> faces = grid.interfaces();
     ConservedQuantities<T> flux = flux_;
-    int num_cells = grid.num_cells();
+    size_t num_cells = grid.num_cells();
     Kokkos::parallel_for(
-        "flux_integral", num_cells, KOKKOS_LAMBDA(const int cell_i) {
+        "flux_integral", num_cells, KOKKOS_LAMBDA(const size_t cell_i) {
             auto face_ids = cell_faces.face_ids(cell_i);
             T d_mass = 0.0;
             T d_momentum_x = 0.0;
             T d_momentum_y = 0.0;
             T d_momentum_z = 0.0;
             T d_energy = 0.0;
-            for (unsigned int face_i = 0; face_i < face_ids.size(); face_i++) {
-                int face_id = face_ids(face_i);
+            for (size_t face_i = 0; face_i < face_ids.size(); face_i++) {
+                size_t face_id = face_ids(face_i);
                 T area =
                     -faces.area(face_id) * cell_faces.outsigns(cell_i)(face_i);
                 d_mass += flux.mass(face_id) * area;
@@ -199,12 +199,12 @@ void FiniteVolume<T>::flux_surface_integral(const GridBlock<T>& grid,
 }
 
 template <typename T>
-int FiniteVolume<T>::count_bad_cells(const FlowStates<T>& fs,
-                                     const int num_cells) {
-    int n_bad_cells = 0;
+size_t FiniteVolume<T>::count_bad_cells(const FlowStates<T>& fs,
+                                     const size_t num_cells) {
+    size_t n_bad_cells = 0;
     Kokkos::parallel_reduce(
         "FiniteVolume::count_bad_cells", num_cells,
-        KOKKOS_LAMBDA(const int cell_i, int& n_bad_cells_utd) {
+        KOKKOS_LAMBDA(const size_t cell_i, size_t& n_bad_cells_utd) {
             if (fs.gas.temp(cell_i) < 0.0 || fs.gas.rho(cell_i) < 0.0) {
                 n_bad_cells_utd += 1;
             }

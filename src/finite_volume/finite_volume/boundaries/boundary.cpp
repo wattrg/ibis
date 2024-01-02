@@ -25,17 +25,17 @@ FlowStateCopy<T>::FlowStateCopy(json flow_state) {
 
 template <typename T>
 void FlowStateCopy<T>::apply(FlowStates<T>& fs, const GridBlock<T>& grid,
-                             const Field<int>& boundary_faces) {
-    unsigned int size = boundary_faces.size();
+                             const Field<size_t>& boundary_faces) {
+    size_t size = boundary_faces.size();
     auto this_fs = fs_;
     auto interfaces = grid.interfaces();
-    int num_valid_cells = grid.num_cells();
+    size_t num_valid_cells = grid.num_cells();
     Kokkos::parallel_for(
-        "FlowStateCopy::apply", size, KOKKOS_LAMBDA(const int i) {
-            int face_id = boundary_faces(i);
-            int left_cell = interfaces.left_cell(face_id);
-            int right_cell = interfaces.right_cell(face_id);
-            int ghost_cell;
+        "FlowStateCopy::apply", size, KOKKOS_LAMBDA(const size_t i) {
+            size_t face_id = boundary_faces(i);
+            size_t left_cell = interfaces.left_cell(face_id);
+            size_t right_cell = interfaces.right_cell(face_id);
+            size_t ghost_cell;
             if (left_cell < num_valid_cells) {
                 ghost_cell = right_cell;
             } else {
@@ -55,19 +55,19 @@ template class FlowStateCopy<double>;
 
 template <typename T>
 void InternalCopy<T>::apply(FlowStates<T>& fs, const GridBlock<T>& grid,
-                            const Field<int>& boundary_faces) {
-    unsigned int size = boundary_faces.size();
+                            const Field<size_t>& boundary_faces) {
+    size_t size = boundary_faces.size();
     auto interfaces = grid.interfaces();
-    int num_valid_cells = grid.num_cells();
+    size_t num_valid_cells = grid.num_cells();
     Kokkos::parallel_for(
-        "InternalCopy::apply", size, KOKKOS_LAMBDA(const int i) {
-            int face_id = boundary_faces(i);
+        "InternalCopy::apply", size, KOKKOS_LAMBDA(const size_t i) {
+            size_t face_id = boundary_faces(i);
 
             // determine the valid and the ghost cell
-            int left_cell = interfaces.left_cell(face_id);
-            int right_cell = interfaces.right_cell(face_id);
-            int ghost_cell;
-            int valid_cell;
+            size_t left_cell = interfaces.left_cell(face_id);
+            size_t right_cell = interfaces.right_cell(face_id);
+            size_t ghost_cell;
+            size_t valid_cell;
             if (left_cell < num_valid_cells) {
                 ghost_cell = right_cell;
                 valid_cell = left_cell;
@@ -92,19 +92,19 @@ template class InternalCopy<double>;
 template <typename T>
 void InternalCopyReflectNormal<T>::apply(FlowStates<T>& fs,
                                          const GridBlock<T>& grid,
-                                         const Field<int>& boundary_faces) {
-    unsigned int size = boundary_faces.size();
+                                         const Field<size_t>& boundary_faces) {
+    size_t size = boundary_faces.size();
     auto interfaces = grid.interfaces();
-    int num_valid_cells = grid.num_cells();
+    size_t num_valid_cells = grid.num_cells();
     Kokkos::parallel_for(
-        "ReflectNormal::apply", size, KOKKOS_LAMBDA(const int i) {
-            int face_id = boundary_faces(i);
+        "ReflectNormal::apply", size, KOKKOS_LAMBDA(const size_t i) {
+            size_t face_id = boundary_faces(i);
 
             // determine the valid and the ghost cell
-            int left_cell = interfaces.left_cell(face_id);
-            int right_cell = interfaces.right_cell(face_id);
-            int ghost_cell;
-            int valid_cell;
+            size_t left_cell = interfaces.left_cell(face_id);
+            size_t right_cell = interfaces.right_cell(face_id);
+            size_t ghost_cell;
+            size_t valid_cell;
             if (left_cell < num_valid_cells) {
                 ghost_cell = right_cell;
                 valid_cell = left_cell;
@@ -175,7 +175,7 @@ std::shared_ptr<PreReconstruction<T>> build_pre_reco(json config) {
 template <typename T>
 BoundaryCondition<T>::BoundaryCondition(json config) {
     std::vector<json> pre_reco = config.at("pre_reconstruction");
-    for (unsigned int i = 0; i < pre_reco.size(); i++) {
+    for (size_t i = 0; i < pre_reco.size(); i++) {
         std::shared_ptr<PreReconstruction<T>> action =
             build_pre_reco<T>(pre_reco[i]);
         pre_reconstruction_.push_back(action);
@@ -185,8 +185,8 @@ BoundaryCondition<T>::BoundaryCondition(json config) {
 template <typename T>
 void BoundaryCondition<T>::apply_pre_reconstruction(
     FlowStates<T>& fs, const GridBlock<T>& grid,
-    const Field<int>& boundary_faces) {
-    for (unsigned int i = 0; i < pre_reconstruction_.size(); i++) {
+    const Field<size_t>& boundary_faces) {
+    for (size_t i = 0; i < pre_reconstruction_.size(); i++) {
         pre_reconstruction_[i]->apply(fs, grid, boundary_faces);
     }
 }

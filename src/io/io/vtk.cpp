@@ -4,7 +4,7 @@
 using array_layout = Kokkos::DefaultExecutionSpace::array_layout;
 using host_mem_space = Kokkos::DefaultHostExecutionSpace::memory_space;
 
-int vtk_type_from_elem_type(ElemType type) {
+size_t vtk_type_from_elem_type(ElemType type) {
     switch (type) {
         case ElemType::Tri:
             return 5;
@@ -20,13 +20,13 @@ void write_scalar_field(std::ofstream& f,
                         const FlowStates<T, array_layout, host_mem_space> fs,
                         std::shared_ptr<ScalarAccessor<T>> accessor,
                         const IdealGas<T>& gas_model, std::string name,
-                        std::string type, int num_values) {
+                        std::string type, size_t num_values) {
     f << "<DataArray type='" << type << "' ";
     f << "NumberOfComponents='1' ";
     f << "Name='" << name << "' ";
     f << "format='ascii'>" << std::endl;
 
-    for (int i = 0; i < num_values; i++) {
+    for (size_t i = 0; i < num_values; i++) {
         f << accessor->access(fs, gas_model, i) << std::endl;
     }
 
@@ -36,13 +36,13 @@ void write_scalar_field(std::ofstream& f,
 template <typename T>
 void write_vector_field(std::ofstream& f,
                         const Vector3s<T, array_layout, host_mem_space>& vec,
-                        std::string name, std::string type, int num_values) {
+                        std::string name, std::string type, size_t num_values) {
     f << "<DataArray type='" << type << "' ";
     f << "NumberOfComponents='3' ";
     f << "Name='" << name << "' ";
     f << "format='ascii'>" << std::endl;
 
-    for (int i = 0; i < num_values; i++) {
+    for (size_t i = 0; i < num_values; i++) {
         f << vec.x(i) << " " << vec.y(i) << " " << vec.z(i) << std::endl;
     }
 
@@ -51,12 +51,12 @@ void write_vector_field(std::ofstream& f,
 
 void write_int_view(
     std::ofstream& f,
-    const Kokkos::View<int*, array_layout, host_mem_space>& view,
+    const Kokkos::View<size_t*, array_layout, host_mem_space>& view,
     std::string name, std::string type, bool skip_first = false) {
     f << "<DataArray type='" << type << "' "
       << "NumberOfComponents='1' "
       << "Name='" << name << "' format='ascii'>" << std::endl;
-    for (unsigned int i = 0; i < view.extent(0); i++) {
+    for (size_t i = 0; i < view.extent(0); i++) {
         if (!(skip_first && i == 0)) {
             f << view(i) << std::endl;
         }
@@ -70,8 +70,8 @@ void write_elem_type(
     f << "<DataArray type='Int64' NumberOfComponents='1' Name='types' "
          "format='ascii'>"
       << std::endl;
-    for (int i = 0; i < types.size(); i++) {
-        int vtk_type = vtk_type_from_elem_type(types(i));
+    for (size_t i = 0; i < types.size(); i++) {
+        size_t vtk_type = vtk_type_from_elem_type(types(i));
         f << vtk_type << std::endl;
     }
     f << "</DataArray>" << std::endl;
@@ -138,7 +138,7 @@ void VtkOutput<T>::write_coordinating_file(std::string plot_dir) {
         << "<VTKFile type='Collection' version='0.1' byte_order='LittleEndian'>"
         << std::endl;
     plot_file << "<Collection>" << std::endl;
-    for (unsigned int i = 0; i < times_.size(); i++) {
+    for (size_t i = 0; i < times_.size(); i++) {
         plot_file << "<DataSet timestep='" << times_[i]
                   << "' group='' part='0' file='" << dirs_[i] << "'/>"
                   << std::endl;

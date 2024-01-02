@@ -22,11 +22,11 @@ GridInfo build_test_grid() {
         Vector3<double>(2.0, 2.0, 0.0), Vector3<double>(3.0, 2.0, 0.0),
         Vector3<double>(0.0, 3.0, 0.0), Vector3<double>(1.0, 3.0, 0.0),
         Vector3<double>(2.0, 3.0, 0.0), Vector3<double>(3.0, 3.0, 0.0)};
-    for (int i = 0; i < 16; i++) {
+    for (size_t i = 0; i < 16; i++) {
         vertices.set_vertex_position(i, vertex_pos[i]);
     }
 
-    std::vector<std::vector<int>> interface_id_list{
+    std::vector<std::vector<size_t>> interface_id_list{
         {0, 1},   {1, 5},  {5, 4},   {4, 0},   {1, 2},   {2, 6},
         {6, 5},   {2, 3},  {3, 7},   {7, 6},   {5, 9},   {9, 8},
         {8, 4},   {6, 10}, {10, 9},  {7, 11},  {11, 10}, {9, 13},
@@ -43,12 +43,12 @@ GridInfo build_test_grid() {
     Interfaces<double, Kokkos::DefaultHostExecutionSpace> interfaces(
         interface_id_list, shapes);
 
-    std::vector<std::vector<int>> cell_interfaces_list{
+    std::vector<std::vector<size_t>> cell_interfaces_list{
         {0, 1, 2, 3},     {4, 5, 6, 1},     {7, 8, 9, 5},
         {2, 10, 11, 12},  {6, 13, 14, 10},  {9, 15, 16, 13},
         {11, 17, 18, 19}, {14, 20, 21, 17}, {16, 22, 23, 20}};
 
-    std::vector<std::vector<int>> cell_vertex_ids_raw{
+    std::vector<std::vector<size_t>> cell_vertex_ids_raw{
         {0, 1, 5, 4},   {1, 2, 6, 5},    {2, 3, 7, 6},
         {4, 5, 9, 8},   {5, 6, 10, 9},   {6, 7, 11, 10},
         {8, 9, 13, 12}, {9, 10, 14, 13}, {10, 11, 15, 14}};
@@ -110,8 +110,8 @@ TEST_CASE("grid cell faces") {
     auto block = block_dev.host_mirror();
     block.deep_copy(block_dev);
     CHECK(block.cells().num_valid_cells() == expected.cells.num_valid_cells());
-    for (int i = 0; i < block.num_cells(); i++) {
-        for (unsigned int j = 0; j < block.cells().faces().face_ids(i).size();
+    for (size_t i = 0; i < block.num_cells(); i++) {
+        for (size_t j = 0; j < block.cells().faces().face_ids(i).size();
              j++) {
             CHECK(block.cells().faces().face_ids(i)(j) ==
                   expected.cells.faces().face_ids(i)(j));
@@ -124,14 +124,14 @@ TEST_CASE("grid cell faces 2") {
     GridBlock<double> block_dev("../../../src/grid/test/grid.su2", config);
     auto block = block_dev.host_mirror();
     block.deep_copy(block_dev);
-    std::vector<std::vector<int>> face_ids = {
+    std::vector<std::vector<size_t>> face_ids = {
         {0, 1, 2, 3},     {4, 5, 6, 1},     {7, 8, 9, 5},
         {2, 10, 11, 12},  {6, 13, 14, 10},  {9, 15, 16, 13},
         {11, 17, 18, 19}, {14, 20, 21, 17}, {16, 22, 23, 20}};
     CHECK(block.num_cells() == 9);
-    for (int i = 0; i < block.num_cells(); i++) {
+    for (size_t i = 0; i < block.num_cells(); i++) {
         CellFaces<double>::mirror_type faces = block.cells().faces();
-        for (unsigned int j = 0; j < faces.face_ids(i).size(); j++) {
+        for (size_t j = 0; j < faces.face_ids(i).size(); j++) {
             CHECK(faces.face_ids(i)(j) == face_ids[i][j]);
         }
     }
@@ -148,8 +148,8 @@ TEST_CASE("grid cell outsigns") {
         {1, 1, 1, 1},  {1, 1, 1, -1},  {1, 1, 1, -1},
         {-1, 1, 1, 1}, {-1, 1, 1, -1}, {-1, 1, 1, -1},
         {-1, 1, 1, 1}, {-1, 1, 1, -1}, {-1, 1, 1, -1}};
-    for (int i = 0; i < block.cells().num_valid_cells(); i++) {
-        for (unsigned int j = 0; j < block.cells().faces().outsigns(i).size();
+    for (size_t i = 0; i < block.cells().num_valid_cells(); i++) {
+        for (size_t j = 0; j < block.cells().faces().outsigns(i).size();
              j++) {
             CHECK(block.cells().faces().outsigns(i)(j) == outsigns[i][j]);
         }
@@ -176,7 +176,7 @@ TEST_CASE("ghost cell centres") {
 
     // test the inflow cells
     auto inflow_ghost_cells = block_host.ghost_cells("inflow");
-    int ghost_cell = inflow_ghost_cells(0);
+    size_t ghost_cell = inflow_ghost_cells(0);
     CHECK(block_host.cells().centroids().x(ghost_cell) == -0.5);
     CHECK(block_host.cells().centroids().y(ghost_cell) == 0.5);
     CHECK(block_host.cells().centroids().z(ghost_cell) == 0.0);

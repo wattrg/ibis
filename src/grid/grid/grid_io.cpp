@@ -25,7 +25,7 @@ GridFileType file_type_from_name(std::string file_name) {
     throw new std::runtime_error("Unknown grid file type");
 }
 
-ElemType elem_type_from_vtk_type(int su2_type) {
+ElemType elem_type_from_vtk_type(size_t su2_type) {
     switch (su2_type) {
         case 3:
             return ElemType::Line;
@@ -45,7 +45,7 @@ ElemType elem_type_from_vtk_type(int su2_type) {
     }
 }
 
-int number_vertices_from_elem_type(ElemType type) {
+size_t number_vertices_from_elem_type(ElemType type) {
     switch (type) {
         case ElemType::Line:
             return 2;
@@ -102,7 +102,7 @@ std::string read_string(std::string str) {
     return str;
 }
 
-int read_int(std::string line) {
+size_t read_int(std::string line) {
     // read an integer from a string of the form  "NAME=int"
     line = read_string(line);
     return std::stoi(line);
@@ -121,29 +121,29 @@ bool get_next_line(std::ifstream &grid_file, std::string &line) {
 }
 
 ElemIO read_su2_element(std::string line) {
-    int pos = line.find(" ");
-    int type_int = std::stoi(line.substr(0, pos));
+    size_t pos = line.find(" ");
+    size_t type_int = std::stoi(line.substr(0, pos));
     ElemType type = elem_type_from_vtk_type(type_int);
-    int n_vertices = number_vertices_from_elem_type(type);
+    size_t n_vertices = number_vertices_from_elem_type(type);
     line = line.substr(pos + 1, std::string::npos);
-    std::vector<int> vertex_ids{};
-    for (int i = 0; i < n_vertices; i++) {
+    std::vector<size_t> vertex_ids{};
+    for (size_t i = 0; i < n_vertices; i++) {
         pos = line.find(" ");
-        int vertex = std::stoi(line.substr(0, pos));
+        size_t vertex = std::stoi(line.substr(0, pos));
         line = line.substr(pos + 1, std::string::npos);
         vertex_ids.push_back(vertex);
     }
     return ElemIO(vertex_ids, type, FaceOrder::Vtk);
 }
 
-Vector3<double> read_vertex(std::string line, int dim) {
+Vector3<double> read_vertex(std::string line, size_t dim) {
     if (dim == 2) {
-        int sep = line.find(" ");
+        size_t sep = line.find(" ");
         double x = std::stod(line.substr(0, sep));
         double y = std::stod(line.substr(sep));
         return Vector3(x, y, 0.0);
     } else if (dim == 3) {
-        int sep = line.find(" ");
+        size_t sep = line.find(" ");
         double x = std::stod(line.substr(0, sep));
         line = line.substr(sep + 1, std::string::npos);
 
@@ -165,9 +165,9 @@ std::pair<std::string, std::vector<ElemIO>> read_su2_boundary_marker(
     std::ifstream &grid_file, std::string &line) {
     std::string tag = read_string(line);
     get_next_line(grid_file, line);
-    int n_elems = read_int(line);
+    size_t n_elems = read_int(line);
     std::vector<ElemIO> elem_io{};
-    for (int i = 0; i < n_elems; i++) {
+    for (size_t i = 0; i < n_elems; i++) {
         get_next_line(grid_file, line);
         elem_io.push_back(read_su2_element(line));
     }
@@ -179,9 +179,9 @@ void GridIO::_read_su2_grid(std::ifstream &grid_file) {
     // a section heading, we read that section. If we come across
     // a line we don't know what to do with, we just ignore it.
     std::string line;
-    int n_vertices;
-    int n_cells;
-    int n_mark;
+    size_t n_vertices;
+    size_t n_cells;
+    size_t n_mark;
     while (get_next_line(grid_file, line)) {
         if (starts_with(line, "NDIME")) {
             dim_ = read_int(line);
@@ -189,7 +189,7 @@ void GridIO::_read_su2_grid(std::ifstream &grid_file) {
 
         else if (starts_with(line, "NPOIN")) {
             n_vertices = read_int(line);
-            for (int vtx_i = 0; vtx_i < n_vertices; vtx_i++) {
+            for (size_t vtx_i = 0; vtx_i < n_vertices; vtx_i++) {
                 get_next_line(grid_file, line);
                 vertices_.push_back(read_vertex(line, dim_));
             }
@@ -197,7 +197,7 @@ void GridIO::_read_su2_grid(std::ifstream &grid_file) {
 
         else if (starts_with(line, "NELEM")) {
             n_cells = read_int(line);
-            for (int cell_i = 0; cell_i < n_cells; cell_i++) {
+            for (size_t cell_i = 0; cell_i < n_cells; cell_i++) {
                 get_next_line(grid_file, line);
                 cells_.push_back(read_su2_element(line));
             }
@@ -205,7 +205,7 @@ void GridIO::_read_su2_grid(std::ifstream &grid_file) {
 
         else if (starts_with(line, "NMARK")) {
             n_mark = read_int(line);
-            for (int mark_i = 0; mark_i < n_mark; mark_i++) {
+            for (size_t mark_i = 0; mark_i < n_mark; mark_i++) {
                 get_next_line(grid_file, line);
                 bcs_.insert(read_su2_boundary_marker(grid_file, line));
             }
@@ -213,7 +213,7 @@ void GridIO::_read_su2_grid(std::ifstream &grid_file) {
     }
 }
 
-std::vector<ElemIO> vtk_face_order(std::vector<int> ids, ElemType type) {
+std::vector<ElemIO> vtk_face_order(std::vector<size_t> ids, ElemType type) {
     switch (type) {
         case ElemType::Line:
             return std::vector<ElemIO>{
