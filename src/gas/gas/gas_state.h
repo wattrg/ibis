@@ -3,6 +3,8 @@
 
 #include <Kokkos_Core.hpp>
 
+#include "Kokkos_Macros.hpp"
+
 template <typename T>
 struct GasState {
 public:
@@ -54,10 +56,18 @@ public:
     T& rho(const int cell_i) { return data_(cell_i, rho_idx_); }
 
     KOKKOS_INLINE_FUNCTION
+    auto rho() { return Kokkos::subview(data_, Kokkos::ALL, rho_idx_); }
+
+    KOKKOS_INLINE_FUNCTION
     T& pressure(const int cell_i) const { return data_(cell_i, pressure_idx_); }
 
     KOKKOS_INLINE_FUNCTION
     T& pressure(const int cell_i) { return data_(cell_i, pressure_idx_); }
+
+    KOKKOS_INLINE_FUNCTION
+    auto pressure() {
+        return Kokkos::subview(data_, Kokkos::ALL, pressure_idx_);
+    }
 
     KOKKOS_INLINE_FUNCTION
     T& temp(const int cell_i) const { return data_(cell_i, temp_idx_); }

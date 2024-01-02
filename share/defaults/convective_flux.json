@@ -1,4 +1,5 @@
 {
     "reconstruction_order": 2,
-    "flux_calculator": "hanel"
+    "flux_calculator": "hanel",
+    "limiter": "barth_jespersen"
 }

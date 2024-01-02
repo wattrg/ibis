@@ -4,9 +4,12 @@
 #include <finite_volume/boundaries/boundary.h>
 #include <finite_volume/conserved_quantities.h>
 #include <finite_volume/flux_calc.h>
+#include <finite_volume/gradient.h>
+#include <finite_volume/limiter.h>
 #include <gas/flow_state.h>
 #include <gas/gas_model.h>
 #include <grid/grid.h>
+#include <spdlog/spdlog.h>
 
 #include <nlohmann/json.hpp>
 
@@ -31,7 +34,10 @@ public:
     void apply_pre_reconstruction_bc(FlowStates<T>& fs,
                                      const GridBlock<T>& grid);
     void reconstruct(FlowStates<T>& flow_states, const GridBlock<T>& grid,
-                     unsigned int order);
+                     IdealGas<T>& gas_model, unsigned int order);
+    void copy_reconstruct(FlowStates<T>& flow_states, const GridBlock<T>& grid);
+    void linear_reconstruct(FlowStates<T>& flow_states,
+                            const GridBlock<T>& grid, IdealGas<T>& gas_model);
     void flux_surface_integral(const GridBlock<T>& grid,
                                ConservedQuantities<T>& dudt);
     void compute_flux(const GridBlock<T>& grid, IdealGas<T>& gas_model);
@@ -54,8 +60,13 @@ private:
     unsigned int reconstruction_order_;
     FluxCalculator flux_calculator_;
 
-    // gas model
-    IdealGas<T> gas_model_;
+    // gradients
+    WLSGradient<T> grad_calc_;
+    Gradients<T> grad_;
+
+    // limiter
+    Limiter<T> limiter_;
+    LimiterValues<T> limiters_;
 };
 
 #endif
