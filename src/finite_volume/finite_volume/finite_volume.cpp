@@ -148,7 +148,8 @@ void FiniteVolume<T>::copy_reconstruct(FlowStates<T>& flow_states,
 
 template <typename T>
 KOKKOS_INLINE_FUNCTION T linear_interpolate(T value, Vector3s<T> grad, T dx,
-                                            T dy, T dz, int i, T limiter, bool is_valid) {
+                                            T dy, T dz, int i, T limiter,
+                                            bool is_valid) {
     T grad_x = 0.0;
     T grad_y = 0.0;
     T grad_z = 0.0;
@@ -171,8 +172,6 @@ void FiniteVolume<T>::linear_reconstruct(FlowStates<T>& flow_states,
     grad_calc_.compute_gradients(grid, flow_states.vel.y(), grad_.vy);
     grad_calc_.compute_gradients(grid, flow_states.vel.z(), grad_.vz);
 
-
-
     auto cells = grid.cells();
     auto faces = grid.interfaces();
     auto left = left_;
@@ -186,14 +185,14 @@ void FiniteVolume<T>::linear_reconstruct(FlowStates<T>& flow_states,
     if (limiter_enabled) {
         limiter.calculate_limiters(flow_states.gas.pressure(), limiters_.p,
                                    cells, faces, grad.p);
-        limiter.calculate_limiters(flow_states.gas.rho(), limiters_.rho,
-                                   cells, faces, grad.rho);
-        limiter.calculate_limiters(flow_states.vel.x(), limiters_.vx,
-                                   cells, faces, grad.vx);
-        limiter.calculate_limiters(flow_states.vel.y(), limiters_.vy,
-                                   cells, faces, grad.vy);
-        limiter.calculate_limiters(flow_states.vel.z(), limiters_.vz,
-                                   cells, faces, grad.vz);
+        limiter.calculate_limiters(flow_states.gas.rho(), limiters_.rho, cells,
+                                   faces, grad.rho);
+        limiter.calculate_limiters(flow_states.vel.x(), limiters_.vx, cells,
+                                   faces, grad.vx);
+        limiter.calculate_limiters(flow_states.vel.y(), limiters_.vy, cells,
+                                   faces, grad.vy);
+        limiter.calculate_limiters(flow_states.vel.z(), limiters_.vz, cells,
+                                   faces, grad.vz);
     }
 
     Kokkos::parallel_for(
@@ -233,13 +232,13 @@ void FiniteVolume<T>::linear_reconstruct(FlowStates<T>& flow_states,
             dy = faces.centre().y(i_face) - cells.centroids().y(right_cell);
             dz = faces.centre().z(i_face) - cells.centroids().z(right_cell);
             p_limit = limiter_enabled ? limiters.p(right_cell) : 1.0;
-            right.gas.pressure(i_face) =
-                linear_interpolate(flow_states.gas.pressure(right_cell), grad.p,
-                                   dx, dy, dz, right_cell, p_limit, right_valid);
+            right.gas.pressure(i_face) = linear_interpolate(
+                flow_states.gas.pressure(right_cell), grad.p, dx, dy, dz,
+                right_cell, p_limit, right_valid);
             rho_limit = limiter_enabled ? limiters.p(right_cell) : 1.0;
-            right.gas.rho(i_face) =
-                linear_interpolate(flow_states.gas.rho(right_cell), grad.rho,
-                                   dx, dy, dz, right_cell, rho_limit, right_valid);
+            right.gas.rho(i_face) = linear_interpolate(
+                flow_states.gas.rho(right_cell), grad.rho, dx, dy, dz,
+                right_cell, rho_limit, right_valid);
             vx_limit = limiter_enabled ? limiters.vx(right_cell) : 1.0;
             right.vel.x(i_face) =
                 linear_interpolate(flow_states.vel.x(right_cell), grad.vx, dx,

@@ -8,14 +8,14 @@
 
 template <typename T>
 struct Gradients {
-    Gradients () {}
+    Gradients() {}
 
-    Gradients (int num_cells) {
-        p = Vector3s<T>("Gradients::p", num_cells); 
-        rho = Vector3s<T>("Gradients::rho", num_cells); 
-        vx = Vector3s<T>("Gradients::vx", num_cells); 
-        vy = Vector3s<T>("Gradients::vy", num_cells); 
-        vz = Vector3s<T>("Gradients::vz", num_cells); 
+    Gradients(int num_cells) {
+        p = Vector3s<T>("Gradients::p", num_cells);
+        rho = Vector3s<T>("Gradients::rho", num_cells);
+        vx = Vector3s<T>("Gradients::vx", num_cells);
+        vy = Vector3s<T>("Gradients::vy", num_cells);
+        vz = Vector3s<T>("Gradients::vz", num_cells);
     }
 
     Vector3s<T> p;
