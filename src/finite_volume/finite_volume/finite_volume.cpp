@@ -5,9 +5,6 @@
 
 #include <stdexcept>
 
-#include "finite_volume/gradient.h"
-#include "finite_volume/limiter.h"
-
 template <typename T>
 FiniteVolume<T>::FiniteVolume(const GridBlock<T>& grid, json config)
     : left_(FlowStates<T>(grid.num_interfaces())),
