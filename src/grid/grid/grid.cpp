@@ -111,8 +111,7 @@ TEST_CASE("grid cell faces") {
     block.deep_copy(block_dev);
     CHECK(block.cells().num_valid_cells() == expected.cells.num_valid_cells());
     for (size_t i = 0; i < block.num_cells(); i++) {
-        for (size_t j = 0; j < block.cells().faces().face_ids(i).size();
-             j++) {
+        for (size_t j = 0; j < block.cells().faces().face_ids(i).size(); j++) {
             CHECK(block.cells().faces().face_ids(i)(j) ==
                   expected.cells.faces().face_ids(i)(j));
         }
@@ -149,8 +148,7 @@ TEST_CASE("grid cell outsigns") {
         {-1, 1, 1, 1}, {-1, 1, 1, -1}, {-1, 1, 1, -1},
         {-1, 1, 1, 1}, {-1, 1, 1, -1}, {-1, 1, 1, -1}};
     for (size_t i = 0; i < block.cells().num_valid_cells(); i++) {
-        for (size_t j = 0; j < block.cells().faces().outsigns(i).size();
-             j++) {
+        for (size_t j = 0; j < block.cells().faces().outsigns(i).size(); j++) {
             CHECK(block.cells().faces().outsigns(i)(j) == outsigns[i][j]);
         }
     }

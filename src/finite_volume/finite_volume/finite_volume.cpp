@@ -30,9 +30,9 @@ FiniteVolume<T>::FiniteVolume(const GridBlock<T>& grid, json config)
 
 template <typename T>
 size_t FiniteVolume<T>::compute_dudt(FlowStates<T>& flow_state,
-                                  const GridBlock<T>& grid,
-                                  ConservedQuantities<T>& dudt,
-                                  IdealGas<T>& gas_model) {
+                                     const GridBlock<T>& grid,
+                                     ConservedQuantities<T>& dudt,
+                                     IdealGas<T>& gas_model) {
     apply_pre_reconstruction_bc(flow_state, grid);
     reconstruct(flow_state, grid, reconstruction_order_);
     compute_flux(grid, gas_model);
@@ -86,8 +86,7 @@ void FiniteVolume<T>::apply_pre_reconstruction_bc(FlowStates<T>& fs,
 
 template <typename T>
 void FiniteVolume<T>::reconstruct(FlowStates<T>& flow_states,
-                                  const GridBlock<T>& grid,
-                                  size_t order) {
+                                  const GridBlock<T>& grid, size_t order) {
     (void)order;
     size_t n_faces = grid.num_interfaces();
     FlowStates<T> this_left = left_;
@@ -142,7 +141,8 @@ void FiniteVolume<T>::compute_flux(const GridBlock<T>& grid,
     Vector3s<T> tan2 = faces.tan2();
     ConservedQuantities<T> flux = flux_;
     Kokkos::parallel_for(
-        "flux::transform_to_global", faces.size(), KOKKOS_LAMBDA(const size_t i) {
+        "flux::transform_to_global", faces.size(),
+        KOKKOS_LAMBDA(const size_t i) {
             T px = flux.momentum_x(i);
             T py = flux.momentum_y(i);
             T pz = 0.0;
@@ -200,7 +200,7 @@ void FiniteVolume<T>::flux_surface_integral(const GridBlock<T>& grid,
 
 template <typename T>
 size_t FiniteVolume<T>::count_bad_cells(const FlowStates<T>& fs,
-                                     const size_t num_cells) {
+                                        const size_t num_cells) {
     size_t n_bad_cells = 0;
     Kokkos::parallel_reduce(
         "FiniteVolume::count_bad_cells", num_cells,

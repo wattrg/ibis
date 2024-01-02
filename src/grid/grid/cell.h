@@ -37,13 +37,14 @@ public:
             view_type("CellFaces::offsets", interface_ids.offsets().size());
         face_ids_ =
             view_type("CellFaces::face_ids", interface_ids.data().size());
-        outsigns_ =
-            signed_view_type("CellFaces::outsigns", interface_ids.data().size());
+        outsigns_ = signed_view_type("CellFaces::outsigns",
+                                     interface_ids.data().size());
         Kokkos::deep_copy(offsets_, interface_ids.offsets());
         Kokkos::deep_copy(face_ids_, interface_ids.data());
     }
 
-    CellFaces(const view_type offsets, view_type face_ids, signed_view_type outsigns)
+    CellFaces(const view_type offsets, view_type face_ids,
+              signed_view_type outsigns)
         : offsets_(offsets), face_ids_(face_ids), outsigns_(outsigns) {}
 
     CellFaces(size_t number_cells, size_t number_face_ids) {
@@ -144,7 +145,8 @@ public:
         // this initially sets the incorrect neighbour cells, so we
         // have to be careful to overwrite them properly
         neighbour_cells_ =
-            Ibis::RaggedArray<size_t, array_layout, execution_space>(interfaces);
+            Ibis::RaggedArray<size_t, array_layout, execution_space>(
+                interfaces);
 
         shape_ = Field<ElemType, array_layout, memory_space>("Cell::shape",
                                                              num_valid_cells_);
@@ -167,8 +169,8 @@ public:
           Ibis::RaggedArray<size_t, array_layout, execution_space> neighbours,
           Field<ElemType, array_layout, memory_space> shapes,
           Field<T, array_layout, memory_space> volume,
-          Vector3s<T, array_layout, memory_space> centroid, size_t num_valid_cells,
-          size_t num_ghost_cells)
+          Vector3s<T, array_layout, memory_space> centroid,
+          size_t num_valid_cells, size_t num_ghost_cells)
         : faces_(faces),
           vertex_ids_(vertices),
           neighbour_cells_(neighbours),
@@ -216,7 +218,9 @@ public:
     size_t num_ghost_cells() const { return num_ghost_cells_; }
 
     KOKKOS_INLINE_FUNCTION
-    size_t num_total_cells() const { return num_valid_cells_ + num_ghost_cells_; }
+    size_t num_total_cells() const {
+        return num_valid_cells_ + num_ghost_cells_;
+    }
 
     KOKKOS_INLINE_FUNCTION
     const T& volume(const size_t i) const { return volume_(i); }
@@ -314,7 +318,8 @@ public:
     }
 
     KOKKOS_INLINE_FUNCTION
-    void set_cell_neighbour(size_t cell_i, size_t face_i, size_t neighbour) const {
+    void set_cell_neighbour(size_t cell_i, size_t face_i,
+                            size_t neighbour) const {
         neighbour_cells_(cell_i, face_i) = neighbour;
     }
 
