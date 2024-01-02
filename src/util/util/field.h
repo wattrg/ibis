@@ -20,7 +20,9 @@ public:
 public:
     Field() {}
 
-    Field(std::string description, size_t n) { view_ = view_type(description, n); }
+    Field(std::string description, size_t n) {
+        view_ = view_type(description, n);
+    }
 
     Field(std::string description, std::vector<T> values) {
         view_ = view_type(description, values.size());

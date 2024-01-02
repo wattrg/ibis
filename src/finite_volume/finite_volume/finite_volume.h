@@ -23,7 +23,7 @@ public:
     FiniteVolume(const GridBlock<T>& grid, json config);
 
     size_t compute_dudt(FlowStates<T>& flow_state, const GridBlock<T>& grid,
-                     ConservedQuantities<T>& dudt, IdealGas<T>& gas_model);
+                        ConservedQuantities<T>& dudt, IdealGas<T>& gas_model);
 
     double estimate_dt(const FlowStates<T>& flow_state, GridBlock<T>& grid,
                        IdealGas<T>& gas_model);

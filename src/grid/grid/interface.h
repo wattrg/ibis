@@ -55,8 +55,8 @@ public:
         // been connected up to any cells yet
         left_cells_ =
             Field<size_t, array_layout, memory_space>("Interface::left", size_);
-        right_cells_ =
-            Field<size_t, array_layout, memory_space>("Interface::right", size_);
+        right_cells_ = Field<size_t, array_layout, memory_space>(
+            "Interface::right", size_);
         left_cells_.deep_copy(std::numeric_limits<size_t>::max());
         right_cells_.deep_copy(std::numeric_limits<size_t>::max());
     }
@@ -73,8 +73,8 @@ public:
         area_ = Field<T, array_layout, memory_space>("Interface::area", size_);
         left_cells_ =
             Field<size_t, array_layout, memory_space>("Interface::left", size_);
-        right_cells_ =
-            Field<size_t, array_layout, memory_space>("Interface::right", size_);
+        right_cells_ = Field<size_t, array_layout, memory_space>(
+            "Interface::right", size_);
     }
 
     Interfaces(id_type vertex_ids,
@@ -176,10 +176,14 @@ public:
     }
 
     KOKKOS_INLINE_FUNCTION
-    size_t left_cell(const size_t face_id) const { return left_cells_(face_id); }
+    size_t left_cell(const size_t face_id) const {
+        return left_cells_(face_id);
+    }
 
     KOKKOS_INLINE_FUNCTION
-    size_t right_cell(const size_t face_id) const { return right_cells_(face_id); }
+    size_t right_cell(const size_t face_id) const {
+        return right_cells_(face_id);
+    }
 
     KOKKOS_INLINE_FUNCTION
     size_t size() const { return vertex_ids_.num_rows(); }
