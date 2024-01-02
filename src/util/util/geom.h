@@ -11,8 +11,9 @@ namespace Ibis {
 // The i and j are indices into `positions`, which contains
 // the actual positions of all the points
 template <typename T, class Layout, class Space>
-KOKKOS_INLINE_FUNCTION T distance_between_points(
-    const Vector3s<T, Layout, Space> &positions, const size_t i, const size_t j) {
+KOKKOS_INLINE_FUNCTION T
+distance_between_points(const Vector3s<T, Layout, Space> &positions,
+                        const size_t i, const size_t j) {
     T xi = positions.x(i);
     T xj = positions.x(j);
     T yi = positions.y(i);
