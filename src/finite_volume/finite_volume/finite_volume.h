@@ -40,7 +40,7 @@ public:
                             const GridBlock<T>& grid, IdealGas<T>& gas_model);
     void flux_surface_integral(const GridBlock<T>& grid,
                                ConservedQuantities<T>& dudt);
-    void compute_flux(const GridBlock<T>& grid, IdealGas<T>& gas_model);
+    void compute_convective_flux(const GridBlock<T>& grid, IdealGas<T>& gas_model);
     void apply_post_convective_flux_bc();
     void apply_pre_spatial_deriv();
     size_t count_bad_cells(const FlowStates<T>& fs, const size_t num_cells);

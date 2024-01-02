@@ -48,7 +48,7 @@ size_t FiniteVolume<T>::compute_dudt(FlowStates<T>& flow_state,
                                      IdealGas<T>& gas_model) {
     apply_pre_reconstruction_bc(flow_state, grid);
     reconstruct(flow_state, grid, gas_model, reconstruction_order_);
-    compute_flux(grid, gas_model);
+    compute_convective_flux(grid, gas_model);
     flux_surface_integral(grid, dudt);
     return 0;
 }
@@ -255,7 +255,7 @@ void FiniteVolume<T>::linear_reconstruct(FlowStates<T>& flow_states,
 }
 
 template <typename T>
-void FiniteVolume<T>::compute_flux(const GridBlock<T>& grid,
+void FiniteVolume<T>::compute_convective_flux(const GridBlock<T>& grid,
                                    IdealGas<T>& gas_model) {
     // rotate velocities to the interface local frames
     Interfaces<T> faces = grid.interfaces();
