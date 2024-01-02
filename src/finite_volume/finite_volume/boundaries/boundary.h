@@ -12,7 +12,7 @@ public:
     virtual ~PreReconstruction() {}
 
     virtual void apply(FlowStates<T>& fs, const GridBlock<T>& grid,
-                       const Field<int>& boundary_faces) = 0;
+                       const Field<size_t>& boundary_faces) = 0;
 };
 
 template <typename T>
@@ -25,7 +25,7 @@ public:
     ~FlowStateCopy() {}
 
     void apply(FlowStates<T>& fs, const GridBlock<T>& grid,
-               const Field<int>& boundary_faces);
+               const Field<size_t>& boundary_faces);
 
 private:
     FlowState<T> fs_;
@@ -37,7 +37,7 @@ public:
     ~InternalCopy() {}
 
     void apply(FlowStates<T>& fs, const GridBlock<T>& grid,
-               const Field<int>& boundary_faces);
+               const Field<size_t>& boundary_faces);
 };
 
 template <typename T>
@@ -46,7 +46,7 @@ public:
     ~InternalCopyReflectNormal() {}
 
     void apply(FlowStates<T>& fs, const GridBlock<T>& grid,
-               const Field<int>& boundary_faces);
+               const Field<size_t>& boundary_faces);
 };
 
 template <typename T>
@@ -55,7 +55,7 @@ public:
     BoundaryCondition(json config);
 
     void apply_pre_reconstruction(FlowStates<T>& fs, const GridBlock<T>& grid,
-                                  const Field<int>& boundary_faces);
+                                  const Field<size_t>& boundary_faces);
 
 private:
     std::vector<std::shared_ptr<PreReconstruction<T>>> pre_reconstruction_;

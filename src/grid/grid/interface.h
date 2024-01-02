@@ -9,6 +9,7 @@
 #include <util/ragged_array.h>
 #include <util/vector3.h>
 
+#include <limits>
 #include <unordered_map>
 
 template <typename T, class ExecSpace = Kokkos::DefaultExecutionSpace,
@@ -26,19 +27,19 @@ public:
 
     // I have no idea why it is execution_space and not memory_space
     // here. But execution_space works and memory_space doesn't...
-    using id_type = Ibis::RaggedArray<int, array_layout, execution_space>;
+    using id_type = Ibis::RaggedArray<size_t, array_layout, execution_space>;
 
 public:
     Interfaces() {}
 
-    Interfaces(std::vector<std::vector<int>> ids,
+    Interfaces(std::vector<std::vector<size_t>> ids,
                std::vector<ElemType> shapes) {
         vertex_ids_ = id_type(ids);
         size_ = vertex_ids_.num_rows();
         shape_ = Field<ElemType, array_layout, memory_space>("Interface::shape",
                                                              shapes.size());
         auto shape_mirror = shape_.host_mirror();
-        for (int i = 0; i < size_; i++) {
+        for (size_t i = 0; i < size_; i++) {
             shape_mirror(i) = shapes[i];
         }
         shape_.deep_copy(shape_mirror);
@@ -50,17 +51,17 @@ public:
         centre_ = vector_type("Interface::centre", size_);
         area_ = Field<T, array_layout, memory_space>("Interface::area", size_);
 
-        // set left and right cells to -1 to indicate they haven't
+        // set left and right cells to maximum integer to indicate they haven't
         // been connected up to any cells yet
         left_cells_ =
-            Field<int, array_layout, memory_space>("Interface::left", size_);
+            Field<size_t, array_layout, memory_space>("Interface::left", size_);
         right_cells_ =
-            Field<int, array_layout, memory_space>("Interface::right", size_);
-        left_cells_.deep_copy(-1);
-        right_cells_.deep_copy(-1);
+            Field<size_t, array_layout, memory_space>("Interface::right", size_);
+        left_cells_.deep_copy(std::numeric_limits<size_t>::max());
+        right_cells_.deep_copy(std::numeric_limits<size_t>::max());
     }
 
-    Interfaces(int num_interfaces, int num_vertex_ids) {
+    Interfaces(size_t num_interfaces, size_t num_vertex_ids) {
         vertex_ids_ = id_type(num_vertex_ids, num_interfaces);
         size_ = num_interfaces;
         shape_ = Field<ElemType, array_layout, memory_space>("Interface::shape",
@@ -71,14 +72,14 @@ public:
         centre_ = vector_type("Interface::centre", size_);
         area_ = Field<T, array_layout, memory_space>("Interface::area", size_);
         left_cells_ =
-            Field<int, array_layout, memory_space>("Interface::left", size_);
+            Field<size_t, array_layout, memory_space>("Interface::left", size_);
         right_cells_ =
-            Field<int, array_layout, memory_space>("Interface::right", size_);
+            Field<size_t, array_layout, memory_space>("Interface::right", size_);
     }
 
     Interfaces(id_type vertex_ids,
-               Field<int, array_layout, memory_space> left_cells,
-               Field<int, array_layout, memory_space> right_cells,
+               Field<size_t, array_layout, memory_space> left_cells,
+               Field<size_t, array_layout, memory_space> right_cells,
                Field<T, array_layout, memory_space> area,
                Field<ElemType, array_layout, memory_space> shape,
                vector_type norm, vector_type tan1, vector_type tan2,
@@ -135,10 +136,10 @@ public:
     const Field<T, array_layout, memory_space>& area() const { return area_; }
 
     KOKKOS_INLINE_FUNCTION
-    T& area(int i) const { return area_(i); }
+    T& area(size_t i) const { return area_(i); }
 
     KOKKOS_INLINE_FUNCTION
-    T& area(int i) { return area_(i); }
+    T& area(size_t i) { return area_(i); }
 
     KOKKOS_INLINE_FUNCTION
     Vector3s<T, array_layout, memory_space>& norm() { return norm_; }
@@ -165,23 +166,23 @@ public:
     const vector_type& centre() const { return centre_; }
 
     KOKKOS_INLINE_FUNCTION
-    void attach_cell_left(const int cell_id, const int face_id) const {
+    void attach_cell_left(const size_t cell_id, const size_t face_id) const {
         left_cells_(face_id) = cell_id;
     }
 
     KOKKOS_INLINE_FUNCTION
-    void attach_cell_right(const int cell_id, const int face_id) const {
+    void attach_cell_right(const size_t cell_id, const size_t face_id) const {
         right_cells_(face_id) = cell_id;
     }
 
     KOKKOS_INLINE_FUNCTION
-    int left_cell(const int face_id) const { return left_cells_(face_id); }
+    size_t left_cell(const size_t face_id) const { return left_cells_(face_id); }
 
     KOKKOS_INLINE_FUNCTION
-    int right_cell(const int face_id) const { return right_cells_(face_id); }
+    size_t right_cell(const size_t face_id) const { return right_cells_(face_id); }
 
     KOKKOS_INLINE_FUNCTION
-    int size() const { return vertex_ids_.num_rows(); }
+    size_t size() const { return vertex_ids_.num_rows(); }
 
     void compute_orientations(Vertices<T, execution_space> vertices) {
         // set the face tangents in parallel
@@ -193,7 +194,7 @@ public:
         Kokkos::parallel_for(
             "Interfaces::compute_orientations",
             Kokkos::RangePolicy<execution_space>(0, norm_.size()),
-            KOKKOS_LAMBDA(const int i) {
+            KOKKOS_LAMBDA(const size_t i) {
                 auto vertex_ids = this_vertex_ids(i);
                 T x0 = vertices.positions().x(vertex_ids(0));
                 T x1 = vertices.positions().x(vertex_ids(1));
@@ -237,7 +238,7 @@ public:
         Kokkos::parallel_for(
             "Interfaces::compute_areas",
             Kokkos::RangePolicy<execution_space>(0, area_.size()),
-            KOKKOS_LAMBDA(const int i) {
+            KOKKOS_LAMBDA(const size_t i) {
                 switch (shape(i)) {
                     case ElemType::Line: {
                         auto vertex_ids = this_vertex_ids(i);
@@ -281,14 +282,14 @@ public:
         Kokkos::parallel_for(
             "Interfaces::compute_centres",
             Kokkos::RangePolicy<execution_space>(0, centre_.size()),
-            KOKKOS_LAMBDA(const int face_i) {
+            KOKKOS_LAMBDA(const size_t face_i) {
                 auto face_vertices = vertex_ids(face_i);
                 T x = 0.0;
                 T y = 0.0;
                 T z = 0.0;
-                unsigned int num_vertices = face_vertices.size();
-                for (unsigned int vtx_i = 0; vtx_i < num_vertices; vtx_i++) {
-                    int vtx_id = face_vertices[vtx_i];
+                size_t num_vertices = face_vertices.size();
+                for (size_t vtx_i = 0; vtx_i < num_vertices; vtx_i++) {
+                    size_t vtx_id = face_vertices[vtx_i];
                     x += vertices.positions().x(vtx_id);
                     y += vertices.positions().y(vtx_id);
                     z += vertices.positions().z(vtx_id);
@@ -300,14 +301,14 @@ public:
     }
 
 public:
-    int size_;
+    size_t size_;
 
     // the id's of the vertices forming each interface
     id_type vertex_ids_;
 
     // the cells to the left/right of the interface
-    Field<int, array_layout, memory_space> left_cells_;
-    Field<int, array_layout, memory_space> right_cells_;
+    Field<size_t, array_layout, memory_space> left_cells_;
+    Field<size_t, array_layout, memory_space> right_cells_;
 
     // geometric data
     Field<T, array_layout, memory_space> area_;
@@ -325,14 +326,14 @@ struct InterfaceLookup {
 public:
     InterfaceLookup();
 
-    int insert(std::vector<int> vertex_ids);
-    bool contains(std::vector<int> vertex_ids);
-    int id(std::vector<int> vertex_ids);
+    size_t insert(std::vector<size_t> vertex_ids);
+    bool contains(std::vector<size_t> vertex_ids);
+    size_t id(std::vector<size_t> vertex_ids);
 
 private:
-    std::unordered_map<std::string, int> hash_map_;
+    std::unordered_map<std::string, size_t> hash_map_;
 
-    std::string hash_vertex_ids(std::vector<int> vertex_ids);
+    std::string hash_vertex_ids(std::vector<size_t> vertex_ids);
     bool contains_hash(std::string hash);
 };
 

@@ -28,7 +28,7 @@ enum class FaceOrder {
 };
 
 struct ElemIO {
-    ElemIO(std::vector<int> ids, ElemType type, FaceOrder face_order)
+    ElemIO(std::vector<size_t> ids, ElemType type, FaceOrder face_order)
         : vertex_ids_(ids), cell_type_(type), face_order_(face_order) {}
 
     bool operator==(const ElemIO &other) const {
@@ -36,14 +36,14 @@ struct ElemIO {
                (cell_type_ == other.cell_type_);
     }
 
-    std::vector<int> vertex_ids() const { return vertex_ids_; }
+    std::vector<size_t> vertex_ids() const { return vertex_ids_; }
 
     ElemType cell_type() const { return cell_type_; }
 
     std::vector<ElemIO> interfaces() const;
 
 private:
-    std::vector<int> vertex_ids_{};
+    std::vector<size_t> vertex_ids_{};
     ElemType cell_type_;
     FaceOrder face_order_;
 };
@@ -69,13 +69,13 @@ public:
         return bcs_;
     }
 
-    int dim() const { return dim_; }
+    size_t dim() const { return dim_; }
 
 private:
     std::vector<Vertex<double>> vertices_{};
     std::vector<ElemIO> cells_{};
     std::unordered_map<std::string, std::vector<ElemIO>> bcs_;
-    int dim_;
+    size_t dim_;
 
     void _read_su2_grid(std::ifstream &grid_file);
 };

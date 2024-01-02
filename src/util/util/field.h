@@ -20,30 +20,30 @@ public:
 public:
     Field() {}
 
-    Field(std::string description, int n) { view_ = view_type(description, n); }
+    Field(std::string description, size_t n) { view_ = view_type(description, n); }
 
     Field(std::string description, std::vector<T> values) {
         view_ = view_type(description, values.size());
         auto view_host = Kokkos::create_mirror_view(view_);
-        for (unsigned int i = 0; i < values.size(); i++) {
+        for (size_t i = 0; i < values.size(); i++) {
             view_host(i) = values[i];
         }
         Kokkos::deep_copy(view_, view_host);
     }
 
     KOKKOS_FORCEINLINE_FUNCTION
-    T& operator()(const int i) { return view_(i); }
+    T& operator()(const size_t i) { return view_(i); }
 
     KOKKOS_FORCEINLINE_FUNCTION
-    T& operator()(const int i) const { return view_(i); }
+    T& operator()(const size_t i) const { return view_(i); }
 
     KOKKOS_FORCEINLINE_FUNCTION
-    int size() const { return view_.extent(0); }
+    size_t size() const { return view_.extent(0); }
 
     KOKKOS_FORCEINLINE_FUNCTION
     bool operator==(const Field& other) const {
         assert(this->size() == other.size());
-        for (int i = 0; this->size(); i++) {
+        for (size_t i = 0; this->size(); i++) {
             if (Kokkos::fabs(view_(i) - other.view_(i)) > 1e-14) return false;
         }
         return true;
@@ -62,7 +62,7 @@ public:
 
     std::string to_string() const {
         std::string result = "Field(";
-        for (unsigned int i = 0; i < view_.size(); i++) {
+        for (size_t i = 0; i < view_.size(); i++) {
             result.append(std::to_string(view_(i)));
             result.append(",");
         }

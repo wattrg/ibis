@@ -20,7 +20,7 @@ public:
     using HostMirror = RaggedArray<DataType, host_layout, host_space>;
 
 private:
-    using OffsetType = Kokkos::View<int *, Layout, Space>;
+    using OffsetType = Kokkos::View<size_t *, Layout, Space>;
 
     // allow accessing the private data of the same class with differe
     // template parameters (e.g. living in different memory spaces)
@@ -30,7 +30,7 @@ private:
 public:
     RaggedArray() {}
 
-    RaggedArray(int num_values, int num_rows)
+    RaggedArray(size_t num_values, size_t num_rows)
         : data_("RaggedArray::data", num_values),
           offsets_("RaggedArray::offsets", num_rows + 1) {}
 
@@ -39,7 +39,7 @@ public:
 
     RaggedArray(std::vector<std::vector<DataType>> data) {
         // count the total number of entries
-        unsigned int n = 0;
+        size_t n = 0;
         for (const auto &row : data) {
             n += row.size();
         }
@@ -51,8 +51,8 @@ public:
         // initialise memory (on the CPU)
         auto data_host = Kokkos::create_mirror_view(data_);
         auto offsets_host = Kokkos::create_mirror_view(offsets_);
-        int i = 0;
-        int row_i = 0;
+        size_t i = 0;
+        size_t row_i = 0;
         for (const auto &row : data) {
             offsets_host(row_i) = i;
             for (const auto &value : row) {
@@ -70,8 +70,8 @@ public:
 
     // Read-write value at (row, col)
     KOKKOS_INLINE_FUNCTION
-    DataType &operator()(const int row, const int col) const {
-        int index = offsets_(row) + col;
+    DataType &operator()(const size_t row, const size_t col) const {
+        size_t index = offsets_(row) + col;
         return data_(index);
     }
 
@@ -84,17 +84,17 @@ public:
 
     // Read-write view to a particular row
     KOKKOS_INLINE_FUNCTION
-    auto operator()(const int row) {
-        int first = offsets_(row);
-        int last = offsets_(row + 1);
+    auto operator()(const size_t row) {
+        size_t first = offsets_(row);
+        size_t last = offsets_(row + 1);
         return Kokkos::subview(data_, Kokkos::make_pair(first, last));
     }
 
     // Read-only view to a particular row
     KOKKOS_INLINE_FUNCTION
-    auto operator()(const int row) const {
-        int first = offsets_(row);
-        int last = offsets_(row + 1);
+    auto operator()(const size_t row) const {
+        size_t first = offsets_(row);
+        size_t last = offsets_(row + 1);
         return Kokkos::subview(data_, Kokkos::make_pair(first, last));
     }
 
@@ -122,21 +122,21 @@ public:
     }
 
     KOKKOS_INLINE_FUNCTION
-    int num_rows() const { return offsets_.extent(0) - 1; }
+    size_t num_rows() const { return offsets_.extent(0) - 1; }
 
     KOKKOS_INLINE_FUNCTION
-    int num_values() const { return data_.extent(0); }
+    size_t num_values() const { return data_.extent(0); }
 
     const OffsetType &offsets() const { return offsets_; }
 
     const ArrayType &data() const { return data_; }
 
     bool operator==(const RaggedArray<DataType, Layout, Space> &other) const {
-        for (unsigned int i = 0; i < data_.extent(0); i++) {
+        for (size_t i = 0; i < data_.extent(0); i++) {
             if (data_(i) != other.data_(i)) return false;
         }
 
-        for (unsigned int i = 0; i < offsets_.extent(0); i++) {
+        for (size_t i = 0; i < offsets_.extent(0); i++) {
             if (offsets_(i) != other.offsets_(i)) return false;
         }
         return true;
@@ -146,28 +146,28 @@ public:
         std::string result = "RaggedArray(offsets(";
         result.append(std::to_string(offsets_.extent(0)));
         result.append(") = [");
-        for (unsigned int i = 0; i < offsets_.extent(0); i++) {
+        for (size_t i = 0; i < offsets_.extent(0); i++) {
             result.append(std::to_string(offsets_(i)));
             result.append(", ");
         }
         result.append("], data(");
         result.append(std::to_string(data_.extent(0)));
         result.append(") = [");
-        for (unsigned int i = 0; i < data_.extent(0); i++) {
+        for (size_t i = 0; i < data_.extent(0); i++) {
             result.append(std::to_string(data_(i)));
             result.append(", ");
         }
         result.append("], ragged array = ");
 
         result.append("[");
-        for (int row = 0; row < num_rows(); row++) {
-            int first = offsets_(row);
-            int last = offsets_(row + 1);
+        for (size_t row = 0; row < num_rows(); row++) {
+            size_t first = offsets_(row);
+            size_t last = offsets_(row + 1);
             auto row_data =
                 Kokkos::subview(data_, Kokkos::make_pair(first, last));
             result.append("[");
             // int size = last - first;
-            for (int col = 0; col < row_data.size(); col++) {
+            for (size_t col = 0; col < row_data.size(); col++) {
                 result.append(std::to_string(row_data(col)));
                 result.append(", ");
             }
