@@ -5,6 +5,7 @@
 #include <finite_volume/conserved_quantities.h>
 #include <finite_volume/flux_calc.h>
 #include <finite_volume/gradient.h>
+#include <finite_volume/limiter.h>
 #include <gas/flow_state.h>
 #include <gas/gas_model.h>
 #include <grid/grid.h>
@@ -61,14 +62,11 @@ private:
 
     // gradients
     WLSGradient<T> grad_calc_;
-    Vector3s<T> grad_p_;
-    Vector3s<T> grad_rho_;
-    Vector3s<T> grad_vx_;
-    Vector3s<T> grad_vy_;
-    Vector3s<T> grad_vz_;
+    Gradients<T> grad_;
 
-    // gas model
-    // IdealGas<T> gas_model_;
+    // limiter
+    Limiter<T> limiter_;
+    LimiterValues<T> limiters_;
 };
 
 #endif

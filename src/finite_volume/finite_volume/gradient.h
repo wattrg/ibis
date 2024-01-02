@@ -6,8 +6,24 @@
 
 #include <Kokkos_Core.hpp>
 
-#include "Kokkos_Core_fwd.hpp"
-#include "Kokkos_Macros.hpp"
+template <typename T>
+struct Gradients {
+    Gradients () {}
+
+    Gradients (int num_cells) {
+        p = Vector3s<T>("Gradients::p", num_cells); 
+        rho = Vector3s<T>("Gradients::rho", num_cells); 
+        vx = Vector3s<T>("Gradients::vx", num_cells); 
+        vy = Vector3s<T>("Gradients::vy", num_cells); 
+        vz = Vector3s<T>("Gradients::vz", num_cells); 
+    }
+
+    Vector3s<T> p;
+    Vector3s<T> rho;
+    Vector3s<T> vx;
+    Vector3s<T> vy;
+    Vector3s<T> vz;
+};
 
 template <typename T, class ExecSpace = Kokkos::DefaultExecutionSpace,
           class Layout = Kokkos::DefaultExecutionSpace::array_layout>

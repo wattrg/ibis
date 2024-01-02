@@ -19,13 +19,29 @@ class ValidationException(Exception):
 class Solver(Enum):
     RungeKutta = "runge_kutta"
 
+class Limiter(Enum):
+    BarthJespersen = "barth_jespersen"
+
 def string_to_solver(string):
     if string == Solver.RungeKutta.value:
         return Solver.RungeKutta
     validation_errors.append(ValidationException(f"Unknown solver {string}"))
 
+def string_to_limiter(string):
+    if string == Limiter.BarthJespersen.value:
+        return Limiter.BarthJespersen
+    if string == "none":
+        return None
+    else:
+        validation_errors.append(ValidationException(f"Unknown limiter {string}"))
+
+def string_from_limiter(limiter):
+    if limiter:
+        return limiter.value
+    return "none"
+
 class ConvectiveFlux:
-    _json_values = ["flux_calculator", "reconstruction_order"]
+    _json_values = ["flux_calculator", "reconstruction_order", "limiter"]
     __slots__ = _json_values
     _defaults_file = "convective_flux.json"
     
@@ -40,6 +56,9 @@ class ConvectiveFlux:
 
         if type(self.flux_calculator) != FluxCalculator:
             self.flux_calculator = flux_calculator_from_string(self.flux_calculator)
+
+        if type(self.limiter) != Limiter:
+            self.limiter = string_to_limiter(self.limiter)
 
     def validate(self):
         if type(self.flux_calculator) != FluxCalculator:
@@ -56,6 +75,8 @@ class ConvectiveFlux:
         for key in self._json_values:
             if key == "flux_calculator":
                 dictionary[key] = string_from_flux_calculator(self.flux_calculator)
+            elif key == "limiter":
+                dictionary[key] = string_from_limiter(self.limiter)
             else:
                 dictionary[key] = getattr(self, key)
         return dictionary

@@ -6,6 +6,7 @@
 #include <stdexcept>
 
 #include "finite_volume/gradient.h"
+#include "finite_volume/limiter.h"
 
 template <typename T>
 FiniteVolume<T>::FiniteVolume(const GridBlock<T>& grid, json config)
@@ -13,19 +14,21 @@ FiniteVolume<T>::FiniteVolume(const GridBlock<T>& grid, json config)
       right_(FlowStates<T>(grid.num_interfaces())),
       flux_(ConservedQuantities<T>(grid.num_interfaces(), grid.dim())) {
     dim_ = grid.dim();
+
     json convective_flux_config = config.at("convective_flux");
+
     reconstruction_order_ = convective_flux_config.at("reconstruction_order");
+    if (reconstruction_order_ > 1) {
+        grad_calc_ = WLSGradient<T>(grid);
+        grad_ = Gradients<T>(grid.num_cells());
+        limiter_ = Limiter<T>(convective_flux_config);
+        if (limiter_.enabled()) {
+            limiters_ = LimiterValues<T>(grid.num_cells());
+        }
+    }
+
     flux_calculator_ = flux_calculator_from_string(
         convective_flux_config.at("flux_calculator"));
-
-    if (reconstruction_order_ == 2) {
-        grad_calc_ = WLSGradient<T>(grid);
-        grad_p_ = Vector3s<T>("FV::grad_p", grid.num_cells());
-        grad_rho_ = Vector3s<T>("FV::grad_rho", grid.num_cells());
-        grad_vx_ = Vector3s<T>("FV::grad_vx", grid.num_cells());
-        grad_vy_ = Vector3s<T>("FV::grad_vy", grid.num_cells());
-        grad_vz_ = Vector3s<T>("FV::grad_vz", grid.num_cells());
-    }
 
     std::vector<std::string> boundary_tags = grid.boundary_tags();
     json boundaries_config = config.at("grid").at("boundaries");
@@ -148,7 +151,7 @@ void FiniteVolume<T>::copy_reconstruct(FlowStates<T>& flow_states,
 
 template <typename T>
 KOKKOS_INLINE_FUNCTION T linear_interpolate(T value, Vector3s<T> grad, T dx,
-                                            T dy, T dz, int i, bool is_valid) {
+                                            T dy, T dz, int i, T limiter, bool is_valid) {
     T grad_x = 0.0;
     T grad_y = 0.0;
     T grad_z = 0.0;
@@ -158,29 +161,44 @@ KOKKOS_INLINE_FUNCTION T linear_interpolate(T value, Vector3s<T> grad, T dx,
         grad_z = grad.z(i);
     }
 
-    return value + grad_x * dx + grad_y * dy + grad_z * dz;
+    return value + limiter * (grad_x * dx + grad_y * dy + grad_z * dz);
 }
 
 template <typename T>
 void FiniteVolume<T>::linear_reconstruct(FlowStates<T>& flow_states,
                                          const GridBlock<T>& grid,
                                          IdealGas<T>& gas_model) {
-    grad_calc_.compute_gradients(grid, flow_states.gas.pressure(), grad_p_);
-    grad_calc_.compute_gradients(grid, flow_states.gas.rho(), grad_rho_);
-    grad_calc_.compute_gradients(grid, flow_states.vel.x(), grad_vx_);
-    grad_calc_.compute_gradients(grid, flow_states.vel.y(), grad_vy_);
-    grad_calc_.compute_gradients(grid, flow_states.vel.z(), grad_vz_);
+    grad_calc_.compute_gradients(grid, flow_states.gas.pressure(), grad_.p);
+    grad_calc_.compute_gradients(grid, flow_states.gas.rho(), grad_.rho);
+    grad_calc_.compute_gradients(grid, flow_states.vel.x(), grad_.vx);
+    grad_calc_.compute_gradients(grid, flow_states.vel.y(), grad_.vy);
+    grad_calc_.compute_gradients(grid, flow_states.vel.z(), grad_.vz);
+
+
 
     auto cells = grid.cells();
     auto faces = grid.interfaces();
     auto left = left_;
     auto right = right_;
-    auto grad_p = grad_p_;
-    auto grad_rho = grad_rho_;
-    auto grad_vx = grad_vx_;
-    auto grad_vy = grad_vy_;
-    auto grad_vz = grad_vz_;
+    auto grad = grad_;
+    auto limiter = limiter_;
+    auto limiters = limiters_;
     int num_cells = grid.num_cells();
+
+    bool limiter_enabled = limiter.enabled();
+    if (limiter_enabled) {
+        limiter.calculate_limiters(flow_states.gas.pressure(), limiters_.p,
+                                   cells, faces, grad.p);
+        limiter.calculate_limiters(flow_states.gas.rho(), limiters_.rho,
+                                   cells, faces, grad.rho);
+        limiter.calculate_limiters(flow_states.vel.x(), limiters_.vx,
+                                   cells, faces, grad.vx);
+        limiter.calculate_limiters(flow_states.vel.y(), limiters_.vy,
+                                   cells, faces, grad.vy);
+        limiter.calculate_limiters(flow_states.vel.z(), limiters_.vz,
+                                   cells, faces, grad.vz);
+    }
+
     Kokkos::parallel_for(
         "FV::linear_reconstruct", grid.num_interfaces(),
         KOKKOS_LAMBDA(const int i_face) {
@@ -189,21 +207,27 @@ void FiniteVolume<T>::linear_reconstruct(FlowStates<T>& flow_states,
             T dx = faces.centre().x(i_face) - cells.centroids().x(left_cell);
             T dy = faces.centre().y(i_face) - cells.centroids().y(left_cell);
             T dz = faces.centre().z(i_face) - cells.centroids().z(left_cell);
+
+            T p_limit = limiter_enabled ? limiters.p(left_cell) : 1.0;
             left.gas.pressure(i_face) =
-                linear_interpolate(flow_states.gas.pressure(left_cell), grad_p,
-                                   dx, dy, dz, left_cell, left_valid);
+                linear_interpolate(flow_states.gas.pressure(left_cell), grad.p,
+                                   dx, dy, dz, left_cell, p_limit, left_valid);
+            T rho_limit = limiter_enabled ? limiters.rho(left_cell) : 1.0;
             left.gas.rho(i_face) =
-                linear_interpolate(flow_states.gas.rho(left_cell), grad_rho, dx,
-                                   dy, dz, left_cell, left_valid);
+                linear_interpolate(flow_states.gas.rho(left_cell), grad.rho, dx,
+                                   dy, dz, left_cell, rho_limit, left_valid);
+            T vx_limit = limiter_enabled ? limiters.vx(left_cell) : 1.0;
             left.vel.x(i_face) =
-                linear_interpolate(flow_states.vel.x(left_cell), grad_vx, dx,
-                                   dy, dz, left_cell, left_valid);
+                linear_interpolate(flow_states.vel.x(left_cell), grad.vx, dx,
+                                   dy, dz, left_cell, vx_limit, left_valid);
+            T vy_limit = limiter_enabled ? limiters.vy(left_cell) : 1.0;
             left.vel.y(i_face) =
-                linear_interpolate(flow_states.vel.y(left_cell), grad_vy, dx,
-                                   dy, dz, left_cell, left_valid);
+                linear_interpolate(flow_states.vel.y(left_cell), grad.vy, dx,
+                                   dy, dz, left_cell, vy_limit, left_valid);
+            T vz_limit = limiter_enabled ? limiters.vz(left_cell) : 1.0;
             left.vel.z(i_face) =
-                linear_interpolate(flow_states.vel.z(left_cell), grad_vz, dx,
-                                   dy, dz, left_cell, left_valid);
+                linear_interpolate(flow_states.vel.z(left_cell), grad.vz, dx,
+                                   dy, dz, left_cell, vz_limit, left_valid);
             gas_model.update_thermo_from_rhop(left.gas, i_face);
 
             int right_cell = faces.right_cell(i_face);
@@ -211,21 +235,26 @@ void FiniteVolume<T>::linear_reconstruct(FlowStates<T>& flow_states,
             dx = faces.centre().x(i_face) - cells.centroids().x(right_cell);
             dy = faces.centre().y(i_face) - cells.centroids().y(right_cell);
             dz = faces.centre().z(i_face) - cells.centroids().z(right_cell);
+            p_limit = limiter_enabled ? limiters.p(right_cell) : 1.0;
             right.gas.pressure(i_face) =
-                linear_interpolate(flow_states.gas.pressure(right_cell), grad_p,
-                                   dx, dy, dz, right_cell, right_valid);
+                linear_interpolate(flow_states.gas.pressure(right_cell), grad.p,
+                                   dx, dy, dz, right_cell, p_limit, right_valid);
+            rho_limit = limiter_enabled ? limiters.p(right_cell) : 1.0;
             right.gas.rho(i_face) =
-                linear_interpolate(flow_states.gas.rho(right_cell), grad_rho,
-                                   dx, dy, dz, right_cell, right_valid);
+                linear_interpolate(flow_states.gas.rho(right_cell), grad.rho,
+                                   dx, dy, dz, right_cell, rho_limit, right_valid);
+            vx_limit = limiter_enabled ? limiters.vx(right_cell) : 1.0;
             right.vel.x(i_face) =
-                linear_interpolate(flow_states.vel.x(right_cell), grad_vx, dx,
-                                   dy, dz, right_cell, right_valid);
+                linear_interpolate(flow_states.vel.x(right_cell), grad.vx, dx,
+                                   dy, dz, right_cell, vx_limit, right_valid);
+            vy_limit = limiter_enabled ? limiters.vy(right_cell) : 1.0;
             right.vel.y(i_face) =
-                linear_interpolate(flow_states.vel.y(right_cell), grad_vy, dx,
-                                   dy, dz, right_cell, right_valid);
+                linear_interpolate(flow_states.vel.y(right_cell), grad.vy, dx,
+                                   dy, dz, right_cell, vy_limit, right_valid);
+            vz_limit = limiter_enabled ? limiters.vz(right_cell) : 1.0;
             right.vel.z(i_face) =
-                linear_interpolate(flow_states.vel.z(right_cell), grad_vz, dx,
-                                   dy, dz, right_cell, right_valid);
+                linear_interpolate(flow_states.vel.z(right_cell), grad.vz, dx,
+                                   dy, dz, right_cell, vz_limit, right_valid);
             gas_model.update_thermo_from_rhop(right.gas, i_face);
         });
 }
