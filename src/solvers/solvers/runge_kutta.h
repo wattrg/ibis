@@ -3,6 +3,7 @@
 
 #include <finite_volume/conserved_quantities.h>
 #include <gas/flow_state.h>
+#include <gas/transport_properties.h>
 #include <grid/grid.h>
 #include <io/io.h>
 #include <solvers/solver.h>
@@ -64,6 +65,7 @@ private:
 
 private:
     IdealGas<double> gas_model_;
+    TransportProperties<double> trans_prop_;
 };
 
 #endif

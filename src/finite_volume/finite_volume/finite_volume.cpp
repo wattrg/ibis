@@ -5,6 +5,8 @@
 
 #include <stdexcept>
 
+#include "gas/transport_properties.h"
+
 template <typename T>
 FiniteVolume<T>::FiniteVolume(const GridBlock<T>& grid, json config)
     : left_(FlowStates<T>(grid.num_interfaces())),
@@ -45,9 +47,10 @@ template <typename T>
 size_t FiniteVolume<T>::compute_dudt(FlowStates<T>& flow_state,
                                      const GridBlock<T>& grid,
                                      ConservedQuantities<T>& dudt,
-                                     IdealGas<T>& gas_model) {
+                                     IdealGas<T>& gas_model,
+                                     TransportProperties<T>& trans_prop) {
     apply_pre_reconstruction_bc(flow_state, grid);
-    reconstruct(flow_state, grid, gas_model, reconstruction_order_);
+    reconstruct(flow_state, grid, gas_model, trans_prop, reconstruction_order_);
     compute_convective_flux(grid, gas_model);
     flux_surface_integral(grid, dudt);
     return 0;
@@ -55,8 +58,9 @@ size_t FiniteVolume<T>::compute_dudt(FlowStates<T>& flow_state,
 
 template <typename T>
 double FiniteVolume<T>::estimate_dt(const FlowStates<T>& flow_state,
-                                    GridBlock<T>& grid,
-                                    IdealGas<T>& gas_model) {
+                                    GridBlock<T>& grid, IdealGas<T>& gas_model,
+                                    TransportProperties<T>& trans_prop) {
+    (void)trans_prop;
     size_t num_cells = grid.num_cells();
     CellFaces<T> cell_interfaces = grid.cells().faces();
     Interfaces<T> interfaces = grid.interfaces();
@@ -100,13 +104,15 @@ void FiniteVolume<T>::apply_pre_reconstruction_bc(FlowStates<T>& fs,
 template <typename T>
 void FiniteVolume<T>::reconstruct(FlowStates<T>& flow_states,
                                   const GridBlock<T>& grid,
-                                  IdealGas<T>& gas_model, size_t order) {
+                                  IdealGas<T>& gas_model,
+                                  TransportProperties<T>& trans_prop,
+                                  size_t order) {
     switch (order) {
         case 1:
             copy_reconstruct(flow_states, grid);
             break;
         case 2:
-            linear_reconstruct(flow_states, grid, gas_model);
+            linear_reconstruct(flow_states, grid, gas_model, trans_prop);
             break;
         default:
             spdlog::error("Invalid reconstruction order {}", order);
@@ -164,7 +170,9 @@ KOKKOS_INLINE_FUNCTION T linear_interpolate(T value, Vector3s<T> grad, T dx,
 template <typename T>
 void FiniteVolume<T>::linear_reconstruct(FlowStates<T>& flow_states,
                                          const GridBlock<T>& grid,
-                                         IdealGas<T>& gas_model) {
+                                         IdealGas<T>& gas_model,
+                                         TransportProperties<T>& trans_prop) {
+    (void)trans_prop;
     grad_calc_.compute_gradients(grid, flow_states.gas.pressure(), grad_.p);
     grad_calc_.compute_gradients(grid, flow_states.gas.rho(), grad_.rho);
     grad_calc_.compute_gradients(grid, flow_states.vel.x(), grad_.vx);
@@ -256,7 +264,7 @@ void FiniteVolume<T>::linear_reconstruct(FlowStates<T>& flow_states,
 
 template <typename T>
 void FiniteVolume<T>::compute_convective_flux(const GridBlock<T>& grid,
-                                   IdealGas<T>& gas_model) {
+                                              IdealGas<T>& gas_model) {
     // rotate velocities to the interface local frames
     Interfaces<T> faces = grid.interfaces();
     transform_to_local_frame(left_.vel, faces.norm(), faces.tan1(),

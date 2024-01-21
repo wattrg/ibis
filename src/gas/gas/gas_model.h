@@ -171,9 +171,16 @@ public:
         return Cv_ * gs.temp(i);
     }
 
+    KOKKOS_INLINE_FUNCTION
     double R() { return R_; }
+
+    KOKKOS_INLINE_FUNCTION
     double Cv() { return Cv_; }
+
+    KOKKOS_INLINE_FUNCTION
     double Cp() { return Cp_; }
+
+    KOKKOS_INLINE_FUNCTION
     double gamma() { return gamma_; }
 
 private:

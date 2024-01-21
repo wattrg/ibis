@@ -4,6 +4,8 @@
 #include <solvers/solver.h>
 #include <spdlog/spdlog.h>
 
+#include "gas/transport_properties.h"
+
 RungeKutta::RungeKutta(json config, GridBlock<double> grid,
                        std::string grid_dir, std::string flow_dir)
     : Solver(grid_dir, flow_dir) {
@@ -18,6 +20,8 @@ RungeKutta::RungeKutta(json config, GridBlock<double> grid,
 
     // gas_model
     gas_model_ = IdealGas<double>(config.at("gas_model"));
+    trans_prop_ =
+        TransportProperties<double>(config.at("transport_properties"));
 
     // memory
     grid_ = grid;
@@ -47,8 +51,9 @@ int RungeKutta::initialise() {
 int RungeKutta::finalise() { return 0; }
 
 int RungeKutta::take_step() {
-    fv_.compute_dudt(flow_, grid_, dUdt_, gas_model_);
-    double full_dt = cfl_ * fv_.estimate_dt(flow_, grid_, gas_model_);
+    fv_.compute_dudt(flow_, grid_, dUdt_, gas_model_, trans_prop_);
+    double full_dt =
+        cfl_ * fv_.estimate_dt(flow_, grid_, gas_model_, trans_prop_);
     dt_ = Kokkos::min(full_dt, max_time_ - t_);
     if (plot_frequency_ > 0.0 && time_since_last_plot_ < plot_frequency_) {
         dt_ = Kokkos::min(dt_, plot_frequency_ - time_since_last_plot_);

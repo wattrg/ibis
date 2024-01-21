@@ -8,6 +8,7 @@
 #include <finite_volume/limiter.h>
 #include <gas/flow_state.h>
 #include <gas/gas_model.h>
+#include <gas/transport_properties.h>
 #include <grid/grid.h>
 #include <spdlog/spdlog.h>
 
@@ -23,10 +24,12 @@ public:
     FiniteVolume(const GridBlock<T>& grid, json config);
 
     size_t compute_dudt(FlowStates<T>& flow_state, const GridBlock<T>& grid,
-                        ConservedQuantities<T>& dudt, IdealGas<T>& gas_model);
+                        ConservedQuantities<T>& dudt, IdealGas<T>& gas_model,
+                        TransportProperties<T>& trans_prop);
 
     double estimate_dt(const FlowStates<T>& flow_state, GridBlock<T>& grid,
-                       IdealGas<T>& gas_model);
+                       IdealGas<T>& gas_model,
+                       TransportProperties<T>& trans_prop);
 
     // methods
     // these have to be public for NVCC, but they shouldn't really need to
@@ -34,13 +37,16 @@ public:
     void apply_pre_reconstruction_bc(FlowStates<T>& fs,
                                      const GridBlock<T>& grid);
     void reconstruct(FlowStates<T>& flow_states, const GridBlock<T>& grid,
-                     IdealGas<T>& gas_model, size_t order);
+                     IdealGas<T>& gas_model, TransportProperties<T>& trans_prop,
+                     size_t order);
     void copy_reconstruct(FlowStates<T>& flow_states, const GridBlock<T>& grid);
     void linear_reconstruct(FlowStates<T>& flow_states,
-                            const GridBlock<T>& grid, IdealGas<T>& gas_model);
+                            const GridBlock<T>& grid, IdealGas<T>& gas_model,
+                            TransportProperties<T>& trans_prop);
     void flux_surface_integral(const GridBlock<T>& grid,
                                ConservedQuantities<T>& dudt);
-    void compute_convective_flux(const GridBlock<T>& grid, IdealGas<T>& gas_model);
+    void compute_convective_flux(const GridBlock<T>& grid,
+                                 IdealGas<T>& gas_model);
     void apply_post_convective_flux_bc();
     void apply_pre_spatial_deriv();
     size_t count_bad_cells(const FlowStates<T>& fs, const size_t num_cells);
