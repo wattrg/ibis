@@ -153,9 +153,8 @@ void InternalCopyReflectNormal<T>::apply(FlowStates<T>& fs,
 }
 
 template <typename T>
-void ReflectVelocity<T>::apply(FlowStates<T>& fs,
-                                   const GridBlock<T>& grid,
-                                   const Field<size_t>& boundary_faces) {
+void ReflectVelocity<T>::apply(FlowStates<T>& fs, const GridBlock<T>& grid,
+                               const Field<size_t>& boundary_faces) {
     size_t size = boundary_faces.size();
     auto interfaces = grid.interfaces();
     size_t num_valid_cells = grid.num_cells();
@@ -169,8 +168,7 @@ void ReflectVelocity<T>::apply(FlowStates<T>& fs,
             size_t ghost_cell;
             if (left_cell < num_valid_cells) {
                 ghost_cell = right_cell;
-            }
-            else {
+            } else {
                 ghost_cell = left_cell;
             }
 
@@ -178,7 +176,7 @@ void ReflectVelocity<T>::apply(FlowStates<T>& fs,
             fs.vel.x(ghost_cell) = -fs.vel.x(ghost_cell);
             fs.vel.y(ghost_cell) = -fs.vel.y(ghost_cell);
             fs.vel.z(ghost_cell) = -fs.vel.z(ghost_cell);
-    });
+        });
 }
 
 template <typename T>
