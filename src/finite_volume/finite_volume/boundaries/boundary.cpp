@@ -153,21 +153,52 @@ void InternalCopyReflectNormal<T>::apply(FlowStates<T>& fs,
 }
 
 template <typename T>
-std::shared_ptr<PreReconstruction<T>> build_pre_reco(json config) {
+void ReflectVelocity<T>::apply(FlowStates<T>& fs,
+                                   const GridBlock<T>& grid,
+                                   const Field<size_t>& boundary_faces) {
+    size_t size = boundary_faces.size();
+    auto interfaces = grid.interfaces();
+    size_t num_valid_cells = grid.num_cells();
+    Kokkos::parallel_for(
+        "Reflect::apply", size, KOKKOS_LAMBDA(const size_t i) {
+            size_t face_id = boundary_faces(i);
+
+            // determine the valid and the ghost cell
+            size_t left_cell = interfaces.left_cell(face_id);
+            size_t right_cell = interfaces.right_cell(face_id);
+            size_t ghost_cell;
+            if (left_cell < num_valid_cells) {
+                ghost_cell = right_cell;
+            }
+            else {
+                ghost_cell = left_cell;
+            }
+
+            // Copy the velocity from the valid cell, but change the sign
+            fs.vel.x(ghost_cell) = -fs.vel.x(ghost_cell);
+            fs.vel.y(ghost_cell) = -fs.vel.y(ghost_cell);
+            fs.vel.z(ghost_cell) = -fs.vel.z(ghost_cell);
+    });
+}
+
+template <typename T>
+std::shared_ptr<BoundaryAction<T>> build_boundary_action(json config) {
     std::string type = config.at("type");
-    std::shared_ptr<PreReconstruction<T>> action;
+    std::shared_ptr<BoundaryAction<T>> action;
     if (type == "flow_state_copy") {
         json flow_state = config.at("flow_state");
-        action = std::shared_ptr<PreReconstruction<T>>(
+        action = std::shared_ptr<BoundaryAction<T>>(
             new FlowStateCopy<T>(flow_state));
     } else if (type == "internal_copy") {
-        action = std::shared_ptr<PreReconstruction<T>>(new InternalCopy<T>());
-    } else if (type == "internal_copy_reflect") {
-        action = std::shared_ptr<PreReconstruction<T>>(
+        action = std::shared_ptr<BoundaryAction<T>>(new InternalCopy<T>());
+    } else if (type == "internal_copy_reflect_normal") {
+        action = std::shared_ptr<BoundaryAction<T>>(
             new InternalCopyReflectNormal<T>());
+    } else if (type == "reflect_velocity") {
+        action = std::shared_ptr<BoundaryAction<T>>(new ReflectVelocity<T>());
     } else {
-        spdlog::error("Unknown pre reconstruction action {}", type);
-        throw std::runtime_error("Unknown pre reconstruction action");
+        spdlog::error("Unknown boundary action {}", type);
+        throw std::runtime_error("Unknown boundary action");
     }
     return action;
 }
@@ -176,8 +207,8 @@ template <typename T>
 BoundaryCondition<T>::BoundaryCondition(json config) {
     std::vector<json> pre_reco = config.at("pre_reconstruction");
     for (size_t i = 0; i < pre_reco.size(); i++) {
-        std::shared_ptr<PreReconstruction<T>> action =
-            build_pre_reco<T>(pre_reco[i]);
+        std::shared_ptr<BoundaryAction<T>> action =
+            build_boundary_action<T>(pre_reco[i]);
         pre_reconstruction_.push_back(action);
     }
 }

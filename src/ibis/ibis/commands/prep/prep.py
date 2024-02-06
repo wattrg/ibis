@@ -182,6 +182,7 @@ class BoundaryCondition:
         dictionary["ghost_cells"] = self.ghost_cells
         return dictionary
 
+
 class _FlowStateCopy:
     def __init__(self, flow_state):
         self.flow_state = flow_state
@@ -189,13 +190,21 @@ class _FlowStateCopy:
     def as_dict(self):
         return {"type": "flow_state_copy", "flow_state": self.flow_state.as_dict()}
 
+
 class _InternalCopy:
     def as_dict(self):
         return {"type": "internal_copy"}
 
-class _InternalCopyReflect:
+
+class _InternalCopyReflectNormal:
     def as_dict(self):
-        return {"type": "internal_copy_reflect"}
+        return {"type": "internal_copy_reflect_normal"}
+
+
+class _ReflectVelocity():
+    def as_dict(self):
+        return {"type": "reflect_velocity"}
+
 
 def supersonic_inflow(inflow):
     return BoundaryCondition(
@@ -209,7 +218,12 @@ def supersonic_outflow():
 
 def slip_wall():
     return BoundaryCondition(
-        pre_reconstruction = [_InternalCopyReflect()]
+        pre_reconstruction = [_InternalCopyReflectNormal()]
+    )
+
+def no_slip_adiabatic_wall():
+    return BoundaryCondition(
+        pre_reconstruction = [_InternalCopy(), _ReflectVelocity()]
     )
 
 
