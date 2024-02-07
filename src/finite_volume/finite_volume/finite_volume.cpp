@@ -316,12 +316,11 @@ void FiniteVolume<T>::compute_convective_flux(const GridBlock<T>& grid,
         });
 }
 
-template<typename T>
-void FiniteVolume<T>::compute_viscous_flux(const FlowStates<T>& flow_states,
-                                           const GridBlock<T>& grid,
-                                           const IdealGas<T>& gas_model,
-                                           const TransportProperties<T>& trans_prop) {
-    grad_calc_.compute_gradients(grid, flow_states.gas.temp(), grad_.temp); 
+template <typename T>
+void FiniteVolume<T>::compute_viscous_flux(
+    const FlowStates<T>& flow_states, const GridBlock<T>& grid,
+    const IdealGas<T>& gas_model, const TransportProperties<T>& trans_prop) {
+    grad_calc_.compute_gradients(grid, flow_states.gas.temp(), grad_.temp);
     if (reconstruction_order_ < 2) {
         grad_calc_.compute_gradients(grid, flow_states.vel.x(), grad_.vx);
     }
@@ -332,11 +331,11 @@ void FiniteVolume<T>::compute_viscous_flux(const FlowStates<T>& flow_states,
     FlowStates<T> right = right_;
     GasStates<T> face_gs = face_gs_;
     Kokkos::parallel_for(
-        "viscous_flux", faces.size(), 
-        KOKKOS_LAMBDA(const size_t i) {
+        "viscous_flux", faces.size(), KOKKOS_LAMBDA(const size_t i) {
             // compute the viscosity and thermal conductivity at the face
             face_gs.temp(i) = 0.5 * (left.gas.temp(i) + right.gas.temp(i));
-            face_gs.pressure(i) = 0.5 * (left.gas.pressure(i) + right.gas.pressure(i));
+            face_gs.pressure(i) =
+                0.5 * (left.gas.pressure(i) + right.gas.pressure(i));
             gas_model.update_thermo_from_pT(face_gs, i);
             T mu = trans_prop.viscosity(face_gs, gas_model, i);
             T k = trans_prop.thermal_conductivity(face_gs, gas_model, i);

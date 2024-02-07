@@ -34,8 +34,8 @@ public:
         return mu0_ * Kokkos::pow(temp, 3 / 2) / (temp + Ts_);
     }
 
-    KOKKOS_INLINE_FUNCTION T viscosity(
-        const GasState<T>& gas_state, const IdealGas<T>& gas_model) const {
+    KOKKOS_INLINE_FUNCTION T viscosity(const GasState<T>& gas_state,
+                                       const IdealGas<T>& gas_model) const {
         (void)gas_model;
         T temp = gas_state.temp;
         return mu0_ * Kokkos::pow(temp, 3 / 2) / (temp + Ts_);
@@ -128,11 +128,12 @@ public:
     KOKKOS_INLINE_FUNCTION T thermal_conductivity(
         const GasStates<T, layout, typename exec::memory_space>& gas_states,
         const IdealGas<T>& gas_model, const size_t i) const {
-        return thermal_conductivity_.thermal_conductivity(gas_states, gas_model, i);
+        return thermal_conductivity_.thermal_conductivity(gas_states, gas_model,
+                                                          i);
     }
 
-    KOKKOS_INLINE_FUNCTION T thermal_conductivity(const GasState<T>& gas_state,
-                                                  const IdealGas<T>& gas_model) const {
+    KOKKOS_INLINE_FUNCTION T thermal_conductivity(
+        const GasState<T>& gas_state, const IdealGas<T>& gas_model) const {
         return thermal_conductivity_.thermal_conductivity(gas_state, gas_model);
     }
 

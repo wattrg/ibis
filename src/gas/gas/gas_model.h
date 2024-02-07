@@ -120,7 +120,9 @@ public:
         GasStates<T, layout, typename exec::memory_space> &gs) const {
         Kokkos::parallel_for(
             "update_thermo_from_pT", Kokkos::RangePolicy<exec>(0, gs.size()),
-            KOKKOS_CLASS_LAMBDA(const size_t i) { update_thermo_from_pT(gs, i); });
+            KOKKOS_CLASS_LAMBDA(const size_t i) {
+                update_thermo_from_pT(gs, i);
+            });
     }
 
     template <typename exec = default_exec_space,
@@ -162,16 +164,16 @@ public:
     }
 
     template <typename layout = default_layout, typename space = default_space>
-    KOKKOS_INLINE_FUNCTION T
-    speed_of_sound(const GasStates<T, layout, space> &gs, const size_t i) const {
+    KOKKOS_INLINE_FUNCTION T speed_of_sound(
+        const GasStates<T, layout, space> &gs, const size_t i) const {
         return speed_of_sound_(gs.temp(i), R_, gamma_);
     }
 
     T internal_energy(const GasState<T> &gs) const { return Cv_ * gs.temp; }
 
     template <typename layout = default_layout, typename space = default_space>
-    KOKKOS_INLINE_FUNCTION T
-    internal_energy(const GasStates<T, layout, space> &gs, const size_t i) const {
+    KOKKOS_INLINE_FUNCTION T internal_energy(
+        const GasStates<T, layout, space> &gs, const size_t i) const {
         return Cv_ * gs.temp(i);
     }
 

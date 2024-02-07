@@ -2,6 +2,7 @@
 #define GAS_H
 
 #include <Kokkos_Core.hpp>
+
 #include "Kokkos_Macros.hpp"
 
 template <typename T>
@@ -85,14 +86,10 @@ public:
     T& temp(const size_t cell_i) { return data_(cell_i, temp_idx_); }
 
     KOKKOS_INLINE_FUNCTION
-    auto temp() {
-        return Kokkos::subview(data_, Kokkos::ALL, temp_idx_);
-    }
+    auto temp() { return Kokkos::subview(data_, Kokkos::ALL, temp_idx_); }
 
     KOKKOS_INLINE_FUNCTION
-    auto temp() const {
-        return Kokkos::subview(data_, Kokkos::ALL, temp_idx_);
-    }
+    auto temp() const { return Kokkos::subview(data_, Kokkos::ALL, temp_idx_); }
 
     KOKKOS_INLINE_FUNCTION
     T& energy(const size_t cell_i) const { return data_(cell_i, energy_idx_); }
