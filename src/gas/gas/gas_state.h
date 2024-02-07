@@ -2,6 +2,7 @@
 #define GAS_H
 
 #include <Kokkos_Core.hpp>
+#include "Kokkos_Macros.hpp"
 
 template <typename T>
 struct GasState {
@@ -57,6 +58,9 @@ public:
     auto rho() { return Kokkos::subview(data_, Kokkos::ALL, rho_idx_); }
 
     KOKKOS_INLINE_FUNCTION
+    auto rho() const { return Kokkos::subview(data_, Kokkos::ALL, rho_idx_); }
+
+    KOKKOS_INLINE_FUNCTION
     T& pressure(const size_t cell_i) const {
         return data_(cell_i, pressure_idx_);
     }
@@ -70,10 +74,25 @@ public:
     }
 
     KOKKOS_INLINE_FUNCTION
+    auto pressure() const {
+        return Kokkos::subview(data_, Kokkos::ALL, pressure_idx_);
+    }
+
+    KOKKOS_INLINE_FUNCTION
     T& temp(const size_t cell_i) const { return data_(cell_i, temp_idx_); }
 
     KOKKOS_INLINE_FUNCTION
     T& temp(const size_t cell_i) { return data_(cell_i, temp_idx_); }
+
+    KOKKOS_INLINE_FUNCTION
+    auto temp() {
+        return Kokkos::subview(data_, Kokkos::ALL, temp_idx_);
+    }
+
+    KOKKOS_INLINE_FUNCTION
+    auto temp() const {
+        return Kokkos::subview(data_, Kokkos::ALL, temp_idx_);
+    }
 
     KOKKOS_INLINE_FUNCTION
     T& energy(const size_t cell_i) const { return data_(cell_i, energy_idx_); }

@@ -82,6 +82,28 @@ class ConvectiveFlux:
                 dictionary[key] = getattr(self, key)
         return dictionary
 
+class ViscousFlux:
+    _json_values = ["enabled"]
+    __slots__ = _json_values
+    _defaults_file = "viscous_flux.json"
+
+    def __init__(self, **kwargs):
+        json_data = read_defaults(DEFAULTS_DIRECTORY,
+                                  self._defaults_file) 
+        for key in self._json_values:
+            setattr(self, key, json_data[key])
+
+        for key in kwargs:
+            setattr(self, key, kwargs[key])
+
+    def validate(self):
+        return
+
+    def as_dict(self):
+        dictionary = {}
+        for key in self._json_values:
+            dictionary[key] = getattr(self, key)
+        return dictionary
 
 class Block:
     def __init__(self, file_name, initial_condition, boundaries):
@@ -340,12 +362,13 @@ def default_transport_properties(gas_model):
     return TransportPropertyModel(viscosity_model, thermal_conductivity_model)
 
 class Config:
-    _json_values = ["convective_flux", "solver", "grid", 
+    _json_values = ["convective_flux", "viscous_flux", "solver", "grid", 
                     "gas_model", "transport_properties"]
     __slots__ = _json_values
 
     def __init__(self):
         self.convective_flux = ConvectiveFlux()
+        self.viscous_flux = ViscousFlux()
         self.solver = make_default_solver()
         self.gas_model = default_gas_model()
         self.transport_properties = default_transport_properties(self.gas_model)

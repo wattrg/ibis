@@ -19,7 +19,7 @@ FiniteVolume<T>::FiniteVolume(const GridBlock<T>& grid, json config)
     reconstruction_order_ = convective_flux_config.at("reconstruction_order");
     if (reconstruction_order_ > 1) {
         grad_calc_ = WLSGradient<T>(grid);
-        grad_ = Gradients<T>(grid.num_cells());
+        grad_ = Gradients<T>(grid.num_cells(), viscous_);
         limiter_ = Limiter<T>(convective_flux_config);
         if (limiter_.enabled()) {
             limiters_ = LimiterValues<T>(grid.num_cells());
@@ -28,6 +28,13 @@ FiniteVolume<T>::FiniteVolume(const GridBlock<T>& grid, json config)
 
     flux_calculator_ = flux_calculator_from_string(
         convective_flux_config.at("flux_calculator"));
+
+    json viscous_flux_config = config.at("viscous_flux");
+    viscous_ = viscous_flux_config.at("enabled");
+
+    if (viscous_) {
+        face_gs_ = GasStates<T>(grid.num_interfaces());
+    }
 
     std::vector<std::string> boundary_tags = grid.boundary_tags();
     json boundaries_config = config.at("grid").at("boundaries");
@@ -52,6 +59,9 @@ size_t FiniteVolume<T>::compute_dudt(FlowStates<T>& flow_state,
     apply_pre_reconstruction_bc(flow_state, grid);
     reconstruct(flow_state, grid, gas_model, trans_prop, reconstruction_order_);
     compute_convective_flux(grid, gas_model);
+    if (viscous_) {
+        compute_viscous_flux(flow_state, grid, gas_model, trans_prop);
+    }
     flux_surface_integral(grid, dudt);
     return 0;
 }
@@ -168,7 +178,7 @@ KOKKOS_INLINE_FUNCTION T linear_interpolate(T value, Vector3s<T> grad, T dx,
 }
 
 template <typename T>
-void FiniteVolume<T>::linear_reconstruct(FlowStates<T>& flow_states,
+void FiniteVolume<T>::linear_reconstruct(const FlowStates<T>& flow_states,
                                          const GridBlock<T>& grid,
                                          IdealGas<T>& gas_model,
                                          TransportProperties<T>& trans_prop) {
@@ -303,6 +313,37 @@ void FiniteVolume<T>::compute_convective_flux(const GridBlock<T>& grid,
             if (flux.dim() == 3) {
                 flux.momentum_z(i) = z;
             }
+        });
+}
+
+template<typename T>
+void FiniteVolume<T>::compute_viscous_flux(const FlowStates<T>& flow_states,
+                                           const GridBlock<T>& grid,
+                                           const IdealGas<T>& gas_model,
+                                           const TransportProperties<T>& trans_prop) {
+    grad_calc_.compute_gradients(grid, flow_states.gas.temp(), grad_.temp); 
+    if (reconstruction_order_ < 2) {
+        grad_calc_.compute_gradients(grid, flow_states.vel.x(), grad_.vx);
+    }
+
+    ConservedQuantities<T> flux = flux_;
+    Interfaces<T> faces = grid.interfaces();
+    FlowStates<T> left = left_;
+    FlowStates<T> right = right_;
+    GasStates<T> face_gs = face_gs_;
+    Kokkos::parallel_for(
+        "viscous_flux", faces.size(), 
+        KOKKOS_LAMBDA(const size_t i) {
+            // compute the viscosity and thermal conductivity at the face
+            face_gs.temp(i) = 0.5 * (left.gas.temp(i) + right.gas.temp(i));
+            face_gs.pressure(i) = 0.5 * (left.gas.pressure(i) + right.gas.pressure(i));
+            gas_model.update_thermo_from_pT(face_gs, i);
+            T mu = trans_prop.viscosity(face_gs, gas_model, i);
+            T k = trans_prop.thermal_conductivity(face_gs, gas_model, i);
+
+            // Use Hasslebacker formula to average gradients to the face
+
+            // Calculate the viscous fluxes
         });
 }
 

@@ -40,13 +40,17 @@ public:
                      IdealGas<T>& gas_model, TransportProperties<T>& trans_prop,
                      size_t order);
     void copy_reconstruct(FlowStates<T>& flow_states, const GridBlock<T>& grid);
-    void linear_reconstruct(FlowStates<T>& flow_states,
+    void linear_reconstruct(const FlowStates<T>& flow_states,
                             const GridBlock<T>& grid, IdealGas<T>& gas_model,
                             TransportProperties<T>& trans_prop);
     void flux_surface_integral(const GridBlock<T>& grid,
                                ConservedQuantities<T>& dudt);
     void compute_convective_flux(const GridBlock<T>& grid,
                                  IdealGas<T>& gas_model);
+    void compute_viscous_flux(const FlowStates<T>& flow_states,
+                              const GridBlock<T>& grid,
+                              const IdealGas<T>& gas_model,
+                              const TransportProperties<T>& trans_prop);
     void apply_post_convective_flux_bc();
     void apply_pre_spatial_deriv();
     size_t count_bad_cells(const FlowStates<T>& fs, const size_t num_cells);
@@ -55,7 +59,8 @@ private:
     // memory
     FlowStates<T> left_;
     FlowStates<T> right_;
-    ConservedQuantities<double> flux_;
+    ConservedQuantities<T> flux_;
+    GasStates<T> face_gs_;
 
     // boundary conditions
     std::vector<std::shared_ptr<BoundaryCondition<T>>> bcs_{};
@@ -65,6 +70,7 @@ private:
     size_t dim_;
     size_t reconstruction_order_;
     FluxCalculator flux_calculator_;
+    bool viscous_;
 
     // gradients
     WLSGradient<T> grad_calc_;
