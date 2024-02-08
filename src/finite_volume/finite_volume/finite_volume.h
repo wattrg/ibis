@@ -65,7 +65,7 @@ private:
     ConservedQuantities<T> flux_;
 
     // memory for viscous fluxes
-    GasStates<T> face_gs_;
+    FlowStates<T> face_fs_;
     Gradients<T> face_grad_;
 
     // boundary conditions
