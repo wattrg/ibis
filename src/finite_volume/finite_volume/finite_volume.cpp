@@ -378,7 +378,8 @@ void FiniteVolume<T>::compute_viscous_properties_at_faces(
                 face_grad.vz.z(i) = cell_grad.vz.z(interior_cell);
             } else {
                 // set the gas state at the interface
-                face_fs.gas.temp(i) = 0.5 * (left.gas.temp(i) + right.gas.temp(i));
+                face_fs.gas.temp(i) =
+                    0.5 * (left.gas.temp(i) + right.gas.temp(i));
                 face_fs.gas.pressure(i) =
                     0.5 * (left.gas.pressure(i) + right.gas.pressure(i));
                 face_fs.vel.x(i) = 0.5 * (left.vel.x(i) + right.vel.x(i));
@@ -482,7 +483,7 @@ void FiniteVolume<T>::compute_viscous_flux(
         "viscous_flux", num_faces, KOKKOS_LAMBDA(const size_t i) {
             T mu = trans_prop.viscosity(face_fs.gas, gas_model, i);
             T k = trans_prop.thermal_conductivity(face_fs.gas, gas_model, i);
-            T lambda = - 2.0 / 3.0 * mu;
+            T lambda = -2.0 / 3.0 * mu;
 
             // compute the viscous fluxes
             T bulk = lambda * (grad.vx.x(i) + grad.vy.y(i) + grad.vz.z(i));
@@ -493,18 +494,12 @@ void FiniteVolume<T>::compute_viscous_flux(
             T tau_xz = mu * (grad.vx.z(i) + grad.vz.x(i));
             T tau_yz = mu * (grad.vy.z(i) + grad.vz.y(i));
 
-            T theta_x = fs.vel.x(i) * tau_xx + 
-                        fs.vel.y(i) * tau_xy + 
-                        fs.vel.z(i) * tau_xz + 
-                        k * grad.temp.x(i);
-            T theta_y = fs.vel.x(i) * tau_xy + 
-                        fs.vel.y(i) * tau_yy + 
-                        fs.vel.z(i) * tau_yz + 
-                        k * grad.temp.y(i);
-            T theta_z = fs.vel.x(i) * tau_xz + 
-                        fs.vel.y(i) * tau_yz + 
-                        fs.vel.z(i) * tau_zz + 
-                        k * grad.temp.z(i);
+            T theta_x = fs.vel.x(i) * tau_xx + fs.vel.y(i) * tau_xy +
+                        fs.vel.z(i) * tau_xz + k * grad.temp.x(i);
+            T theta_y = fs.vel.x(i) * tau_xy + fs.vel.y(i) * tau_yy +
+                        fs.vel.z(i) * tau_yz + k * grad.temp.y(i);
+            T theta_z = fs.vel.x(i) * tau_xz + fs.vel.y(i) * tau_yz +
+                        fs.vel.z(i) * tau_zz + k * grad.temp.z(i);
 
             T nx = interfaces.norm().x(i);
             T ny = interfaces.norm().y(i);
