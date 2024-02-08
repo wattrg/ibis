@@ -243,7 +243,7 @@ def slip_wall():
         pre_reconstruction = [_InternalCopyReflectNormal()]
     )
 
-def no_slip_adiabatic_wall():
+def adiabatic_no_slip_wall():
     return BoundaryCondition(
         pre_reconstruction = [_InternalCopy(), _ReflectVelocity()]
     )
@@ -422,6 +422,7 @@ def main(file_name, res_dir):
     namespace = {
         "config": config,
         "ConvectiveFlux": ConvectiveFlux,
+        "ViscousFlux": ViscousFlux,
         "FluxCalculator": FluxCalculator,
         "Block": Block,
         "Solver": Solver,
@@ -432,7 +433,8 @@ def main(file_name, res_dir):
         "RungeKutta": RungeKutta,
         "supersonic_inflow": supersonic_inflow,
         "supersonic_outflow": supersonic_outflow,
-        "slip_wall": slip_wall
+        "slip_wall": slip_wall,
+        "adiabatic_no_slip_wall": adiabatic_no_slip_wall,
     }
 
     # run the user supplied script
