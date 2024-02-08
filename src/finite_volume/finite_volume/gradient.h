@@ -10,12 +10,15 @@ template <typename T>
 struct Gradients {
     Gradients() {}
 
-    Gradients(int num_cells, bool viscous) {
-        p = Vector3s<T>("Gradients::p", num_cells);
-        rho = Vector3s<T>("Gradients::rho", num_cells);
+    Gradients(int num_cells, bool convective, bool viscous) {
         vx = Vector3s<T>("Gradients::vx", num_cells);
         vy = Vector3s<T>("Gradients::vy", num_cells);
         vz = Vector3s<T>("Gradients::vz", num_cells);
+
+        if (convective) {
+            p = Vector3s<T>("Gradients::p", num_cells);
+            rho = Vector3s<T>("Gradients::rho", num_cells);
+        }
 
         if (viscous) {
             temp = Vector3s<T>("Gradients::temp", num_cells);

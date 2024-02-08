@@ -51,6 +51,9 @@ public:
                               const GridBlock<T>& grid,
                               const IdealGas<T>& gas_model,
                               const TransportProperties<T>& trans_prop);
+    void compute_viscous_properties_at_faces(const FlowStates<T>& flow_states,
+                              const GridBlock<T>& grid,
+                              const IdealGas<T>& gas_model);
     void apply_post_convective_flux_bc();
     void apply_pre_spatial_deriv();
     size_t count_bad_cells(const FlowStates<T>& fs, const size_t num_cells);
@@ -60,7 +63,10 @@ private:
     FlowStates<T> left_;
     FlowStates<T> right_;
     ConservedQuantities<T> flux_;
+
+    // memory for viscous fluxes
     GasStates<T> face_gs_;
+    Gradients<T> face_grad_;
 
     // boundary conditions
     std::vector<std::shared_ptr<BoundaryCondition<T>>> bcs_{};
