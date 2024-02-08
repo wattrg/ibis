@@ -318,12 +318,10 @@ void FiniteVolume<T>::compute_convective_flux(const GridBlock<T>& grid,
         });
 }
 
-
 template <typename T>
 void FiniteVolume<T>::compute_viscous_properties_at_faces(
     const FlowStates<T>& flow_states, const GridBlock<T>& grid,
     const IdealGas<T>& gas_model) {
-
     grad_calc_.compute_gradients(grid, flow_states.gas.temp(), grad_.temp);
     if (reconstruction_order_ < 2) {
         grad_calc_.compute_gradients(grid, flow_states.vel.x(), grad_.vx);
@@ -337,132 +335,144 @@ void FiniteVolume<T>::compute_viscous_properties_at_faces(
     Gradients<T> cell_grad = grad_;
     Gradients<T> face_grad = face_grad_;
     size_t num_cells = grid.num_cells();
-    Kokkos::parallel_for("viscous_properties", faces.size(), 
-                         KOKKOS_LAMBDA(const size_t i) {
-        size_t left_cell = faces.left_cell(i);
-        size_t right_cell = faces.right_cell(i);
-        bool left_valid = left_cell < num_cells;
-        bool right_valid = right_cell < num_cells;
-        if (!left_valid || !right_valid) {
-            size_t interior_cell = (left_valid) ? left_cell : right_cell;
+    Kokkos::parallel_for(
+        "viscous_properties", faces.size(), KOKKOS_LAMBDA(const size_t i) {
+            size_t left_cell = faces.left_cell(i);
+            size_t right_cell = faces.right_cell(i);
+            bool left_valid = left_cell < num_cells;
+            bool right_valid = right_cell < num_cells;
+            if (!left_valid || !right_valid) {
+                size_t interior_cell = (left_valid) ? left_cell : right_cell;
 
-            // set the gas state at the interface
-            if (left_valid) {
-                face_gs.temp(i) = left.gas.temp(i);
-                face_gs.pressure(i) = left.gas.pressure(i);
+                // set the gas state at the interface
+                if (left_valid) {
+                    face_gs.temp(i) = left.gas.temp(i);
+                    face_gs.pressure(i) = left.gas.pressure(i);
+                } else {
+                    face_gs.temp(i) = right.gas.temp(i);
+                    face_gs.pressure(i) = right.gas.pressure(i);
+                }
+                gas_model.update_thermo_from_pT(face_gs, i);
+
+                // copy gradients to the face
+                face_grad.temp.x(i) = cell_grad.temp.x(interior_cell);
+                face_grad.temp.y(i) = cell_grad.temp.y(interior_cell);
+                face_grad.temp.z(i) = cell_grad.temp.z(interior_cell);
+
+                face_grad.vx.x(i) = cell_grad.vx.x(interior_cell);
+                face_grad.vx.y(i) = cell_grad.vx.y(interior_cell);
+                face_grad.vx.z(i) = cell_grad.vx.z(interior_cell);
+
+                face_grad.vy.x(i) = cell_grad.vy.x(interior_cell);
+                face_grad.vy.y(i) = cell_grad.vy.y(interior_cell);
+                face_grad.vy.z(i) = cell_grad.vy.z(interior_cell);
+
+                face_grad.vz.x(i) = cell_grad.vz.x(interior_cell);
+                face_grad.vz.y(i) = cell_grad.vz.y(interior_cell);
+                face_grad.vz.z(i) = cell_grad.vz.z(interior_cell);
+            } else {
+                // set the gas state at the interface
+                face_gs.temp(i) = 0.5 * (left.gas.temp(i) + right.gas.temp(i));
+                face_gs.pressure(i) =
+                    0.5 * (left.gas.pressure(i) + right.gas.pressure(i));
+                gas_model.update_thermo_from_pT(face_gs, i);
+
+                // Use Hasselbacher formula to average gradients to the face
+                // vector from cell centre to cell centre
+                T ex =
+                    faces.centre().x(right_cell) - faces.centre().x(left_cell);
+                T ey =
+                    faces.centre().y(right_cell) - faces.centre().y(left_cell);
+                T ez =
+                    faces.centre().z(right_cell) - faces.centre().z(left_cell);
+                T len_e = Kokkos::sqrt(ex * ex + ey * ey + ez * ez);
+                T ehatx = ex / len_e;
+                T ehaty = ey / len_e;
+                T ehatz = ez / len_e;
+                T nx = faces.norm().x(i);
+                T ny = faces.norm().y(i);
+                T nz = faces.norm().z(i);
+                T ehat_dot_n = ehatx * nx + ehaty * ny + ehatz * nz;
+
+                // vx
+                T avg_grad_x = 0.5 * (cell_grad.vx.x(left_cell) +
+                                      cell_grad.vx.x(right_cell));
+                T avg_grad_y = 0.5 * (cell_grad.vx.y(left_cell) +
+                                      cell_grad.vx.y(right_cell));
+                T avg_grad_z = 0.5 * (cell_grad.vx.z(left_cell) +
+                                      cell_grad.vx.z(right_cell));
+                T avgdotehat = avg_grad_x * ehatx + avg_grad_y * ehaty +
+                               avg_grad_z * ehatz;
+                T correction =
+                    avgdotehat - (left.vel.x(i) - right.vel.y(i)) / len_e;
+                face_grad.vx.x(i) = avg_grad_x - correction * nx / ehat_dot_n;
+                face_grad.vx.y(i) = avg_grad_y - correction * ny / ehat_dot_n;
+                face_grad.vx.z(i) = avg_grad_z - correction * nz / ehat_dot_n;
+
+                // vy
+                avg_grad_x = 0.5 * (cell_grad.vy.x(left_cell) +
+                                    cell_grad.vy.x(right_cell));
+                avg_grad_y = 0.5 * (cell_grad.vy.y(left_cell) +
+                                    cell_grad.vy.y(right_cell));
+                avg_grad_z = 0.5 * (cell_grad.vy.z(left_cell) +
+                                    cell_grad.vy.z(right_cell));
+                avgdotehat = avg_grad_x * ehatx + avg_grad_y * ehaty +
+                             avg_grad_z * ehatz;
+                correction =
+                    avgdotehat - (left.vel.y(i) - right.vel.y(i)) / len_e;
+                face_grad.vy.x(i) = avg_grad_x - correction * nx / ehat_dot_n;
+                face_grad.vy.y(i) = avg_grad_y - correction * ny / ehat_dot_n;
+                face_grad.vy.z(i) = avg_grad_z - correction * nz / ehat_dot_n;
+
+                // vz
+                avg_grad_x = 0.5 * (cell_grad.vz.x(left_cell) +
+                                    cell_grad.vz.x(right_cell));
+                avg_grad_y = 0.5 * (cell_grad.vz.y(left_cell) +
+                                    cell_grad.vz.y(right_cell));
+                avg_grad_z = 0.5 * (cell_grad.vz.z(left_cell) +
+                                    cell_grad.vz.z(right_cell));
+                avgdotehat = avg_grad_x * ehatx + avg_grad_y * ehaty +
+                             avg_grad_z * ehatz;
+                correction =
+                    avgdotehat - (left.vel.z(i) - right.vel.z(i)) / len_e;
+                face_grad.vz.x(i) = avg_grad_x - correction * nx / ehat_dot_n;
+                face_grad.vz.y(i) = avg_grad_y - correction * ny / ehat_dot_n;
+                face_grad.vz.z(i) = avg_grad_z - correction * nz / ehat_dot_n;
+
+                // temperature
+                avg_grad_x = 0.5 * (cell_grad.temp.x(left_cell) +
+                                    cell_grad.temp.x(right_cell));
+                avg_grad_y = 0.5 * (cell_grad.temp.y(left_cell) +
+                                    cell_grad.temp.y(right_cell));
+                avg_grad_z = 0.5 * (cell_grad.temp.z(left_cell) +
+                                    cell_grad.temp.z(right_cell));
+                avgdotehat = avg_grad_x * ehatx + avg_grad_y * ehaty +
+                             avg_grad_z * ehatz;
+                correction =
+                    avgdotehat - (left.gas.temp(i) - right.gas.temp(i)) / len_e;
+                face_grad.temp.x(i) = avg_grad_x - correction * nx / ehat_dot_n;
+                face_grad.temp.y(i) = avg_grad_y - correction * ny / ehat_dot_n;
+                face_grad.temp.z(i) = avg_grad_z - correction * nz / ehat_dot_n;
             }
-            else {
-                face_gs.temp(i) = right.gas.temp(i);
-                face_gs.pressure(i) = right.gas.pressure(i);
-            }
-            gas_model.update_thermo_from_pT(face_gs, i);
-
-            // copy gradients to the face
-            face_grad.temp.x(i) = cell_grad.temp.x(interior_cell);
-            face_grad.temp.y(i) = cell_grad.temp.y(interior_cell);
-            face_grad.temp.z(i) = cell_grad.temp.z(interior_cell);
-
-            face_grad.vx.x(i) = cell_grad.vx.x(interior_cell);
-            face_grad.vx.y(i) = cell_grad.vx.y(interior_cell);
-            face_grad.vx.z(i) = cell_grad.vx.z(interior_cell);
-
-            face_grad.vy.x(i) = cell_grad.vy.x(interior_cell);
-            face_grad.vy.y(i) = cell_grad.vy.y(interior_cell);
-            face_grad.vy.z(i) = cell_grad.vy.z(interior_cell);
-
-            face_grad.vz.x(i) = cell_grad.vz.x(interior_cell);
-            face_grad.vz.y(i) = cell_grad.vz.y(interior_cell);
-            face_grad.vz.z(i) = cell_grad.vz.z(interior_cell);
-        }
-        else {
-            // set the gas state at the interface
-            face_gs.temp(i) = 0.5 * (left.gas.temp(i) + right.gas.temp(i));
-            face_gs.pressure(i) =
-                0.5 * (left.gas.pressure(i) + right.gas.pressure(i));
-            gas_model.update_thermo_from_pT(face_gs, i);
-
-            // Use Hasselbacher formula to average gradients to the face
-            // vector from cell centre to cell centre
-            T ex = faces.centre().x(right_cell) - faces.centre().x(left_cell);
-            T ey = faces.centre().y(right_cell) - faces.centre().y(left_cell);
-            T ez = faces.centre().z(right_cell) - faces.centre().z(left_cell);
-            T len_e = Kokkos::sqrt(ex*ex + ey*ey + ez*ez);
-            T ehatx = ex / len_e;
-            T ehaty = ey / len_e;
-            T ehatz = ez / len_e;
-            T nx = faces.norm().x(i);
-            T ny = faces.norm().y(i);
-            T nz = faces.norm().z(i);
-            T ehat_dot_n = ehatx * nx + ehaty * ny + ehatz * nz;
-
-            // vx
-            T avg_grad_x = 0.5*(cell_grad.vx.x(left_cell)+cell_grad.vx.x(right_cell));
-            T avg_grad_y = 0.5*(cell_grad.vx.y(left_cell)+cell_grad.vx.y(right_cell));
-            T avg_grad_z = 0.5*(cell_grad.vx.z(left_cell)+cell_grad.vx.z(right_cell));
-            T avgdotehat = avg_grad_x * ehatx +
-                           avg_grad_y * ehaty +
-                           avg_grad_z * ehatz;
-            T correction = avgdotehat - (left.vel.x(i) - right.vel.y(i)) / len_e;
-            face_grad.vx.x(i) = avg_grad_x - correction * nx / ehat_dot_n;
-            face_grad.vx.y(i) = avg_grad_y - correction * ny / ehat_dot_n;
-            face_grad.vx.z(i) = avg_grad_z - correction * nz / ehat_dot_n;
-
-            // vy
-            avg_grad_x = 0.5*(cell_grad.vy.x(left_cell)+cell_grad.vy.x(right_cell));
-            avg_grad_y = 0.5*(cell_grad.vy.y(left_cell)+cell_grad.vy.y(right_cell));
-            avg_grad_z = 0.5*(cell_grad.vy.z(left_cell)+cell_grad.vy.z(right_cell));
-            avgdotehat = avg_grad_x * ehatx +
-                         avg_grad_y * ehaty +
-                         avg_grad_z * ehatz;
-            correction = avgdotehat - (left.vel.y(i) - right.vel.y(i)) / len_e;
-            face_grad.vy.x(i) = avg_grad_x - correction * nx / ehat_dot_n;
-            face_grad.vy.y(i) = avg_grad_y - correction * ny / ehat_dot_n;
-            face_grad.vy.z(i) = avg_grad_z - correction * nz / ehat_dot_n;
-
-            // vz
-            avg_grad_x = 0.5*(cell_grad.vz.x(left_cell)+cell_grad.vz.x(right_cell));
-            avg_grad_y = 0.5*(cell_grad.vz.y(left_cell)+cell_grad.vz.y(right_cell));
-            avg_grad_z = 0.5*(cell_grad.vz.z(left_cell)+cell_grad.vz.z(right_cell));
-            avgdotehat = avg_grad_x * ehatx +
-                         avg_grad_y * ehaty +
-                         avg_grad_z * ehatz;
-            correction = avgdotehat - (left.vel.z(i) - right.vel.z(i)) / len_e;
-            face_grad.vz.x(i) = avg_grad_x - correction * nx / ehat_dot_n;
-            face_grad.vz.y(i) = avg_grad_y - correction * ny / ehat_dot_n;
-            face_grad.vz.z(i) = avg_grad_z - correction * nz / ehat_dot_n;
-
-            // temperature
-            avg_grad_x = 0.5*(cell_grad.temp.x(left_cell)+cell_grad.temp.x(right_cell));
-            avg_grad_y = 0.5*(cell_grad.temp.y(left_cell)+cell_grad.temp.y(right_cell));
-            avg_grad_z = 0.5*(cell_grad.temp.z(left_cell)+cell_grad.temp.z(right_cell));
-            avgdotehat = avg_grad_x * ehatx +
-                         avg_grad_y * ehaty +
-                         avg_grad_z * ehatz;
-            correction = avgdotehat - (left.gas.temp(i) - right.gas.temp(i)) / len_e;
-            face_grad.temp.x(i) = avg_grad_x - correction * nx / ehat_dot_n;
-            face_grad.temp.y(i) = avg_grad_y - correction * ny / ehat_dot_n;
-            face_grad.temp.z(i) = avg_grad_z - correction * nz / ehat_dot_n;
-        }
-    });
+        });
 }
 
-template<typename T>
+template <typename T>
 void FiniteVolume<T>::compute_viscous_flux(
     const FlowStates<T>& flow_states, const GridBlock<T>& grid,
     const IdealGas<T>& gas_model, const TransportProperties<T>& trans_prop) {
-
     compute_viscous_properties_at_faces(flow_states, grid, gas_model);
 
     size_t num_faces = grid.num_interfaces();
     GasStates<T> face_gs = face_gs_;
     ConservedQuantities<T> flux = flux_;
-    Kokkos::parallel_for("viscous_flux", num_faces, 
-                         KOKKOS_LAMBDA(const size_t i) {
-        T mu = trans_prop.viscosity(face_gs, gas_model, i);
-        T k = trans_prop.thermal_conductivity(face_gs, gas_model, i);
+    Kokkos::parallel_for(
+        "viscous_flux", num_faces, KOKKOS_LAMBDA(const size_t i) {
+            T mu = trans_prop.viscosity(face_gs, gas_model, i);
+            T k = trans_prop.thermal_conductivity(face_gs, gas_model, i);
 
-        // compute the viscous fluxes
-    });
+            // compute the viscous fluxes
+        });
 }
 
 template <typename T>
