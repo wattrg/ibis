@@ -87,6 +87,7 @@ double FiniteVolume<T>::estimate_dt(const FlowStates<T>& flow_state,
     CellFaces<T> cell_interfaces = grid.cells().faces();
     Interfaces<T> interfaces = grid.interfaces();
     Cells<T> cells = grid.cells();
+    bool viscous = viscous_;
     // IdealGas<T> gas_model = gas_model_;
 
     double dt;
@@ -100,7 +101,7 @@ double FiniteVolume<T>::estimate_dt(const FlowStates<T>& flow_state,
             T k;
             T Pr;
             T rho;
-            if (viscous_) {
+            if (viscous) {
                 gamma = gas_model.gamma();
                 mu = trans_prop.viscosity(flow_state.gas, gas_model, cell_i);
                 k = trans_prop.thermal_conductivity(flow_state.gas, gas_model, cell_i);
@@ -126,7 +127,7 @@ double FiniteVolume<T>::estimate_dt(const FlowStates<T>& flow_state,
                             gas_model.speed_of_sound(flow_state.gas, cell_i);
                 spectral_radii_c += sig_vel * area;
 
-                if (viscous_) {
+                if (viscous) {
                     T tmp = (gamma / rho) * (mu / Pr) * area * area;
                     spectral_radii_v += tmp / volume;
                 }
@@ -368,6 +369,7 @@ void FiniteVolume<T>::compute_viscous_properties_at_faces(
 
     ConservedQuantities<T> flux = flux_;
     Interfaces<T> faces = grid.interfaces();
+    Cells<T> cells = grid.cells();
     FlowStates<T> left = left_;
     FlowStates<T> right = right_;
     FlowStates<T> face_fs = face_fs_;
@@ -430,11 +432,11 @@ void FiniteVolume<T>::compute_viscous_properties_at_faces(
                 // Use Hasselbacher formula to average gradients to the face
                 // vector from cell centre to cell centre
                 T ex =
-                    faces.centre().x(right_cell) - faces.centre().x(left_cell);
+                    cells.centroids().x(right_cell) - cells.centroids().x(left_cell);
                 T ey =
-                    faces.centre().y(right_cell) - faces.centre().y(left_cell);
+                    cells.centroids().y(right_cell) - cells.centroids().y(left_cell);
                 T ez =
-                    faces.centre().z(right_cell) - faces.centre().z(left_cell);
+                    cells.centroids().z(right_cell) - cells.centroids().z(left_cell);
                 T len_e = Kokkos::sqrt(ex * ex + ey * ey + ez * ez);
                 T ehatx = ex / len_e;
                 T ehaty = ey / len_e;
@@ -521,6 +523,7 @@ void FiniteVolume<T>::compute_viscous_flux(
     ConservedQuantities<T> flux = flux_;
     Gradients<T> grad = face_grad_;
     FlowStates<T> fs = face_fs_;
+    size_t dim = dim_;
     Kokkos::parallel_for(
         "viscous_flux", num_faces, KOKKOS_LAMBDA(const size_t i) {
             // transport properties at the face
@@ -549,7 +552,7 @@ void FiniteVolume<T>::compute_viscous_flux(
             T nz = interfaces.norm().z(i);
             flux.momentum_x(i) -= nx * tau_xx + ny * tau_xy + nz * tau_xz;
             flux.momentum_y(i) -= nx * tau_xy + ny * tau_yy + nz * tau_yz;
-            if (dim_ == 3) {
+            if (dim == 3) {
                 flux.momentum_z(i) -= nx * tau_xz + ny * tau_yz + nz * tau_zz;
             }
             flux.energy(i) -= nx * theta_x + ny * theta_y + nz * theta_z;
