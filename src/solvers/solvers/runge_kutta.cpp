@@ -6,7 +6,7 @@
 
 #include "gas/transport_properties.h"
 
-RungeKutta::RungeKutta(json config, GridBlock<double> grid,
+RungeKutta::RungeKutta(json config, GridBlock<double>& grid,
                        std::string grid_dir, std::string flow_dir)
     : Solver(grid_dir, flow_dir) {
     // configuration

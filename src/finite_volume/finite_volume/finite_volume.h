@@ -64,10 +64,6 @@ private:
     FlowStates<T> right_;
     ConservedQuantities<T> flux_;
 
-    // memory for viscous fluxes
-    FlowStates<T> face_fs_;
-    Gradients<T> face_grad_;
-
     // boundary conditions
     std::vector<std::shared_ptr<BoundaryCondition<T>>> bcs_{};
     std::vector<Field<size_t>> bc_interfaces_{};
@@ -80,7 +76,11 @@ private:
 
     // gradients
     WLSGradient<T> grad_calc_;
-    Gradients<T> grad_;
+    Gradients<T> cell_grad_;
+
+    // memory for viscous fluxes
+    FlowStates<T> face_fs_;
+    Gradients<T> face_grad_;
 
     // limiter
     Limiter<T> limiter_;

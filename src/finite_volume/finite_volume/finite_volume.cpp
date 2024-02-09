@@ -13,32 +13,42 @@ FiniteVolume<T>::FiniteVolume(const GridBlock<T>& grid, json config)
     : left_(FlowStates<T>(grid.num_interfaces())),
       right_(FlowStates<T>(grid.num_interfaces())),
       flux_(ConservedQuantities<T>(grid.num_interfaces(), grid.dim())) {
+
     dim_ = grid.dim();
 
     json convective_flux_config = config.at("convective_flux");
+    json viscous_flux_config = config.at("viscous_flux");
+    viscous_ = viscous_flux_config.at("enabled");
 
+    // allocate memory for gradients
+    if (viscous_ || reconstruction_order_ > 1) {
+        bool convective_grad = reconstruction_order_ > 1;
+        grad_calc_ = WLSGradient<T>(grid);
+        cell_grad_ = Gradients<T>(grid.num_cells(), convective_grad, viscous_);
+
+        if (viscous_) {
+            face_fs_ = FlowStates<T>(grid.num_interfaces());
+
+            // we only need viscous gradient info at faces
+            face_grad_ = Gradients<T>(grid.num_interfaces(), false, true);
+        }
+    }
+
+    // set the flux calculator
+    flux_calculator_ = flux_calculator_from_string(
+        convective_flux_config.at("flux_calculator"));
+
+    // set up reconstruction limiters for convective flux
     reconstruction_order_ = convective_flux_config.at("reconstruction_order");
     if (reconstruction_order_ > 1) {
-        grad_calc_ = WLSGradient<T>(grid);
-        grad_ = Gradients<T>(grid.num_cells(), true, viscous_);
         limiter_ = Limiter<T>(convective_flux_config);
         if (limiter_.enabled()) {
             limiters_ = LimiterValues<T>(grid.num_cells());
         }
     }
 
-    flux_calculator_ = flux_calculator_from_string(
-        convective_flux_config.at("flux_calculator"));
-
-    json viscous_flux_config = config.at("viscous_flux");
-    viscous_ = viscous_flux_config.at("enabled");
-
-    if (viscous_) {
-        face_fs_ = FlowStates<T>(grid.num_interfaces());
-        face_grad_ = Gradients<T>(grid.num_cells(), false, true);
-    }
-
-    std::vector<std::string> boundary_tags = grid.boundary_tags();
+    // set up boundary conditions
+std::vector<std::string> boundary_tags = grid.boundary_tags();
     json boundaries_config = config.at("grid").at("boundaries");
     for (size_t bi = 0; bi < boundary_tags.size(); bi++) {
         // build the actual boundary condition
@@ -84,18 +94,44 @@ double FiniteVolume<T>::estimate_dt(const FlowStates<T>& flow_state,
         "FV::signal_frequency", num_cells,
         KOKKOS_LAMBDA(const size_t cell_i, double& dt_utd) {
             auto cell_face_ids = cell_interfaces.face_ids(cell_i);
-            T spectral_radii = 0.0;
+
+            T gamma;
+            T mu;
+            T k;
+            T Pr;
+            T rho;
+            if (viscous_) {
+                gamma = gas_model.gamma();
+                mu = trans_prop.viscosity(flow_state.gas, gas_model, cell_i);
+                k = trans_prop.thermal_conductivity(flow_state.gas, gas_model, cell_i);
+                rho = flow_state.gas.rho(cell_i);
+                Pr = mu * gas_model.Cp() / k;
+            } 
+
+            T vx = flow_state.vel.x(cell_i);
+            T vy = flow_state.vel.y(cell_i);
+            T vz = flow_state.vel.z(cell_i);
+
+            T spectral_radii_c = 0.0;
+            T spectral_radii_v = 0.0;
+            T volume = cells.volume(cell_i);
             for (size_t face_idx = 0; face_idx < cell_face_ids.size();
                  face_idx++) {
                 size_t i_face = cell_face_ids(face_idx);
-                T dot = flow_state.vel.x(cell_i) * interfaces.norm().x(i_face) +
-                        flow_state.vel.y(cell_i) * interfaces.norm().y(i_face) +
-                        flow_state.vel.z(cell_i) * interfaces.norm().z(i_face);
+                T area = interfaces.area(i_face);
+                T dot = vx * interfaces.norm().x(i_face) +
+                        vy * interfaces.norm().y(i_face) +
+                        vz * interfaces.norm().z(i_face);
                 T sig_vel = Kokkos::fabs(dot) +
                             gas_model.speed_of_sound(flow_state.gas, cell_i);
-                spectral_radii += sig_vel * interfaces.area(i_face);
+                spectral_radii_c += sig_vel * area;
+
+                if (viscous_) {
+                    T tmp = (gamma / rho) * (mu / Pr) * area * area;
+                    spectral_radii_v += tmp / volume;
+                }
             }
-            T local_dt = cells.volume(cell_i) / spectral_radii;
+            T local_dt = volume / (spectral_radii_c + 4 * spectral_radii_v);
             dt_utd = Kokkos::min(local_dt, dt_utd);
         },
         Kokkos::Min<double>(dt));
@@ -185,17 +221,17 @@ void FiniteVolume<T>::linear_reconstruct(const FlowStates<T>& flow_states,
                                          IdealGas<T>& gas_model,
                                          TransportProperties<T>& trans_prop) {
     (void)trans_prop;
-    grad_calc_.compute_gradients(grid, flow_states.gas.pressure(), grad_.p);
-    grad_calc_.compute_gradients(grid, flow_states.gas.rho(), grad_.rho);
-    grad_calc_.compute_gradients(grid, flow_states.vel.x(), grad_.vx);
-    grad_calc_.compute_gradients(grid, flow_states.vel.y(), grad_.vy);
-    grad_calc_.compute_gradients(grid, flow_states.vel.z(), grad_.vz);
+    grad_calc_.compute_gradients(grid, flow_states.gas.pressure(), cell_grad_.p);
+    grad_calc_.compute_gradients(grid, flow_states.gas.rho(), cell_grad_.rho);
+    grad_calc_.compute_gradients(grid, flow_states.vel.x(), cell_grad_.vx);
+    grad_calc_.compute_gradients(grid, flow_states.vel.y(), cell_grad_.vy);
+    grad_calc_.compute_gradients(grid, flow_states.vel.z(), cell_grad_.vz);
 
     auto cells = grid.cells();
     auto faces = grid.interfaces();
     auto left = left_;
     auto right = right_;
-    auto grad = grad_;
+    auto grad = cell_grad_;
     auto limiter = limiter_;
     auto limiters = limiters_;
     int num_cells = grid.num_cells();
@@ -322,9 +358,12 @@ template <typename T>
 void FiniteVolume<T>::compute_viscous_properties_at_faces(
     const FlowStates<T>& flow_states, const GridBlock<T>& grid,
     const IdealGas<T>& gas_model) {
-    grad_calc_.compute_gradients(grid, flow_states.gas.temp(), grad_.temp);
+
+    grad_calc_.compute_gradients(grid, flow_states.gas.temp(), cell_grad_.temp);
     if (reconstruction_order_ < 2) {
-        grad_calc_.compute_gradients(grid, flow_states.vel.x(), grad_.vx);
+        grad_calc_.compute_gradients(grid, flow_states.vel.x(), cell_grad_.vx);
+        grad_calc_.compute_gradients(grid, flow_states.vel.y(), cell_grad_.vy);
+        grad_calc_.compute_gradients(grid, flow_states.vel.z(), cell_grad_.vz);
     }
 
     ConservedQuantities<T> flux = flux_;
@@ -332,7 +371,7 @@ void FiniteVolume<T>::compute_viscous_properties_at_faces(
     FlowStates<T> left = left_;
     FlowStates<T> right = right_;
     FlowStates<T> face_fs = face_fs_;
-    Gradients<T> cell_grad = grad_;
+    Gradients<T> cell_grad = cell_grad_;
     Gradients<T> face_grad = face_grad_;
     size_t num_cells = grid.num_cells();
     Kokkos::parallel_for(
@@ -382,10 +421,11 @@ void FiniteVolume<T>::compute_viscous_properties_at_faces(
                     0.5 * (left.gas.temp(i) + right.gas.temp(i));
                 face_fs.gas.pressure(i) =
                     0.5 * (left.gas.pressure(i) + right.gas.pressure(i));
+                gas_model.update_thermo_from_pT(face_fs.gas, i);
+
                 face_fs.vel.x(i) = 0.5 * (left.vel.x(i) + right.vel.x(i));
                 face_fs.vel.y(i) = 0.5 * (left.vel.y(i) + right.vel.y(i));
                 face_fs.vel.z(i) = 0.5 * (left.vel.z(i) + right.vel.z(i));
-                gas_model.update_thermo_from_pT(face_fs.gas, i);
 
                 // Use Hasselbacher formula to average gradients to the face
                 // vector from cell centre to cell centre
@@ -414,10 +454,11 @@ void FiniteVolume<T>::compute_viscous_properties_at_faces(
                 T avgdotehat = avg_grad_x * ehatx + avg_grad_y * ehaty +
                                avg_grad_z * ehatz;
                 T correction =
-                    avgdotehat - (left.vel.x(i) - right.vel.y(i)) / len_e;
+                    avgdotehat - (right.vel.x(i) - left.vel.x(i)) / len_e;
                 face_grad.vx.x(i) = avg_grad_x - correction * nx / ehat_dot_n;
                 face_grad.vx.y(i) = avg_grad_y - correction * ny / ehat_dot_n;
                 face_grad.vx.z(i) = avg_grad_z - correction * nz / ehat_dot_n;
+                // printf("dvx/dy = %f, avg_grad_x = %f, grad_x_left = %f, grad_x_right = %f\n", face_grad.vx.y(i), avg_grad_x, cell_grad.vx.y(left_cell), cell_grad.vx.y(right_cell));
 
                 // vy
                 avg_grad_x = 0.5 * (cell_grad.vy.x(left_cell) +
@@ -429,7 +470,7 @@ void FiniteVolume<T>::compute_viscous_properties_at_faces(
                 avgdotehat = avg_grad_x * ehatx + avg_grad_y * ehaty +
                              avg_grad_z * ehatz;
                 correction =
-                    avgdotehat - (left.vel.y(i) - right.vel.y(i)) / len_e;
+                    avgdotehat - (right.vel.y(i) - left.vel.y(i)) / len_e;
                 face_grad.vy.x(i) = avg_grad_x - correction * nx / ehat_dot_n;
                 face_grad.vy.y(i) = avg_grad_y - correction * ny / ehat_dot_n;
                 face_grad.vy.z(i) = avg_grad_z - correction * nz / ehat_dot_n;
@@ -444,7 +485,7 @@ void FiniteVolume<T>::compute_viscous_properties_at_faces(
                 avgdotehat = avg_grad_x * ehatx + avg_grad_y * ehaty +
                              avg_grad_z * ehatz;
                 correction =
-                    avgdotehat - (left.vel.z(i) - right.vel.z(i)) / len_e;
+                    avgdotehat - (right.vel.z(i) - left.vel.z(i)) / len_e;
                 face_grad.vz.x(i) = avg_grad_x - correction * nx / ehat_dot_n;
                 face_grad.vz.y(i) = avg_grad_y - correction * ny / ehat_dot_n;
                 face_grad.vz.z(i) = avg_grad_z - correction * nz / ehat_dot_n;
@@ -459,7 +500,7 @@ void FiniteVolume<T>::compute_viscous_properties_at_faces(
                 avgdotehat = avg_grad_x * ehatx + avg_grad_y * ehaty +
                              avg_grad_z * ehatz;
                 correction =
-                    avgdotehat - (left.gas.temp(i) - right.gas.temp(i)) / len_e;
+                    avgdotehat - (right.gas.temp(i) - left.gas.temp(i)) / len_e;
                 face_grad.temp.x(i) = avg_grad_x - correction * nx / ehat_dot_n;
                 face_grad.temp.y(i) = avg_grad_y - correction * ny / ehat_dot_n;
                 face_grad.temp.z(i) = avg_grad_z - correction * nz / ehat_dot_n;
@@ -471,6 +512,7 @@ template <typename T>
 void FiniteVolume<T>::compute_viscous_flux(
     const FlowStates<T>& flow_states, const GridBlock<T>& grid,
     const IdealGas<T>& gas_model, const TransportProperties<T>& trans_prop) {
+
     compute_viscous_properties_at_faces(flow_states, grid, gas_model);
 
     size_t num_faces = grid.num_interfaces();
@@ -481,8 +523,9 @@ void FiniteVolume<T>::compute_viscous_flux(
     FlowStates<T> fs = face_fs_;
     Kokkos::parallel_for(
         "viscous_flux", num_faces, KOKKOS_LAMBDA(const size_t i) {
-            T mu = trans_prop.viscosity(face_fs.gas, gas_model, i);
-            T k = trans_prop.thermal_conductivity(face_fs.gas, gas_model, i);
+            // transport properties at the face
+            T mu = 0.0; //trans_prop.viscosity(face_fs.gas, gas_model, i);
+            T k = 0.0; //trans_prop.thermal_conductivity(face_fs.gas, gas_model, i);
             T lambda = -2.0 / 3.0 * mu;
 
             // compute the viscous fluxes
@@ -494,19 +537,21 @@ void FiniteVolume<T>::compute_viscous_flux(
             T tau_xz = mu * (grad.vx.z(i) + grad.vz.x(i));
             T tau_yz = mu * (grad.vy.z(i) + grad.vz.y(i));
 
-            T theta_x = fs.vel.x(i) * tau_xx + fs.vel.y(i) * tau_xy +
-                        fs.vel.z(i) * tau_xz + k * grad.temp.x(i);
-            T theta_y = fs.vel.x(i) * tau_xy + fs.vel.y(i) * tau_yy +
-                        fs.vel.z(i) * tau_yz + k * grad.temp.y(i);
-            T theta_z = fs.vel.x(i) * tau_xz + fs.vel.y(i) * tau_yz +
-                        fs.vel.z(i) * tau_zz + k * grad.temp.z(i);
+            T vx = fs.vel.x(i);
+            T vy = fs.vel.y(i);
+            T vz = fs.vel.z(i);
+            T theta_x = vx * tau_xx + vy * tau_xy + vz * tau_xz + k * grad.temp.x(i);
+            T theta_y = vx * tau_xy + vy * tau_yy + vz * tau_yz + k * grad.temp.y(i);
+            T theta_z = vx * tau_xz + vy * tau_yz + vz * tau_zz + k * grad.temp.z(i);
 
             T nx = interfaces.norm().x(i);
             T ny = interfaces.norm().y(i);
             T nz = interfaces.norm().z(i);
             flux.momentum_x(i) -= nx * tau_xx + ny * tau_xy + nz * tau_xz;
             flux.momentum_y(i) -= nx * tau_xy + ny * tau_yy + nz * tau_yz;
-            flux.momentum_z(i) -= nx * tau_xz + ny * tau_yz + nz * tau_zz;
+            if (dim_ == 3) {
+                flux.momentum_z(i) -= nx * tau_xz + ny * tau_yz + nz * tau_zz;
+            }
             flux.energy(i) -= nx * theta_x + ny * theta_y + nz * theta_z;
         });
 }
