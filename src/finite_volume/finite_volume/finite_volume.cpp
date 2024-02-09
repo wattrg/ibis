@@ -524,8 +524,8 @@ void FiniteVolume<T>::compute_viscous_flux(
     Kokkos::parallel_for(
         "viscous_flux", num_faces, KOKKOS_LAMBDA(const size_t i) {
             // transport properties at the face
-            T mu = 0.0; //trans_prop.viscosity(face_fs.gas, gas_model, i);
-            T k = 0.0; //trans_prop.thermal_conductivity(face_fs.gas, gas_model, i);
+            T mu = trans_prop.viscosity(face_fs.gas, gas_model, i);
+            T k = trans_prop.thermal_conductivity(face_fs.gas, gas_model, i);
             T lambda = -2.0 / 3.0 * mu;
 
             // compute the viscous fluxes
