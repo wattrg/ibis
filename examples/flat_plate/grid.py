@@ -9,10 +9,12 @@ gmsh.option.setNumber("Mesh.RecombineAll", 1)
 gmsh.option.setNumber("Mesh.SaveAll", 1)
 
 # points
+height = 0.1
+length = 0.5
 a = gmsh.model.geo.addPoint(0.0, 0.0, 0.0) # 1
-b = gmsh.model.geo.addPoint(1.0, 0.0, 0.0) # 2
-c = gmsh.model.geo.addPoint(1.0, 0.5, 0.0) # 3
-d = gmsh.model.geo.addPoint(0.0, 0.5, 0.0) # 4
+b = gmsh.model.geo.addPoint(length, 0.0, 0.0) # 2
+c = gmsh.model.geo.addPoint(length, height, 0.0) # 3
+d = gmsh.model.geo.addPoint(0.0, height, 0.0) # 4
 
 # lines
 la = gmsh.model.geo.addLine(a, b)
@@ -30,9 +32,23 @@ gmsh.model.geo.addPhysicalGroup(1, [ld], name="inflow")
 gmsh.model.geo.addPhysicalGroup(1, [lb, lc], name="outflow")
 
 # mesh size
-gmsh.model.geo.mesh.setSize([(0, a), (0,b), (0,c), (0,d)], 0.01)
+size = 0.01
+gmsh.model.geo.mesh.setSize([(0, a), (0,b), (0,c), (0,d)], size)
 
 # syncronise the geometry so we can mesh
+gmsh.model.geo.synchronize()
+
+boundary_layer = gmsh.model.mesh.field.add("BoundaryLayer")
+gmsh.model.mesh.field.set_numbers(boundary_layer, "CurvesList", [la])
+gmsh.model.mesh.field.set_numbers(boundary_layer, "PointsList", [a, b])
+gmsh.model.mesh.field.set_number(boundary_layer, "SizeFar", size)
+gmsh.model.mesh.field.set_number(boundary_layer, "Size", 5e-5)
+gmsh.model.mesh.field.set_number(boundary_layer, "Quads", 1)
+gmsh.model.mesh.field.set_number(boundary_layer, "Ratio", 1.1)
+gmsh.model.mesh.field.set_number(boundary_layer, "Thickness", height/2)
+gmsh.model.mesh.field.setAsBoundaryLayer(boundary_layer)
+gmsh.model.geo.mesh.set_recombine(2, 1)
+
 gmsh.model.geo.synchronize()
 
 # generate the mesh
