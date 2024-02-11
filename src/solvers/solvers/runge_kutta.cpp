@@ -4,7 +4,9 @@
 #include <solvers/solver.h>
 #include <spdlog/spdlog.h>
 
-RungeKutta::RungeKutta(json config, GridBlock<double> grid,
+#include "gas/transport_properties.h"
+
+RungeKutta::RungeKutta(json config, GridBlock<double>& grid,
                        std::string grid_dir, std::string flow_dir)
     : Solver(grid_dir, flow_dir) {
     // configuration
@@ -18,6 +20,8 @@ RungeKutta::RungeKutta(json config, GridBlock<double> grid,
 
     // gas_model
     gas_model_ = IdealGas<double>(config.at("gas_model"));
+    trans_prop_ =
+        TransportProperties<double>(config.at("transport_properties"));
 
     // memory
     grid_ = grid;
@@ -47,8 +51,9 @@ int RungeKutta::initialise() {
 int RungeKutta::finalise() { return 0; }
 
 int RungeKutta::take_step() {
-    fv_.compute_dudt(flow_, grid_, dUdt_, gas_model_);
-    double full_dt = cfl_ * fv_.estimate_dt(flow_, grid_, gas_model_);
+    fv_.compute_dudt(flow_, grid_, dUdt_, gas_model_, trans_prop_);
+    double full_dt =
+        cfl_ * fv_.estimate_dt(flow_, grid_, gas_model_, trans_prop_);
     dt_ = Kokkos::min(full_dt, max_time_ - t_);
     if (plot_frequency_ > 0.0 && time_since_last_plot_ < plot_frequency_) {
         dt_ = Kokkos::min(dt_, plot_frequency_ - time_since_last_plot_);
@@ -82,8 +87,9 @@ int RungeKutta::plot_solution(unsigned int step) {
 }
 
 void RungeKutta::print_progress(unsigned int step, double wc) {
-    spdlog::info("  step: {:>8}, t = {:.6e}, dt = {:.6e}, wc = {:.1f}s", step,
-                 t_, dt_, wc);
+    spdlog::info(
+        "  step: {:>8}, t = {:.6e} ({:.1f}%), dt = {:.6e}, wc = {:.1f}s", step,
+        t_, t_ / max_time_ * 100, dt_, wc);
 }
 std::string RungeKutta::stop_reason(unsigned int step) {
     if (t_ >= max_time_ - 1e-15)

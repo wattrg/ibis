@@ -28,8 +28,6 @@ class FlowState:
             if vz:
                 self.vel.z = vz
 
-
-
     def as_dict(self):
         return {
             "p": self.gas.p, "T": self.gas.T, 
@@ -37,8 +35,59 @@ class FlowState:
             "vx": self.vel.x, "vy": self.vel.y, "vz": self.vel.z
         }
 
+class SutherlandViscosity:
+    __slots__ = ["_mu_0", "_T_0", "_T_s"]
+
+    def __init__(self, mu_0, T_0, T_s):
+        self._mu_0 = mu_0
+        self._T_0 = T_0
+        self._T_s = T_s
+
+    def as_dict(self):
+        return {
+            "type": "sutherland",
+            "mu_0": self._mu_0,
+            "T_0": self._T_0,
+            "T_s": self._T_s
+        }
+
+class ConstantPrandtlNumber:
+    __slots__ = ["_Pr"]
+
+    def __init__(self, Pr):
+        self._Pr = Pr
+
+    def as_dict(self):
+        return {
+            "type": "constant_prandtl_number",
+            "Pr": self._Pr
+        }
+
+class TransportPropertyModel:
+    __slots__ = ["_viscosity_model", 
+                 "_thermal_conducitivty_model"]
+    def __init__(self, viscosity, thermal_conductivity):
+        self._viscosity_model = viscosity
+        self._thermal_conducitivty_model = thermal_conductivity
+
+    def viscosity_model(self):
+        return self._viscosity_model
+
+    def thermal_conductivity_model(self):
+        return self._thermal_conducitivty_model
+
+    def as_dict(self):
+        return {
+            "viscosity": self._viscosity_model.as_dict(),
+            "thermal_conductivity": self._thermal_conducitivty_model.as_dict()
+        }
+
+    def validate(self):
+        return
+
 class GasModel:
-    __slots__ = ["_gas_model"]
+    __slots__ = ["_gas_model", "_transport_properties", "_type",
+                 "_species"]
 
     def update_thermo_from_pT(self, gas_state):
         self._gas_model.update_thermo_from_pT(gas_state)
@@ -52,23 +101,16 @@ class GasModel:
     def speed_of_sound(self, gas_state):
         return self._gas_model.speed_of_sound(gas_state)
 
+    def species(self):
+        return self._species
+
     def validate(self):
         return
 
-class IdealGas(GasModel):
-    def __init__(self, args):
-        if type(args) == float:
-            self._gas_model = PyIdealGas(args)
-        elif type(args) == dict:
-            self._gas_model = PyIdealGas(args["R"])
+    def type(self):
+        return self._type
 
     def as_dict(self):
-        return {
-            "type": "ideal_gas",
-            "R": self._gas_model.R(),
-            "Cv": self._gas_model.Cv(),
-            "Cp": self._gas_model.Cp(),
-            "gamma": self._gas_model.gamma()
-        }
+        return self._gas_model.as_dict()
 
 

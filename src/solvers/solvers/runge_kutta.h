@@ -3,13 +3,14 @@
 
 #include <finite_volume/conserved_quantities.h>
 #include <gas/flow_state.h>
+#include <gas/transport_properties.h>
 #include <grid/grid.h>
 #include <io/io.h>
 #include <solvers/solver.h>
 
 class RungeKutta : public Solver {
 public:
-    RungeKutta(json config, GridBlock<double> grid, std::string grid_dir,
+    RungeKutta(json config, GridBlock<double>& grid, std::string grid_dir,
                std::string flow_dir);
 
     ~RungeKutta() {}
@@ -64,6 +65,7 @@ private:
 
 private:
     IdealGas<double> gas_model_;
+    TransportProperties<double> trans_prop_;
 };
 
 #endif

@@ -1,0 +1,8 @@
+{
+    "viscosity": {
+        "ideal_gas": "sutherland"
+    },
+    "thermal_conductivity": {
+        "ideal_gas": "constant_prandtl"
+    }
+}

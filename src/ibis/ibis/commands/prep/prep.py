@@ -3,12 +3,13 @@ import os
 import shutil
 from enum import Enum
 
-from ibis_py_utils import read_defaults, FlowState, GasModel, IdealGas
+from ibis_py_utils import ConstantPrandtlNumber, SutherlandViscosity, TransportPropertyModel, read_defaults, FlowState, GasModel
 from python_api import (
     FluxCalculator, 
     flux_calculator_from_string, 
     string_from_flux_calculator,
-    GasState
+    GasState,
+    PyIdealGas
 )
 
 validation_errors = []
@@ -81,6 +82,28 @@ class ConvectiveFlux:
                 dictionary[key] = getattr(self, key)
         return dictionary
 
+class ViscousFlux:
+    _json_values = ["enabled"]
+    __slots__ = _json_values
+    _defaults_file = "viscous_flux.json"
+
+    def __init__(self, **kwargs):
+        json_data = read_defaults(DEFAULTS_DIRECTORY,
+                                  self._defaults_file) 
+        for key in self._json_values:
+            setattr(self, key, json_data[key])
+
+        for key in kwargs:
+            setattr(self, key, kwargs[key])
+
+    def validate(self):
+        return
+
+    def as_dict(self):
+        dictionary = {}
+        for key in self._json_values:
+            dictionary[key] = getattr(self, key)
+        return dictionary
 
 class Block:
     def __init__(self, file_name, initial_condition, boundaries):
@@ -181,6 +204,7 @@ class BoundaryCondition:
         dictionary["ghost_cells"] = self.ghost_cells
         return dictionary
 
+
 class _FlowStateCopy:
     def __init__(self, flow_state):
         self.flow_state = flow_state
@@ -188,13 +212,21 @@ class _FlowStateCopy:
     def as_dict(self):
         return {"type": "flow_state_copy", "flow_state": self.flow_state.as_dict()}
 
+
 class _InternalCopy:
     def as_dict(self):
         return {"type": "internal_copy"}
 
-class _InternalCopyReflect:
+
+class _InternalCopyReflectNormal:
     def as_dict(self):
-        return {"type": "internal_copy_reflect"}
+        return {"type": "internal_copy_reflect_normal"}
+
+
+class _ReflectVelocity():
+    def as_dict(self):
+        return {"type": "reflect_velocity"}
+
 
 def supersonic_inflow(inflow):
     return BoundaryCondition(
@@ -208,7 +240,12 @@ def supersonic_outflow():
 
 def slip_wall():
     return BoundaryCondition(
-        pre_reconstruction = [_InternalCopyReflect()]
+        pre_reconstruction = [_InternalCopyReflectNormal()]
+    )
+
+def adiabatic_no_slip_wall():
+    return BoundaryCondition(
+        pre_reconstruction = [_InternalCopy(), _ReflectVelocity()]
     )
 
 
@@ -247,29 +284,94 @@ def make_default_solver():
         ValidationException(f"Unknown default solver {default_solver_name}")
     )
 
-def get_gas_model(name):
-    with open(f"{SHARE_DIRECTORY}/gas_models/{name}.json", "r") as gas_model:
-        gas_model = json.load(gas_model)
+# class SutherlandViscosity(ViscosityModel):
+#     def __init__(self):
+        
+def load_species_data(species): 
+    with open(f"{SHARE_DIRECTORY}/species_database/{species}.json") as f:
+        species_data = json.load(f)
+    return species_data
 
-    gas_model_type = gas_model["type"]
-    if gas_model_type == "ideal_gas":
-        return IdealGas(gas_model["R"])        
-    else:
-        raise ValidationException(f"Unknown gas model {gas_model_type}")
+class IdealGas(GasModel):
+    _type = "ideal_gas"
+
+    def __init__(self, **args):
+        if "R" in args:
+            self._gas_model = PyIdealGas(args["R"])
+        elif "species" in args:
+            species = args["species"]
+            if type(species) != str:
+                if len(species ) != 1:
+                    raise Exception("Multiple species not supported yet")
+                self._species = species[0]
+            species_data = load_species_data(self._species)
+            R = species_data["thermo"]["R"]
+            self._gas_model = PyIdealGas(R)
+
+    def as_dict(self):
+        return {
+            "type": self._type,
+            "R": self._gas_model.R(),
+            "Cv": self._gas_model.Cv(),
+            "Cp": self._gas_model.Cp(),
+            "gamma": self._gas_model.gamma()
+        }
 
 def default_gas_model():
-    default_gas_model_name = read_defaults(DEFAULTS_DIRECTORY,
+    default_gas_model = read_defaults(DEFAULTS_DIRECTORY,
                                            "config.json")["gas_model"]
-    return get_gas_model(default_gas_model_name)
+    if default_gas_model["model"] == "ideal_gas":
+        return IdealGas(species = default_gas_model["species"])
+
+def default_viscosity_model(gas_model):
+    gas_model_type = gas_model.type()
+    with open(f"{DEFAULTS_DIRECTORY}/transport_properties.json") as f:
+        models = json.load(f)
+    viscosity_model = models["viscosity"][gas_model_type]
+    species_data = load_species_data(gas_model.species())["transport"]
+    if viscosity_model == "sutherland":
+        species_data = species_data["sutherland"]
+        mu_0 = species_data["mu_0"]
+        T_0 = species_data["T_0"]
+        T_s = species_data["T_s"]
+        return SutherlandViscosity(mu_0, T_0, T_s)
+    else:
+        validation_errors.append(
+            ValidationException(f"Unknown default viscosity "
+                                f"model {viscosity_model}")
+        )
+
+def default_thermal_conductivity_model(gas_model):
+    gas_model_type = gas_model.type()
+    with open(f"{DEFAULTS_DIRECTORY}/transport_properties.json") as f:
+        models = json.load(f)
+    thermal_conductivity = models["thermal_conductivity"][gas_model_type]
+    species_data = load_species_data(gas_model.species())["transport"]
+    if thermal_conductivity == "constant_prandtl":
+        Pr = species_data["prandtl"]
+        return ConstantPrandtlNumber(Pr)
+    else:
+        validation_errors.append(
+            ValidationException("Unknown default thermal conductivity "
+                                f"model {thermal_conductivity}")
+        )
+
+def default_transport_properties(gas_model):
+    viscosity_model = default_viscosity_model(gas_model)
+    thermal_conductivity_model = default_thermal_conductivity_model(gas_model)
+    return TransportPropertyModel(viscosity_model, thermal_conductivity_model)
 
 class Config:
-    _json_values = ["convective_flux", "solver", "grid", "gas_model"]
+    _json_values = ["convective_flux", "viscous_flux", "solver", "grid", 
+                    "gas_model", "transport_properties"]
     __slots__ = _json_values
 
     def __init__(self):
         self.convective_flux = ConvectiveFlux()
+        self.viscous_flux = ViscousFlux()
         self.solver = make_default_solver()
         self.gas_model = default_gas_model()
+        self.transport_properties = default_transport_properties(self.gas_model)
     
     def validate(self):
         for setting in self.__slots__:
@@ -320,6 +422,7 @@ def main(file_name, res_dir):
     namespace = {
         "config": config,
         "ConvectiveFlux": ConvectiveFlux,
+        "ViscousFlux": ViscousFlux,
         "FluxCalculator": FluxCalculator,
         "Block": Block,
         "Solver": Solver,
@@ -327,11 +430,11 @@ def main(file_name, res_dir):
         "GasState": GasState,
         "GasModel": GasModel,
         "IdealGas": IdealGas,
-        "get_gas_model": get_gas_model,
         "RungeKutta": RungeKutta,
         "supersonic_inflow": supersonic_inflow,
         "supersonic_outflow": supersonic_outflow,
-        "slip_wall": slip_wall
+        "slip_wall": slip_wall,
+        "adiabatic_no_slip_wall": adiabatic_no_slip_wall,
     }
 
     # run the user supplied script

@@ -34,7 +34,7 @@ public:
 public:
     GasStates() {}
 
-    GasStates(int n) {
+    GasStates(size_t n) {
         rho_idx_ = 0;
         pressure_idx_ = 1;
         temp_idx_ = 2;
@@ -50,19 +50,24 @@ public:
           energy_idx_(3) {}
 
     KOKKOS_INLINE_FUNCTION
-    T& rho(const int cell_i) const { return data_(cell_i, rho_idx_); }
+    T& rho(const size_t cell_i) const { return data_(cell_i, rho_idx_); }
 
     KOKKOS_INLINE_FUNCTION
-    T& rho(const int cell_i) { return data_(cell_i, rho_idx_); }
+    T& rho(const size_t cell_i) { return data_(cell_i, rho_idx_); }
 
     KOKKOS_INLINE_FUNCTION
     auto rho() { return Kokkos::subview(data_, Kokkos::ALL, rho_idx_); }
 
     KOKKOS_INLINE_FUNCTION
-    T& pressure(const int cell_i) const { return data_(cell_i, pressure_idx_); }
+    auto rho() const { return Kokkos::subview(data_, Kokkos::ALL, rho_idx_); }
 
     KOKKOS_INLINE_FUNCTION
-    T& pressure(const int cell_i) { return data_(cell_i, pressure_idx_); }
+    T& pressure(const size_t cell_i) const {
+        return data_(cell_i, pressure_idx_);
+    }
+
+    KOKKOS_INLINE_FUNCTION
+    T& pressure(const size_t cell_i) { return data_(cell_i, pressure_idx_); }
 
     KOKKOS_INLINE_FUNCTION
     auto pressure() {
@@ -70,19 +75,30 @@ public:
     }
 
     KOKKOS_INLINE_FUNCTION
-    T& temp(const int cell_i) const { return data_(cell_i, temp_idx_); }
+    auto pressure() const {
+        return Kokkos::subview(data_, Kokkos::ALL, pressure_idx_);
+    }
 
     KOKKOS_INLINE_FUNCTION
-    T& temp(const int cell_i) { return data_(cell_i, temp_idx_); }
+    T& temp(const size_t cell_i) const { return data_(cell_i, temp_idx_); }
 
     KOKKOS_INLINE_FUNCTION
-    T& energy(const int cell_i) const { return data_(cell_i, energy_idx_); }
+    T& temp(const size_t cell_i) { return data_(cell_i, temp_idx_); }
 
     KOKKOS_INLINE_FUNCTION
-    T& energy(const int cell_i) { return data_(cell_i, energy_idx_); }
+    auto temp() { return Kokkos::subview(data_, Kokkos::ALL, temp_idx_); }
 
     KOKKOS_INLINE_FUNCTION
-    void copy_gas_state(const GasState<T>& gs, const int i) {
+    auto temp() const { return Kokkos::subview(data_, Kokkos::ALL, temp_idx_); }
+
+    KOKKOS_INLINE_FUNCTION
+    T& energy(const size_t cell_i) const { return data_(cell_i, energy_idx_); }
+
+    KOKKOS_INLINE_FUNCTION
+    T& energy(const size_t cell_i) { return data_(cell_i, energy_idx_); }
+
+    KOKKOS_INLINE_FUNCTION
+    void copy_gas_state(const GasState<T>& gs, const size_t i) {
         rho(i) = gs.rho;
         pressure(i) = gs.pressure;
         temp(i) = gs.temp;
@@ -100,7 +116,7 @@ public:
     }
 
     KOKKOS_INLINE_FUNCTION
-    int size() const { return data_.extent(0); }
+    size_t size() const { return data_.extent(0); }
 
 public:
     view_type data_;

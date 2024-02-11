@@ -66,6 +66,9 @@ public:
     auto x() { return Kokkos::subview(view_, Kokkos::ALL, 0); }
 
     KOKKOS_INLINE_FUNCTION
+    auto x() const { return Kokkos::subview(view_, Kokkos::ALL, 0); }
+
+    KOKKOS_INLINE_FUNCTION
     T& y(const size_t i) { return view_(i, 1); }
 
     KOKKOS_INLINE_FUNCTION
@@ -75,6 +78,9 @@ public:
     auto y() { return Kokkos::subview(view_, Kokkos::ALL, 1); }
 
     KOKKOS_INLINE_FUNCTION
+    auto y() const { return Kokkos::subview(view_, Kokkos::ALL, 1); }
+
+    KOKKOS_INLINE_FUNCTION
     T& z(const size_t i) { return view_(i, 2); }
 
     KOKKOS_INLINE_FUNCTION
@@ -82,6 +88,9 @@ public:
 
     KOKKOS_INLINE_FUNCTION
     auto z() { return Kokkos::subview(view_, Kokkos::ALL, 2); }
+
+    KOKKOS_INLINE_FUNCTION
+    auto z() const { return Kokkos::subview(view_, Kokkos::ALL, 2); }
 
     KOKKOS_INLINE_FUNCTION
     void copy_vector(const Vector3<T>& vector, const size_t i) {

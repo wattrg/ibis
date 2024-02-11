@@ -7,16 +7,16 @@
 enum class BoundaryConditions { SupersonicInflow, SlipWall, SupersonicOutflow };
 
 template <typename T>
-class PreReconstruction {
+class BoundaryAction {
 public:
-    virtual ~PreReconstruction() {}
+    virtual ~BoundaryAction() {}
 
     virtual void apply(FlowStates<T>& fs, const GridBlock<T>& grid,
                        const Field<size_t>& boundary_faces) = 0;
 };
 
 template <typename T>
-class FlowStateCopy : public PreReconstruction<T> {
+class FlowStateCopy : public BoundaryAction<T> {
 public:
     FlowStateCopy(FlowState<T> fs) : fs_(fs) {}
 
@@ -32,7 +32,7 @@ private:
 };
 
 template <typename T>
-class InternalCopy : public PreReconstruction<T> {
+class InternalCopy : public BoundaryAction<T> {
 public:
     ~InternalCopy() {}
 
@@ -41,9 +41,18 @@ public:
 };
 
 template <typename T>
-class InternalCopyReflectNormal : public PreReconstruction<T> {
+class InternalCopyReflectNormal : public BoundaryAction<T> {
 public:
     ~InternalCopyReflectNormal() {}
+
+    void apply(FlowStates<T>& fs, const GridBlock<T>& grid,
+               const Field<size_t>& boundary_faces);
+};
+
+template <typename T>
+class ReflectVelocity : public BoundaryAction<T> {
+public:
+    ~ReflectVelocity() {}
 
     void apply(FlowStates<T>& fs, const GridBlock<T>& grid,
                const Field<size_t>& boundary_faces);
@@ -58,7 +67,7 @@ public:
                                   const Field<size_t>& boundary_faces);
 
 private:
-    std::vector<std::shared_ptr<PreReconstruction<T>>> pre_reconstruction_;
+    std::vector<std::shared_ptr<BoundaryAction<T>>> pre_reconstruction_;
 };
 
 #endif
