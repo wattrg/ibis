@@ -87,8 +87,9 @@ int RungeKutta::plot_solution(unsigned int step) {
 }
 
 void RungeKutta::print_progress(unsigned int step, double wc) {
-    spdlog::info("  step: {:>8}, t = {:.6e} ({:.1f}%), dt = {:.6e}, wc = {:.1f}s", step,
-                 t_, t_/max_time_*100, dt_, wc);
+    spdlog::info(
+        "  step: {:>8}, t = {:.6e} ({:.1f}%), dt = {:.6e}, wc = {:.1f}s", step,
+        t_, t_ / max_time_ * 100, dt_, wc);
 }
 std::string RungeKutta::stop_reason(unsigned int step) {
     if (t_ >= max_time_ - 1e-15)
