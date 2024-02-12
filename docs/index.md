@@ -4,4 +4,4 @@ Performance portable compressible CFD solver
 
 [Reference manual](reference_manual): Reference manual for all the settings
 
-[Developer documentation](reference_manual): Documentation for developers
+[Developer documentation](dev_docs): Documentation for developers

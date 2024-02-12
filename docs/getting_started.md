@@ -67,6 +67,6 @@ make -j install
 I'll add an example of running a simulation here soon...
 
 ## Documentation
-User reference manual: [https://wattrg.github.io/ibis/reference_manual]
+[Reference Manual](reference_manual)
 
-Developer documentation: [https://wattrg.github.io/ibis/dev_docs]
+[Developer Documentation](dev_docs)
