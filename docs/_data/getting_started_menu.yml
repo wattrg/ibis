@@ -1,0 +1,6 @@
+- label: Getting Started
+  items:
+    - name: Install
+      link: /documentation/getting_started/install
+    - name: Run
+      link: /documentation/getting_started/run

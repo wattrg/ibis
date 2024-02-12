@@ -1,8 +1,0 @@
-- label: Documentation
-  items:
-    - name: Getting Started
-      link: /documentation/getting_started
-    - name: User Guide
-      link: /documentation/user_guide/user_guide
-    - name: Developer Guide
-      link: /documentation/dev_docs/dev_docs

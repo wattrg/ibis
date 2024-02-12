@@ -1,11 +1,12 @@
 ---
 title: Ibis
 subtitle: Getting Started
+toc: true
+menubar: getting_started_menu
 ---
 
-# Getting Started
-## Installation
-### Dependancies
+# Installation
+## Dependancies
 To build `ibis`, you will need to have:
   1. A c++ compiler (with c++17 support; g++ 11.4 works)
   2. cmake (at least version 3.20.1)
@@ -13,7 +14,7 @@ To build `ibis`, you will need to have:
   4. Python
   5. Native compilers for the target architecture (e.g. cuda, hip)
 
-### Download
+## Download
 To download the code:
 ```
 git clone git@github.com:wattrg/ibis.git --recurse-submodules
@@ -24,7 +25,7 @@ If you missed the `--recurse-submodules`, you can initialise the submodules them
 git submodule update --init --recursive
 ```
 
-### Configure
+## Configure
 `ibis` uses `cmake` to configure things like the architecture you will run the code on.
 Regardless of the architecture you will be using, `ibis` does not support in-tree builds.
 So, regardless of your architecture, begin with:
@@ -44,13 +45,13 @@ The available architectures are:
 The next step is to configure the code.
 Make sure to follow the configuration steps for your chosen architecture.
 
-#### Configure CUDA, CPU
+### Configure CUDA, CPU
 With your chosen architecture, run
 ```
-cmake .. -DKokkos_ENABLE[ARCH]=ON
+cmake .. -DKokkos_ENABLE_[ARCH]=ON
 ```
 
-#### Configure HIP
+### Configure HIP
 If using an AMD GPU, make sure that `ROCM_PATH` is set to `/opt/rocm` before proceeding.
 If you are using any machine but Bunya, configure `ibis` with:
 ```
@@ -62,11 +63,11 @@ Configure `ibis` with:
 cmake .. -DKokkos_ENABLE_HIP=ON -DCMAKE_CXX_COMPILER=hipcc -DIbis_LINK_FS=ON
 ```
 
-### Compile
+## Compile and Install
 Finally, to compile and install (regardless of architecture):
 ```
 make -j install
 ```
 
-## Running simulations
-I'll add an example of running a simulation here soon...
+Finally, add the install location to your system path.
+By default, the install location is `path/to/ibis/repo/inst`
