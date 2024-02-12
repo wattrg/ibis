@@ -1,3 +1,8 @@
+---
+title: Ibis
+subtitle: Getting Started
+---
+
 # Getting Started
 ## Installation
 ### Dependancies

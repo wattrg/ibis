@@ -5,7 +5,7 @@
 - label: Fluid Settings
   items:
     - name: Convective Flux
-      link: /documentation/user_guide/fluid_settings/convective_flux/
+      link: /documentation/user_guide/fluid_settings/convective_flux
 - label: Solvers
   items:
     - name: Explicit Solver
