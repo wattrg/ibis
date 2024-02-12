@@ -13,3 +13,5 @@ tests/**/grid
 tests/**/config
 tests/**/log
 tests/**/plot
+Gemfile
+Gemfile.lock

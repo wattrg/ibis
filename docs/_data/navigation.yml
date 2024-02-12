@@ -1,0 +1,11 @@
+- name: Examples
+  link: /examples/examples/
+- name: Documentation
+  link: /documentation/docs/
+  dropdown:
+    - name: Getting Started
+      link: /documentation/getting_started/
+    - name: User Guide
+      link: /documentation/user_guide/user_guide
+    - name: Developer Docs
+      link: /documentation/dev_docs/

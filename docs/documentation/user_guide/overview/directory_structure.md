@@ -1,6 +1,10 @@
-# Ibis Reference Manual
+---
+title: Ibis
+subtitle: User Guide
+menubar: user_guide_menu
+---
 
-## Directory Structure
+# Directory Structure
 `ibis` runs one simulation per directory.
 `ibis` looks for specific files in that directory, and will automatically generate files.
 

@@ -65,8 +65,3 @@ make -j install
 
 ## Running simulations
 I'll add an example of running a simulation here soon...
-
-## Documentation
-[Reference Manual](reference_manual)
-
-[Developer Documentation](dev_docs)
