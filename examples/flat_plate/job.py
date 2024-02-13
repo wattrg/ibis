@@ -1,16 +1,17 @@
 gas_model = IdealGas(R = 287.0)
 gas_state = GasState()
-gas_state.p = 101325
+gas_state.p = 1.013e3
 gas_state.T = 300.0
 gas_model.update_thermo_from_pT(gas_state)
-vx = 2.0 * gas_model.speed_of_sound(gas_state)
+vx = 4.0 * gas_model.speed_of_sound(gas_state)
 inflow = FlowState(gas=gas_state, vx=vx)
 initial = FlowState(gas=gas_state, vx=0)
-max_time = 2 * 0.0005 / vx
+max_time = 5 * 1.0 / vx
 
 config.convective_flux = ConvectiveFlux(
     flux_calculator = FluxCalculator.Ausmdv,
-    reconstruction_order = 2
+    reconstruction_order = 1,
+    limiter = "none"
 )
 
 config.viscous_flux = ViscousFlux(enabled = True)

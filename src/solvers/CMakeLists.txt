@@ -1,4 +1,4 @@
-add_library(solver STATIC solvers/solver.cpp solvers/solver.h)
+add_library(solver STATIC solvers/solver.cpp solvers/solver.h solvers/cfl.cpp)
 
 target_link_libraries(
 	solver 
@@ -28,3 +28,22 @@ target_link_libraries(
 	spdlog::spdlog
 	IO
 )
+
+if (Ibis_BUILD_TESTS)
+	add_executable(
+		solver_unittest
+		test/unittest.cpp
+		solvers/cfl.cpp
+	)
+	target_link_libraries(
+		solver_unittest 
+		PRIVATE
+		Kokkos::kokkos 
+		nlohmann_json::nlohmann_json 
+		grid 
+		gas
+		spdlog::spdlog
+		IO
+	)
+	add_test(NAME solver_unittest COMMAND solver_unittest)
+endif(Ibis_BUILD_TESTS)

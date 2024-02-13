@@ -191,8 +191,9 @@ class Block:
         return dictionary
 
 class BoundaryCondition:
-    def __init__(self, pre_reconstruction, ghost_cells=True):
+    def __init__(self, pre_reconstruction, pre_viscous_grad, ghost_cells=True):
         self._pre_reconstruction = pre_reconstruction
+        self._pre_viscous_grad = pre_viscous_grad
         self.ghost_cells = ghost_cells
 
     def as_dict(self):
@@ -201,6 +202,12 @@ class BoundaryCondition:
         for pre_reco in self._pre_reconstruction:
             pre_reco_dict.append(pre_reco.as_dict())
         dictionary["pre_reconstruction"] = pre_reco_dict
+
+        pre_viscous_grad_dict = []
+        for pre_viscous_grad in self._pre_viscous_grad:
+            pre_viscous_grad_dict.append(pre_viscous_grad.as_dict())
+        dictionary["pre_viscous_grad"] = pre_viscous_grad_dict
+
         dictionary["ghost_cells"] = self.ghost_cells
         return dictionary
 
@@ -223,29 +230,35 @@ class _InternalCopyReflectNormal:
         return {"type": "internal_copy_reflect_normal"}
 
 
-class _ReflectVelocity():
+class _InternalVelCopyReflect:
     def as_dict(self):
-        return {"type": "reflect_velocity"}
+        return {"type": "internal_vel_copy_reflect"}
 
 
 def supersonic_inflow(inflow):
     return BoundaryCondition(
-        pre_reconstruction=[_FlowStateCopy(inflow)]
+        pre_reconstruction=[_FlowStateCopy(inflow)],
+        pre_viscous_grad=[]
     )
 
 def supersonic_outflow():
     return BoundaryCondition(
-        pre_reconstruction = [_InternalCopy()]
+        pre_reconstruction = [_InternalCopy()],
+        pre_viscous_grad=[]
     )
+    
 
 def slip_wall():
     return BoundaryCondition(
-        pre_reconstruction = [_InternalCopyReflectNormal()]
+        pre_reconstruction = [_InternalCopyReflectNormal()],
+        pre_viscous_grad=[]
     )
+    
 
 def adiabatic_no_slip_wall():
     return BoundaryCondition(
-        pre_reconstruction = [_InternalCopy(), _ReflectVelocity()]
+        pre_reconstruction = [_InternalCopyReflectNormal()],
+        pre_viscous_grad = [_InternalVelCopyReflect()]
     )
 
 

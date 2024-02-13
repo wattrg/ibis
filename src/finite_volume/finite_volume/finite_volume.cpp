@@ -71,6 +71,7 @@ size_t FiniteVolume<T>::compute_dudt(FlowStates<T>& flow_state,
     reconstruct(flow_state, grid, gas_model, trans_prop, reconstruction_order_);
     compute_convective_flux(grid, gas_model);
     if (viscous_) {
+        apply_pre_viscous_grad_bc(flow_state, grid);
         compute_viscous_flux(flow_state, grid, gas_model, trans_prop);
     }
     flux_surface_integral(grid, dudt);
@@ -147,6 +148,16 @@ void FiniteVolume<T>::apply_pre_reconstruction_bc(FlowStates<T>& fs,
         std::shared_ptr<BoundaryCondition<T>> bc = bcs_[i];
         Field<size_t> bc_faces = bc_interfaces_[i];
         bc->apply_pre_reconstruction(fs, grid, bc_faces);
+    }
+}
+
+template <typename T>
+void FiniteVolume<T>::apply_pre_viscous_grad_bc(FlowStates<T>& fs,
+                                                const GridBlock<T>& grid) {
+    for (size_t i = 0; i < bcs_.size(); i++) {
+        std::shared_ptr<BoundaryCondition<T>> bc = bcs_[i];
+        Field<size_t> bc_faces = bc_interfaces_[i];
+        bc->apply_pre_viscous_grad(fs, grid, bc_faces);
     }
 }
 
@@ -361,11 +372,9 @@ void FiniteVolume<T>::compute_viscous_properties_at_faces(
     const FlowStates<T>& flow_states, const GridBlock<T>& grid,
     const IdealGas<T>& gas_model) {
     grad_calc_.compute_gradients(grid, flow_states.gas.temp(), cell_grad_.temp);
-    if (reconstruction_order_ < 2) {
-        grad_calc_.compute_gradients(grid, flow_states.vel.x(), cell_grad_.vx);
-        grad_calc_.compute_gradients(grid, flow_states.vel.y(), cell_grad_.vy);
-        grad_calc_.compute_gradients(grid, flow_states.vel.z(), cell_grad_.vz);
-    }
+    grad_calc_.compute_gradients(grid, flow_states.vel.x(), cell_grad_.vx);
+    grad_calc_.compute_gradients(grid, flow_states.vel.y(), cell_grad_.vy);
+    grad_calc_.compute_gradients(grid, flow_states.vel.z(), cell_grad_.vz);
 
     ConservedQuantities<T> flux = flux_;
     Interfaces<T> faces = grid.interfaces();
@@ -460,9 +469,6 @@ void FiniteVolume<T>::compute_viscous_properties_at_faces(
                 face_grad.vx.x(i) = avg_grad_x - correction * nx / ehat_dot_n;
                 face_grad.vx.y(i) = avg_grad_y - correction * ny / ehat_dot_n;
                 face_grad.vx.z(i) = avg_grad_z - correction * nz / ehat_dot_n;
-                // printf("dvx/dy = %f, avg_grad_x = %f, grad_x_left = %f,
-                // grad_x_right = %f\n", face_grad.vx.y(i), avg_grad_x,
-                // cell_grad.vx.y(left_cell), cell_grad.vx.y(right_cell));
 
                 // vy
                 avg_grad_x = 0.5 * (cell_grad.vy.x(left_cell) +

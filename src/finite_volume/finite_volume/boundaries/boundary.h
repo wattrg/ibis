@@ -50,9 +50,9 @@ public:
 };
 
 template <typename T>
-class ReflectVelocity : public BoundaryAction<T> {
+class InternalVelCopyReflect : public BoundaryAction<T> {
 public:
-    ~ReflectVelocity() {}
+    ~InternalVelCopyReflect() {}
 
     void apply(FlowStates<T>& fs, const GridBlock<T>& grid,
                const Field<size_t>& boundary_faces);
@@ -66,8 +66,12 @@ public:
     void apply_pre_reconstruction(FlowStates<T>& fs, const GridBlock<T>& grid,
                                   const Field<size_t>& boundary_faces);
 
+    void apply_pre_viscous_grad(FlowStates<T>& fs, const GridBlock<T>& grid,
+                                const Field<size_t>& boundary_faces);
+
 private:
     std::vector<std::shared_ptr<BoundaryAction<T>>> pre_reconstruction_;
+    std::vector<std::shared_ptr<BoundaryAction<T>>> pre_viscous_grad_;
 };
 
 #endif

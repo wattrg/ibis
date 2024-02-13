@@ -36,6 +36,7 @@ public:
     // be accessed from outside of the class
     void apply_pre_reconstruction_bc(FlowStates<T>& fs,
                                      const GridBlock<T>& grid);
+    void apply_pre_viscous_grad_bc(FlowStates<T>& fs, const GridBlock<T>& grid);
     void reconstruct(FlowStates<T>& flow_states, const GridBlock<T>& grid,
                      IdealGas<T>& gas_model, TransportProperties<T>& trans_prop,
                      size_t order);
@@ -54,8 +55,6 @@ public:
     void compute_viscous_properties_at_faces(const FlowStates<T>& flow_states,
                                              const GridBlock<T>& grid,
                                              const IdealGas<T>& gas_model);
-    void apply_post_convective_flux_bc();
-    void apply_pre_spatial_deriv();
     size_t count_bad_cells(const FlowStates<T>& fs, const size_t num_cells);
 
 private:
