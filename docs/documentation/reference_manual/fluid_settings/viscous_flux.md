@@ -1,9 +1,6 @@
 ---
-title: Ibis
-subtitle: User Guide
-menubar: user_guide_menu
+menubar: reference_manual_menu
 ---
-
 # Viscous Flux
 The viscous flux is configured by setting `config.viscous_flux` to an instance of the `ViscousFlux` class in `job.py`.
 For example:

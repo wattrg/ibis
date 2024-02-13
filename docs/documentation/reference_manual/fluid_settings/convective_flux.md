@@ -1,9 +1,6 @@
 ---
-title: Ibis
-subtitle: User Guide
-menubar: user_guide_menu
+menubar: reference_manual_menu
 ---
-
 # Convective Flux
 The convective flux is configured by setting `config.convective_flux` to an instance of the `ConvectiveFlux` class in `job.py`.
 For example:

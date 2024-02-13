@@ -1,9 +1,6 @@
 ---
-title: Ibis
-subtitle: User Guide
-menubar: user_guide_menu
+menubar: reference_manual_menu
 ---
-
 # Grid
 The grid is configured by setting `config.grid` to an instance of the `Block` class in `job.py`.
 For example:
@@ -31,14 +28,14 @@ The name of the grid file.
 
 ## initial_condition
 The initial condition to fill the grid with.
-> Type: [FlowState](/documentation/user_guide/gas_model/gas_model#FlowState)\
+> Type: [FlowState](/documentation/reference_manual/gas_model/gas_model#FlowState)\
 > Default: None
 
 ## boundaries
 A dictionary of the boundary conditions to attach to the grid.
 The grid file should have some boundary tags associated with it.
 These boundary tags are the keys in the dictionary, and the values are the `ibis` boundary conditions.
-The available boundary conditions are described [here](/documentation/user_guide/fluid_settings/boundary_conditions).
+The available boundary conditions are described [here](/documentation/reference_manual/fluid_settings/boundary_conditions).
 > Type: `dict`: {`String`: `BoundaryCondition`}\
 > Default: None
 

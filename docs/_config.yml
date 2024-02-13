@@ -1,1 +1,10 @@
 remote_theme: chrisrhymes/bulma-clean-theme
+
+defaults:
+  -
+    scope:
+      path: ""
+      type: "pages"
+    values:
+      hero_image: "/examples/supersonic_jet_test.png"
+      title: Ibis

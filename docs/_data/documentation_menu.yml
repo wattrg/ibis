@@ -1,11 +1,8 @@
-- name: Examples
-  link: /examples/examples
-- name: Documentation
-  link: /documentation/docs
-  dropdown:
+- label: Documentation
+  items:
     - name: Getting Started
       link: /documentation/getting_started/getting_started
     - name: Reference Manual
       link: /documentation/reference_manual/reference_manual
-    - name: Developer Docs
+    - name: Developer Documentation
       link: /documentation/dev_docs/dev_docs

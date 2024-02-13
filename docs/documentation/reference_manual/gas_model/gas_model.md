@@ -1,10 +1,6 @@
 ---
-title: Ibis
-subtitle: User Guide
-menubar: user_guide_menu
-toc: true
+menubar: reference_manual_menu
 ---
-
 # Gas Model
 
 ## GasState
