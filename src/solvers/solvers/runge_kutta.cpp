@@ -3,8 +3,10 @@
 #include <solvers/runge_kutta.h>
 #include <solvers/solver.h>
 #include <spdlog/spdlog.h>
+#include <limits>
 
 #include "gas/transport_properties.h"
+#include "solvers/cfl.h"
 
 RungeKutta::RungeKutta(json config, GridBlock<double>& grid,
                        std::string grid_dir, std::string flow_dir)
@@ -16,7 +18,8 @@ RungeKutta::RungeKutta(json config, GridBlock<double>& grid,
     print_frequency_ = solver_config.at("print_frequency");
     plot_frequency_ = solver_config.at("plot_frequency");
     plot_every_n_steps_ = solver_config.at("plot_every_n_steps");
-    cfl_ = solver_config.at("cfl");
+    cfl_ = make_cfl_schedule(solver_config.at("cfl"));
+    dt_init_ = solver_config.at("dt_init");
 
     // gas_model
     gas_model_ = IdealGas<double>(config.at("gas_model"));
@@ -45,22 +48,33 @@ int RungeKutta::initialise() {
     int ic_result = io_.read(flow_, grid_, gas_model_, meta_data, 0);
     int conversion_result =
         primatives_to_conserved(conserved_quantities_, flow_, gas_model_);
+    dt_ = (dt_init_ > 0) ? dt_init_ : std::numeric_limits<double>::max();
     return ic_result + conversion_result;
 }
 
 int RungeKutta::finalise() { return 0; }
 
 int RungeKutta::take_step() {
+    // this has to be done before the estimation of dt, as may set
+    // values used to estimate the stable time step
     fv_.compute_dudt(flow_, grid_, dUdt_, gas_model_, trans_prop_);
-    double full_dt =
-        cfl_ * fv_.estimate_dt(flow_, grid_, gas_model_, trans_prop_);
-    dt_ = Kokkos::min(full_dt, max_time_ - t_);
+
+    // choose the size of time step to take. We take the smallest of
+    //   1. The stable timestep
+    //   2. 1.5 x the previous time step
+    //   3. The time till the next plot needs to be written
+    stable_dt_ = fv_.estimate_dt(flow_, grid_, gas_model_, trans_prop_);
+    double dt_startup = Kokkos::min(cfl_->eval(t_) * stable_dt_, 1.5 * dt_);
+    dt_ = Kokkos::min(dt_startup, max_time_ - t_);
     if (plot_frequency_ > 0.0 && time_since_last_plot_ < plot_frequency_) {
         dt_ = Kokkos::min(dt_, plot_frequency_ - time_since_last_plot_);
     }
+
+    // update the state
     conserved_quantities_.apply_time_derivative(dUdt_, dt_);
     conserved_to_primatives(conserved_quantities_, flow_, gas_model_);
 
+    // book keeping
     t_ += dt_;
     time_since_last_plot_ += dt_;
     return 0;
@@ -88,8 +102,8 @@ int RungeKutta::plot_solution(unsigned int step) {
 
 void RungeKutta::print_progress(unsigned int step, double wc) {
     spdlog::info(
-        "  step: {:>8}, t = {:.6e} ({:.1f}%), dt = {:.6e}, wc = {:.1f}s", step,
-        t_, t_ / max_time_ * 100, dt_, wc);
+        "  step: {:>8}, t = {:.6e} ({:.1f}%), dt = {:.6e} (cfl={:.1f}), wc = {:.1f}s", step,
+        t_, t_ / max_time_ * 100, dt_, dt_ / stable_dt_,  wc);
 }
 std::string RungeKutta::stop_reason(unsigned int step) {
     if (t_ >= max_time_ - 1e-15)

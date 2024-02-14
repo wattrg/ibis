@@ -394,22 +394,6 @@ void FiniteVolume<T>::compute_viscous_properties_at_faces(
             if (!left_valid || !right_valid) {
                 size_t interior_cell = (left_valid) ? left_cell : right_cell;
 
-                // set the gas state at the interface
-                if (left_valid) {
-                    face_fs.gas.temp(i) = left.gas.temp(left_cell);
-                    face_fs.gas.pressure(i) = left.gas.pressure(left_cell);
-                    face_fs.vel.x(i) = left.vel.x(left_cell);
-                    face_fs.vel.y(i) = left.vel.y(left_cell);
-                    face_fs.vel.z(i) = left.vel.z(left_cell);
-                } else {
-                    face_fs.gas.temp(i) = right.gas.temp(right_cell);
-                    face_fs.gas.pressure(i) = right.gas.pressure(right_cell);
-                    face_fs.vel.x(i) = right.vel.x(right_cell);
-                    face_fs.vel.y(i) = right.vel.y(right_cell);
-                    face_fs.vel.z(i) = right.vel.z(right_cell);
-                }
-                gas_model.update_thermo_from_pT(face_fs.gas, i);
-
                 // copy gradients to the face
                 face_grad.temp.x(i) = cell_grad.temp.x(interior_cell);
                 face_grad.temp.y(i) = cell_grad.temp.y(interior_cell);
@@ -427,18 +411,8 @@ void FiniteVolume<T>::compute_viscous_properties_at_faces(
                 face_grad.vz.y(i) = cell_grad.vz.y(interior_cell);
                 face_grad.vz.z(i) = cell_grad.vz.z(interior_cell);
             } else {
-                // set the gas state at the interface
-                face_fs.gas.temp(i) =
-                    0.5 * (left.gas.temp(i) + right.gas.temp(i));
-                face_fs.gas.pressure(i) =
-                    0.5 * (left.gas.pressure(i) + right.gas.pressure(i));
-                gas_model.update_thermo_from_pT(face_fs.gas, i);
-
-                face_fs.vel.x(i) = 0.5 * (left.vel.x(i) + right.vel.x(i));
-                face_fs.vel.y(i) = 0.5 * (left.vel.y(i) + right.vel.y(i));
-                face_fs.vel.z(i) = 0.5 * (left.vel.z(i) + right.vel.z(i));
-
                 // Use Hasselbacher formula to average gradients to the face
+
                 // vector from cell centre to cell centre
                 T ex = cells.centroids().x(right_cell) -
                        cells.centroids().x(left_cell);
@@ -515,6 +489,16 @@ void FiniteVolume<T>::compute_viscous_properties_at_faces(
                 face_grad.temp.y(i) = avg_grad_y - correction * ny / ehat_dot_n;
                 face_grad.temp.z(i) = avg_grad_z - correction * nz / ehat_dot_n;
             }
+            // set the gas state at the interface
+            face_fs.gas.temp(i) = 0.5 * (left.gas.temp(i) +
+                                         right.gas.temp(i));
+            face_fs.gas.pressure(i) =
+                0.5 * (left.gas.pressure(i) + right.gas.pressure(i));
+            gas_model.update_thermo_from_pT(face_fs.gas, i);
+
+            face_fs.vel.x(i) = 0.5 * (left.vel.x(i) + right.vel.x(i));
+            face_fs.vel.y(i) = 0.5 * (left.vel.y(i) + right.vel.y(i));
+            face_fs.vel.z(i) = 0.5 * (left.vel.z(i) + right.vel.z(i));
         });
 }
 

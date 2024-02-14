@@ -19,8 +19,10 @@ public:
 private:
     std::vector<double> times_;
     std::vector<std::string> dirs_;
-    std::map<std::string, std::shared_ptr<ScalarAccessor<T>>>
-        m_scalar_accessors;
+    // std::map<std::string, std::shared_ptr<ScalarAccessor<T>>>
+    //     m_scalar_accessors;
+    // std::map<std::string, std::shared_ptr<VectorAccessor<T>>> 
+    //     m_vector_accessors;
 };
 
 #endif

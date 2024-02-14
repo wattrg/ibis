@@ -9,6 +9,7 @@
 #include <fstream>
 #include <iostream>
 #include <stdexcept>
+#include "io/accessor.h"
 
 std::string pad_time_index(int time_idx, unsigned long len) {
     std::string time_index = std::to_string(time_idx);
@@ -105,6 +106,18 @@ int FVIO<T>::read(FlowStates<T>& fs, const GridBlock<T>& grid,
 template <typename T>
 void FVIO<T>::write_coordinating_file() {
     output_->write_coordinating_file(output_dir_);
+}
+
+template <typename T>
+void FVOutput<T>::add_variable(std::string name) {
+    if (name == "grad_vx") {
+        this->m_vector_accessors.insert(
+            {name, std::shared_ptr<VectorAccessor<T>>(new GradVxAccess<T>())});
+    }
+    else {
+        spdlog::error("Unknown post-processing variable {}", name);
+        throw std::runtime_error("Unknown post-process variable");
+    }
 }
 
 template class FVIO<double>;

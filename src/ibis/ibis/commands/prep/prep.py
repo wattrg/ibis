@@ -20,13 +20,13 @@ class ValidationException(Exception):
 class Solver(Enum):
     RungeKutta = "runge_kutta"
 
-class Limiter(Enum):
-    BarthJespersen = "barth_jespersen"
-
 def string_to_solver(string):
     if string == Solver.RungeKutta.value:
         return Solver.RungeKutta
     validation_errors.append(ValidationException(f"Unknown solver {string}"))
+
+class Limiter(Enum):
+    BarthJespersen = "barth_jespersen"
 
 def string_to_limiter(string):
     if string == Limiter.BarthJespersen.value:
@@ -261,10 +261,54 @@ def adiabatic_no_slip_wall():
         pre_viscous_grad = [_InternalVelCopyReflect()]
     )
 
+class CflSchedule:
+    def as_dict(self):
+        pass
+
+class ConstantCfl(CflSchedule):
+    _type = "constant"
+
+    def __init__(self, cfl):
+        self._cfl = cfl 
+
+    def as_dict(self):
+        return {"type": self._type, "value": self._cfl}
+
+class LinearInterpolateCfl(CflSchedule):
+    _type = "linear_interpolate"
+
+    def __init__(self, cfls):
+        self._times = []
+        self._cfls = []
+        for time, cfl in cfls:
+            self._times.append(time)
+            self._cfls.append(cfl)
+
+    def as_dict(self):
+        return {
+            "type": self._type,
+            "times": self._times,
+            "cfls": self._cfls
+        }
+
+def make_cfl_schedule(config):
+    if type(config) == float:
+        return ConstantCfl(config)
+
+    cfl_type = config["type"]
+    if cfl_type == "constant":
+        return ConstantCfl(config["value"])
+    elif cfl_type == "linear_interpolate":
+        cfls = []
+        for time, cfl in zip(config["times"], config["cfls"]):
+            cfls.append((time, cfl))
+        return LinearInterpolateCfl(cfls)
+    else:
+        validation_errors.append(ValidationException(f"Unkown cfl schedule {cfl_type}"))
 
 class RungeKutta:
     _json_values = ["cfl", "max_time", "max_step", "print_frequency", 
-                    "plot_frequency", "plot_every_n_steps"]
+                    "plot_frequency", "plot_every_n_steps", "dt_init"]
     _defaults_file = "runge_kutta.json"
     _name = Solver.RungeKutta.value
     __slots__ = _json_values
@@ -281,6 +325,8 @@ class RungeKutta:
     def as_dict(self):
         dictionary = {"name": self._name}
         for key in self._json_values:
+            if key == "cfl" and type(self.cfl) != CflSchedule:
+                self.cfl = make_cfl_schedule(self.cfl).as_dict()
             dictionary[key] = getattr(self, key)
         return dictionary
 

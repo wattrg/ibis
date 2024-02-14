@@ -7,6 +7,8 @@
 #include <grid/grid.h>
 #include <io/io.h>
 #include <solvers/solver.h>
+#include <solvers/cfl.h>
+#include <memory>
 
 class RungeKutta : public Solver {
 public:
@@ -24,13 +26,15 @@ private:
     unsigned int print_frequency_;
     double plot_frequency_;
     int plot_every_n_steps_;
-    double cfl_;
+    std::unique_ptr<CflSchedule> cfl_;
+    double dt_init_;
 
 private:
     // progress
     double time_since_last_plot_;
     double t_;
     double dt_;
+    double stable_dt_;
 
 private:
     // input/output

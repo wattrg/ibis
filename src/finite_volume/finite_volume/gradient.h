@@ -5,32 +5,35 @@
 #include <util/ragged_array.h>
 
 #include <Kokkos_Core.hpp>
+#include "Kokkos_Core_fwd.hpp"
 
-template <typename T>
+template <typename T, 
+          class Layout=Kokkos::DefaultExecutionSpace::array_layout,
+          class Space=Kokkos::DefaultExecutionSpace::memory_space>
 struct Gradients {
     Gradients() {}
 
     Gradients(int num_cells, bool convective, bool viscous) {
-        vx = Vector3s<T>("Gradients::vx", num_cells);
-        vy = Vector3s<T>("Gradients::vy", num_cells);
-        vz = Vector3s<T>("Gradients::vz", num_cells);
+        vx = Vector3s<T, Layout, Space>("Gradients::vx", num_cells);
+        vy = Vector3s<T, Layout, Space>("Gradients::vy", num_cells);
+        vz = Vector3s<T, Layout, Space>("Gradients::vz", num_cells);
 
         if (convective) {
-            p = Vector3s<T>("Gradients::p", num_cells);
-            rho = Vector3s<T>("Gradients::rho", num_cells);
+            p = Vector3s<T, Layout, Space>("Gradients::p", num_cells);
+            rho = Vector3s<T, Layout, Space>("Gradients::rho", num_cells);
         }
 
         if (viscous) {
-            temp = Vector3s<T>("Gradients::temp", num_cells);
+            temp = Vector3s<T, Layout, Space>("Gradients::temp", num_cells);
         }
     }
 
-    Vector3s<T> p;
-    Vector3s<T> rho;
-    Vector3s<T> temp;
-    Vector3s<T> vx;
-    Vector3s<T> vy;
-    Vector3s<T> vz;
+    Vector3s<T, Layout, Space> p;
+    Vector3s<T, Layout, Space> rho;
+    Vector3s<T, Layout, Space> temp;
+    Vector3s<T, Layout, Space> vx;
+    Vector3s<T, Layout, Space> vy;
+    Vector3s<T, Layout, Space> vz;
 };
 
 template <typename T, class ExecSpace = Kokkos::DefaultExecutionSpace,

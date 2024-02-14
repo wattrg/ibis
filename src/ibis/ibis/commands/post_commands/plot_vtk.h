@@ -7,6 +7,6 @@
 using json = nlohmann::json;
 
 template <typename T>
-void plot_vtk(json directories);
+void plot_vtk(json directories, std::vector<std::string> extra_vars);
 
 #endif

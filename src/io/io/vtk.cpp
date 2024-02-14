@@ -35,6 +35,27 @@ void write_scalar_field(std::ofstream& f,
 
 template <typename T>
 void write_vector_field(std::ofstream& f,
+                        const FlowStates<T, array_layout, host_mem_space>& fs,
+                        std::shared_ptr<VectorAccessor<T>> accessor,
+                        const IdealGas<T>& gas_model,
+                        // const Vector3s<T, array_layout, host_mem_space>& vec,
+                        std::string name, std::string type, size_t num_values) {
+    f << "<DataArray type='" << type << "' ";
+    f << "NumberOfComponents='3' ";
+    f << "Name='" << name << "' ";
+    f << "format='ascii'>" << std::endl;
+
+    for (size_t i = 0; i < num_values; i++) {
+        Vector3<T> vec = accessor->access(fs, gas_model, i);
+        f << vec.x << " " << vec.y << " " << vec.z << std::endl;
+        // f << vec.x(i) << " " << vec.y(i) << " " << vec.z(i) << std::endl;
+    }
+
+    f << "</DataArray>" << std::endl;
+}
+
+template <typename T>
+void write_vector3s(std::ofstream& f,
                         const Vector3s<T, array_layout, host_mem_space>& vec,
                         std::string name, std::string type, size_t num_values) {
     f << "<DataArray type='" << type << "' ";
@@ -79,7 +100,8 @@ void write_elem_type(
 
 template <typename T>
 VtkOutput<T>::VtkOutput() {
-    m_scalar_accessors = get_accessors<T>();
+    this->m_scalar_accessors = get_scalar_accessors<T>();
+    this->m_vector_accessors = get_vector_accessors<T>();
 }
 
 template <typename T>
@@ -96,8 +118,8 @@ int VtkOutput<T>::write(const typename FlowStates<T>::mirror_type& fs,
     f << "<Piece NumberOfPoints='" << grid.num_vertices() << "' NumberOfCells='"
       << grid.num_cells() << "'>" << std::endl;
     f << "<Points>" << std::endl;
-    write_vector_field(f, grid.vertices().positions(), "points", "Float64",
-                       grid.num_vertices());
+    write_vector3s(f, grid.vertices().positions(), "points", "Float64",
+                   grid.num_vertices());
     f << "</Points>" << std::endl;
     f << "<Cells>" << std::endl;
     write_int_view(f, grid.cells().vertex_ids().data(), "connectivity",
@@ -109,13 +131,20 @@ int VtkOutput<T>::write(const typename FlowStates<T>::mirror_type& fs,
 
     // the cell data
     f << "<CellData>" << std::endl;
-    for (auto& key_value : m_scalar_accessors) {
+    for (auto& key_value : this->m_scalar_accessors) {
         std::string name = key_value.first;
         std::shared_ptr<ScalarAccessor<T>> accessor = key_value.second;
+        accessor->init(fs, grid);
         write_scalar_field(f, fs, accessor, gas_model, name, "Float64",
                            grid.num_cells());
     }
-    write_vector_field(f, fs.vel, "velocity", "Float64", grid.num_cells());
+
+    for (auto& key_value : this->m_vector_accessors){
+        std::string name = key_value.first;
+        std::shared_ptr<VectorAccessor<T>> accessor = key_value.second;
+        accessor->init(fs, grid);
+        write_vector_field(f, fs, accessor, gas_model, name, "Float64", grid.num_cells());
+    }
     f << "</CellData>" << std::endl;
 
     // close all the data fields

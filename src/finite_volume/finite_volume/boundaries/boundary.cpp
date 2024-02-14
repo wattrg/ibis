@@ -153,8 +153,9 @@ void InternalCopyReflectNormal<T>::apply(FlowStates<T>& fs,
 }
 
 template <typename T>
-void InternalVelCopyReflect<T>::apply(FlowStates<T>& fs, const GridBlock<T>& grid,
-                               const Field<size_t>& boundary_faces) {
+void InternalVelCopyReflect<T>::apply(FlowStates<T>& fs,
+                                      const GridBlock<T>& grid,
+                                      const Field<size_t>& boundary_faces) {
     size_t size = boundary_faces.size();
     auto interfaces = grid.interfaces();
     size_t num_valid_cells = grid.num_cells();
@@ -196,7 +197,8 @@ std::shared_ptr<BoundaryAction<T>> build_boundary_action(json config) {
         action = std::shared_ptr<BoundaryAction<T>>(
             new InternalCopyReflectNormal<T>());
     } else if (type == "internal_vel_copy_reflect") {
-        action = std::shared_ptr<BoundaryAction<T>>(new InternalVelCopyReflect  <T>());
+        action =
+            std::shared_ptr<BoundaryAction<T>>(new InternalVelCopyReflect<T>());
     } else {
         spdlog::error("Unknown boundary action {}", type);
         throw std::runtime_error("Unknown boundary action");
@@ -215,7 +217,7 @@ BoundaryCondition<T>::BoundaryCondition(json config) {
 
     std::vector<json> pre_viscous_grad = config.at("pre_viscous_grad");
     for (size_t i = 0; i < pre_viscous_grad.size(); i++) {
-        std::shared_ptr<BoundaryAction<T>> action = 
+        std::shared_ptr<BoundaryAction<T>> action =
             build_boundary_action<T>(pre_viscous_grad[i]);
         pre_viscous_grad_.push_back(action);
     }
