@@ -9,6 +9,7 @@
 #include <fstream>
 #include <iostream>
 #include <stdexcept>
+#include "finite_volume/finite_volume.h"
 #include "io/accessor.h"
 
 std::string pad_time_index(int time_idx, unsigned long len) {
@@ -72,7 +73,8 @@ FVIO<T>::FVIO(int time_index)
 }
 
 template <typename T>
-int FVIO<T>::write(const FlowStates<T>& fs, const GridBlock<T>& grid,
+int FVIO<T>::write(const FlowStates<T>& fs, const FiniteVolume<T>& fv,
+                   const GridBlock<T>& grid,
                    const IdealGas<T>& gas_model, double time) {
     // get a copy of the flow states and grid on the CPU
     auto grid_host = grid.host_mirror();
@@ -84,7 +86,7 @@ int FVIO<T>::write(const FlowStates<T>& fs, const GridBlock<T>& grid,
     std::string directory_name = output_dir_ + "/" + time_index;
     std::filesystem::create_directory(output_dir_);
     std::filesystem::create_directory(directory_name);
-    int result = output_->write(fs_host, grid_host, gas_model, output_dir_,
+    int result = output_->write(fs_host, fv, grid_host, gas_model, output_dir_,
                                 time_index, time);
     time_index_++;
     return result;

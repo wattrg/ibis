@@ -3,6 +3,7 @@
 
 #include <io/accessor.h>
 #include <io/io.h>
+#include "finite_volume/finite_volume.h"
 
 template <typename T>
 class VtkOutput : public FVOutput<T> {
@@ -10,6 +11,7 @@ public:
     VtkOutput();
 
     int write(const typename FlowStates<T>::mirror_type& fs,
+              const FiniteVolume<T>& fv,
               const typename GridBlock<T>::mirror_type& grid,
               const IdealGas<T>& gas_model, std::string plot_dir,
               std::string time_dir, double time);
