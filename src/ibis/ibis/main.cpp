@@ -1,3 +1,4 @@
+#include <CLI/App.hpp>
 #include <iostream>
 #include <string>
 #include <vector>
@@ -8,11 +9,13 @@
 #include <ibis/commands/post_commands/post.h>
 #include <ibis/commands/prep/prep.h>
 #include <ibis/commands/run/run.h>
-#include <ibis_version_info.h>
+// #include <ibis_version_info.h>
 #include <runtime_dirs.h>
 #include <spdlog/sinks/basic_file_sink.h>
 #include <spdlog/sinks/stdout_color_sinks.h>
 #include <spdlog/spdlog.h>
+
+#include <CLI/CLI.hpp>
 
 static std::string HELP =
     "ibis usage:\n"
@@ -24,19 +27,8 @@ static std::string HELP =
     "    run: run a simulation"
     "    clean: clean a directory of generated files";
 
-void print_header() {
-    spdlog::info("ibis - cfd solver");
-    spdlog::info("git branch: {}", Ibis::GIT_BRANCH);
-    if (Ibis::GIT_CLEAN_STATUS == "clean") {
-        spdlog::info("git commit: {}", Ibis::GIT_COMMIT_HASH);
-    } else {
-        spdlog::info("git commit: {}-dirty", Ibis::GIT_COMMIT_HASH);
-    }
-    spdlog::info("revision date: {}", Ibis::GIT_COMMIT_DATE);
-    spdlog::info("build date: {}", Ibis::IBIS_BUILD_DATE);
-}
-
 int main(int argc, char* argv[]) {
+    // set up the logger
     std::vector<spdlog::sink_ptr> logs;
     auto console_log = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
     console_log->set_pattern("[%^%l%$] %v");
@@ -51,38 +43,64 @@ int main(int argc, char* argv[]) {
         std::make_shared<spdlog::logger>("logger", begin(logs), end(logs));
 
     spdlog::set_default_logger(logger);
-    print_header();
 
+    // doctest requires every executable which links to libraries
+    // using doctest (which our libraries do), to have a doctest
+    // context. We build that here, but it never gets executed.
+    // This should have very little overhead on this executable.
     doctest::Context ctx;
 
-    if (argc < 2) {
-        spdlog::error("Not enough arguments provided\n");
-        return 1;
-    }
+    // set up the command line interface
+    CLI::App ibis{"compressible computational fluid dynamics"};
+    ibis.require_subcommand(1);
+    setup_clean_cli(ibis);
+    setup_prep_cli(ibis);
+    setup_run_cli(ibis);
+    setup_post_cli(ibis);
 
-    std::string command = argv[1];
+    CLI11_PARSE(ibis, argc, argv);
 
-    if (command == "help") {
-        std::cout << HELP;
-        return 0;
-    }
-
-    else if (command == "prep") {
-        return prep(argc, argv);
-    }
-
-    else if (command == "clean") {
+    if (ibis.got_subcommand("clean")) {
         return clean(argc, argv);
     }
-
-    else if (command == "run") {
+    if (ibis.got_subcommand("prep")) {
+        return prep(argc, argv);
+    }
+    if (ibis.got_subcommand("run")) {
         return run(argc, argv);
-    } else if (command == "post") {
+    }
+    if (ibis.got_subcommand("post")) {
         return post(argc, argv);
     }
-
-    else {
-        std::cerr << "Unknown command: " << command << std::endl;
-        std::cerr << "For help, use `ibis help`" << std::endl;
-    }
+    // if (argc < 2) {
+    //     spdlog::error("Not enough arguments provided\n");
+    //     return 1;
+    // }
+    //
+    // std::string command = argv[1];
+    //
+    // if (command == "help") {
+    //     std::cout << HELP;
+    //     return 0;
+    // }
+    //
+    // else if (command == "prep") {
+    //     return prep(argc, argv);
+    // }
+    //
+    // else if (command == "clean") {
+    //     return clean(argc, argv);
+    // }
+    //
+    // else if (command == "run") {
+    //     run(argc, argv);
+    //     return 0;
+    // } else if (command == "post") {
+    //     return post(argc, argv);
+    // }
+    //
+    // else {
+    //     std::cerr << "Unknown command: " << command << std::endl;
+    //     std::cerr << "For help, use `ibis help`" << std::endl;
+    // }
 }

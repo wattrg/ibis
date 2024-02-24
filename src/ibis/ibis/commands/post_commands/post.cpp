@@ -10,6 +10,10 @@
 
 using json = nlohmann::json;
 
+void setup_post_cli(CLI::App& ibis) {
+    ibis.add_subcommand("post", "post-process the simulation");
+}
+
 int post(int argc, char* argv[]) {
     if (argc < 3) {
         spdlog::error("No post-processing command given");
