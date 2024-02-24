@@ -1,4 +1,6 @@
 
+#include <finite_volume/finite_volume.h>
+#include <io/accessor.h>
 #include <io/io.h>
 #include <io/native.h>
 #include <io/vtk.h>
@@ -9,9 +11,6 @@
 #include <fstream>
 #include <iostream>
 #include <stdexcept>
-
-#include "finite_volume/finite_volume.h"
-#include "io/accessor.h"
 
 std::string pad_time_index(int time_idx, unsigned long len) {
     std::string time_index = std::to_string(time_idx);
@@ -77,10 +76,8 @@ template <typename T>
 int FVIO<T>::write(const FlowStates<T>& fs, FiniteVolume<T>& fv,
                    const GridBlock<T>& grid, const IdealGas<T>& gas_model,
                    double time) {
-    // get a copy of the flow states and grid on the CPU
-    // auto grid_host = grid.host_mirror();
+    // get a copy of the flow states on the CPU
     auto fs_host = fs.host_mirror();
-    // grid_host.deep_copy(grid);
     fs_host.deep_copy(fs);
 
     std::string time_index = pad_time_index(time_index_, 4);
@@ -116,6 +113,19 @@ void FVOutput<T>::add_variable(std::string name) {
     if (name == "grad_vx") {
         this->m_vector_accessors.insert(
             {name, std::shared_ptr<VectorAccessor<T>>(new GradVxAccess<T>())});
+    } else if (name == "grad_vy") {
+        this->m_vector_accessors.insert(
+            {name, std::shared_ptr<VectorAccessor<T>>(new GradVyAccess<T>())});
+    } else if (name == "grad_vz") {
+        this->m_vector_accessors.insert(
+            {name, std::shared_ptr<VectorAccessor<T>>(new GradVzAccess<T>())});
+    } else if (name == "grad") {
+        this->m_vector_accessors.insert(
+            {name, std::shared_ptr<VectorAccessor<T>>(new GradVxAccess<T>())});
+        this->m_vector_accessors.insert(
+            {name, std::shared_ptr<VectorAccessor<T>>(new GradVyAccess<T>())});
+        this->m_vector_accessors.insert(
+            {name, std::shared_ptr<VectorAccessor<T>>(new GradVzAccess<T>())});
     } else {
         spdlog::error("Unknown post-processing variable {}", name);
         throw std::runtime_error("Unknown post-process variable");

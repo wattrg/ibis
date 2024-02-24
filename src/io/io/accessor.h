@@ -112,6 +112,36 @@ private:
 };
 
 template <typename T>
+class GradVyAccess : public VectorAccessor<T> {
+public:
+    void init(const FlowStates<T, array_layout, host_mem_space>& fs,
+              FiniteVolume<T>& fv, const GridBlock<T>& grid,
+              const IdealGas<T>& gas_model) override;
+
+    Vector3<T> access(const FlowStates<T, array_layout, host_mem_space>& fs,
+                      FiniteVolume<T>& fv, const IdealGas<T>& gas_model,
+                      const int i) override;
+
+private:
+    Vector3s<T, array_layout, host_mem_space> grad_vy_;
+};
+
+template <typename T>
+class GradVzAccess : public VectorAccessor<T> {
+public:
+    void init(const FlowStates<T, array_layout, host_mem_space>& fs,
+              FiniteVolume<T>& fv, const GridBlock<T>& grid,
+              const IdealGas<T>& gas_model) override;
+
+    Vector3<T> access(const FlowStates<T, array_layout, host_mem_space>& fs,
+                      FiniteVolume<T>& fv, const IdealGas<T>& gas_model,
+                      const int i) override;
+
+private:
+    Vector3s<T, array_layout, host_mem_space> grad_vz_;
+};
+
+template <typename T>
 std::map<std::string, std::shared_ptr<ScalarAccessor<T>>>
 get_scalar_accessors();
 
