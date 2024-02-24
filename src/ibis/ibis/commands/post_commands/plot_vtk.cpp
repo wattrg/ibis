@@ -1,16 +1,17 @@
 
 #include <gas/flow_state.h>
+#include <gas/transport_properties.h>
 #include <grid/grid.h>
 #include <ibis/commands/post_commands/plot_vtk.h>
 #include <ibis/config.h>
 #include <io/io.h>
-#include <gas/transport_properties.h>
 #include <spdlog/spdlog.h>
 
 #include <fstream>
 #include <iostream>
 #include <string>
 #include <vector>
+
 #include "finite_volume/finite_volume.h"
 
 template <typename T>
@@ -31,7 +32,7 @@ void plot_vtk(json directories, std::vector<std::string> extra_vars) {
 
     FVIO<T> io(FlowFormat::Native, FlowFormat::Vtk, flow_dir, plot_dir);
     for (auto& extra_var : extra_vars) {
-        io.add_output_variable(extra_var); 
+        io.add_output_variable(extra_var);
     }
 
     GridBlock<T> grid(grid_dir + "/block_0000.su2", config.at("grid"));

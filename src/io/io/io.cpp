@@ -9,6 +9,7 @@
 #include <fstream>
 #include <iostream>
 #include <stdexcept>
+
 #include "finite_volume/finite_volume.h"
 #include "io/accessor.h"
 
@@ -74,8 +75,8 @@ FVIO<T>::FVIO(int time_index)
 
 template <typename T>
 int FVIO<T>::write(const FlowStates<T>& fs, FiniteVolume<T>& fv,
-                   const GridBlock<T>& grid,
-                   const IdealGas<T>& gas_model, double time) {
+                   const GridBlock<T>& grid, const IdealGas<T>& gas_model,
+                   double time) {
     // get a copy of the flow states and grid on the CPU
     // auto grid_host = grid.host_mirror();
     auto fs_host = fs.host_mirror();
@@ -115,8 +116,7 @@ void FVOutput<T>::add_variable(std::string name) {
     if (name == "grad_vx") {
         this->m_vector_accessors.insert(
             {name, std::shared_ptr<VectorAccessor<T>>(new GradVxAccess<T>())});
-    }
-    else {
+    } else {
         spdlog::error("Unknown post-processing variable {}", name);
         throw std::runtime_error("Unknown post-process variable");
     }

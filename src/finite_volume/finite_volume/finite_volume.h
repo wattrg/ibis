@@ -59,7 +59,7 @@ public:
 
 public:
     // methods for IO
-    const Gradients<T>& cell_gradients() const {return cell_grad_;}
+    const Gradients<T>& cell_gradients() const { return cell_grad_; }
 
 private:
     // memory

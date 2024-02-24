@@ -5,11 +5,12 @@
 #include <util/ragged_array.h>
 
 #include <Kokkos_Core.hpp>
+
 #include "Kokkos_Core_fwd.hpp"
 
-template <typename T, 
-          class Layout=Kokkos::DefaultExecutionSpace::array_layout,
-          class Space=Kokkos::DefaultExecutionSpace::memory_space>
+template <typename T,
+          class Layout = Kokkos::DefaultExecutionSpace::array_layout,
+          class Space = Kokkos::DefaultExecutionSpace::memory_space>
 struct Gradients {
     Gradients() {}
 

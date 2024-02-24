@@ -2,13 +2,14 @@
 
 #include <doctest/doctest.h>
 #include <spdlog/spdlog.h>
+
 #include <memory>
 #include <stdexcept>
 
 ConstantSchedule::ConstantSchedule(double cfl) : cfl_(cfl) {}
 
 double ConstantSchedule::eval(double t) {
-    (void) t;
+    (void)t;
     return cfl_;
 }
 
@@ -37,15 +38,15 @@ double LinearSchedule::eval(double t) {
     throw std::runtime_error("Shouldn't reach here");
 }
 
-std::unique_ptr<CflSchedule> make_cfl_schedule(json config){
+std::unique_ptr<CflSchedule> make_cfl_schedule(json config) {
     std::string type = config.at("type");
     if (type == "constant") {
-        return std::unique_ptr<CflSchedule>(new ConstantSchedule(config.at("value"))); 
-    }
-    else if (type == "linear_interpolate") {
-        return std::unique_ptr<CflSchedule>(new LinearSchedule(config.at("schedule")));
-    }
-    else {
+        return std::unique_ptr<CflSchedule>(
+            new ConstantSchedule(config.at("value")));
+    } else if (type == "linear_interpolate") {
+        return std::unique_ptr<CflSchedule>(
+            new LinearSchedule(config.at("schedule")));
+    } else {
         spdlog::error("Unkown CFL schedule {}", type);
         throw std::runtime_error("Unknown CFL schedule");
     }

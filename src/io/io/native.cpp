@@ -3,8 +3,7 @@
 
 template <typename T>
 int NativeOutput<T>::write(const typename FlowStates<T>::mirror_type& fs,
-                           FiniteVolume<T>& fv,
-                           const GridBlock<T>& grid,
+                           FiniteVolume<T>& fv, const GridBlock<T>& grid,
                            const IdealGas<T>& gas_model, std::string plot_dir,
                            std::string time_dir, double time) {
     (void)gas_model;
@@ -86,9 +85,8 @@ template class NativeOutput<double>;
 
 template <typename T>
 int NativeInput<T>::read(typename FlowStates<T>::mirror_type& fs,
-                         const GridBlock<T>& grid,
-                         const IdealGas<T>& gas_model, std::string dir,
-                         json& meta_data) {
+                         const GridBlock<T>& grid, const IdealGas<T>& gas_model,
+                         std::string dir, json& meta_data) {
     size_t num_cells = grid.num_cells();
     std::ifstream meta_f(dir + "/meta_data.json");
     if (!meta_f) {

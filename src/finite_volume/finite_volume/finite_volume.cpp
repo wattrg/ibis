@@ -490,8 +490,7 @@ void FiniteVolume<T>::compute_viscous_properties_at_faces(
                 face_grad.temp.z(i) = avg_grad_z - correction * nz / ehat_dot_n;
             }
             // set the gas state at the interface
-            face_fs.gas.temp(i) = 0.5 * (left.gas.temp(i) +
-                                         right.gas.temp(i));
+            face_fs.gas.temp(i) = 0.5 * (left.gas.temp(i) + right.gas.temp(i));
             face_fs.gas.pressure(i) =
                 0.5 * (left.gas.pressure(i) + right.gas.pressure(i));
             gas_model.update_thermo_from_pT(face_fs.gas, i);

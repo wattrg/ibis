@@ -58,8 +58,8 @@ void write_vector_field(std::ofstream& f,
 
 template <typename T>
 void write_vector3s(std::ofstream& f,
-                        const Vector3s<T, array_layout, host_mem_space>& vec,
-                        std::string name, std::string type, size_t num_values) {
+                    const Vector3s<T, array_layout, host_mem_space>& vec,
+                    std::string name, std::string type, size_t num_values) {
     f << "<DataArray type='" << type << "' ";
     f << "NumberOfComponents='3' ";
     f << "Name='" << name << "' ";
@@ -108,8 +108,7 @@ VtkOutput<T>::VtkOutput() {
 
 template <typename T>
 int VtkOutput<T>::write(const typename FlowStates<T>::mirror_type& fs,
-                        FiniteVolume<T>& fv,
-                        const GridBlock<T>& grid,
+                        FiniteVolume<T>& fv, const GridBlock<T>& grid,
                         const IdealGas<T>& gas_model, std::string plot_dir,
                         std::string time_dir, double time) {
     auto grid_host = grid.host_mirror();
@@ -130,8 +129,8 @@ int VtkOutput<T>::write(const typename FlowStates<T>::mirror_type& fs,
     f << "<Cells>" << std::endl;
     write_int_view(f, grid_host.cells().vertex_ids().data(), "connectivity",
                    "Int64");
-    write_int_view(f, grid_host.cells().vertex_ids().offsets(), "offsets", "Int64",
-                   true);
+    write_int_view(f, grid_host.cells().vertex_ids().offsets(), "offsets",
+                   "Int64", true);
     write_elem_type(f, grid_host.cells().shapes());
     f << "</Cells>" << std::endl;
 
@@ -145,11 +144,12 @@ int VtkOutput<T>::write(const typename FlowStates<T>::mirror_type& fs,
                            grid.num_cells());
     }
 
-    for (auto& key_value : this->m_vector_accessors){
+    for (auto& key_value : this->m_vector_accessors) {
         std::string name = key_value.first;
         std::shared_ptr<VectorAccessor<T>> accessor = key_value.second;
         accessor->init(fs, fv, grid, gas_model);
-        write_vector_field(f, fs, fv, accessor, gas_model, name, "Float64", grid.num_cells());
+        write_vector_field(f, fs, fv, accessor, gas_model, name, "Float64",
+                           grid.num_cells());
     }
     f << "</CellData>" << std::endl;
 

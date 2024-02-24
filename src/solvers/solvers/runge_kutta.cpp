@@ -3,6 +3,7 @@
 #include <solvers/runge_kutta.h>
 #include <solvers/solver.h>
 #include <spdlog/spdlog.h>
+
 #include <limits>
 
 #include "gas/transport_properties.h"
@@ -102,8 +103,9 @@ int RungeKutta::plot_solution(unsigned int step) {
 
 void RungeKutta::print_progress(unsigned int step, double wc) {
     spdlog::info(
-        "  step: {:>8}, t = {:.6e} ({:.1f}%), dt = {:.6e} (cfl={:.1f}), wc = {:.1f}s", step,
-        t_, t_ / max_time_ * 100, dt_, dt_ / stable_dt_,  wc);
+        "  step: {:>8}, t = {:.6e} ({:.1f}%), dt = {:.6e} (cfl={:.1f}), wc = "
+        "{:.1f}s",
+        step, t_, t_ / max_time_ * 100, dt_, dt_ / stable_dt_, wc);
 }
 std::string RungeKutta::stop_reason(unsigned int step) {
     if (t_ >= max_time_ - 1e-15)

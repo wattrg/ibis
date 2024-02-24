@@ -6,8 +6,9 @@
 #include <gas/transport_properties.h>
 #include <grid/grid.h>
 #include <io/io.h>
-#include <solvers/solver.h>
 #include <solvers/cfl.h>
+#include <solvers/solver.h>
+
 #include <memory>
 
 class RungeKutta : public Solver {

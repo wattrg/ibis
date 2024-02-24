@@ -18,10 +18,10 @@ int post(int argc, char* argv[]) {
 
     std::string command = std::string(argv[2]);
     if (command == "plot_vtk") {
-        std::vector<std::string> extra_vars {};
+        std::vector<std::string> extra_vars{};
         for (int i = 3; i < argc; i++) {
             std::string arg = argv[i];
-            if ( arg.rfind("--add_", 0) == 0 ) {
+            if (arg.rfind("--add_", 0) == 0) {
                 extra_vars.push_back(arg.substr(6));
             }
         }
