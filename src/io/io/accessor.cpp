@@ -4,8 +4,10 @@
 template <typename T>
 T PressureAccess<T>::access(
     const FlowStates<T, array_layout, host_mem_space>& fs,
+    FiniteVolume<T>& fv,
     const IdealGas<T>& gas_model, const int i) {
     (void) gas_model;
+    (void) fv;
     return fs.gas.pressure(i);
 }
 template class PressureAccess<double>;
@@ -13,8 +15,10 @@ template class PressureAccess<double>;
 template <typename T>
 T TemperatureAccess<T>::access(
     const FlowStates<T, array_layout, host_mem_space>& fs,
+    FiniteVolume<T>& fv,
     const IdealGas<T>& gas_model, const int i) {
     (void) gas_model;
+    (void) fv;
     return fs.gas.temp(i);
 }
 template class TemperatureAccess<double>;
@@ -22,8 +26,10 @@ template class TemperatureAccess<double>;
 template <typename T>
 T DensityAccess<T>::access(
     const FlowStates<T, array_layout, host_mem_space>& fs,
+    FiniteVolume<T>& fv,
     const IdealGas<T>& gas_model, const int i) {
     (void) gas_model;
+    (void) fv;
     return fs.gas.rho(i);
 }
 template class DensityAccess<double>;
@@ -31,8 +37,10 @@ template class DensityAccess<double>;
 template <typename T>
 T InternalEnergyAccess<T>::access(
     const FlowStates<T, array_layout, host_mem_space>& fs,
+    FiniteVolume<T>& fv,
     const IdealGas<T>& gas_model, const int i) {
     (void)gas_model;
+    (void) fv;
     return fs.gas.energy(i);
 }
 template class InternalEnergyAccess<double>;
@@ -40,7 +48,9 @@ template class InternalEnergyAccess<double>;
 template <typename T>
 T SpeedOfSoundAccess<T>::access(
     const FlowStates<T, array_layout, host_mem_space>& fs,
+    FiniteVolume<T>& fv,
     const IdealGas<T>& gas_model, const int i) {
+    (void) fv;
     return gas_model.speed_of_sound(fs.gas, i);
 }
 template class SpeedOfSoundAccess<double>;
@@ -48,7 +58,9 @@ template class SpeedOfSoundAccess<double>;
 template <typename T>
 T MachNumberAccess<T>::access(
     const FlowStates<T, array_layout, host_mem_space>& fs,
+    FiniteVolume<T>& fv,
     const IdealGas<T>& gas_model, const int i) {
+    (void) fv;
     T a = gas_model.speed_of_sound(fs.gas, i);
     T vx = fs.vel.x(i);
     T vy = fs.vel.y(i);
@@ -61,9 +73,11 @@ template class MachNumberAccess<double>;
 template <typename T>
 Vector3<T> VelocityAccess<T>::access(
     const FlowStates<T, array_layout, host_mem_space>& fs,
+    FiniteVolume<T>& fv,
     const IdealGas<T>& gas_model, const int i) {
     
     (void) gas_model;
+    (void) fv;
     T x = fs.vel.x(i);
     T y = fs.vel.x(i);
     T z = fs.vel.x(i);
@@ -73,22 +87,27 @@ template class VelocityAccess<double>;
 
 template <typename T>
 void GradVxAccess<T>::init(const FlowStates<T, array_layout, host_mem_space>& fs,
-                           const typename GridBlock<T>::mirror_type& grid) {
-    grad_calc_ = WLSGradient<T, host_exec_space, array_layout>(grid);
-    grad_ = Vector3s<T, array_layout, host_mem_space>("GradVxAccess", grid.num_cells());
-    grad_calc_.compute_gradients(grid, fs.vel.x(), grad_);
+                           FiniteVolume<T>& fv,
+                           const GridBlock<T>& grid, const IdealGas<T>& gas_model) {
+    FlowStates<T> fs_dev = FlowStates<T>(fs.number_flow_states());
+    fs_dev.deep_copy(fs);
+    fv.compute_viscous_properties_at_faces(fs_dev, grid, gas_model);
+    grad_vx_ = fv.cell_gradients().vx.host_mirror();    
+    grad_vx_.deep_copy(fv.cell_gradients().vx);
 }
 
 template <typename T>
 Vector3<T> GradVxAccess<T>::access(
     const FlowStates<T, array_layout, host_mem_space>& fs,
+    FiniteVolume<T>& fv,
     const IdealGas<T>& gas_model, const int i) {
     
     (void) gas_model;
     (void) fs;
-    T grad_x = grad_.x(i);
-    T grad_y = grad_.y(i);
-    T grad_z = grad_.z(i);
+    (void) fv;
+    T grad_x = grad_vx_.x(i);
+    T grad_y = grad_vx_.y(i);
+    T grad_z = grad_vx_.z(i);
     return Vector3<T>(grad_x, grad_y, grad_z);
 }
 template class GradVxAccess<double>;

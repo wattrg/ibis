@@ -57,6 +57,10 @@ public:
                                              const IdealGas<T>& gas_model);
     size_t count_bad_cells(const FlowStates<T>& fs, const size_t num_cells);
 
+public:
+    // methods for IO
+    const Gradients<T>& cell_gradients() const {return cell_grad_;}
+
 private:
     // memory
     FlowStates<T> left_;

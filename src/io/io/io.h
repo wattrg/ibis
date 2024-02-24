@@ -20,7 +20,7 @@ public:
     virtual ~FVInput() {}
 
     virtual int read(typename FlowStates<T>::mirror_type& fs,
-                     const typename GridBlock<T>::mirror_type& grid,
+                     const GridBlock<T>& grid,
                      const IdealGas<T>& gas_model, std::string dir,
                      json& meta_data) = 0;
 };
@@ -31,8 +31,8 @@ public:
     virtual ~FVOutput() {}
 
     virtual int write(const typename FlowStates<T>::mirror_type& fs,
-                      const FiniteVolume<T>& fv,
-                      const typename GridBlock<T>::mirror_type& grid,
+                      FiniteVolume<T>& fv,
+                      const GridBlock<T>& grid,
                       const IdealGas<T>& gas_model, std::string plot_dir,
                       std::string time_dir, double time) = 0;
 
@@ -68,7 +68,7 @@ public:
              const IdealGas<T>& gas_model, json& meta_data, int time_idx);
 
     // write a flow state
-    int write(const FlowStates<T>& flow_state, const FiniteVolume<T>& fv,
+    int write(const FlowStates<T>& flow_state, FiniteVolume<T>& fv,
               const GridBlock<T>& grid,
               const IdealGas<T>& gas_model, double time);
 
