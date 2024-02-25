@@ -2,6 +2,7 @@
 #include <iostream>
 #include <string>
 #include <vector>
+
 #include "ibis/commands/post_commands/plot.h"
 
 #define DOCTEST_CONFIG_IMPLEMENT
@@ -35,26 +36,27 @@ int cli(int argc, char* argv[]) {
     ibis.failure_message(CLI::FailureMessage::help);
     ibis.require_subcommand(1);
 
-    CLI::App * clean_command = ibis.add_subcommand("clean", "clean the simulation");
-    CLI::App * prep_command = ibis.add_subcommand("prep", "prepare the simulation");
-    CLI::App * run_command = ibis.add_subcommand("run", "run the simulation");
+    CLI::App* clean_command =
+        ibis.add_subcommand("clean", "clean the simulation");
+    CLI::App* prep_command =
+        ibis.add_subcommand("prep", "prepare the simulation");
+    CLI::App* run_command = ibis.add_subcommand("run", "run the simulation");
 
-    CLI::App * post_command = ibis.add_subcommand("post", "post-process the simulation");
+    CLI::App* post_command =
+        ibis.add_subcommand("post", "post-process the simulation");
     post_command->require_subcommand(1);
 
-    CLI::App * plot_command = post_command->add_subcommand("plot", "write simulatioin files to visualisation format");
-    std::map<std::string, FlowFormat> format_map{
-        {"vtk", FlowFormat::Vtk}
-    };
+    CLI::App* plot_command = post_command->add_subcommand(
+        "plot", "write simulatioin files to visualisation format");
+    std::map<std::string, FlowFormat> format_map{{"vtk", FlowFormat::Vtk}};
     FlowFormat format = FlowFormat::Vtk;
     plot_command->add_option("-f,--format", format, "File format")
         ->capture_default_str()
         ->transform(CLI::CheckedTransformer(format_map, CLI::ignore_case));
-    
 
     std::vector<std::string> extra_vars;
-    plot_command->add_option("--add", extra_vars, "Extra variables to add to plot");
-
+    plot_command->add_option("--add", extra_vars,
+                             "Extra variables to add to plot");
 
     CLI11_PARSE(ibis, argc, argv);
 
@@ -68,7 +70,7 @@ int cli(int argc, char* argv[]) {
         return run(argc, argv);
     }
     if (ibis.got_subcommand("post")) {
-        if (post_command->got_subcommand(plot_command)){
+        if (post_command->got_subcommand(plot_command)) {
             return plot(format, extra_vars, argc, argv);
         }
     }

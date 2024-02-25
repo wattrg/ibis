@@ -3,8 +3,8 @@
 
 #include <CLI/CLI.hpp>
 
-CLI::App * setup_post_cli(CLI::App& ibis);
+CLI::App* setup_post_cli(CLI::App& ibis);
 
-int post(CLI::App * post_command, int argc, char* argv[]);
+int post(CLI::App* post_command, int argc, char* argv[]);
 
 #endif

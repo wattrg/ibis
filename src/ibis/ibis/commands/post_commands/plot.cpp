@@ -1,5 +1,4 @@
 
-#include <Kokkos_Core.hpp>
 #include <gas/flow_state.h>
 #include <gas/transport_properties.h>
 #include <grid/grid.h>
@@ -8,6 +7,7 @@
 #include <io/io.h>
 #include <spdlog/spdlog.h>
 
+#include <Kokkos_Core.hpp>
 #include <fstream>
 #include <iostream>
 #include <stdexcept>
@@ -16,15 +16,13 @@
 
 #include "finite_volume/finite_volume.h"
 
-int plot(FlowFormat format, std::vector<std::string> extras,
-         int argc, char* argv[]) {
-
+int plot(FlowFormat format, std::vector<std::string> extras, int argc,
+         char* argv[]) {
     Kokkos::initialize(argc, argv);
     json directories = read_directories();
-    if (format == FlowFormat::Vtk){
+    if (format == FlowFormat::Vtk) {
         plot_vtk<double>(directories, extras);
-    }
-    else if (format == FlowFormat::Native){
+    } else if (format == FlowFormat::Native) {
         spdlog::error("Unable to plot in Native format");
         throw std::runtime_error("Unable to plot in Native format");
     }
