@@ -15,7 +15,7 @@ run:
 
 .PHONY: post
 post:
-	ibis post plot_vtk
+	ibis post plot
 
 .PHONY: clean
 clean:
