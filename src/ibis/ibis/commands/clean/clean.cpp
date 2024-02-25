@@ -5,10 +5,6 @@
 
 #include <iostream>
 
-void setup_clean_cli(CLI::App& ibis) {
-    ibis.add_subcommand("clean", "clean the simulation");
-}
-
 int clean(int argc, char* argv[]) {
     (void)argc;
     (void)argv;

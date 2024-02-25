@@ -3,8 +3,6 @@
 
 #include <CLI/CLI.hpp>
 
-void setup_clean_cli(CLI::App& ibis);
-
 int clean(int argc, char* arvg[]);
 
 #endif

@@ -2,6 +2,7 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include "ibis/commands/post_commands/plot.h"
 
 #define DOCTEST_CONFIG_IMPLEMENT
 #include <doctest/doctest.h>
@@ -9,6 +10,7 @@
 #include <ibis/commands/post_commands/post.h>
 #include <ibis/commands/prep/prep.h>
 #include <ibis/commands/run/run.h>
+#include <io/io.h>
 // #include <ibis_version_info.h>
 #include <runtime_dirs.h>
 #include <spdlog/sinks/basic_file_sink.h>
@@ -26,6 +28,52 @@ static std::string HELP =
     "    prep [filename]: prepare a simulation given a python input script\n"
     "    run: run a simulation"
     "    clean: clean a directory of generated files";
+
+int cli(int argc, char* argv[]) {
+    // set up the command line interface
+    CLI::App ibis{"compressible computational fluid dynamics"};
+    ibis.failure_message(CLI::FailureMessage::help);
+    ibis.require_subcommand(1);
+
+    CLI::App * clean_command = ibis.add_subcommand("clean", "clean the simulation");
+    CLI::App * prep_command = ibis.add_subcommand("prep", "prepare the simulation");
+    CLI::App * run_command = ibis.add_subcommand("run", "run the simulation");
+
+    CLI::App * post_command = ibis.add_subcommand("post", "post-process the simulation");
+    post_command->require_subcommand(1);
+
+    CLI::App * plot_command = post_command->add_subcommand("plot", "write simulatioin files to visualisation format");
+    std::map<std::string, FlowFormat> format_map{
+        {"vtk", FlowFormat::Vtk}
+    };
+    FlowFormat format = FlowFormat::Vtk;
+    plot_command->add_option("-f,--format", format, "File format")
+        ->capture_default_str()
+        ->transform(CLI::CheckedTransformer(format_map, CLI::ignore_case));
+    
+
+    std::vector<std::string> extra_vars;
+    plot_command->add_option("--add", extra_vars, "Extra variables to add to plot");
+
+
+    CLI11_PARSE(ibis, argc, argv);
+
+    if (ibis.got_subcommand(clean_command)) {
+        return clean(argc, argv);
+    }
+    if (ibis.got_subcommand(prep_command)) {
+        return prep(argc, argv);
+    }
+    if (ibis.got_subcommand(run_command)) {
+        return run(argc, argv);
+    }
+    if (ibis.got_subcommand("post")) {
+        if (post_command->got_subcommand(plot_command)){
+            return plot(format, extra_vars, argc, argv);
+        }
+    }
+    return 1;
+}
 
 int main(int argc, char* argv[]) {
     // set up the logger
@@ -50,57 +98,6 @@ int main(int argc, char* argv[]) {
     // This should have very little overhead on this executable.
     doctest::Context ctx;
 
-    // set up the command line interface
-    CLI::App ibis{"compressible computational fluid dynamics"};
-    ibis.require_subcommand(1);
-    setup_clean_cli(ibis);
-    setup_prep_cli(ibis);
-    setup_run_cli(ibis);
-    setup_post_cli(ibis);
-
-    CLI11_PARSE(ibis, argc, argv);
-
-    if (ibis.got_subcommand("clean")) {
-        return clean(argc, argv);
-    }
-    if (ibis.got_subcommand("prep")) {
-        return prep(argc, argv);
-    }
-    if (ibis.got_subcommand("run")) {
-        return run(argc, argv);
-    }
-    if (ibis.got_subcommand("post")) {
-        return post(argc, argv);
-    }
-    // if (argc < 2) {
-    //     spdlog::error("Not enough arguments provided\n");
-    //     return 1;
-    // }
-    //
-    // std::string command = argv[1];
-    //
-    // if (command == "help") {
-    //     std::cout << HELP;
-    //     return 0;
-    // }
-    //
-    // else if (command == "prep") {
-    //     return prep(argc, argv);
-    // }
-    //
-    // else if (command == "clean") {
-    //     return clean(argc, argv);
-    // }
-    //
-    // else if (command == "run") {
-    //     run(argc, argv);
-    //     return 0;
-    // } else if (command == "post") {
-    //     return post(argc, argv);
-    // }
-    //
-    // else {
-    //     std::cerr << "Unknown command: " << command << std::endl;
-    //     std::cerr << "For help, use `ibis help`" << std::endl;
-    // }
+    // run the command line interface
+    cli(argc, argv);
 }

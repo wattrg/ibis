@@ -119,13 +119,13 @@ void FVOutput<T>::add_variable(std::string name) {
     } else if (name == "grad_vz") {
         this->m_vector_accessors.insert(
             {name, std::shared_ptr<VectorAccessor<T>>(new GradVzAccess<T>())});
-    } else if (name == "grad") {
+    } else if (name == "grad_v") {
         this->m_vector_accessors.insert(
-            {name, std::shared_ptr<VectorAccessor<T>>(new GradVxAccess<T>())});
+            {"grad_vx", std::shared_ptr<VectorAccessor<T>>(new GradVxAccess<T>())});
         this->m_vector_accessors.insert(
-            {name, std::shared_ptr<VectorAccessor<T>>(new GradVyAccess<T>())});
+            {"grad_vy", std::shared_ptr<VectorAccessor<T>>(new GradVyAccess<T>())});
         this->m_vector_accessors.insert(
-            {name, std::shared_ptr<VectorAccessor<T>>(new GradVzAccess<T>())});
+            {"grad_vz", std::shared_ptr<VectorAccessor<T>>(new GradVzAccess<T>())});
     } else {
         spdlog::error("Unknown post-processing variable {}", name);
         throw std::runtime_error("Unknown post-process variable");

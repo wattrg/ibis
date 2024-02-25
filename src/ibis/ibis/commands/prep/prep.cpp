@@ -8,10 +8,6 @@
 #include <fstream>
 #include <iostream>
 
-void setup_prep_cli(CLI::App& ibis) {
-    ibis.add_subcommand("prep", "prepare the simulation");
-}
-
 int prep(int argc, char* argv[]) {
     (void)argc;
     (void)argv;

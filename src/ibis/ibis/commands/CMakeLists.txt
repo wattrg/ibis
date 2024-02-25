@@ -37,7 +37,14 @@ target_link_libraries(
 target_include_directories(run PUBLIC ../..)
 
 
-add_library(post STATIC post_commands/post.cpp post_commands/plot_vtk.cpp ../config.cpp)
+add_library(
+        post 
+        STATIC
+        post_commands/post.cpp 
+        post_commands/plot.cpp
+        ../config.cpp
+)
+
 target_link_libraries(
         post PUBLIC
         Python::Python 

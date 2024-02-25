@@ -12,10 +12,6 @@
 
 using json = nlohmann::json;
 
-void setup_run_cli(CLI::App& ibis) {
-    ibis.add_subcommand("run", "run the simulation");
-}
-
 void print_header() {
     spdlog::info("ibis - cfd solver");
     spdlog::info("git branch: {}", Ibis::GIT_BRANCH);
