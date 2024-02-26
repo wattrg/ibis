@@ -87,6 +87,7 @@ double FiniteVolume<T>::estimate_dt(const FlowStates<T>& flow_state,
     CellFaces<T> cell_interfaces = grid.cells().faces();
     Interfaces<T> interfaces = grid.interfaces();
     Cells<T> cells = grid.cells();
+    FlowStates<T> face_fs = face_fs_;
     bool viscous = viscous_;
     // IdealGas<T> gas_model = gas_model_;
 
@@ -95,20 +96,6 @@ double FiniteVolume<T>::estimate_dt(const FlowStates<T>& flow_state,
         "FV::signal_frequency", num_cells,
         KOKKOS_LAMBDA(const size_t cell_i, double& dt_utd) {
             auto cell_face_ids = cell_interfaces.face_ids(cell_i);
-
-            T gamma;
-            T mu;
-            T k;
-            T Pr;
-            T rho;
-            if (viscous) {
-                gamma = gas_model.gamma();
-                mu = trans_prop.viscosity(flow_state.gas, gas_model, cell_i);
-                k = trans_prop.thermal_conductivity(flow_state.gas, gas_model,
-                                                    cell_i);
-                rho = flow_state.gas.rho(cell_i);
-                Pr = mu * gas_model.Cp() / k;
-            }
 
             T vx = flow_state.vel.x(cell_i);
             T vy = flow_state.vel.y(cell_i);
@@ -129,6 +116,11 @@ double FiniteVolume<T>::estimate_dt(const FlowStates<T>& flow_state,
                 spectral_radii_c += sig_vel * area;
 
                 if (viscous) {
+                    T gamma = gas_model.gamma();
+                    T mu = trans_prop.viscosity(face_fs.gas, gas_model, i_face);
+                    T k = trans_prop.thermal_conductivity(face_fs.gas, gas_model, i_face);
+                    T rho = face_fs.gas.rho(i_face);
+                    T Pr = mu * gas_model.Cp() / k;
                     T tmp = (gamma / rho) * (mu / Pr) * area * area;
                     spectral_radii_v += tmp / volume;
                 }
