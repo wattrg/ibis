@@ -1,4 +1,4 @@
-gas_model = IdealGas(287.0)
+gas_model = IdealGas(R=287.0)
 gas_state = GasState()
 gas_state.p = 101325
 gas_state.T = 300.0

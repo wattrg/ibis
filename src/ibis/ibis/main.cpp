@@ -51,12 +51,14 @@ int cli(int argc, char* argv[]) {
     std::map<std::string, FlowFormat> format_map{{"vtk", FlowFormat::Vtk}};
     FlowFormat format = FlowFormat::Vtk;
     plot_command->add_option("-f,--format", format, "File format")
-        ->capture_default_str()
+        ->option_text("format (default: vtk)")
         ->transform(CLI::CheckedTransformer(format_map, CLI::ignore_case));
 
     std::vector<std::string> extra_vars;
     plot_command->add_option("--add", extra_vars,
-                             "Extra variables to add to plot");
+                             "Extra variables to add to plot")
+        ->delimiter(',')
+        ->type_name("str");
 
     CLI11_PARSE(ibis, argc, argv);
 

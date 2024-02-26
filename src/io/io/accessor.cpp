@@ -134,6 +134,8 @@ void GradVzAccess<T>::init(
     const GridBlock<T>& grid, const IdealGas<T>& gas_model) {
     FlowStates<T> fs_dev = FlowStates<T>(fs.number_flow_states());
     fs_dev.deep_copy(fs);
+    fv.apply_pre_reconstruction_bc(fs_dev, grid);
+    fv.apply_pre_viscous_grad_bc(fs_dev, grid);
     fv.compute_viscous_properties_at_faces(fs_dev, grid, gas_model);
     grad_vz_ = fv.cell_gradients().vz.host_mirror();
     grad_vz_.deep_copy(fv.cell_gradients().vz);
