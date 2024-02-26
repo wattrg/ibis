@@ -487,9 +487,12 @@ void FiniteVolume<T>::compute_viscous_properties_at_faces(
                 0.5 * (left.gas.pressure(i) + right.gas.pressure(i));
             gas_model.update_thermo_from_pT(face_fs.gas, i);
 
-            face_fs.vel.x(i) = 0.5 * (left.vel.x(i) + right.vel.x(i));
-            face_fs.vel.y(i) = 0.5 * (left.vel.y(i) + right.vel.y(i));
-            face_fs.vel.z(i) = 0.5 * (left.vel.z(i) + right.vel.z(i));
+            // face_fs.vel.x(i) = 0.5 * (left.vel.x(i) + right.vel.x(i));
+            // face_fs.vel.y(i) = 0.5 * (left.vel.y(i) + right.vel.y(i));
+            // face_fs.vel.z(i) = 0.5 * (left.vel.z(i) + right.vel.z(i));
+            face_fs.vel.x(i) = 0.5 * (flow_states.vel.x(left_cell) + flow_states.vel.x(right_cell));
+            face_fs.vel.y(i) = 0.5 * (flow_states.vel.y(left_cell) + flow_states.vel.y(right_cell));
+            face_fs.vel.z(i) = 0.5 * (flow_states.vel.z(left_cell) + flow_states.vel.z(right_cell));
         });
 }
 
@@ -504,7 +507,6 @@ void FiniteVolume<T>::compute_viscous_flux(
     FlowStates<T> face_fs = face_fs_;
     ConservedQuantities<T> flux = flux_;
     Gradients<T> grad = face_grad_;
-    FlowStates<T> fs = face_fs_;
     size_t dim = dim_;
     Kokkos::parallel_for(
         "viscous_flux", num_faces, KOKKOS_LAMBDA(const size_t i) {
@@ -522,9 +524,9 @@ void FiniteVolume<T>::compute_viscous_flux(
             T tau_xz = mu * (grad.vx.z(i) + grad.vz.x(i));
             T tau_yz = mu * (grad.vy.z(i) + grad.vz.y(i));
 
-            T vx = fs.vel.x(i);
-            T vy = fs.vel.y(i);
-            T vz = fs.vel.z(i);
+            T vx = face_fs.vel.x(i);
+            T vy = face_fs.vel.y(i);
+            T vz = face_fs.vel.z(i);
             T theta_x =
                 vx * tau_xx + vy * tau_xy + vz * tau_xz + k * grad.temp.x(i);
             T theta_y =
