@@ -72,8 +72,8 @@ Vector3<T> VelocityAccess<T>::access(
     (void)gas_model;
     (void)fv;
     T x = fs.vel.x(i);
-    T y = fs.vel.x(i);
-    T z = fs.vel.x(i);
+    T y = fs.vel.y(i);
+    T z = fs.vel.z(i);
     return Vector3<T>(x, y, z);
 }
 template class VelocityAccess<double>;
