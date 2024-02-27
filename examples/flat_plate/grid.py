@@ -34,7 +34,7 @@ gmsh.model.geo.addPhysicalGroup(1, [ld], name="inflow")
 gmsh.model.geo.addPhysicalGroup(1, [lb, lc], name="outflow")
 
 # mesh size
-size = length / 75
+size = length / 120
 gmsh.model.geo.mesh.setSize([(0, a), (0,b), (0,c), (0,d)], size)
 
 # syncronise the geometry so we can mesh

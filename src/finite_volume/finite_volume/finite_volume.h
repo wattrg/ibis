@@ -33,7 +33,8 @@ public:
 
     // methods
     // these have to be public for NVCC, but they shouldn't really need to
-    // be accessed from outside of the class
+    // be accessed from outside of the class. Although sometimes the
+    // post-processing will call them.
     void apply_pre_reconstruction_bc(FlowStates<T>& fs,
                                      const GridBlock<T>& grid);
     void apply_pre_viscous_grad_bc(FlowStates<T>& fs, const GridBlock<T>& grid);

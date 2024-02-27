@@ -118,7 +118,8 @@ double FiniteVolume<T>::estimate_dt(const FlowStates<T>& flow_state,
                 if (viscous) {
                     T gamma = gas_model.gamma();
                     T mu = trans_prop.viscosity(face_fs.gas, gas_model, i_face);
-                    T k = trans_prop.thermal_conductivity(face_fs.gas, gas_model, i_face);
+                    T k = trans_prop.thermal_conductivity(face_fs.gas,
+                                                          gas_model, i_face);
                     T rho = face_fs.gas.rho(i_face);
                     T Pr = mu * gas_model.Cp() / k;
                     T tmp = (gamma / rho) * (mu / Pr) * area * area;
@@ -482,13 +483,19 @@ void FiniteVolume<T>::compute_viscous_properties_at_faces(
                 face_grad.temp.z(i) = avg_grad_z - correction * nz / ehat_dot_n;
             }
             // set the gas state at the interface
-            face_fs.gas.temp(i) = 0.5 * (flow_states.gas.temp(left_cell) + flow_states.gas.temp(right_cell));
-            face_fs.gas.pressure(i) = 0.5 * (flow_states.gas.pressure(left_cell) + flow_states.gas.pressure(right_cell));
+            face_fs.gas.temp(i) = 0.5 * (flow_states.gas.temp(left_cell) +
+                                         flow_states.gas.temp(right_cell));
+            face_fs.gas.pressure(i) =
+                0.5 * (flow_states.gas.pressure(left_cell) +
+                       flow_states.gas.pressure(right_cell));
             gas_model.update_thermo_from_pT(face_fs.gas, i);
 
-            face_fs.vel.x(i) = 0.5 * (flow_states.vel.x(left_cell) + flow_states.vel.x(right_cell));
-            face_fs.vel.y(i) = 0.5 * (flow_states.vel.y(left_cell) + flow_states.vel.y(right_cell));
-            face_fs.vel.z(i) = 0.5 * (flow_states.vel.z(left_cell) + flow_states.vel.z(right_cell));
+            face_fs.vel.x(i) = 0.5 * (flow_states.vel.x(left_cell) +
+                                      flow_states.vel.x(right_cell));
+            face_fs.vel.y(i) = 0.5 * (flow_states.vel.y(left_cell) +
+                                      flow_states.vel.y(right_cell));
+            face_fs.vel.z(i) = 0.5 * (flow_states.vel.z(left_cell) +
+                                      flow_states.vel.z(right_cell));
         });
 }
 
