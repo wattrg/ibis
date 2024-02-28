@@ -9,7 +9,7 @@ template <typename T>
 void ldfss(FlowStates<T>& left, FlowStates<T>& right,
            ConservedQuantities<T>& flux, IdealGas<T>& gm, bool three_d) {
     Kokkos::parallel_for(
-        "ldfss", flux.size(), KOKKOS_LAMBDA(const int i){
+        "ldfss", flux.size(), KOKKOS_LAMBDA(const int i) {
             // unpack left flow state
             T rL = left.gas.rho(i);
             T pL = left.gas.pressure(i);
@@ -48,8 +48,8 @@ void ldfss(FlowStates<T>& left, FlowStates<T>& right,
             T alphaR = 0.5 * (1.0 - Kokkos::copysignf(1.0, MR));
 
             // equation 17
-            T betaL = -Kokkos::fmax(0.0, 1.0 - Kokkos::floor(Kokkos::fabs(ML)));            
-            T betaR = -Kokkos::fmax(0.0, 1.0 - Kokkos::floor(Kokkos::fabs(MR)));            
+            T betaL = -Kokkos::fmax(0.0, 1.0 - Kokkos::floor(Kokkos::fabs(ML)));
+            T betaR = -Kokkos::fmax(0.0, 1.0 - Kokkos::floor(Kokkos::fabs(MR)));
 
             // subsonic pressure splitting (eqn 12)
             T PL = 0.25 * (ML + 1.0) * (ML + 1.0) * (2.0 - ML);
@@ -61,15 +61,19 @@ void ldfss(FlowStates<T>& left, FlowStates<T>& right,
 
             // choice of weighting parameter
             T delta = 2.0;
-          
-            T Mhalf = 0.25 * betaL * betaR * Kokkos::powf((Kokkos::sqrt(0.5 * (ML * ML + MR * MR))-1.0), 2);
 
-            T MhalfL = Mhalf * (1.0 - ((pL-pR)/(pL+pR) + delta*(Kokkos::fabs(pL-pR)/pL)));
-            T MhalfR = Mhalf * (1.0 + ((pL-pR)/(pL+pR) - delta*(Kokkos::fabs(pL-pR)/pR)));
+            T Mhalf = 0.25 * betaL * betaR *
+                      Kokkos::powf(
+                          (Kokkos::sqrt(0.5 * (ML * ML + MR * MR)) - 1.0), 2);
+
+            T MhalfL = Mhalf * (1.0 - ((pL - pR) / (pL + pR) +
+                                       delta * (Kokkos::fabs(pL - pR) / pL)));
+            T MhalfR = Mhalf * (1.0 + ((pL - pR) / (pL + pR) -
+                                       delta * (Kokkos::fabs(pL - pR) / pR)));
 
             // C parameter for LDFSS (2) (eqn 13 & eqn 14 & eqn 26 & eqn 27)
-            T CL = alphaL*(1.0+betaL)*ML - betaL*MpL - MhalfL;
-            T CR = alphaR*(1.0+betaR)*MR - betaR*MmR + MhalfR;
+            T CL = alphaL * (1.0 + betaL) * ML - betaL * MpL - MhalfL;
+            T CR = alphaR * (1.0 + betaR) * MR - betaR * MmR + MhalfR;
 
             T ru_half = am * rL * CL + am * rR * CR;
             T ru2_half = am * rL * CL * uL + am * rR * CR * uR;
@@ -77,13 +81,12 @@ void ldfss(FlowStates<T>& left, FlowStates<T>& right,
             flux.mass(i) = ru_half;
             flux.momentum_x(i) = ru2_half + p_half;
             flux.momentum_y(i) = am * rL * CL * vL + am * rR * CR * vR;
-            if (three_d){
-              flux.momentum_z(i) = am * rL * CL * wL + am * rR * CR * wR;
+            if (three_d) {
+                flux.momentum_z(i) = am * rL * CL * wL + am * rR * CR * wR;
             }
             flux.energy(i) = am * rL * CL * HL + am * rR * CR * HR;
-        }
-    );
+        });
 }
 template void ldfss<double>(FlowStates<double>&, FlowStates<double>&,
-                             ConservedQuantities<double>&, IdealGas<double>&,
-                             bool);
+                            ConservedQuantities<double>&, IdealGas<double>&,
+                            bool);

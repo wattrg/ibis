@@ -18,7 +18,7 @@ using json = nlohmann::json;
 
 /**
  * Handles the fluid dynamics/finite volume related things
- * 
+ *
  * @tparam T The type of number flow variables are stored with
  */
 template <typename T>
@@ -30,7 +30,7 @@ public:
 
     /**
      * Compute the time derivative of a particular flow state
-     * 
+     *
      * @param[in] flow_state The flow state to compute the time derivative for
      * @param[in] grid The grid
      * @param[out] dudt The time derivatives of conserved quantities
@@ -42,10 +42,10 @@ public:
                         TransportProperties<T>& trans_prop);
 
     /**
-     * Estimate the allowable global time step for a given flow 
+     * Estimate the allowable global time step for a given flow
      * state on a given grid
-     * 
-     * @param flow_state The flow state to estimate the allowable 
+     *
+     * @param flow_state The flow state to estimate the allowable
      *     time step for
      * @param grid The grid to compute the time step for
      * @param gas_model The gas model

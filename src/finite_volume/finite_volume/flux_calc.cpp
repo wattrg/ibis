@@ -11,7 +11,7 @@ FluxCalculator flux_calculator_from_string(std::string name) {
     } else if (name == "ausmdv") {
         flux_calc = FluxCalculator::Ausmdv;
     } else if (name == "ldfss") {
-        flux_calc = FluxCalculator::Ldfss;    
+        flux_calc = FluxCalculator::Ldfss;
     } else {
         spdlog::error("Unknown flux calculator {}", name);
         throw std::runtime_error("Unknown flux calculator");
