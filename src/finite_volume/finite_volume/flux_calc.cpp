@@ -10,6 +10,8 @@ FluxCalculator flux_calculator_from_string(std::string name) {
         flux_calc = FluxCalculator::Hanel;
     } else if (name == "ausmdv") {
         flux_calc = FluxCalculator::Ausmdv;
+    } else if (name == "ldfss") {
+        flux_calc = FluxCalculator::Ldfss;    
     } else {
         spdlog::error("Unknown flux calculator {}", name);
         throw std::runtime_error("Unknown flux calculator");
@@ -23,6 +25,8 @@ std::string string_from_flux_calculator(FluxCalculator flux_calc) {
             return "hanel";
         case FluxCalculator::Ausmdv:
             return "ausmdv";
+        case FluxCalculator::Ldfss:
+            return "ldfss";
         default:
             throw std::runtime_error("Shouldn't get here");
     }

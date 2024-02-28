@@ -9,6 +9,7 @@
 enum class FluxCalculator {
     Hanel,
     Ausmdv,
+    Ldfss,
 };
 
 FluxCalculator flux_calculator_from_string(std::string name);
@@ -21,5 +22,9 @@ void hanel(FlowStates<T>& left, FlowStates<T>& right,
 template <typename T>
 void ausmdv(FlowStates<T>& left, FlowStates<T>& right,
             ConservedQuantities<T>& flux, IdealGas<T>& gm, bool three_d);
+
+template <typename T>
+void ldfss(FlowStates<T>& left, FlowStates<T>& right,
+           ConservedQuantities<T>& flux, IdealGas<T>& gm, bool three_d);
 
 #endif

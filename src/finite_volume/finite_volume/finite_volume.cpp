@@ -333,6 +333,9 @@ void FiniteVolume<T>::compute_convective_flux(const GridBlock<T>& grid,
         case FluxCalculator::Ausmdv:
             ausmdv(left_, right_, flux_, gas_model, dim_ == 3);
             break;
+        case FluxCalculator::Ldfss:
+            ldfss(left_, right_, flux_, gas_model, dim_ == 3);
+            break;
     }
 
     // rotate the fluxes to the global frame

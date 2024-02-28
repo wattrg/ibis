@@ -51,7 +51,8 @@ PYBIND11_MODULE(python_api, m) {
 
     pybind11::enum_<FluxCalculator>(m, "FluxCalculator")
         .value("Hanel", FluxCalculator::Hanel)
-        .value("Ausmdv", FluxCalculator::Ausmdv);
+        .value("Ausmdv", FluxCalculator::Ausmdv)
+        .value("Ldfss", FluxCalculator::Ldfss);
 
     m.def("flux_calculator_from_string", &flux_calculator_from_string,
           "Convert string to flux calculator");

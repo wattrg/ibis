@@ -5,6 +5,7 @@ add_library(
 	finite_volume/flux_calc.cpp 
 	finite_volume/flux_calculators/hanel.cpp
 	finite_volume/flux_calculators/ausmdv.cpp
+	finite_volume/flux_calculators/ldfss.cpp
 	finite_volume/primative_conserved_conversion.cpp
 	finite_volume/conserved_quantities.cpp
 	finite_volume/boundaries/boundary.cpp
@@ -33,8 +34,9 @@ if (Ibis_BUILD_TESTS)
     	finite_volume/flux_calc.cpp 
     	finite_volume/flux_calculators/hanel.cpp
     	finite_volume/flux_calculators/ausmdv.cpp
-	finite_volume/gradient.cpp
-	finite_volume/limiter.cpp
+			finite_volume/flux_calculators/ldfss.cpp
+			finite_volume/gradient.cpp
+			finite_volume/limiter.cpp
     )
     # target_compile_options(finite_volume_unittest -g)
     target_link_libraries(
