@@ -6,8 +6,9 @@
 #include <Kokkos_MathematicalFunctions.hpp>
 
 template <typename T>
-void ldfss(FlowStates<T>& left, FlowStates<T>& right,
-           ConservedQuantities<T>& flux, IdealGas<T>& gm, bool three_d) {
+void Ldfss<T>::compute_flux(const FlowStates<T>& left, const FlowStates<T>& right,
+                         ConservedQuantities<T>& flux, IdealGas<T>& gm,
+                         bool three_d) {
     Kokkos::parallel_for(
         "ldfss", flux.size(), KOKKOS_LAMBDA(const int i) {
             // unpack left flow state
@@ -87,6 +88,4 @@ void ldfss(FlowStates<T>& left, FlowStates<T>& right,
             flux.energy(i) = am * rL * CL * HL + am * rR * CR * HR;
         });
 }
-template void ldfss<double>(FlowStates<double>&, FlowStates<double>&,
-                            ConservedQuantities<double>&, IdealGas<double>&,
-                            bool);
+template class Ldfss<double>;

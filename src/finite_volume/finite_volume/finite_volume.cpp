@@ -34,8 +34,7 @@ FiniteVolume<T>::FiniteVolume(const GridBlock<T>& grid, json config)
     }
 
     // set the flux calculator
-    flux_calculator_ = flux_calculator_from_string(
-        convective_flux_config.at("flux_calculator"));
+    flux_calculator_ = make_flux_calculator<T>(convective_flux_config.at("flux_calculator"));
 
     // set up reconstruction limiters for convective flux
     reconstruction_order_ = convective_flux_config.at("reconstruction_order");
@@ -326,17 +325,7 @@ void FiniteVolume<T>::compute_convective_flux(const GridBlock<T>& grid,
     transform_to_local_frame(right_.vel, faces.norm(), faces.tan1(),
                              faces.tan2());
 
-    switch (flux_calculator_) {
-        case FluxCalculator::Hanel:
-            hanel(left_, right_, flux_, gas_model, dim_ == 3);
-            break;
-        case FluxCalculator::Ausmdv:
-            ausmdv(left_, right_, flux_, gas_model, dim_ == 3);
-            break;
-        case FluxCalculator::Ldfss:
-            ldfss(left_, right_, flux_, gas_model, dim_ == 3);
-            break;
-    }
+    flux_calculator_->compute_flux(left_, right_, flux_, gas_model, dim_==3);
 
     // rotate the fluxes to the global frame
     Vector3s<T> norm = faces.norm();

@@ -13,9 +13,9 @@ from ibis_py_utils import (
 )
 
 from python_api import (
-    FluxCalculator,
-    flux_calculator_from_string,
-    string_from_flux_calculator,
+    PyAusmdv,
+    PyHanel,
+    PyLdfss,
     GasState,
     PyIdealGas
 )
@@ -58,6 +58,47 @@ def string_from_limiter(limiter):
     return "none"
 
 
+class FluxCalculator:
+    pass
+
+
+class Hanel(FluxCalculator):
+    def __init__(self):
+        self._flux_calc = PyHanel()
+
+    def as_dict(self):
+        return {"type": self._flux_calc.name()}
+
+
+class Ausmdv(FluxCalculator):
+    def __init__(self):
+        self._flux_calc = PyAusmdv()
+
+    def as_dict(self):
+        return {"type": self._flux_calc.name()}
+
+
+class Ldfss(FluxCalculator):
+    def __init__(self):
+        self._flux_calc = PyLdfss()
+
+    def as_dict(self):
+        return {"type": self._flux_calc.name()}
+
+
+def string_to_flux_calc(name):
+    if name == "hanel":
+        return Hanel()
+    elif name == "ausmdv":
+        return Ausmdv()
+    elif name == "ldfss":
+        return Ldfss()
+    else:
+        validation_errors.append(
+            ValidationException(f"Unknown flux calculator {name}")
+        )
+
+
 class ConvectiveFlux:
     _json_values = ["flux_calculator", "reconstruction_order", "limiter"]
     __slots__ = _json_values
@@ -67,24 +108,19 @@ class ConvectiveFlux:
         json_data = read_defaults(DEFAULTS_DIRECTORY,
                                   self._defaults_file)
         for key in self._json_values:
+            if key == "flux_calculator":
+                self.flux_calculator = string_to_flux_calc(
+                    json_data["flux_calculator"]
+                )
             setattr(self, key, json_data[key])
 
         for key in kwargs:
             setattr(self, key, kwargs[key])
 
-        if type(self.flux_calculator) is not FluxCalculator:
-            self.flux_calculator = flux_calculator_from_string(
-                self.flux_calculator
-            )
-
         if type(self.limiter) is not Limiter:
             self.limiter = string_to_limiter(self.limiter)
 
     def validate(self):
-        if type(self.flux_calculator) is not FluxCalculator:
-            self.flux_calculator = flux_calculator_from_string(
-                self.flux_calculator
-            )
         if self.reconstruction_order not in (1, 2):
             validation_errors.append(
                 ValidationException(
@@ -97,9 +133,7 @@ class ConvectiveFlux:
         dictionary = {}
         for key in self._json_values:
             if key == "flux_calculator":
-                dictionary[key] = string_from_flux_calculator(
-                    self.flux_calculator
-                )
+                dictionary[key] = self.flux_calculator.as_dict()
             elif key == "limiter":
                 dictionary[key] = string_from_limiter(self.limiter)
             else:
@@ -527,7 +561,9 @@ def main(file_name, res_dir):
         "config": config,
         "ConvectiveFlux": ConvectiveFlux,
         "ViscousFlux": ViscousFlux,
-        "FluxCalculator": FluxCalculator,
+        "Ausmdv": Ausmdv,
+        "Hanel": Hanel,
+        "Ldfss": Ldfss,
         "Block": Block,
         "Solver": Solver,
         "FlowState": FlowState,

@@ -130,7 +130,7 @@ private:
     size_t reconstruction_order_;
 
     // The flux calculator
-    FluxCalculator flux_calculator_;
+    std::unique_ptr<FluxCalculator<T>> flux_calculator_;
 
     // Flag for whether viscous fluxes should be included
     bool viscous_;

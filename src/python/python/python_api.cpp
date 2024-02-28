@@ -49,14 +49,18 @@ PYBIND11_MODULE(python_api, m) {
         .def_readwrite("y", &Vector3<double>::y, "y")
         .def_readwrite("z", &Vector3<double>::z, "z");
 
-    pybind11::enum_<FluxCalculator>(m, "FluxCalculator")
-        .value("Hanel", FluxCalculator::Hanel)
-        .value("Ausmdv", FluxCalculator::Ausmdv)
-        .value("Ldfss", FluxCalculator::Ldfss);
+    // flux calculators
+    pybind11::class_<FluxCalculator<double>>(m, "FluxCalculator");
 
-    m.def("flux_calculator_from_string", &flux_calculator_from_string,
-          "Convert string to flux calculator");
+    pybind11::class_<Hanel<double>>(m, "PyHanel")
+        .def(pybind11::init<>())
+        .def("name", &Hanel<double>::name);
 
-    m.def("string_from_flux_calculator", &string_from_flux_calculator,
-          "Convert flux calculator to string");
+    pybind11::class_<Ausmdv<double>>(m, "PyAusmdv")
+        .def(pybind11::init<>())
+        .def("name", &Ausmdv<double>::name);
+
+    pybind11::class_<Ldfss<double>>(m, "PyLdfss")
+        .def(pybind11::init<>())
+        .def("name", &Ldfss<double>::name);
 }

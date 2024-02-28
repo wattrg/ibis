@@ -9,7 +9,7 @@ initial = FlowState(gas=gas_state, vx=vx)
 max_time = 2 * 1.0 / vx
 
 config.convective_flux = ConvectiveFlux(
-    flux_calculator = FluxCalculator.Ldfss,
+    flux_calculator = Hanel(),
     reconstruction_order = 1,
 )
 

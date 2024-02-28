@@ -9,7 +9,7 @@ flow_state = FlowState(gas=gas_state, vx=vx)
 max_time = 5e-3
 
 config.convective_flux = ConvectiveFlux(
-    flux_calculator=FluxCalculator.Ldfss,
+    flux_calculator=Ausmdv(),
     reconstruction_order = 2
 )
 
