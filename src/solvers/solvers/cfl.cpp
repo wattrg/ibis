@@ -13,8 +13,12 @@ double ConstantSchedule::eval(double t) {
     return cfl_;
 }
 
-// LinearSchedule::LinearSchedule(json schedule)
-//     : times_(schedule.at("times")), cfls_(schedule.at("cfls")) {}
+LinearSchedule::LinearSchedule(json schedule) {
+    std::vector<double> times = schedule.at("times");
+    std::vector<double> cfls = schedule.at("cfls");
+    times_ = times;
+    cfls_ = cfls;
+}
 
 double LinearSchedule::eval(double t) {
     if (t <= times_[0]) {
