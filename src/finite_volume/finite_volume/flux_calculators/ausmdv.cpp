@@ -5,8 +5,10 @@
 #include <Kokkos_Core.hpp>
 
 template <typename T>
-void ausmdv(FlowStates<T>& left, FlowStates<T>& right,
-            ConservedQuantities<T>& flux, IdealGas<T>& gm, bool three_d) {
+void Ausmdv<T>::compute_flux(const FlowStates<T>& left,
+                             const FlowStates<T>& right,
+                             ConservedQuantities<T>& flux, IdealGas<T>& gm,
+                             bool three_d) {
     Kokkos::parallel_for(
         "ausmdv", flux.size(), KOKKOS_LAMBDA(const int i) {
             T rL = left.gas.rho(i);
@@ -131,6 +133,4 @@ void ausmdv(FlowStates<T>& left, FlowStates<T>& right,
             }
         });
 }
-template void ausmdv<double>(FlowStates<double>&, FlowStates<double>&,
-                             ConservedQuantities<double>&, IdealGas<double>&,
-                             bool);
+template class Ausmdv<double>;

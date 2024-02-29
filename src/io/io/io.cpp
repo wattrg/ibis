@@ -1,4 +1,6 @@
 
+#include <finite_volume/finite_volume.h>
+#include <io/accessor.h>
 #include <io/io.h>
 #include <io/native.h>
 #include <io/vtk.h>
@@ -71,19 +73,18 @@ FVIO<T>::FVIO(int time_index)
 }
 
 template <typename T>
-int FVIO<T>::write(const FlowStates<T>& fs, const GridBlock<T>& grid,
-                   const IdealGas<T>& gas_model, double time) {
-    // get a copy of the flow states and grid on the CPU
-    auto grid_host = grid.host_mirror();
+int FVIO<T>::write(const FlowStates<T>& fs, FiniteVolume<T>& fv,
+                   const GridBlock<T>& grid, const IdealGas<T>& gas_model,
+                   double time) {
+    // get a copy of the flow states on the CPU
     auto fs_host = fs.host_mirror();
-    grid_host.deep_copy(grid);
     fs_host.deep_copy(fs);
 
     std::string time_index = pad_time_index(time_index_, 4);
     std::string directory_name = output_dir_ + "/" + time_index;
     std::filesystem::create_directory(output_dir_);
     std::filesystem::create_directory(directory_name);
-    int result = output_->write(fs_host, grid_host, gas_model, output_dir_,
+    int result = output_->write(fs_host, fv, grid, gas_model, output_dir_,
                                 time_index, time);
     time_index_++;
     return result;
@@ -92,12 +93,12 @@ int FVIO<T>::write(const FlowStates<T>& fs, const GridBlock<T>& grid,
 template <typename T>
 int FVIO<T>::read(FlowStates<T>& fs, const GridBlock<T>& grid,
                   const IdealGas<T>& gas_model, json& meta_data, int time_idx) {
-    auto grid_host = grid.host_mirror();
+    // auto grid_host = grid.host_mirror();
     auto fs_host = fs.host_mirror();
     std::string time_index = pad_time_index(time_idx, 4);
     std::string directory_name = input_dir_ + "/" + time_index;
     int result =
-        input_->read(fs_host, grid_host, gas_model, directory_name, meta_data);
+        input_->read(fs_host, grid, gas_model, directory_name, meta_data);
     fs.deep_copy(fs_host);
     return result;
 }
@@ -105,6 +106,33 @@ int FVIO<T>::read(FlowStates<T>& fs, const GridBlock<T>& grid,
 template <typename T>
 void FVIO<T>::write_coordinating_file() {
     output_->write_coordinating_file(output_dir_);
+}
+
+template <typename T>
+void FVOutput<T>::add_variable(std::string name) {
+    if (name == "grad_vx") {
+        this->m_vector_accessors.insert(
+            {name, std::shared_ptr<VectorAccessor<T>>(new GradVxAccess<T>())});
+    } else if (name == "grad_vy") {
+        this->m_vector_accessors.insert(
+            {name, std::shared_ptr<VectorAccessor<T>>(new GradVyAccess<T>())});
+    } else if (name == "grad_vz") {
+        this->m_vector_accessors.insert(
+            {name, std::shared_ptr<VectorAccessor<T>>(new GradVzAccess<T>())});
+    } else if (name == "grad_v") {
+        this->m_vector_accessors.insert(
+            {"grad_vx",
+             std::shared_ptr<VectorAccessor<T>>(new GradVxAccess<T>())});
+        this->m_vector_accessors.insert(
+            {"grad_vy",
+             std::shared_ptr<VectorAccessor<T>>(new GradVyAccess<T>())});
+        this->m_vector_accessors.insert(
+            {"grad_vz",
+             std::shared_ptr<VectorAccessor<T>>(new GradVzAccess<T>())});
+    } else {
+        spdlog::error("Unknown post-processing variable {}", name);
+        throw std::runtime_error("Unknown post-process variable");
+    }
 }
 
 template class FVIO<double>;

@@ -1,4 +1,4 @@
-gas_model = IdealGas(287.0)
+gas_model = IdealGas(R = 287.0)
 gas_state = GasState()
 gas_state.p = 101325
 gas_state.T = 300.0
@@ -9,7 +9,7 @@ flow_state = FlowState(gas=gas_state, vx=vx)
 max_time = 5e-3
 
 config.convective_flux = ConvectiveFlux(
-    flux_calculator = FluxCalculator.Ausmdv,
+    flux_calculator=Ausmdv(),
     reconstruction_order = 2
 )
 

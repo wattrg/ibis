@@ -5,8 +5,10 @@
 #include <Kokkos_Core.hpp>
 
 template <typename T>
-void hanel(FlowStates<T>& left, FlowStates<T>& right,
-           ConservedQuantities<T>& flux, IdealGas<T>& gm, bool three_d) {
+void Hanel<T>::compute_flux(const FlowStates<T>& left,
+                            const FlowStates<T>& right,
+                            ConservedQuantities<T>& flux, IdealGas<T>& gm,
+                            bool three_d) {
     Kokkos::parallel_for(
         "Flux::hanel", flux.size(), KOKKOS_LAMBDA(const int i) {
             // unpack left gas state
@@ -63,7 +65,4 @@ void hanel(FlowStates<T>& left, FlowStates<T>& right,
             flux.energy(i) = uLplus * rL * HL + uRminus * rR * HR;
         });
 }
-
-template void hanel<double>(FlowStates<double>&, FlowStates<double>&,
-                            ConservedQuantities<double>&, IdealGas<double>&,
-                            bool);
+template class Hanel<double>;

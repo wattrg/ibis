@@ -12,7 +12,7 @@ vx = mach * gas_model.speed_of_sound(gas_state)
 flow_state = FlowState(gas=gas_state, vx=vx)
 
 config.convective_flux = ConvectiveFlux(
-    flux_calculator = FluxCalculator.Ausmdv,
+    flux_calculator = Ausmdv(),
     reconstruction_order = 2
 )
 

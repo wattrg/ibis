@@ -18,6 +18,7 @@ size_t vtk_type_from_elem_type(ElemType type) {
 template <typename T>
 void write_scalar_field(std::ofstream& f,
                         const FlowStates<T, array_layout, host_mem_space> fs,
+                        FiniteVolume<T>& fv,
                         std::shared_ptr<ScalarAccessor<T>> accessor,
                         const IdealGas<T>& gas_model, std::string name,
                         std::string type, size_t num_values) {
@@ -27,7 +28,7 @@ void write_scalar_field(std::ofstream& f,
     f << "format='ascii'>" << std::endl;
 
     for (size_t i = 0; i < num_values; i++) {
-        f << accessor->access(fs, gas_model, i) << std::endl;
+        f << accessor->access(fs, fv, gas_model, i) << std::endl;
     }
 
     f << "</DataArray>" << std::endl;
@@ -35,8 +36,30 @@ void write_scalar_field(std::ofstream& f,
 
 template <typename T>
 void write_vector_field(std::ofstream& f,
-                        const Vector3s<T, array_layout, host_mem_space>& vec,
+                        const FlowStates<T, array_layout, host_mem_space>& fs,
+                        FiniteVolume<T>& fv,
+                        std::shared_ptr<VectorAccessor<T>> accessor,
+                        const IdealGas<T>& gas_model,
+                        // const Vector3s<T, array_layout, host_mem_space>& vec,
                         std::string name, std::string type, size_t num_values) {
+    f << "<DataArray type='" << type << "' ";
+    f << "NumberOfComponents='3' ";
+    f << "Name='" << name << "' ";
+    f << "format='ascii'>" << std::endl;
+
+    for (size_t i = 0; i < num_values; i++) {
+        Vector3<T> vec = accessor->access(fs, fv, gas_model, i);
+        f << vec.x << " " << vec.y << " " << vec.z << std::endl;
+        // f << vec.x(i) << " " << vec.y(i) << " " << vec.z(i) << std::endl;
+    }
+
+    f << "</DataArray>" << std::endl;
+}
+
+template <typename T>
+void write_vector3s(std::ofstream& f,
+                    const Vector3s<T, array_layout, host_mem_space>& vec,
+                    std::string name, std::string type, size_t num_values) {
     f << "<DataArray type='" << type << "' ";
     f << "NumberOfComponents='3' ";
     f << "Name='" << name << "' ";
@@ -79,14 +102,18 @@ void write_elem_type(
 
 template <typename T>
 VtkOutput<T>::VtkOutput() {
-    m_scalar_accessors = get_accessors<T>();
+    this->m_scalar_accessors = get_scalar_accessors<T>();
+    this->m_vector_accessors = get_vector_accessors<T>();
 }
 
 template <typename T>
 int VtkOutput<T>::write(const typename FlowStates<T>::mirror_type& fs,
-                        const typename GridBlock<T>::mirror_type& grid,
+                        FiniteVolume<T>& fv, const GridBlock<T>& grid,
                         const IdealGas<T>& gas_model, std::string plot_dir,
                         std::string time_dir, double time) {
+    auto grid_host = grid.host_mirror();
+    grid_host.deep_copy(grid);
+
     std::ofstream f(plot_dir + "/" + time_dir + "/" + "/block_0.vtu");
     f << "<VTKFile type='UnstructuredGrid' byte_order='BigEndian'>"
       << std::endl;
@@ -96,26 +123,34 @@ int VtkOutput<T>::write(const typename FlowStates<T>::mirror_type& fs,
     f << "<Piece NumberOfPoints='" << grid.num_vertices() << "' NumberOfCells='"
       << grid.num_cells() << "'>" << std::endl;
     f << "<Points>" << std::endl;
-    write_vector_field(f, grid.vertices().positions(), "points", "Float64",
-                       grid.num_vertices());
+    write_vector3s(f, grid_host.vertices().positions(), "points", "Float64",
+                   grid.num_vertices());
     f << "</Points>" << std::endl;
     f << "<Cells>" << std::endl;
-    write_int_view(f, grid.cells().vertex_ids().data(), "connectivity",
+    write_int_view(f, grid_host.cells().vertex_ids().data(), "connectivity",
                    "Int64");
-    write_int_view(f, grid.cells().vertex_ids().offsets(), "offsets", "Int64",
-                   true);
-    write_elem_type(f, grid.cells().shapes());
+    write_int_view(f, grid_host.cells().vertex_ids().offsets(), "offsets",
+                   "Int64", true);
+    write_elem_type(f, grid_host.cells().shapes());
     f << "</Cells>" << std::endl;
 
     // the cell data
     f << "<CellData>" << std::endl;
-    for (auto& key_value : m_scalar_accessors) {
+    for (auto& key_value : this->m_scalar_accessors) {
         std::string name = key_value.first;
         std::shared_ptr<ScalarAccessor<T>> accessor = key_value.second;
-        write_scalar_field(f, fs, accessor, gas_model, name, "Float64",
+        accessor->init(fs, fv, grid, gas_model);
+        write_scalar_field(f, fs, fv, accessor, gas_model, name, "Float64",
                            grid.num_cells());
     }
-    write_vector_field(f, fs.vel, "velocity", "Float64", grid.num_cells());
+
+    for (auto& key_value : this->m_vector_accessors) {
+        std::string name = key_value.first;
+        std::shared_ptr<VectorAccessor<T>> accessor = key_value.second;
+        accessor->init(fs, fv, grid, gas_model);
+        write_vector_field(f, fs, fv, accessor, gas_model, name, "Float64",
+                           grid.num_cells());
+    }
     f << "</CellData>" << std::endl;
 
     // close all the data fields

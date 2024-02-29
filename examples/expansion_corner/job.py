@@ -5,7 +5,7 @@ T = 300
 n_flows = 3
 n_plots = 10
 length = 1.0
-gas_model = IdealGas(species = "air")
+gas_model = IdealGas(R=287)
 gas_state = GasState()
 gas_state.rho = 1.225
 gas_state.T = T
@@ -14,7 +14,7 @@ vx = mach * gas_model.speed_of_sound(gas_state)
 flow_state = FlowState(gas=gas_state, vx=vx)
 
 config.convective_flux = ConvectiveFlux(
-    flux_calculator = FluxCalculator.Ausmdv,
+    flux_calculator = Ausmdv(),
     reconstruction_order = 2
 )
 

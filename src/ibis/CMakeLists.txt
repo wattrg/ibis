@@ -18,6 +18,7 @@ target_link_libraries(
 	spdlog::spdlog
 	solver
 	IO
+	CLI11::CLI11
 )
 
 set_target_properties(ibis PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})

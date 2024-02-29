@@ -53,7 +53,7 @@ Currently, only `vtk` format is implemented.
 
 To generate `vtk` files, run:
 ```
-ibis post plot_vtk
+ibis post plot
 ```
 
 This will generate `vtk` files in a directory called `plot`.
