@@ -9,6 +9,7 @@ template <typename T>
 void Ldfss<T>::compute_flux(const FlowStates<T>& left, const FlowStates<T>& right,
                          ConservedQuantities<T>& flux, IdealGas<T>& gm,
                          bool three_d) {
+    double delta = delta_;
     Kokkos::parallel_for(
         "ldfss", flux.size(), KOKKOS_LAMBDA(const int i) {
             // unpack left flow state
@@ -59,9 +60,6 @@ void Ldfss<T>::compute_flux(const FlowStates<T>& left, const FlowStates<T>& righ
             // eqn 11
             T DL = alphaL * (1.0 + betaL) - betaL * PL;
             T DR = alphaR * (1.0 + betaR) - betaR * PR;
-
-            // choice of weighting parameter
-            T delta = 2.0;
 
             T Mhalf = 0.25 * betaL * betaR *
                       Kokkos::powf(

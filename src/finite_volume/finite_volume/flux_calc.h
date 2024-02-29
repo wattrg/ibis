@@ -63,9 +63,16 @@ class Ldfss : public FluxCalculator<T> {
 public:
     Ldfss() : FluxCalculator<T>("ldfss") {}
 
+    Ldfss(json config) : FluxCalculator<T>("ldfss") {
+        delta_ = config.at("delta");
+    }
+
     void compute_flux(const FlowStates<T>& left, const FlowStates<T>& right,
                       ConservedQuantities<T>& flux,
                       IdealGas<T>& gm, bool three_d);    
+
+private:
+    double delta_;
 };
 
 template <typename T>

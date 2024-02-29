@@ -20,16 +20,6 @@
 
 #include <CLI/CLI.hpp>
 
-static std::string HELP =
-    "ibis usage:\n"
-    "ibis command [options]\n"
-    "\n"
-    "Available commands:\n"
-    "    help: write this help message\n"
-    "    prep [filename]: prepare a simulation given a python input script\n"
-    "    run: run a simulation"
-    "    clean: clean a directory of generated files";
-
 int cli(int argc, char* argv[]) {
     // set up the command line interface
     CLI::App ibis{"compressible computational fluid dynamics"};

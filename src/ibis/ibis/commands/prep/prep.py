@@ -31,14 +31,14 @@ class Solver(Enum):
     RungeKutta = "runge_kutta"
 
 
+class Limiter(Enum):
+    BarthJespersen = "barth_jespersen"
+
+
 def string_to_solver(string):
     if string == Solver.RungeKutta.value:
         return Solver.RungeKutta
     validation_errors.append(ValidationException(f"Unknown solver {string}"))
-
-
-class Limiter(Enum):
-    BarthJespersen = "barth_jespersen"
 
 
 def string_to_limiter(string):
@@ -59,11 +59,18 @@ def string_from_limiter(limiter):
 
 
 class FluxCalculator:
-    pass
+    def _read_defaults(self):
+        json_data = read_defaults(DEFAULTS_DIRECTORY, self._defaults_file)
+        for key in self._json_values:
+            setattr(self, key, json_data[key])
 
 
 class Hanel(FluxCalculator):
+    _defaults_file = "hanel.json"
+    _json_values = []
+
     def __init__(self):
+        self._read_defaults()
         self._flux_calc = PyHanel()
 
     def as_dict(self):
@@ -71,19 +78,31 @@ class Hanel(FluxCalculator):
 
 
 class Ausmdv(FluxCalculator):
+    _defaults_file = "ausmdv.json"
+    _json_values = []
+
     def __init__(self):
+        self._read_defaults()
         self._flux_calc = PyAusmdv()
 
     def as_dict(self):
+        self._read_defaults()
         return {"type": self._flux_calc.name()}
 
 
 class Ldfss(FluxCalculator):
-    def __init__(self):
+    _defaults_file = "ldfss.json"
+    _json_values = ["delta"]
+
+    def __init__(self, delta=None):
+        self._read_defaults()
         self._flux_calc = PyLdfss()
 
+        if delta:
+            self.delta = delta
+
     def as_dict(self):
-        return {"type": self._flux_calc.name()}
+        return {"type": self._flux_calc.name(), "delta": self.delta}
 
 
 def string_to_flux_calc(name):

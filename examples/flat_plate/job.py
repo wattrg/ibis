@@ -3,14 +3,14 @@ gas_state = GasState()
 gas_state.p = 1.013e3
 gas_state.T = 300.0
 gas_model.update_thermo_from_pT(gas_state)
-vx = 2 * gas_model.speed_of_sound(gas_state)
+vx = 4 * gas_model.speed_of_sound(gas_state)
 inflow = FlowState(gas=gas_state, vx=vx)
 initial = FlowState(gas=gas_state, vx=vx)
 max_time = 2 * 1.0 / vx
 
 config.convective_flux = ConvectiveFlux(
-    flux_calculator = Hanel(),
-    reconstruction_order = 1,
+    flux_calculator=Ausmdv(),
+    reconstruction_order=2,
 )
 
 config.viscous_flux = ViscousFlux(enabled = True)
@@ -27,7 +27,7 @@ config.solver = RungeKutta(
 )
 
 config.grid = Block(
-    file_name="grid.su2", 
+    file_name="grid.su2",
     initial_condition=inflow,
     boundaries = {
         "inflow": supersonic_inflow(inflow),

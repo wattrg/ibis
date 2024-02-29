@@ -14,7 +14,7 @@ std::unique_ptr<FluxCalculator<T>> make_flux_calculator(json config) {
         return std::unique_ptr<FluxCalculator<T>>(new Ausmdv<T>());
     }
     else if (type == "ldfss"){
-        return std::unique_ptr<FluxCalculator<T>>(new Ldfss<T>());
+        return std::unique_ptr<FluxCalculator<T>>(new Ldfss<T>(config));
     }
     else {
         spdlog::error("Unknown flux calculator {}", type);
