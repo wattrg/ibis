@@ -34,7 +34,8 @@ FiniteVolume<T>::FiniteVolume(const GridBlock<T>& grid, json config)
     }
 
     // set the flux calculator
-    flux_calculator_ = make_flux_calculator<T>(convective_flux_config.at("flux_calculator"));
+    flux_calculator_ =
+        make_flux_calculator<T>(convective_flux_config.at("flux_calculator"));
 
     // set up reconstruction limiters for convective flux
     reconstruction_order_ = convective_flux_config.at("reconstruction_order");
@@ -326,7 +327,7 @@ void FiniteVolume<T>::compute_convective_flux(const GridBlock<T>& grid,
                              faces.tan2());
 
     // compute the flux
-    flux_calculator_->compute_flux(left_, right_, flux_, gas_model, dim_==3);
+    flux_calculator_->compute_flux(left_, right_, flux_, gas_model, dim_ == 3);
 
     // rotate the fluxes to the global frame
     Vector3s<T> norm = faces.norm();
@@ -424,8 +425,9 @@ void FiniteVolume<T>::compute_viscous_properties_at_faces(
                                       cell_grad.vx.z(right_cell));
                 T avgdotehat = avg_grad_x * ehatx + avg_grad_y * ehaty +
                                avg_grad_z * ehatz;
-                T correction =
-                    avgdotehat - (flow_states.vel.x(right_cell) - flow_states.vel.x(left_cell)) / len_e;
+                T correction = avgdotehat - (flow_states.vel.x(right_cell) -
+                                             flow_states.vel.x(left_cell)) /
+                                                len_e;
                 face_grad.vx.x(i) = avg_grad_x - correction * nx / ehat_dot_n;
                 face_grad.vx.y(i) = avg_grad_y - correction * ny / ehat_dot_n;
                 face_grad.vx.z(i) = avg_grad_z - correction * nz / ehat_dot_n;
@@ -439,8 +441,9 @@ void FiniteVolume<T>::compute_viscous_properties_at_faces(
                                     cell_grad.vy.z(right_cell));
                 avgdotehat = avg_grad_x * ehatx + avg_grad_y * ehaty +
                              avg_grad_z * ehatz;
-                correction =
-                    avgdotehat - (flow_states.vel.y(right_cell) - flow_states.vel.y(left_cell)) / len_e;
+                correction = avgdotehat - (flow_states.vel.y(right_cell) -
+                                           flow_states.vel.y(left_cell)) /
+                                              len_e;
                 face_grad.vy.x(i) = avg_grad_x - correction * nx / ehat_dot_n;
                 face_grad.vy.y(i) = avg_grad_y - correction * ny / ehat_dot_n;
                 face_grad.vy.z(i) = avg_grad_z - correction * nz / ehat_dot_n;
@@ -454,8 +457,9 @@ void FiniteVolume<T>::compute_viscous_properties_at_faces(
                                     cell_grad.vz.z(right_cell));
                 avgdotehat = avg_grad_x * ehatx + avg_grad_y * ehaty +
                              avg_grad_z * ehatz;
-                correction =
-                    avgdotehat - (flow_states.vel.z(right_cell) - flow_states.vel.z(left_cell)) / len_e;
+                correction = avgdotehat - (flow_states.vel.z(right_cell) -
+                                           flow_states.vel.z(left_cell)) /
+                                              len_e;
                 face_grad.vz.x(i) = avg_grad_x - correction * nx / ehat_dot_n;
                 face_grad.vz.y(i) = avg_grad_y - correction * ny / ehat_dot_n;
                 face_grad.vz.z(i) = avg_grad_z - correction * nz / ehat_dot_n;
@@ -469,8 +473,9 @@ void FiniteVolume<T>::compute_viscous_properties_at_faces(
                                     cell_grad.temp.z(right_cell));
                 avgdotehat = avg_grad_x * ehatx + avg_grad_y * ehaty +
                              avg_grad_z * ehatz;
-                correction =
-                    avgdotehat - (flow_states.gas.temp(right_cell) - flow_states.gas.temp(left_cell)) / len_e;
+                correction = avgdotehat - (flow_states.gas.temp(right_cell) -
+                                           flow_states.gas.temp(left_cell)) /
+                                              len_e;
                 face_grad.temp.x(i) = avg_grad_x - correction * nx / ehat_dot_n;
                 face_grad.temp.y(i) = avg_grad_y - correction * ny / ehat_dot_n;
                 face_grad.temp.z(i) = avg_grad_z - correction * nz / ehat_dot_n;

@@ -28,7 +28,8 @@ void print_config_info(json config) {
     spdlog::info("solver: {}", std::string(config.at("solver").at("name")));
     spdlog::info(
         "flux calculator: {}",
-        std::string(config.at("convective_flux").at("flux_calculator").at("type")));
+        std::string(
+            config.at("convective_flux").at("flux_calculator").at("type")));
 }
 
 int run(int argc, char* argv[]) {

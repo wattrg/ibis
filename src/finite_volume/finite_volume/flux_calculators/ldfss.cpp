@@ -6,9 +6,10 @@
 #include <Kokkos_MathematicalFunctions.hpp>
 
 template <typename T>
-void Ldfss<T>::compute_flux(const FlowStates<T>& left, const FlowStates<T>& right,
-                         ConservedQuantities<T>& flux, IdealGas<T>& gm,
-                         bool three_d) {
+void Ldfss<T>::compute_flux(const FlowStates<T>& left,
+                            const FlowStates<T>& right,
+                            ConservedQuantities<T>& flux, IdealGas<T>& gm,
+                            bool three_d) {
     double delta = delta_;
     Kokkos::parallel_for(
         "ldfss", flux.size(), KOKKOS_LAMBDA(const int i) {
