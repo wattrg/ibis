@@ -6,7 +6,7 @@ gas_model.update_thermo_from_pT(gas_state)
 vx = 4 * gas_model.speed_of_sound(gas_state)
 inflow = FlowState(gas=gas_state, vx=vx)
 initial = FlowState(gas=gas_state, vx=vx)
-max_time = 2 * 1.0 / vx
+max_time = 3 * 1.0 / vx
 
 config.convective_flux = ConvectiveFlux(
     flux_calculator=Ausmdv(),
