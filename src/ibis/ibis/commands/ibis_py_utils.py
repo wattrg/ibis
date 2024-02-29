@@ -1,11 +1,12 @@
 import json
-from python_api import GasState, Vector3, PyIdealGas
+from python_api import Vector3
 
 
 def read_defaults(defaults_dir, file_name):
     with open(f"{defaults_dir}/{file_name}", "r") as defaults:
         defaults = json.load(defaults)
     return defaults
+
 
 class FlowState:
     # __slots__ = ["p", "T", "rho" "vx", "vy", "vz"]
@@ -30,10 +31,11 @@ class FlowState:
 
     def as_dict(self):
         return {
-            "p": self.gas.p, "T": self.gas.T, 
+            "p": self.gas.p, "T": self.gas.T,
             "rho": self.gas.rho, "energy": self.gas.energy,
             "vx": self.vel.x, "vy": self.vel.y, "vz": self.vel.z
         }
+
 
 class SutherlandViscosity:
     __slots__ = ["_mu_0", "_T_0", "_T_s"]
@@ -51,6 +53,7 @@ class SutherlandViscosity:
             "T_s": self._T_s
         }
 
+
 class ConstantPrandtlNumber:
     __slots__ = ["_Pr"]
 
@@ -63,9 +66,11 @@ class ConstantPrandtlNumber:
             "Pr": self._Pr
         }
 
+
 class TransportPropertyModel:
-    __slots__ = ["_viscosity_model", 
+    __slots__ = ["_viscosity_model",
                  "_thermal_conducitivty_model"]
+
     def __init__(self, viscosity, thermal_conductivity):
         self._viscosity_model = viscosity
         self._thermal_conducitivty_model = thermal_conductivity
@@ -84,6 +89,7 @@ class TransportPropertyModel:
 
     def validate(self):
         return
+
 
 class GasModel:
     __slots__ = ["_gas_model", "_transport_properties", "_type",
@@ -112,5 +118,3 @@ class GasModel:
 
     def as_dict(self):
         return self._gas_model.as_dict()
-
-

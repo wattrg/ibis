@@ -1,4 +1,4 @@
-gas_model = IdealGas(R = 287.0)
+gas_model = IdealGas(species="air")
 gas_state = GasState()
 gas_state.p = 1.013e3
 gas_state.T = 300.0

@@ -450,10 +450,13 @@ class IdealGas(GasModel):
             self._gas_model = PyIdealGas(args["R"])
         elif "species" in args:
             species = args["species"]
-            if type(species) is not str:
+            if type(species) is str:
+                self._species = species
+            if type(species) is list or type(species) is tuple:
                 if len(species) != 1:
                     raise Exception("Multiple species not supported yet")
                 self._species = species[0]
+
             species_data = load_species_data(self._species)
             R = species_data["thermo"]["R"]
             self._gas_model = PyIdealGas(R)
@@ -475,7 +478,7 @@ def default_gas_model():
         return IdealGas(species=default_gas_model["species"])
 
 
-def default_viscosity_model(gas_model):
+def build_viscosity_model(gas_model):
     gas_model_type = gas_model.type()
     with open(f"{DEFAULTS_DIRECTORY}/transport_properties.json") as f:
         models = json.load(f)
@@ -494,7 +497,7 @@ def default_viscosity_model(gas_model):
         )
 
 
-def default_thermal_conductivity_model(gas_model):
+def build_thermal_conductivity_model(gas_model):
     gas_model_type = gas_model.type()
     with open(f"{DEFAULTS_DIRECTORY}/transport_properties.json") as f:
         models = json.load(f)
@@ -510,9 +513,9 @@ def default_thermal_conductivity_model(gas_model):
         )
 
 
-def default_transport_properties(gas_model):
-    viscosity_model = default_viscosity_model(gas_model)
-    thermal_conductivity_model = default_thermal_conductivity_model(gas_model)
+def build_transport_property_model(gas_model):
+    viscosity_model = build_viscosity_model(gas_model)
+    thermal_conductivity_model = build_thermal_conductivity_model(gas_model)
     return TransportPropertyModel(viscosity_model, thermal_conductivity_model)
 
 
@@ -526,7 +529,7 @@ class Config:
         self.viscous_flux = ViscousFlux()
         self.solver = make_default_solver()
         self.gas_model = default_gas_model()
-        self.transport_properties = default_transport_properties(
+        self.transport_properties = build_transport_property_model(
             self.gas_model
         )
 
