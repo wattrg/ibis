@@ -9,11 +9,14 @@ std::unique_ptr<FluxCalculator<T>> make_flux_calculator(json config) {
     std::string type = config.at("type");
     if (type == "hanel") {
         return std::unique_ptr<FluxCalculator<T>>(new Hanel<T>());
-    } else if (type == "ausmdv") {
+    }
+    else if (type == "ausmdv"){
         return std::unique_ptr<FluxCalculator<T>>(new Ausmdv<T>());
-    } else if (type == "ldfss") {
-        return std::unique_ptr<FluxCalculator<T>>(new Ldfss<T>(config));
-    } else {
+    }
+    else if (type == "ldfss2"){
+        return std::unique_ptr<FluxCalculator<T>>(new Ldfss2<T>(config));
+    }
+    else {
         spdlog::error("Unknown flux calculator {}", type);
         throw std::runtime_error("Unknown flux calculator");
     }

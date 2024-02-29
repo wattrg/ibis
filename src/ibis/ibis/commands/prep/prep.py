@@ -15,7 +15,7 @@ from ibis_py_utils import (
 from python_api import (
     PyAusmdv,
     PyHanel,
-    PyLdfss,
+    PyLdfss2,
     GasState,
     PyIdealGas
 )
@@ -90,13 +90,13 @@ class Ausmdv(FluxCalculator):
         return {"type": self._flux_calc.name()}
 
 
-class Ldfss(FluxCalculator):
-    _defaults_file = "ldfss.json"
+class Ldfss2(FluxCalculator):
+    _defaults_file = "ldfss2.json"
     _json_values = ["delta"]
 
     def __init__(self, delta=None):
         self._read_defaults()
-        self._flux_calc = PyLdfss()
+        self._flux_calc = PyLdfss2()
 
         if delta:
             self.delta = delta
@@ -110,8 +110,8 @@ def string_to_flux_calc(name):
         return Hanel()
     elif name == "ausmdv":
         return Ausmdv()
-    elif name == "ldfss":
-        return Ldfss()
+    elif name == "ldfss2":
+        return Ldfss2()
     else:
         validation_errors.append(
             ValidationException(f"Unknown flux calculator {name}")
@@ -582,7 +582,7 @@ def main(file_name, res_dir):
         "ViscousFlux": ViscousFlux,
         "Ausmdv": Ausmdv,
         "Hanel": Hanel,
-        "Ldfss": Ldfss,
+        "Ldfss2": Ldfss2,
         "Block": Block,
         "Solver": Solver,
         "FlowState": FlowState,

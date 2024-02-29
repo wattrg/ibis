@@ -60,7 +60,7 @@ PYBIND11_MODULE(python_api, m) {
         .def(pybind11::init<>())
         .def("name", &Ausmdv<double>::name);
 
-    pybind11::class_<Ldfss<double>>(m, "PyLdfss")
+    pybind11::class_<Ldfss2<double>>(m, "PyLdfss2")
         .def(pybind11::init<>())
-        .def("name", &Ldfss<double>::name);
+        .def("name", &Ldfss2<double>::name);
 }
