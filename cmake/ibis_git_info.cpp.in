@@ -1,4 +1,4 @@
-#include "ibis_version_info.h"
+#include "ibis_git_info.h"
 
 namespace Ibis {
 

@@ -1,7 +1,8 @@
 #include <grid/grid.h>
 #include <ibis/commands/run/run.h>
 #include <ibis/config.h>
-#include <ibis_version_info.h>
+#include <ibis_git_info.h>
+#include <ibis_version.h>
 #include <solvers/solver.h>
 #include <spdlog/spdlog.h>
 
@@ -14,6 +15,7 @@ using json = nlohmann::json;
 
 void print_header() {
     spdlog::info("ibis - cfd solver");
+    spdlog::info("version: {}", Ibis::IBIS_VERSION);
     spdlog::info("git branch: {}", Ibis::GIT_BRANCH);
     if (Ibis::GIT_CLEAN_STATUS == "clean") {
         spdlog::info("git commit: {}", Ibis::GIT_COMMIT_HASH);

@@ -1,3 +1,4 @@
+#include <ibis_version.h>
 #include <CLI/App.hpp>
 #include <iostream>
 #include <string>
@@ -24,7 +25,8 @@ int cli(int argc, char* argv[]) {
     // set up the command line interface
     CLI::App ibis{"compressible computational fluid dynamics"};
     ibis.failure_message(CLI::FailureMessage::help);
-    ibis.require_subcommand(1);
+    bool print_version = false;
+    ibis.add_flag("-v,--version", print_version, "print the version");
 
     CLI::App* clean_command =
         ibis.add_subcommand("clean", "clean the simulation");
@@ -50,21 +52,30 @@ int cli(int argc, char* argv[]) {
         ->delimiter(',')
         ->type_name("str");
 
+    // parse the command line
     CLI11_PARSE(ibis, argc, argv);
 
+    // execute whatever the user asked for
+    if (print_version) {
+        std::cout << Ibis::IBIS_VERSION << std::endl;
+        return 0;
+    }
     if (ibis.got_subcommand(clean_command)) {
         return clean(argc, argv);
     }
-    if (ibis.got_subcommand(prep_command)) {
+    else if (ibis.got_subcommand(prep_command)) {
         return prep(argc, argv);
     }
-    if (ibis.got_subcommand(run_command)) {
+    else if (ibis.got_subcommand(run_command)) {
         return run(argc, argv);
     }
-    if (ibis.got_subcommand("post")) {
+    else if (ibis.got_subcommand("post")) {
         if (post_command->got_subcommand(plot_command)) {
             return plot(format, extra_vars, argc, argv);
         }
+    }
+    else {
+        spdlog::error("Nothing to do. Try `ibis --help`");
     }
     return 1;
 }
@@ -93,5 +104,5 @@ int main(int argc, char* argv[]) {
     doctest::Context ctx;
 
     // run the command line interface
-    cli(argc, argv);
+    return cli(argc, argv);
 }

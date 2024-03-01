@@ -6,8 +6,8 @@ SET(CURRENT_LIST_DIR ${CMAKE_CURRENT_LIST_DIR})
 SET(pre_configure_dir ${CMAKE_CURRENT_LIST_DIR})
 SET(post_configure_dir ${CMAKE_BINARY_DIR}/generated)
 
-SET(pre_configure_file ${pre_configure_dir}/ibis_version_info.cpp.in)
-SET(post_configure_file ${post_configure_dir}/ibis_version_info.cpp)
+SET(pre_configure_file ${pre_configure_dir}/ibis_git_info.cpp.in)
+SET(post_configure_file ${post_configure_dir}/ibis_git_info.cpp)
 
 FUNCTION(check_git_write git_hash git_clean_status)
   FILE(
@@ -29,9 +29,9 @@ FUNCTION(check_git_read git_hash)
 ENDFUNCTION()
 
 FUNCTION(check_git_version)
-  IF(NOT EXISTS ${post_configure_dir}/ibis_version_info.h)
+  IF(NOT EXISTS ${post_configure_dir}/ibis_git_info.h)
     FILE(
-      COPY ${pre_configure_dir}/ibis_version_info.h
+      COPY ${pre_configure_dir}/ibis_git_info.h
       DESTINATION ${post_configure_dir})
   ENDIF()
 
@@ -107,10 +107,10 @@ FUNCTION(check_git_setup)
     -Dpre_configure_dir=${pre_configure_dir}
     -Dpost_configure_file=${post_configure_dir}
     -DGIT_HASH_CACHE=${GIT_HASH_CACHE}
-    -P ${CURRENT_LIST_DIR}/build_env_info.cmake
+    -P ${CURRENT_LIST_DIR}/ibis_git_info.cmake
     BYPRODUCTS ${post_configure_file})
 
-  add_library(ibis_git_version ${CMAKE_BINARY_DIR}/generated/ibis_version_info.cpp)
+  add_library(ibis_git_version ${CMAKE_BINARY_DIR}/generated/ibis_git_info.cpp)
   target_include_directories(ibis_git_version PUBLIC ${CMAKE_BINARY_DIR}/generated)
   target_compile_features(ibis_git_version PRIVATE cxx_raw_string_literals)
   add_dependencies(ibis_git_version IbisAlwaysCheckGit)

@@ -11,6 +11,7 @@ extern std::string GIT_CLEAN_STATUS;
 extern std::string GIT_COMMIT_DESCRIPTION;
 extern std::string GIT_COMMIT_DATE;
 extern std::string IBIS_BUILD_DATE;
+extern std::string IBIS_VERSION;
 
 } 
 
