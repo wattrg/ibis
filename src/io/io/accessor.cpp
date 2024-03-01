@@ -84,6 +84,8 @@ void GradVxAccess<T>::init(
     const GridBlock<T>& grid, const IdealGas<T>& gas_model) {
     FlowStates<T> fs_dev = FlowStates<T>(fs.number_flow_states());
     fs_dev.deep_copy(fs);
+    fv.apply_pre_reconstruction_bc(fs_dev, grid);
+    fv.apply_pre_viscous_grad_bc(fs_dev, grid);
     fv.compute_viscous_properties_at_faces(fs_dev, grid, gas_model);
     grad_vx_ = fv.cell_gradients().vx.host_mirror();
     grad_vx_.deep_copy(fv.cell_gradients().vx);
@@ -109,6 +111,8 @@ void GradVyAccess<T>::init(
     const GridBlock<T>& grid, const IdealGas<T>& gas_model) {
     FlowStates<T> fs_dev = FlowStates<T>(fs.number_flow_states());
     fs_dev.deep_copy(fs);
+    fv.apply_pre_reconstruction_bc(fs_dev, grid);
+    fv.apply_pre_viscous_grad_bc(fs_dev, grid);
     fv.compute_viscous_properties_at_faces(fs_dev, grid, gas_model);
     grad_vy_ = fv.cell_gradients().vy.host_mirror();
     grad_vy_.deep_copy(fv.cell_gradients().vy);
