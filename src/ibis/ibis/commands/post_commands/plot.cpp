@@ -54,7 +54,7 @@ void plot_vtk(json directories, std::vector<std::string> extra_vars) {
 
     GridBlock<T> grid(grid_dir + "/block_0000.su2", config.at("grid"));
     FiniteVolume<T> fv(grid, config);
-    FlowStates<T> fs(grid.num_cells());
+    FlowStates<T> fs(grid.num_total_cells());
     for (unsigned int time_idx = 0; time_idx < dirs.size(); time_idx++) {
         json meta_data;
         io.read(fs, grid, gas_model, meta_data, time_idx);
