@@ -7,6 +7,7 @@
 #include <finite_volume/gradient.h>
 #include <finite_volume/limiter.h>
 #include <finite_volume/convective_flux.h>
+#include <finite_volume/viscous_flux.h>
 #include <gas/flow_state.h>
 #include <gas/gas_model.h>
 #include <gas/transport_properties.h>
@@ -73,17 +74,6 @@ public:
     void flux_surface_integral(const GridBlock<T>& grid,
                                ConservedQuantities<T>& dudt);
 
-    // Compute the viscous fluxes
-    void compute_viscous_flux(const FlowStates<T>& flow_states,
-                              const GridBlock<T>& grid,
-                              const IdealGas<T>& gas_model,
-                              const TransportProperties<T>& trans_prop);
-
-    // Compute viscous properties at faces
-    void compute_viscous_properties_at_faces(const FlowStates<T>& flow_states,
-                                             const GridBlock<T>& grid,
-                                             const IdealGas<T>& gas_model);
-
     // Count the number of bad cells in the domain
     size_t count_bad_cells(const FlowStates<T>& fs, const size_t num_cells);
 
@@ -91,12 +81,22 @@ public:
     // methods for IO
     const Gradients<T>& cell_gradients() const { return cell_grad_; }
 
+    // viscous gradient for post-processing
+    void compute_viscous_gradient(const FlowStates<T>& fs, 
+                                  const GridBlock<T>& grid) {
+        viscous_flux_.compute_viscous_gradient(fs, grid, cell_grad_, grad_calc_);
+    }
+
+
 private:
     // The flux values
     ConservedQuantities<T> flux_;
 
     // The convective flux calculator
     ConvectiveFlux<T> convective_flux_;
+
+    // The viscous flux calculator
+    ViscousFlux<T> viscous_flux_;
 
     // boundary conditions
     std::vector<std::shared_ptr<BoundaryCondition<T>>> bcs_{};
@@ -107,21 +107,11 @@ private:
     // number of spatial dimensions
     size_t dim_;
 
-
-    // Flag for whether viscous fluxes should be included
-    bool viscous_;
-
     // Gradient calculator
     WLSGradient<T> grad_calc_;
 
     // Storage for gradients at cells
     Gradients<T> cell_grad_;
-
-    // Flow states at interfaces, for viscous fluxes
-    FlowStates<T> face_fs_;
-
-    // Storage for gradients at interfaces
-    Gradients<T> face_grad_;
 };
 
 #endif

@@ -4,6 +4,7 @@ add_library(
 	finite_volume/finite_volume.cpp 
 	finite_volume/flux_calc.cpp 
 	finite_volume/convective_flux.cpp
+	finite_volume/viscous_flux.cpp
 	finite_volume/flux_calculators/hanel.cpp
 	finite_volume/flux_calculators/ausmdv.cpp
 	finite_volume/flux_calculators/ldfss2.cpp
@@ -34,6 +35,7 @@ if (Ibis_BUILD_TESTS)
     	test/unittest.cpp 
     	finite_volume/flux_calc.cpp 
 			finite_volume/convective_flux.cpp
+			finite_volume/viscous_flux.cpp
     	finite_volume/flux_calculators/hanel.cpp
     	finite_volume/flux_calculators/ausmdv.cpp
 			finite_volume/flux_calculators/ldfss2.cpp
