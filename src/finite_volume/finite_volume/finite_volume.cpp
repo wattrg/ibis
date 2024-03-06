@@ -208,4 +208,11 @@ void FiniteVolume<T>::compute_viscous_gradient(FlowStates<T>& fs,
     viscous_flux_.compute_viscous_gradient(fs, grid, cell_grad_, grad_calc_);
 }
 
+template <typename T>
+void FiniteVolume<T>::compute_convective_gradient(FlowStates<T>& fs,
+                                 const GridBlock<T>& grid) {
+    apply_pre_reconstruction_bc(fs, grid);
+    convective_flux_.compute_convective_gradient(fs, grid, cell_grad_, grad_calc_);        
+}
+
 template class FiniteVolume<double>;

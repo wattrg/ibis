@@ -81,8 +81,11 @@ public:
     // methods for IO
     const Gradients<T>& cell_gradients() const { return cell_grad_; }
 
-    // viscous gradient for post-processing
+    // viscous gradients for post-processing
     void compute_viscous_gradient(FlowStates<T>& fs, const GridBlock<T>& grid);
+
+    // convective gradients for post-processing
+    void compute_convective_gradient(FlowStates<T>& fs, const GridBlock<T>& grid);
 
 private:
     // The flux values

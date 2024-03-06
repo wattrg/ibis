@@ -79,7 +79,7 @@ Vector3<T> VelocityAccess<T>::access(
 template class VelocityAccess<double>;
 
 template <typename T>
-void GradVxAccess<T>::init(
+void ViscousGradVxAccess<T>::init(
     const FlowStates<T, array_layout, host_mem_space>& fs, FiniteVolume<T>& fv,
     const GridBlock<T>& grid, const IdealGas<T>& gas_model) {
     (void)gas_model;
@@ -91,7 +91,7 @@ void GradVxAccess<T>::init(
 }
 
 template <typename T>
-Vector3<T> GradVxAccess<T>::access(
+Vector3<T> ViscousGradVxAccess<T>::access(
     const FlowStates<T, array_layout, host_mem_space>& fs, FiniteVolume<T>& fv,
     const IdealGas<T>& gas_model, const int i) {
     (void)gas_model;
@@ -102,10 +102,10 @@ Vector3<T> GradVxAccess<T>::access(
     T grad_z = grad_vx_.z(i);
     return Vector3<T>(grad_x, grad_y, grad_z);
 }
-template class GradVxAccess<double>;
+template class ViscousGradVxAccess<double>;
 
 template <typename T>
-void GradVyAccess<T>::init(
+void ViscousGradVyAccess<T>::init(
     const FlowStates<T, array_layout, host_mem_space>& fs, FiniteVolume<T>& fv,
     const GridBlock<T>& grid, const IdealGas<T>& gas_model) {
     (void)gas_model;
@@ -117,7 +117,7 @@ void GradVyAccess<T>::init(
 }
 
 template <typename T>
-Vector3<T> GradVyAccess<T>::access(
+Vector3<T> ViscousGradVyAccess<T>::access(
     const FlowStates<T, array_layout, host_mem_space>& fs, FiniteVolume<T>& fv,
     const IdealGas<T>& gas_model, const int i) {
     (void)gas_model;
@@ -128,10 +128,10 @@ Vector3<T> GradVyAccess<T>::access(
     T grad_z = grad_vy_.z(i);
     return Vector3<T>(grad_x, grad_y, grad_z);
 }
-template class GradVyAccess<double>;
+template class ViscousGradVyAccess<double>;
 
 template <typename T>
-void GradVzAccess<T>::init(
+void ViscousGradVzAccess<T>::init(
     const FlowStates<T, array_layout, host_mem_space>& fs, FiniteVolume<T>& fv,
     const GridBlock<T>& grid, const IdealGas<T>& gas_model) {
     (void)gas_model;
@@ -143,7 +143,7 @@ void GradVzAccess<T>::init(
 }
 
 template <typename T>
-Vector3<T> GradVzAccess<T>::access(
+Vector3<T> ViscousGradVzAccess<T>::access(
     const FlowStates<T, array_layout, host_mem_space>& fs, FiniteVolume<T>& fv,
     const IdealGas<T>& gas_model, const int i) {
     (void)gas_model;
@@ -154,7 +154,86 @@ Vector3<T> GradVzAccess<T>::access(
     T grad_z = grad_vz_.z(i);
     return Vector3<T>(grad_x, grad_y, grad_z);
 }
-template class GradVzAccess<double>;
+template class ViscousGradVzAccess<double>;
+
+
+template <typename T>
+void ConvectiveGradVxAccess<T>::init(
+    const FlowStates<T, array_layout, host_mem_space>& fs, FiniteVolume<T>& fv,
+    const GridBlock<T>& grid, const IdealGas<T>& gas_model) {
+    (void)gas_model;
+    FlowStates<T> fs_dev = FlowStates<T>(fs.number_flow_states());
+    fs_dev.deep_copy(fs);
+    fv.compute_convective_gradient(fs_dev, grid);
+    grad_vx_ = fv.cell_gradients().vx.host_mirror();
+    grad_vx_.deep_copy(fv.cell_gradients().vx);
+}
+
+template <typename T>
+Vector3<T> ConvectiveGradVxAccess<T>::access(
+    const FlowStates<T, array_layout, host_mem_space>& fs, FiniteVolume<T>& fv,
+    const IdealGas<T>& gas_model, const int i) {
+    (void)gas_model;
+    (void)fs;
+    (void)fv;
+    T grad_x = grad_vx_.x(i);
+    T grad_y = grad_vx_.y(i);
+    T grad_z = grad_vx_.z(i);
+    return Vector3<T>(grad_x, grad_y, grad_z);
+}
+template class ConvectiveGradVxAccess<double>;
+
+template <typename T>
+void ConvectiveGradVyAccess<T>::init(
+    const FlowStates<T, array_layout, host_mem_space>& fs, FiniteVolume<T>& fv,
+    const GridBlock<T>& grid, const IdealGas<T>& gas_model) {
+    (void)gas_model;
+    FlowStates<T> fs_dev = FlowStates<T>(fs.number_flow_states());
+    fs_dev.deep_copy(fs);
+    fv.compute_convective_gradient(fs_dev, grid);
+    grad_vy_ = fv.cell_gradients().vy.host_mirror();
+    grad_vy_.deep_copy(fv.cell_gradients().vy);
+}
+
+template <typename T>
+Vector3<T> ConvectiveGradVyAccess<T>::access(
+    const FlowStates<T, array_layout, host_mem_space>& fs, FiniteVolume<T>& fv,
+    const IdealGas<T>& gas_model, const int i) {
+    (void)gas_model;
+    (void)fs;
+    (void)fv;
+    T grad_x = grad_vy_.x(i);
+    T grad_y = grad_vy_.y(i);
+    T grad_z = grad_vy_.z(i);
+    return Vector3<T>(grad_x, grad_y, grad_z);
+}
+template class ConvectiveGradVyAccess<double>;
+
+template <typename T>
+void ConvectiveGradVzAccess<T>::init(
+    const FlowStates<T, array_layout, host_mem_space>& fs, FiniteVolume<T>& fv,
+    const GridBlock<T>& grid, const IdealGas<T>& gas_model) {
+    (void)gas_model;
+    FlowStates<T> fs_dev = FlowStates<T>(fs.number_flow_states());
+    fs_dev.deep_copy(fs);
+    fv.compute_convective_gradient(fs_dev, grid);
+    grad_vz_ = fv.cell_gradients().vz.host_mirror();
+    grad_vz_.deep_copy(fv.cell_gradients().vz);
+}
+
+template <typename T>
+Vector3<T> ConvectiveGradVzAccess<T>::access(
+    const FlowStates<T, array_layout, host_mem_space>& fs, FiniteVolume<T>& fv,
+    const IdealGas<T>& gas_model, const int i) {
+    (void)gas_model;
+    (void)fs;
+    (void)fv;
+    T grad_x = grad_vz_.x(i);
+    T grad_y = grad_vz_.y(i);
+    T grad_z = grad_vz_.z(i);
+    return Vector3<T>(grad_x, grad_y, grad_z);
+}
+template class ConvectiveGradVzAccess<double>;
 
 template <typename T>
 std::map<std::string, std::shared_ptr<ScalarAccessor<T>>>

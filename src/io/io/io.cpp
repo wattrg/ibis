@@ -110,25 +110,44 @@ void FVIO<T>::write_coordinating_file() {
 
 template <typename T>
 void FVOutput<T>::add_variable(std::string name) {
-    if (name == "grad_vx") {
+    if (name == "viscous_grad_vx") {
         this->m_vector_accessors.insert(
-            {name, std::shared_ptr<VectorAccessor<T>>(new GradVxAccess<T>())});
-    } else if (name == "grad_vy") {
+            {name, std::shared_ptr<VectorAccessor<T>>(new ViscousGradVxAccess<T>())});
+    } else if (name == "viscous_grad_vy") {
         this->m_vector_accessors.insert(
-            {name, std::shared_ptr<VectorAccessor<T>>(new GradVyAccess<T>())});
-    } else if (name == "grad_vz") {
+            {name, std::shared_ptr<VectorAccessor<T>>(new ViscousGradVyAccess<T>())});
+    } else if (name == "viscous_grad_vz") {
         this->m_vector_accessors.insert(
-            {name, std::shared_ptr<VectorAccessor<T>>(new GradVzAccess<T>())});
-    } else if (name == "grad_v") {
+            {name, std::shared_ptr<VectorAccessor<T>>(new ViscousGradVzAccess<T>())});
+    } else if (name == "convective_grad_vx") {
         this->m_vector_accessors.insert(
-            {"grad_vx",
-             std::shared_ptr<VectorAccessor<T>>(new GradVxAccess<T>())});
+            {name, std::shared_ptr<VectorAccessor<T>>(new ConvectiveGradVxAccess<T>())});
+    } else if (name == "convective_grad_vy") {
         this->m_vector_accessors.insert(
-            {"grad_vy",
-             std::shared_ptr<VectorAccessor<T>>(new GradVyAccess<T>())});
+            {name, std::shared_ptr<VectorAccessor<T>>(new ConvectiveGradVyAccess<T>())});
+    } else if (name == "convective_grad_vz") {
         this->m_vector_accessors.insert(
-            {"grad_vz",
-             std::shared_ptr<VectorAccessor<T>>(new GradVzAccess<T>())});
+            {name, std::shared_ptr<VectorAccessor<T>>(new ConvectiveGradVzAccess<T>())});
+    } else if (name == "viscous_grad_v") {
+        this->m_vector_accessors.insert(
+            {"viscous_grad_vx",
+             std::shared_ptr<VectorAccessor<T>>(new ViscousGradVxAccess<T>())});
+        this->m_vector_accessors.insert(
+            {"viscous_grad_vy",
+             std::shared_ptr<VectorAccessor<T>>(new ViscousGradVyAccess<T>())});
+        this->m_vector_accessors.insert(
+            {"viscous_grad_vz",
+             std::shared_ptr<VectorAccessor<T>>(new ViscousGradVzAccess<T>())});
+    } else if (name == "convective_grad_v") {
+        this->m_vector_accessors.insert(
+            {"convective_grad_vx",
+             std::shared_ptr<VectorAccessor<T>>(new ConvectiveGradVxAccess<T>())});
+        this->m_vector_accessors.insert(
+            {"convective_grad_vy",
+             std::shared_ptr<VectorAccessor<T>>(new ConvectiveGradVyAccess<T>())});
+        this->m_vector_accessors.insert(
+            {"convective_grad_vz",
+             std::shared_ptr<VectorAccessor<T>>(new ConvectiveGradVzAccess<T>())});
     } else {
         spdlog::error("Unknown post-processing variable {}", name);
         throw std::runtime_error("Unknown post-process variable");
