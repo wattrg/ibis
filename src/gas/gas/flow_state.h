@@ -18,25 +18,21 @@ public:
     Vector3<T> velocity;
 };
 
-template <typename T,
-          class Layout = Kokkos::DefaultExecutionSpace::array_layout,
+template <typename T, class Layout = Kokkos::DefaultExecutionSpace::array_layout,
           class Space = Kokkos::DefaultExecutionSpace::memory_space>
 struct FlowStates {
 public:
     using array_layout = Layout;
     using memory_space = Space;
-    using host_mirror_mem_space =
-        Kokkos::DefaultHostExecutionSpace::memory_space;
+    using host_mirror_mem_space = Kokkos::DefaultHostExecutionSpace::memory_space;
     using host_mirror_layout = Kokkos::DefaultExecutionSpace::array_layout;
-    using mirror_type =
-        FlowStates<T, host_mirror_layout, host_mirror_mem_space>;
+    using mirror_type = FlowStates<T, host_mirror_layout, host_mirror_mem_space>;
 
 public:
     FlowStates() {}
 
     FlowStates(int n)
-        : gas(GasStates<T, Layout, Space>(n)),
-          vel(Vector3s<T, Layout, Space>(n)) {}
+        : gas(GasStates<T, Layout, Space>(n)), vel(Vector3s<T, Layout, Space>(n)) {}
 
     FlowStates(GasStates<T, Layout, Space> gas, Vector3s<T, Layout, Space> vel)
         : gas(gas), vel(vel) {}

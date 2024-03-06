@@ -17,8 +17,7 @@ json read_config(json& directories) {
     std::string config_file = directories.at("config_file");
     std::ifstream f(config_dir + "/" + config_file);
     if (!f) {
-        spdlog::error(
-            "Unable to open config file. Make sure simulation is prepped");
+        spdlog::error("Unable to open config file. Make sure simulation is prepped");
         throw std::runtime_error("Unable to open config file");
     }
     json config = json::parse(f);

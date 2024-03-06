@@ -11,10 +11,9 @@ class VtkOutput : public FVOutput<T> {
 public:
     VtkOutput();
 
-    int write(const typename FlowStates<T>::mirror_type& fs,
-              FiniteVolume<T>& fv, const GridBlock<T>& grid,
-              const IdealGas<T>& gas_model, std::string plot_dir,
-              std::string time_dir, double time);
+    int write(const typename FlowStates<T>::mirror_type& fs, FiniteVolume<T>& fv,
+              const GridBlock<T>& grid, const IdealGas<T>& gas_model,
+              std::string plot_dir, std::string time_dir, double time);
 
     void write_coordinating_file(std::string plot_dir);
 

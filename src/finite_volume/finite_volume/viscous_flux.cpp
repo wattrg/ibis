@@ -31,11 +31,9 @@ template <typename T>
 void ViscousFlux<T>::compute_viscous_flux(
     const FlowStates<T>& flow_states, const GridBlock<T>& grid,
     const IdealGas<T>& gas_model, const TransportProperties<T>& trans_prop,
-    Gradients<T>& cell_grad, WLSGradient<T>& grad_calc,
-    ConservedQuantities<T>& flux) {
+    Gradients<T>& cell_grad, WLSGradient<T>& grad_calc, ConservedQuantities<T>& flux) {
     compute_viscous_gradient(flow_states, grid, cell_grad, grad_calc);
-    compute_viscous_properties_at_faces(flow_states, grid, gas_model,
-                                        cell_grad);
+    compute_viscous_properties_at_faces(flow_states, grid, gas_model, cell_grad);
 
     size_t num_faces = grid.num_interfaces();
     Interfaces<T> interfaces = grid.interfaces();
@@ -61,12 +59,9 @@ void ViscousFlux<T>::compute_viscous_flux(
             T vx = face_fs.vel.x(i);
             T vy = face_fs.vel.y(i);
             T vz = face_fs.vel.z(i);
-            T theta_x =
-                vx * tau_xx + vy * tau_xy + vz * tau_xz + k * grad.temp.x(i);
-            T theta_y =
-                vx * tau_xy + vy * tau_yy + vz * tau_yz + k * grad.temp.y(i);
-            T theta_z =
-                vx * tau_xz + vy * tau_yz + vz * tau_zz + k * grad.temp.z(i);
+            T theta_x = vx * tau_xx + vy * tau_xy + vz * tau_xz + k * grad.temp.x(i);
+            T theta_y = vx * tau_xy + vy * tau_yy + vz * tau_yz + k * grad.temp.y(i);
+            T theta_z = vx * tau_xz + vy * tau_yz + vz * tau_zz + k * grad.temp.z(i);
 
             T nx = interfaces.norm().x(i);
             T ny = interfaces.norm().y(i);
@@ -81,9 +76,10 @@ void ViscousFlux<T>::compute_viscous_flux(
 }
 
 template <typename T>
-void ViscousFlux<T>::compute_viscous_properties_at_faces(
-    const FlowStates<T>& flow_states, const GridBlock<T>& grid,
-    const IdealGas<T>& gas_model, Gradients<T>& cell_grad) {
+void ViscousFlux<T>::compute_viscous_properties_at_faces(const FlowStates<T>& flow_states,
+                                                         const GridBlock<T>& grid,
+                                                         const IdealGas<T>& gas_model,
+                                                         Gradients<T>& cell_grad) {
     Interfaces<T> faces = grid.interfaces();
     Cells<T> cells = grid.cells();
     FlowStates<T> face_fs = face_fs_;
@@ -118,12 +114,9 @@ void ViscousFlux<T>::compute_viscous_properties_at_faces(
                 // Use Hasselbacher formula to average gradients to the face
 
                 // vector from cell centre to cell centre
-                T ex = cells.centroids().x(right_cell) -
-                       cells.centroids().x(left_cell);
-                T ey = cells.centroids().y(right_cell) -
-                       cells.centroids().y(left_cell);
-                T ez = cells.centroids().z(right_cell) -
-                       cells.centroids().z(left_cell);
+                T ex = cells.centroids().x(right_cell) - cells.centroids().x(left_cell);
+                T ey = cells.centroids().y(right_cell) - cells.centroids().y(left_cell);
+                T ez = cells.centroids().z(right_cell) - cells.centroids().z(left_cell);
                 T len_e = Kokkos::sqrt(ex * ex + ey * ey + ez * ez);
                 T ehatx = ex / len_e;
                 T ehaty = ey / len_e;
@@ -134,14 +127,14 @@ void ViscousFlux<T>::compute_viscous_properties_at_faces(
                 T ehat_dot_n = ehatx * nx + ehaty * ny + ehatz * nz;
 
                 // vx
-                T avg_grad_x = 0.5 * (cell_grad.vx.x(left_cell) +
-                                      cell_grad.vx.x(right_cell));
-                T avg_grad_y = 0.5 * (cell_grad.vx.y(left_cell) +
-                                      cell_grad.vx.y(right_cell));
-                T avg_grad_z = 0.5 * (cell_grad.vx.z(left_cell) +
-                                      cell_grad.vx.z(right_cell));
-                T avgdotehat = avg_grad_x * ehatx + avg_grad_y * ehaty +
-                               avg_grad_z * ehatz;
+                T avg_grad_x =
+                    0.5 * (cell_grad.vx.x(left_cell) + cell_grad.vx.x(right_cell));
+                T avg_grad_y =
+                    0.5 * (cell_grad.vx.y(left_cell) + cell_grad.vx.y(right_cell));
+                T avg_grad_z =
+                    0.5 * (cell_grad.vx.z(left_cell) + cell_grad.vx.z(right_cell));
+                T avgdotehat =
+                    avg_grad_x * ehatx + avg_grad_y * ehaty + avg_grad_z * ehatz;
                 T correction = avgdotehat - (flow_states.vel.x(right_cell) -
                                              flow_states.vel.x(left_cell)) /
                                                 len_e;
@@ -150,14 +143,13 @@ void ViscousFlux<T>::compute_viscous_properties_at_faces(
                 face_grad.vx.z(i) = avg_grad_z - correction * nz / ehat_dot_n;
 
                 // vy
-                avg_grad_x = 0.5 * (cell_grad.vy.x(left_cell) +
-                                    cell_grad.vy.x(right_cell));
-                avg_grad_y = 0.5 * (cell_grad.vy.y(left_cell) +
-                                    cell_grad.vy.y(right_cell));
-                avg_grad_z = 0.5 * (cell_grad.vy.z(left_cell) +
-                                    cell_grad.vy.z(right_cell));
-                avgdotehat = avg_grad_x * ehatx + avg_grad_y * ehaty +
-                             avg_grad_z * ehatz;
+                avg_grad_x =
+                    0.5 * (cell_grad.vy.x(left_cell) + cell_grad.vy.x(right_cell));
+                avg_grad_y =
+                    0.5 * (cell_grad.vy.y(left_cell) + cell_grad.vy.y(right_cell));
+                avg_grad_z =
+                    0.5 * (cell_grad.vy.z(left_cell) + cell_grad.vy.z(right_cell));
+                avgdotehat = avg_grad_x * ehatx + avg_grad_y * ehaty + avg_grad_z * ehatz;
                 correction = avgdotehat - (flow_states.vel.y(right_cell) -
                                            flow_states.vel.y(left_cell)) /
                                               len_e;
@@ -166,14 +158,13 @@ void ViscousFlux<T>::compute_viscous_properties_at_faces(
                 face_grad.vy.z(i) = avg_grad_z - correction * nz / ehat_dot_n;
 
                 // vz
-                avg_grad_x = 0.5 * (cell_grad.vz.x(left_cell) +
-                                    cell_grad.vz.x(right_cell));
-                avg_grad_y = 0.5 * (cell_grad.vz.y(left_cell) +
-                                    cell_grad.vz.y(right_cell));
-                avg_grad_z = 0.5 * (cell_grad.vz.z(left_cell) +
-                                    cell_grad.vz.z(right_cell));
-                avgdotehat = avg_grad_x * ehatx + avg_grad_y * ehaty +
-                             avg_grad_z * ehatz;
+                avg_grad_x =
+                    0.5 * (cell_grad.vz.x(left_cell) + cell_grad.vz.x(right_cell));
+                avg_grad_y =
+                    0.5 * (cell_grad.vz.y(left_cell) + cell_grad.vz.y(right_cell));
+                avg_grad_z =
+                    0.5 * (cell_grad.vz.z(left_cell) + cell_grad.vz.z(right_cell));
+                avgdotehat = avg_grad_x * ehatx + avg_grad_y * ehaty + avg_grad_z * ehatz;
                 correction = avgdotehat - (flow_states.vel.z(right_cell) -
                                            flow_states.vel.z(left_cell)) /
                                               len_e;
@@ -182,14 +173,13 @@ void ViscousFlux<T>::compute_viscous_properties_at_faces(
                 face_grad.vz.z(i) = avg_grad_z - correction * nz / ehat_dot_n;
 
                 // temperature
-                avg_grad_x = 0.5 * (cell_grad.temp.x(left_cell) +
-                                    cell_grad.temp.x(right_cell));
-                avg_grad_y = 0.5 * (cell_grad.temp.y(left_cell) +
-                                    cell_grad.temp.y(right_cell));
-                avg_grad_z = 0.5 * (cell_grad.temp.z(left_cell) +
-                                    cell_grad.temp.z(right_cell));
-                avgdotehat = avg_grad_x * ehatx + avg_grad_y * ehaty +
-                             avg_grad_z * ehatz;
+                avg_grad_x =
+                    0.5 * (cell_grad.temp.x(left_cell) + cell_grad.temp.x(right_cell));
+                avg_grad_y =
+                    0.5 * (cell_grad.temp.y(left_cell) + cell_grad.temp.y(right_cell));
+                avg_grad_z =
+                    0.5 * (cell_grad.temp.z(left_cell) + cell_grad.temp.z(right_cell));
+                avgdotehat = avg_grad_x * ehatx + avg_grad_y * ehaty + avg_grad_z * ehatz;
                 correction = avgdotehat - (flow_states.gas.temp(right_cell) -
                                            flow_states.gas.temp(left_cell)) /
                                               len_e;
@@ -200,17 +190,16 @@ void ViscousFlux<T>::compute_viscous_properties_at_faces(
             // set the gas state at the interface
             face_fs.gas.temp(i) = 0.5 * (flow_states.gas.temp(left_cell) +
                                          flow_states.gas.temp(right_cell));
-            face_fs.gas.pressure(i) =
-                0.5 * (flow_states.gas.pressure(left_cell) +
-                       flow_states.gas.pressure(right_cell));
+            face_fs.gas.pressure(i) = 0.5 * (flow_states.gas.pressure(left_cell) +
+                                             flow_states.gas.pressure(right_cell));
             gas_model.update_thermo_from_pT(face_fs.gas, i);
 
-            face_fs.vel.x(i) = 0.5 * (flow_states.vel.x(left_cell) +
-                                      flow_states.vel.x(right_cell));
-            face_fs.vel.y(i) = 0.5 * (flow_states.vel.y(left_cell) +
-                                      flow_states.vel.y(right_cell));
-            face_fs.vel.z(i) = 0.5 * (flow_states.vel.z(left_cell) +
-                                      flow_states.vel.z(right_cell));
+            face_fs.vel.x(i) =
+                0.5 * (flow_states.vel.x(left_cell) + flow_states.vel.x(right_cell));
+            face_fs.vel.y(i) =
+                0.5 * (flow_states.vel.y(left_cell) + flow_states.vel.y(right_cell));
+            face_fs.vel.z(i) =
+                0.5 * (flow_states.vel.z(left_cell) + flow_states.vel.z(right_cell));
         });
 }
 

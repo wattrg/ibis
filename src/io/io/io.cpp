@@ -14,8 +14,7 @@
 
 std::string pad_time_index(int time_idx, unsigned long len) {
     std::string time_index = std::to_string(time_idx);
-    unsigned long extra_chars =
-        len - std::min<unsigned long>(len, time_index.length());
+    unsigned long extra_chars = len - std::min<unsigned long>(len, time_index.length());
     std::string padded_str = std::string(extra_chars, '0');
     return padded_str + time_index;
 }
@@ -46,8 +45,8 @@ std::unique_ptr<FVOutput<T>> make_fv_output(FlowFormat format) {
 }
 
 template <typename T>
-FVIO<T>::FVIO(FlowFormat input_format, FlowFormat output_format,
-              std::string input_dir, std::string output_dir, int time_index)
+FVIO<T>::FVIO(FlowFormat input_format, FlowFormat output_format, std::string input_dir,
+              std::string output_dir, int time_index)
     : input_(make_fv_input<T>(input_format)),
       output_(make_fv_output<T>(output_format)),
       time_index_(time_index),
@@ -64,18 +63,15 @@ FVIO<T>::FVIO(FlowFormat input, FlowFormat output, std::string input_dir,
     : FVIO(input, output, input_dir, output_dir, 0) {}
 
 template <typename T>
-FVIO<T>::FVIO()
-    : FVIO(FlowFormat::Native, FlowFormat::Native, "flow", "flow", 0) {}
+FVIO<T>::FVIO() : FVIO(FlowFormat::Native, FlowFormat::Native, "flow", "flow", 0) {}
 
 template <typename T>
 FVIO<T>::FVIO(int time_index)
-    : FVIO(FlowFormat::Native, FlowFormat::Native, "flow", "flow", time_index) {
-}
+    : FVIO(FlowFormat::Native, FlowFormat::Native, "flow", "flow", time_index) {}
 
 template <typename T>
-int FVIO<T>::write(const FlowStates<T>& fs, FiniteVolume<T>& fv,
-                   const GridBlock<T>& grid, const IdealGas<T>& gas_model,
-                   double time) {
+int FVIO<T>::write(const FlowStates<T>& fs, FiniteVolume<T>& fv, const GridBlock<T>& grid,
+                   const IdealGas<T>& gas_model, double time) {
     // get a copy of the flow states on the CPU
     auto fs_host = fs.host_mirror();
     fs_host.deep_copy(fs);
@@ -84,8 +80,8 @@ int FVIO<T>::write(const FlowStates<T>& fs, FiniteVolume<T>& fv,
     std::string directory_name = output_dir_ + "/" + time_index;
     std::filesystem::create_directory(output_dir_);
     std::filesystem::create_directory(directory_name);
-    int result = output_->write(fs_host, fv, grid, gas_model, output_dir_,
-                                time_index, time);
+    int result =
+        output_->write(fs_host, fv, grid, gas_model, output_dir_, time_index, time);
     time_index_++;
     return result;
 }
@@ -97,8 +93,7 @@ int FVIO<T>::read(FlowStates<T>& fs, const GridBlock<T>& grid,
     auto fs_host = fs.host_mirror();
     std::string time_index = pad_time_index(time_idx, 4);
     std::string directory_name = input_dir_ + "/" + time_index;
-    int result =
-        input_->read(fs_host, grid, gas_model, directory_name, meta_data);
+    int result = input_->read(fs_host, grid, gas_model, directory_name, meta_data);
     fs.deep_copy(fs_host);
     return result;
 }

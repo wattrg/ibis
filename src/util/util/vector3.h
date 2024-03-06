@@ -18,14 +18,12 @@ struct Vector3 {
     T x, y, z;
 
     bool operator==(const Vector3& other) const {
-        return (std::fabs(x - other.x) < 1e-14) &&
-               (std::fabs(y - other.y) < 1e-14) &&
+        return (std::fabs(x - other.x) < 1e-14) && (std::fabs(y - other.y) < 1e-14) &&
                (std::fabs(z - other.z) < 1e-14);
     }
 };
 
-template <typename T,
-          class Layout = Kokkos::DefaultExecutionSpace::array_layout,
+template <typename T, class Layout = Kokkos::DefaultExecutionSpace::array_layout,
           class Space = Kokkos::DefaultExecutionSpace::memory_space>
 struct Vector3s {
 public:
@@ -42,9 +40,7 @@ public:
 
     // ~Vector3s(){}
 
-    Vector3s(std::string description, size_t n) {
-        view_ = view_type(description, n);
-    }
+    Vector3s(std::string description, size_t n) { view_ = view_type(description, n); }
 
     Vector3s(size_t n) { view_ = view_type("Vector3s", n); }
 
@@ -131,8 +127,7 @@ public:
 };
 
 template <typename T>
-KOKKOS_INLINE_FUNCTION T dot(const Vector3s<T>& a, const Vector3s<T>& b,
-                             const size_t i) {
+KOKKOS_INLINE_FUNCTION T dot(const Vector3s<T>& a, const Vector3s<T>& b, const size_t i) {
     return a.x(i) * b.x(i) + a.y(i) * b.y(i) + a.z(i) * b.z(i);
 }
 
@@ -173,7 +168,6 @@ void transform_to_local_frame(Vector3s<T>& a, const Vector3s<T>& norm,
 
 template <typename T>
 void transform_to_global_frame(Vector3s<T>& a, const Vector3s<T>& norm,
-                               const Vector3s<T>& tan1,
-                               const Vector3s<T>& tan2);
+                               const Vector3s<T>& tan1, const Vector3s<T>& tan2);
 
 #endif

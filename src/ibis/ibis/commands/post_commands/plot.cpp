@@ -16,8 +16,7 @@
 
 #include "finite_volume/finite_volume.h"
 
-int plot(FlowFormat format, std::vector<std::string> extras, int argc,
-         char* argv[]) {
+int plot(FlowFormat format, std::vector<std::string> extras, int argc, char* argv[]) {
     Kokkos::initialize(argc, argv);
     json directories = read_directories();
     if (format == FlowFormat::Vtk) {

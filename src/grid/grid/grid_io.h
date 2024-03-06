@@ -32,8 +32,7 @@ struct ElemIO {
         : vertex_ids_(ids), cell_type_(type), face_order_(face_order) {}
 
     bool operator==(const ElemIO &other) const {
-        return (vertex_ids_ == other.vertex_ids_) &&
-               (cell_type_ == other.cell_type_);
+        return (vertex_ids_ == other.vertex_ids_) && (cell_type_ == other.cell_type_);
     }
 
     std::vector<size_t> vertex_ids() const { return vertex_ids_; }
@@ -65,9 +64,7 @@ public:
 
     std::vector<ElemIO> cells() const { return cells_; }
 
-    std::unordered_map<std::string, std::vector<ElemIO>> bcs() const {
-        return bcs_;
-    }
+    std::unordered_map<std::string, std::vector<ElemIO>> bcs() const { return bcs_; }
 
     size_t dim() const { return dim_; }
 

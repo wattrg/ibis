@@ -155,8 +155,7 @@ Vector3<double> read_vertex(std::string line, size_t dim) {
         double z = std::stod(line.substr(0, sep));
         return Vector3(x, y, z);
     } else {
-        std::cerr << "Invalid number of dimensions in su2 file: " << dim
-                  << std::endl;
+        std::cerr << "Invalid number of dimensions in su2 file: " << dim << std::endl;
         throw new std::runtime_error("");
     }
 }
@@ -232,37 +231,27 @@ std::vector<ElemIO> vtk_face_order(std::vector<size_t> ids, ElemType type) {
                 ElemIO({ids[3], ids[0]}, ElemType::Line, FaceOrder::Vtk),
             };
         case ElemType::Hex:
-            return std::vector<ElemIO>{ElemIO({ids[0], ids[2], ids[3], ids[1]},
-                                              ElemType::Quad, FaceOrder::Vtk),
-                                       ElemIO({ids[0], ids[1], ids[5], ids[4]},
-                                              ElemType::Quad, FaceOrder::Vtk),
-                                       ElemIO({ids[4], ids[5], ids[7], ids[6]},
-                                              ElemType::Quad, FaceOrder::Vtk),
-                                       ElemIO({ids[2], ids[6], ids[7], ids[3]},
-                                              ElemType::Quad, FaceOrder::Vtk),
-                                       ElemIO({ids[0], ids[4], ids[6], ids[2]},
-                                              ElemType::Quad, FaceOrder::Vtk),
-                                       ElemIO({ids[1], ids[3], ids[7], ids[6]},
-                                              ElemType::Quad, FaceOrder::Vtk)};
+            return std::vector<ElemIO>{
+                ElemIO({ids[0], ids[2], ids[3], ids[1]}, ElemType::Quad, FaceOrder::Vtk),
+                ElemIO({ids[0], ids[1], ids[5], ids[4]}, ElemType::Quad, FaceOrder::Vtk),
+                ElemIO({ids[4], ids[5], ids[7], ids[6]}, ElemType::Quad, FaceOrder::Vtk),
+                ElemIO({ids[2], ids[6], ids[7], ids[3]}, ElemType::Quad, FaceOrder::Vtk),
+                ElemIO({ids[0], ids[4], ids[6], ids[2]}, ElemType::Quad, FaceOrder::Vtk),
+                ElemIO({ids[1], ids[3], ids[7], ids[6]}, ElemType::Quad, FaceOrder::Vtk)};
         case ElemType::Wedge:
             return std::vector<ElemIO>{
                 ElemIO({ids[0], ids[1], ids[2]}, ElemType::Tri, FaceOrder::Vtk),
                 ElemIO({ids[3], ids[5], ids[4]}, ElemType::Tri, FaceOrder::Vtk),
-                ElemIO({ids[1], ids[4], ids[5], ids[2]}, ElemType::Quad,
-                       FaceOrder::Vtk),
-                ElemIO({ids[0], ids[2], ids[5], ids[3]}, ElemType::Quad,
-                       FaceOrder::Vtk),
-                ElemIO({ids[0], ids[3], ids[4], ids[1]}, ElemType::Quad,
-                       FaceOrder::Vtk)};
+                ElemIO({ids[1], ids[4], ids[5], ids[2]}, ElemType::Quad, FaceOrder::Vtk),
+                ElemIO({ids[0], ids[2], ids[5], ids[3]}, ElemType::Quad, FaceOrder::Vtk),
+                ElemIO({ids[0], ids[3], ids[4], ids[1]}, ElemType::Quad, FaceOrder::Vtk)};
         case ElemType::Pyramid:
             return std::vector<ElemIO>{
-                ElemIO({ids[0], ids[3], ids[2], ids[1]}, ElemType::Quad,
-                       FaceOrder::Vtk),
+                ElemIO({ids[0], ids[3], ids[2], ids[1]}, ElemType::Quad, FaceOrder::Vtk),
                 ElemIO({ids[2], ids[3], ids[4]}, ElemType::Tri, FaceOrder::Vtk),
                 ElemIO({ids[0], ids[4], ids[3]}, ElemType::Tri, FaceOrder::Vtk),
                 ElemIO({ids[0], ids[1], ids[4]}, ElemType::Tri, FaceOrder::Vtk),
-                ElemIO({ids[1], ids[2], ids[4]}, ElemType::Tri,
-                       FaceOrder::Vtk)};
+                ElemIO({ids[1], ids[2], ids[4]}, ElemType::Tri, FaceOrder::Vtk)};
         default:
             throw new std::runtime_error("Unreachable");
     }
@@ -353,16 +342,13 @@ TEST_CASE("get_next_line") {
 
 TEST_CASE("read_su2_element") {
     std::string line = "9 0 1 5 4";
-    CHECK(read_su2_element(line) ==
-          ElemIO({0, 1, 5, 4}, ElemType::Quad, FaceOrder::Vtk));
+    CHECK(read_su2_element(line) == ElemIO({0, 1, 5, 4}, ElemType::Quad, FaceOrder::Vtk));
 
     line = "3 3 34";
-    CHECK(read_su2_element(line) ==
-          ElemIO({3, 34}, ElemType::Line, FaceOrder::Vtk));
+    CHECK(read_su2_element(line) == ElemIO({3, 34}, ElemType::Line, FaceOrder::Vtk));
 
     line = "5 1 39 23";
-    CHECK(read_su2_element(line) ==
-          ElemIO({1, 39, 23}, ElemType::Tri, FaceOrder::Vtk));
+    CHECK(read_su2_element(line) == ElemIO({1, 39, 23}, ElemType::Tri, FaceOrder::Vtk));
 }
 
 TEST_CASE("read_vetex") {

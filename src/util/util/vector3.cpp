@@ -14,8 +14,7 @@ void dot(const Vector3s<T> &a, const Vector3s<T> &b, Field<T> &result) {
 
     Kokkos::parallel_for(
         "vector3 dot product", a.size(), KOKKOS_LAMBDA(const size_t i) {
-            result(i) =
-                a(i, 0) * b(i, 0) + a(i, 1) * b(i, 1) + a(i, 2) * b(i, 2);
+            result(i) = a(i, 0) * b(i, 0) + a(i, 1) * b(i, 1) + a(i, 2) * b(i, 2);
         });
 }
 template void dot<double>(const Vector3s<double> &a, const Vector3s<double> &b,
@@ -46,8 +45,7 @@ void subtract(const Vector3s<T> &a, const Vector3s<T> &b, Vector3s<T> &result) {
             result(i, 2) = a(i, 2) - b(i, 2);
         });
 }
-template void subtract<double>(const Vector3s<double> &a,
-                               const Vector3s<double> &b,
+template void subtract<double>(const Vector3s<double> &a, const Vector3s<double> &b,
                                Vector3s<double> &result);
 
 template <typename T>
@@ -61,8 +59,7 @@ void cross(const Vector3s<T> &a, const Vector3s<T> &b, Vector3s<T> &result) {
             result(i, 2) = a(i, 0) * b(i, 1) - a(i, 1) * b(i, 0);
         });
 }
-template void cross<double>(const Vector3s<double> &a,
-                            const Vector3s<double> &b,
+template void cross<double>(const Vector3s<double> &a, const Vector3s<double> &b,
                             Vector3s<double> &result);
 
 template <typename T>
@@ -82,8 +79,7 @@ void length(const Vector3s<T> &a, Field<T> &len) {
 
     Kokkos::parallel_for(
         "Vector3s length", a.size(), KOKKOS_LAMBDA(const size_t i) {
-            len(i) =
-                sqrt(a(i, 0) * a(i, 0) + a(i, 1) * a(i, 1) + a(i, 2) * a(i, 2));
+            len(i) = sqrt(a(i, 0) * a(i, 0) + a(i, 1) * a(i, 1) + a(i, 2) * a(i, 2));
         });
 }
 template void length<double>(const Vector3s<double> &a, Field<double> &len);
@@ -93,8 +89,7 @@ void normalise(Vector3s<T> &a) {
     Kokkos::parallel_for(
         "Vector3s normalise", a.size(), KOKKOS_LAMBDA(const size_t i) {
             double length_inv =
-                1. /
-                sqrt(a(i, 0) * a(i, 0) + a(i, 1) * a(i, 1) + a(i, 2) * a(i, 2));
+                1. / sqrt(a(i, 0) * a(i, 0) + a(i, 1) * a(i, 1) + a(i, 2) * a(i, 2));
             a(i, 0) *= length_inv;
             a(i, 1) *= length_inv;
             a(i, 2) *= length_inv;
@@ -106,8 +101,7 @@ template <typename T>
 void transform_to_local_frame(Vector3s<T> &a, const Vector3s<T> &norm,
                               const Vector3s<T> &tan1, const Vector3s<T> tan2) {
     Kokkos::parallel_for(
-        "Vector3s::transform_to_local_frame", a.size(),
-        KOKKOS_LAMBDA(const size_t i) {
+        "Vector3s::transform_to_local_frame", a.size(), KOKKOS_LAMBDA(const size_t i) {
             T x = a.x(i) * norm.x(i) + a.y(i) * norm.y(i) + a.z(i) * norm.z(i);
             T y = a.x(i) * tan1.x(i) + a.y(i) * tan1.y(i) + a.z(i) * tan1.z(i);
             T z = a.x(i) * tan2.x(i) + a.y(i) * tan2.y(i) + a.z(i) * tan2.z(i);
@@ -123,17 +117,12 @@ template void transform_to_local_frame<double>(Vector3s<double> &a,
 
 template <typename T>
 void transform_to_global_frame(Vector3s<T> &a, const Vector3s<T> &norm,
-                               const Vector3s<T> &tan1,
-                               const Vector3s<T> &tan2) {
+                               const Vector3s<T> &tan1, const Vector3s<T> &tan2) {
     Kokkos::parallel_for(
-        "Vector3s::transform_to_global_frame", a.size(),
-        KOKKOS_LAMBDA(const size_t i) {
-            T x = a(i, 0) * norm(i, 0) + a(i, 1) * tan1(i, 0) +
-                  a(i, 2) * tan2(i, 0);
-            T y = a(i, 0) * norm(i, 1) + a(i, 1) * tan1(i, 1) +
-                  a(i, 2) * tan2(i, 1);
-            T z = a(i, 0) * norm(i, 2) + a(i, 1) * tan1(i, 2) +
-                  a(i, 2) * tan2(i, 2);
+        "Vector3s::transform_to_global_frame", a.size(), KOKKOS_LAMBDA(const size_t i) {
+            T x = a(i, 0) * norm(i, 0) + a(i, 1) * tan1(i, 0) + a(i, 2) * tan2(i, 0);
+            T y = a(i, 0) * norm(i, 1) + a(i, 1) * tan1(i, 1) + a(i, 2) * tan2(i, 1);
+            T z = a(i, 0) * norm(i, 2) + a(i, 1) * tan1(i, 2) + a(i, 2) * tan2(i, 2);
             a.x(i) = x;
             a.y(i) = y;
             a.z(i) = z;
@@ -367,9 +356,8 @@ TEST_CASE("Vector3s length") {
         a_host(i, 1) = 2.0 * i;
         a_host(i, 2) = 3.0 * i;
 
-        expected(i) =
-            sqrt(a_host.x(i) * a_host.x(i) + a_host.y(i) * a_host.y(i) +
-                 a_host.z(i) * a_host.z(i));
+        expected(i) = sqrt(a_host.x(i) * a_host.x(i) + a_host.y(i) * a_host.y(i) +
+                           a_host.z(i) * a_host.z(i));
     }
 
     a_dev.deep_copy(a_host);
@@ -397,10 +385,8 @@ TEST_CASE("Vector3s normalise") {
     a_host.deep_copy(a_dev);
 
     for (size_t i = 0; i < n; i++) {
-        double length_inv =
-            sqrt((i + 1.0) * (i + 1.0) + 4.0 * i * i + 9.0 * i * i);
-        CHECK(Kokkos::fabs(a_host.x(i) - 1.0 * (i + 1.0) / length_inv) <
-              VEC3_TOL);
+        double length_inv = sqrt((i + 1.0) * (i + 1.0) + 4.0 * i * i + 9.0 * i * i);
+        CHECK(Kokkos::fabs(a_host.x(i) - 1.0 * (i + 1.0) / length_inv) < VEC3_TOL);
         CHECK(Kokkos::fabs(a_host.y(i) - 2.0 * i / length_inv) < VEC3_TOL);
         CHECK(Kokkos::fabs(a_host.z(i) - 3.0 * i / length_inv) < VEC3_TOL);
     }

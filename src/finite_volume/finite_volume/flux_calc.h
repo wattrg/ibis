@@ -26,8 +26,7 @@ public:
 
     virtual ~FluxCalculator() {}
 
-    virtual void compute_flux(const FlowStates<T>& left,
-                              const FlowStates<T>& right,
+    virtual void compute_flux(const FlowStates<T>& left, const FlowStates<T>& right,
                               ConservedQuantities<T>& flux, IdealGas<T>& gm,
                               bool three_d) = 0;
 
@@ -43,8 +42,7 @@ public:
     Hanel() : FluxCalculator<T>("hanel") {}
 
     void compute_flux(const FlowStates<T>& left, const FlowStates<T>& right,
-                      ConservedQuantities<T>& flux, IdealGas<T>& gm,
-                      bool three_d);
+                      ConservedQuantities<T>& flux, IdealGas<T>& gm, bool three_d);
 };
 
 template <typename T>
@@ -53,8 +51,7 @@ public:
     Ausmdv() : FluxCalculator<T>("ausmdv") {}
 
     void compute_flux(const FlowStates<T>& left, const FlowStates<T>& right,
-                      ConservedQuantities<T>& flux, IdealGas<T>& gm,
-                      bool three_d);
+                      ConservedQuantities<T>& flux, IdealGas<T>& gm, bool three_d);
 };
 
 template <typename T>
@@ -62,13 +59,10 @@ class Ldfss2 : public FluxCalculator<T> {
 public:
     Ldfss2() : FluxCalculator<T>("ldfss2") {}
 
-    Ldfss2(json config) : FluxCalculator<T>("ldfss2") {
-        delta_ = config.at("delta");
-    }
+    Ldfss2(json config) : FluxCalculator<T>("ldfss2") { delta_ = config.at("delta"); }
 
     void compute_flux(const FlowStates<T>& left, const FlowStates<T>& right,
-                      ConservedQuantities<T>& flux, IdealGas<T>& gm,
-                      bool three_d);
+                      ConservedQuantities<T>& flux, IdealGas<T>& gm, bool three_d);
 
 private:
     double delta_;

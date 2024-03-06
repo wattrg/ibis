@@ -22,15 +22,12 @@ public:
     using array_layout = Layout;
     using memory_space = typename ExecSpace::memory_space;
     using vector_type = Vector3s<T, array_layout, memory_space>;
-    using mirror_type =
-        Vertices<T, Kokkos::DefaultHostExecutionSpace, array_layout>;
+    using mirror_type = Vertices<T, Kokkos::DefaultHostExecutionSpace, array_layout>;
 
 public:
     Vertices() {}
 
-    Vertices(size_t num_vertices) {
-        _positions = vector_type("Vertices", num_vertices);
-    }
+    Vertices(size_t num_vertices) { _positions = vector_type("Vertices", num_vertices); }
 
     Vertices(vector_type positions) : _positions(positions) {}
 

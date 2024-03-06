@@ -55,8 +55,7 @@ public:
      * @return the size of the time step
      */
     double estimate_dt(const FlowStates<T>& flow_state, GridBlock<T>& grid,
-                       IdealGas<T>& gas_model,
-                       TransportProperties<T>& trans_prop);
+                       IdealGas<T>& gas_model, TransportProperties<T>& trans_prop);
 
     // methods
     // these have to be public for NVCC, but they shouldn't really need to
@@ -64,15 +63,13 @@ public:
     // post-processing will call them.
 
     // Apply pre-reconstruction boundary conditions
-    void apply_pre_reconstruction_bc(FlowStates<T>& fs,
-                                     const GridBlock<T>& grid);
+    void apply_pre_reconstruction_bc(FlowStates<T>& fs, const GridBlock<T>& grid);
 
     // Apply pre-reconstruction boundary conditions
     void apply_pre_viscous_grad_bc(FlowStates<T>& fs, const GridBlock<T>& grid);
 
     // Perform the surface integral of fluxes over the cells
-    void flux_surface_integral(const GridBlock<T>& grid,
-                               ConservedQuantities<T>& dudt);
+    void flux_surface_integral(const GridBlock<T>& grid, ConservedQuantities<T>& dudt);
 
     // Count the number of bad cells in the domain
     size_t count_bad_cells(const FlowStates<T>& fs, const size_t num_cells);

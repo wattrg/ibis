@@ -122,16 +122,14 @@ Interfaces<double> generate_interfaces() {
     vertices.deep_copy(vertices_host);
 
     std::vector<std::vector<size_t>> interface_id_list{
-        {0, 1},   {1, 5},  {5, 4},   {4, 0},   {1, 2},   {2, 6},
-        {6, 5},   {2, 3},  {3, 7},   {7, 6},   {5, 9},   {9, 8},
-        {8, 4},   {6, 10}, {10, 9},  {7, 11},  {11, 10}, {9, 13},
-        {13, 12}, {12, 8}, {10, 14}, {14, 13}, {11, 15}, {15, 14}};
+        {0, 1},   {1, 5},  {5, 4},   {4, 0},  {1, 2},   {2, 6},   {6, 5},   {2, 3},
+        {3, 7},   {7, 6},  {5, 9},   {9, 8},  {8, 4},   {6, 10},  {10, 9},  {7, 11},
+        {11, 10}, {9, 13}, {13, 12}, {12, 8}, {10, 14}, {14, 13}, {11, 15}, {15, 14}};
     std::vector<ElemType> shapes = {
-        ElemType::Line, ElemType::Line, ElemType::Line, ElemType::Line,
-        ElemType::Line, ElemType::Line, ElemType::Line, ElemType::Line,
-        ElemType::Line, ElemType::Line, ElemType::Line, ElemType::Line,
-        ElemType::Line, ElemType::Line, ElemType::Line, ElemType::Line,
-        ElemType::Line, ElemType::Line, ElemType::Line, ElemType::Line,
+        ElemType::Line, ElemType::Line, ElemType::Line, ElemType::Line, ElemType::Line,
+        ElemType::Line, ElemType::Line, ElemType::Line, ElemType::Line, ElemType::Line,
+        ElemType::Line, ElemType::Line, ElemType::Line, ElemType::Line, ElemType::Line,
+        ElemType::Line, ElemType::Line, ElemType::Line, ElemType::Line, ElemType::Line,
         ElemType::Line, ElemType::Line, ElemType::Line, ElemType::Line,
     };
 
@@ -183,12 +181,10 @@ TEST_CASE("Interface directions") {
 }
 
 TEST_CASE("Interface centres") {
-    std::vector<double> xs = {0.5, 1.0, 0.5, 0.0, 1.5, 2.0, 1.5, 2.5,
-                              3.0, 2.5, 1.0, 0.5, 0.0, 2.0, 1.5, 3.0,
-                              2.5, 1.0, 0.5, 0.0, 2.0, 1.5, 3.0, 2.5};
-    std::vector<double> ys = {0.0, 0.5, 1.0, 0.5, 0.0, 0.5, 1.0, 0.0,
-                              0.5, 1.0, 1.5, 2.0, 1.5, 1.5, 2.0, 1.5,
-                              2.0, 2.5, 3.0, 2.5, 2.5, 3.0, 2.5, 3.0};
+    std::vector<double> xs = {0.5, 1.0, 0.5, 0.0, 1.5, 2.0, 1.5, 2.5, 3.0, 2.5, 1.0, 0.5,
+                              0.0, 2.0, 1.5, 3.0, 2.5, 1.0, 0.5, 0.0, 2.0, 1.5, 3.0, 2.5};
+    std::vector<double> ys = {0.0, 0.5, 1.0, 0.5, 0.0, 0.5, 1.0, 0.0, 0.5, 1.0, 1.5, 2.0,
+                              1.5, 1.5, 2.0, 1.5, 2.0, 2.5, 3.0, 2.5, 2.5, 3.0, 2.5, 3.0};
 
     Interfaces<double> interfaces = generate_interfaces();
     auto interfaces_mirror = interfaces.host_mirror();

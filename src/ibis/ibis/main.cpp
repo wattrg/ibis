@@ -29,14 +29,11 @@ int cli(int argc, char* argv[]) {
     bool print_version = false;
     ibis.add_flag("-v,--version", print_version, "print the version");
 
-    CLI::App* clean_command =
-        ibis.add_subcommand("clean", "clean the simulation");
-    CLI::App* prep_command =
-        ibis.add_subcommand("prep", "prepare the simulation");
+    CLI::App* clean_command = ibis.add_subcommand("clean", "clean the simulation");
+    CLI::App* prep_command = ibis.add_subcommand("prep", "prepare the simulation");
     CLI::App* run_command = ibis.add_subcommand("run", "run the simulation");
 
-    CLI::App* post_command =
-        ibis.add_subcommand("post", "post-process the simulation");
+    CLI::App* post_command = ibis.add_subcommand("post", "post-process the simulation");
     post_command->require_subcommand(1);
 
     CLI::App* plot_command = post_command->add_subcommand(
@@ -48,8 +45,7 @@ int cli(int argc, char* argv[]) {
         ->transform(CLI::CheckedTransformer(format_map, CLI::ignore_case));
 
     std::vector<std::string> extra_vars;
-    plot_command
-        ->add_option("--add", extra_vars, "Extra variables to add to plot")
+    plot_command->add_option("--add", extra_vars, "Extra variables to add to plot")
         ->delimiter(',')
         ->type_name("str");
 
@@ -85,12 +81,10 @@ int main(int argc, char* argv[]) {
     console_log->set_level(spdlog::level::info);
     logs.push_back(console_log);
 
-    auto debug_log =
-        std::make_shared<spdlog::sinks::basic_file_sink_mt>("log/log");
+    auto debug_log = std::make_shared<spdlog::sinks::basic_file_sink_mt>("log/log");
     debug_log->set_level(spdlog::level::debug);
     logs.push_back(debug_log);
-    auto logger =
-        std::make_shared<spdlog::logger>("logger", begin(logs), end(logs));
+    auto logger = std::make_shared<spdlog::logger>("logger", begin(logs), end(logs));
 
     spdlog::set_default_logger(logger);
 

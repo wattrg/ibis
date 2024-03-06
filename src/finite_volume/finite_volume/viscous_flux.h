@@ -21,16 +21,13 @@ public:
     bool enabled() const { return enabled_; }
 
     void compute_viscous_gradient(const FlowStates<T>& flow_states,
-                                  const GridBlock<T>& grid,
-                                  Gradients<T>& cell_grad,
+                                  const GridBlock<T>& grid, Gradients<T>& cell_grad,
                                   WLSGradient<T>& grad_calc);
 
-    void compute_viscous_flux(const FlowStates<T>& flow_states,
-                              const GridBlock<T>& grid,
+    void compute_viscous_flux(const FlowStates<T>& flow_states, const GridBlock<T>& grid,
                               const IdealGas<T>& gas_model,
                               const TransportProperties<T>& trans_prop,
-                              Gradients<T>& cell_grad,
-                              WLSGradient<T>& grad_calc,
+                              Gradients<T>& cell_grad, WLSGradient<T>& grad_calc,
                               ConservedQuantities<T>& flux);
 
     void compute_viscous_properties_at_faces(const FlowStates<T>& flow_states,

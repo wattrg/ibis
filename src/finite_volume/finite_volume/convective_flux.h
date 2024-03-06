@@ -22,10 +22,8 @@ public:
     // Compute the convective fluxes. Includes gradient calculation,
     // but not boundary conditions
     void compute_convective_flux(const FlowStates<T>& flow_states,
-                                 const GridBlock<T>& grid,
-                                 IdealGas<T>& gas_model,
-                                 Gradients<T>& cell_grad,
-                                 WLSGradient<T>& grad_calc,
+                                 const GridBlock<T>& grid, IdealGas<T>& gas_model,
+                                 Gradients<T>& cell_grad, WLSGradient<T>& grad_calc,
                                  ConservedQuantities<T>& flux);
 
     // Compute the convective gradients. This could be private,
@@ -33,19 +31,17 @@ public:
     // the gradients in post without computing the actual flux
     // values afterwards.
     void compute_convective_gradient(const FlowStates<T>& flow_states,
-                                     const GridBlock<T>& grid,
-                                     Gradients<T>& cell_grad,
+                                     const GridBlock<T>& grid, Gradients<T>& cell_grad,
                                      WLSGradient<T>& grad_calc);
 
-    void copy_reconstruct(const FlowStates<T>& flow_states,
-                          const GridBlock<T>& grid);
+    void copy_reconstruct(const FlowStates<T>& flow_states, const GridBlock<T>& grid);
 
-    void linear_reconstruct(const FlowStates<T>& flow_states,
-                            const GridBlock<T>& grid, Gradients<T>& cell_grad,
-                            WLSGradient<T>& grad_calc, IdealGas<T>& gas_model);
+    void linear_reconstruct(const FlowStates<T>& flow_states, const GridBlock<T>& grid,
+                            Gradients<T>& cell_grad, WLSGradient<T>& grad_calc,
+                            IdealGas<T>& gas_model);
 
-    void compute_limiters(const FlowStates<T>& flow_states,
-                          const GridBlock<T>& grid, Gradients<T>& cell_grad);
+    void compute_limiters(const FlowStates<T>& flow_states, const GridBlock<T>& grid,
+                          Gradients<T>& cell_grad);
 
     size_t reconstruction_order() const { return reconstruction_order_; }
 

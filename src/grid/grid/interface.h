@@ -21,8 +21,7 @@ public:
     using array_layout = Layout;
     using host_execution_space = Kokkos::DefaultHostExecutionSpace;
     using vector_type = Vector3s<T, array_layout, memory_space>;
-    using host_mirror_mem_space =
-        Kokkos::DefaultHostExecutionSpace::memory_space;
+    using host_mirror_mem_space = Kokkos::DefaultHostExecutionSpace::memory_space;
     using mirror_type = Interfaces<T, host_execution_space, array_layout>;
 
     // I have no idea why it is execution_space and not memory_space
@@ -32,8 +31,7 @@ public:
 public:
     Interfaces() {}
 
-    Interfaces(std::vector<std::vector<size_t>> ids,
-               std::vector<ElemType> shapes) {
+    Interfaces(std::vector<std::vector<size_t>> ids, std::vector<ElemType> shapes) {
         vertex_ids_ = id_type(ids);
         size_ = vertex_ids_.num_rows();
         shape_ = Field<ElemType, array_layout, memory_space>("Interface::shape",
@@ -53,10 +51,9 @@ public:
 
         // set left and right cells to maximum integer to indicate they haven't
         // been connected up to any cells yet
-        left_cells_ =
-            Field<size_t, array_layout, memory_space>("Interface::left", size_);
-        right_cells_ = Field<size_t, array_layout, memory_space>(
-            "Interface::right", size_);
+        left_cells_ = Field<size_t, array_layout, memory_space>("Interface::left", size_);
+        right_cells_ =
+            Field<size_t, array_layout, memory_space>("Interface::right", size_);
         left_cells_.deep_copy(std::numeric_limits<size_t>::max());
         right_cells_.deep_copy(std::numeric_limits<size_t>::max());
     }
@@ -64,26 +61,22 @@ public:
     Interfaces(size_t num_interfaces, size_t num_vertex_ids) {
         vertex_ids_ = id_type(num_vertex_ids, num_interfaces);
         size_ = num_interfaces;
-        shape_ = Field<ElemType, array_layout, memory_space>("Interface::shape",
-                                                             size_);
+        shape_ = Field<ElemType, array_layout, memory_space>("Interface::shape", size_);
         norm_ = vector_type("Interface::norm", size_);
         tan1_ = vector_type("Interface::tan1", size_);
         tan2_ = vector_type("Interface::tan2", size_);
         centre_ = vector_type("Interface::centre", size_);
         area_ = Field<T, array_layout, memory_space>("Interface::area", size_);
-        left_cells_ =
-            Field<size_t, array_layout, memory_space>("Interface::left", size_);
-        right_cells_ = Field<size_t, array_layout, memory_space>(
-            "Interface::right", size_);
+        left_cells_ = Field<size_t, array_layout, memory_space>("Interface::left", size_);
+        right_cells_ =
+            Field<size_t, array_layout, memory_space>("Interface::right", size_);
     }
 
-    Interfaces(id_type vertex_ids,
-               Field<size_t, array_layout, memory_space> left_cells,
+    Interfaces(id_type vertex_ids, Field<size_t, array_layout, memory_space> left_cells,
                Field<size_t, array_layout, memory_space> right_cells,
                Field<T, array_layout, memory_space> area,
-               Field<ElemType, array_layout, memory_space> shape,
-               vector_type norm, vector_type tan1, vector_type tan2,
-               vector_type centre)
+               Field<ElemType, array_layout, memory_space> shape, vector_type norm,
+               vector_type tan1, vector_type tan2, vector_type centre)
         : size_(vertex_ids.num_rows()),
           vertex_ids_(vertex_ids),
           left_cells_(left_cells),
@@ -105,8 +98,8 @@ public:
         auto tan1 = tan1_.host_mirror();
         auto tan2 = tan2_.host_mirror();
         auto centre = centre_.host_mirror();
-        return mirror_type(vertex_ids, left_cells, right_cells, area, shape,
-                           norm, tan1, tan2, centre);
+        return mirror_type(vertex_ids, left_cells, right_cells, area, shape, norm, tan1,
+                           tan2, centre);
     }
 
     template <class OtherSpace>
@@ -176,14 +169,10 @@ public:
     }
 
     KOKKOS_INLINE_FUNCTION
-    size_t left_cell(const size_t face_id) const {
-        return left_cells_(face_id);
-    }
+    size_t left_cell(const size_t face_id) const { return left_cells_(face_id); }
 
     KOKKOS_INLINE_FUNCTION
-    size_t right_cell(const size_t face_id) const {
-        return right_cells_(face_id);
-    }
+    size_t right_cell(const size_t face_id) const { return right_cells_(face_id); }
 
     KOKKOS_INLINE_FUNCTION
     size_t size() const { return vertex_ids_.num_rows(); }
@@ -206,9 +195,8 @@ public:
                 T y1 = vertices.positions().y(vertex_ids(1));
                 T z0 = vertices.positions().z(vertex_ids(0));
                 T z1 = vertices.positions().z(vertex_ids(1));
-                T ilength =
-                    1. / Kokkos::sqrt((x1 - x0) * (x1 - x0) +
-                                      (y1 - y0) * (y1 - y0) + (z1 - z0));
+                T ilength = 1. / Kokkos::sqrt((x1 - x0) * (x1 - x0) +
+                                              (y1 - y0) * (y1 - y0) + (z1 - z0));
                 this_tan1.x(i) = ilength * (x1 - x0);
                 this_tan1.y(i) = ilength * (y1 - y0);
                 this_tan1.z(i) = ilength * (z1 - z0);
@@ -252,9 +240,9 @@ public:
                     }
                     case ElemType::Tri: {
                         auto vertex_ids = this_vertex_ids(i);
-                        this_area(i) = Ibis::area_of_triangle(
-                            vertices.positions(), vertex_ids(0), vertex_ids(1),
-                            vertex_ids(2));
+                        this_area(i) =
+                            Ibis::area_of_triangle(vertices.positions(), vertex_ids(0),
+                                                   vertex_ids(1), vertex_ids(2));
                         break;
                     }
                     case ElemType::Quad: {

@@ -4,8 +4,7 @@
 #include <Kokkos_Core.hpp>
 #include <vector>
 
-template <typename T,
-          class Layout = Kokkos::DefaultExecutionSpace::array_layout,
+template <typename T, class Layout = Kokkos::DefaultExecutionSpace::array_layout,
           class Space = Kokkos::DefaultExecutionSpace::memory_space>
 class Field {
 public:
@@ -20,9 +19,7 @@ public:
 public:
     Field() {}
 
-    Field(std::string description, size_t n) {
-        view_ = view_type(description, n);
-    }
+    Field(std::string description, size_t n) { view_ = view_type(description, n); }
 
     Field(std::string description, std::vector<T> values) {
         view_ = view_type(description, values.size());

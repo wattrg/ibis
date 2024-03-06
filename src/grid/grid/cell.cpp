@@ -30,17 +30,15 @@ CellInfo generate_cells() {
     vertices.deep_copy(vertices_host);
 
     std::vector<std::vector<size_t>> interface_id_list{
-        {0, 1},   {1, 5},  {5, 4},   {4, 0},   {1, 2},   {2, 6},
-        {6, 5},   {2, 3},  {3, 7},   {7, 6},   {5, 9},   {9, 8},
-        {8, 4},   {6, 10}, {10, 9},  {7, 11},  {11, 10}, {9, 13},
-        {13, 12}, {12, 8}, {10, 14}, {14, 13}, {11, 15}, {15, 14}};
+        {0, 1},   {1, 5},  {5, 4},   {4, 0},  {1, 2},   {2, 6},   {6, 5},   {2, 3},
+        {3, 7},   {7, 6},  {5, 9},   {9, 8},  {8, 4},   {6, 10},  {10, 9},  {7, 11},
+        {11, 10}, {9, 13}, {13, 12}, {12, 8}, {10, 14}, {14, 13}, {11, 15}, {15, 14}};
 
     std::vector<ElemType> shapes = {
-        ElemType::Line, ElemType::Line, ElemType::Line, ElemType::Line,
-        ElemType::Line, ElemType::Line, ElemType::Line, ElemType::Line,
-        ElemType::Line, ElemType::Line, ElemType::Line, ElemType::Line,
-        ElemType::Line, ElemType::Line, ElemType::Line, ElemType::Line,
-        ElemType::Line, ElemType::Line, ElemType::Line, ElemType::Line,
+        ElemType::Line, ElemType::Line, ElemType::Line, ElemType::Line, ElemType::Line,
+        ElemType::Line, ElemType::Line, ElemType::Line, ElemType::Line, ElemType::Line,
+        ElemType::Line, ElemType::Line, ElemType::Line, ElemType::Line, ElemType::Line,
+        ElemType::Line, ElemType::Line, ElemType::Line, ElemType::Line, ElemType::Line,
         ElemType::Line, ElemType::Line, ElemType::Line, ElemType::Line,
     };
     Interfaces<double> interfaces(interface_id_list, shapes);
@@ -51,18 +49,15 @@ CellInfo generate_cells() {
         {11, 17, 18, 19}, {14, 20, 21, 17}, {16, 22, 23, 20}};
 
     std::vector<std::vector<size_t>> cell_vertex_ids_raw{
-        {0, 1, 5, 4},   {1, 2, 6, 5},    {2, 3, 7, 6},
-        {4, 5, 9, 8},   {5, 6, 10, 9},   {6, 7, 11, 10},
-        {8, 9, 13, 12}, {9, 10, 14, 13}, {10, 11, 15, 14}};
+        {0, 1, 5, 4},   {1, 2, 6, 5},   {2, 3, 7, 6},    {4, 5, 9, 8},    {5, 6, 10, 9},
+        {6, 7, 11, 10}, {8, 9, 13, 12}, {9, 10, 14, 13}, {10, 11, 15, 14}};
 
     std::vector<ElemType> cell_shapes{
-        ElemType::Quad, ElemType::Quad, ElemType::Quad,
-        ElemType::Quad, ElemType::Quad, ElemType::Quad,
-        ElemType::Quad, ElemType::Quad, ElemType::Quad,
+        ElemType::Quad, ElemType::Quad, ElemType::Quad, ElemType::Quad, ElemType::Quad,
+        ElemType::Quad, ElemType::Quad, ElemType::Quad, ElemType::Quad,
     };
 
-    Cells<double> cells(cell_vertex_ids_raw, cell_interfaces_list, cell_shapes,
-                        9, 0);
+    Cells<double> cells(cell_vertex_ids_raw, cell_interfaces_list, cell_shapes, 9, 0);
     CellInfo info;
     info.vertices = vertices;
     info.interfaces = interfaces;
@@ -92,15 +87,11 @@ TEST_CASE("cell_centre") {
     auto cells_mirror = cells.host_mirror();
     cells_mirror.deep_copy(cells);
 
-    std::vector<double> x_values = {0.5, 1.5, 2.5, 0.5, 1.5,
-                                    2.5, 0.5, 1.5, 2.5};
-    std::vector<double> y_values = {0.5, 0.5, 0.5, 1.5, 1.5,
-                                    1.5, 2.5, 2.5, 2.5};
+    std::vector<double> x_values = {0.5, 1.5, 2.5, 0.5, 1.5, 2.5, 0.5, 1.5, 2.5};
+    std::vector<double> y_values = {0.5, 0.5, 0.5, 1.5, 1.5, 1.5, 2.5, 2.5, 2.5};
 
     for (size_t i = 0; i < cells.num_valid_cells(); i++) {
-        CHECK(Kokkos::fabs(cells_mirror.centroids().x(i) - x_values[i]) <
-              1e-14);
-        CHECK(Kokkos::fabs(cells_mirror.centroids().y(i) - y_values[i]) <
-              1e-14);
+        CHECK(Kokkos::fabs(cells_mirror.centroids().x(i) - x_values[i]) < 1e-14);
+        CHECK(Kokkos::fabs(cells_mirror.centroids().y(i) - y_values[i]) < 1e-14);
     }
 }

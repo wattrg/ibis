@@ -5,8 +5,7 @@
 #include <Kokkos_Core.hpp>
 
 template <typename T>
-void Ausmdv<T>::compute_flux(const FlowStates<T>& left,
-                             const FlowStates<T>& right,
+void Ausmdv<T>::compute_flux(const FlowStates<T>& left, const FlowStates<T>& right,
                              ConservedQuantities<T>& flux, IdealGas<T>& gm,
                              bool three_d) {
     Kokkos::parallel_for(
@@ -50,8 +49,7 @@ void Ausmdv<T>::compute_flux(const FlowStates<T>& left,
             T duL = 0.5 * (uL + Kokkos::fabs(uL));
             if (Kokkos::fabs(ML) <= 1.0) {
                 pLplus = pL * (ML + 1.0) * (ML + 1.0) * (2.0 - ML) * 0.25;
-                uLplus =
-                    alphaL * ((uL + am) * (uL + am) / (4.0 * am) - duL) + duL;
+                uLplus = alphaL * ((uL + am) * (uL + am) / (4.0 * am) - duL) + duL;
             } else {
                 pLplus = pL * duL / uL;
                 uLplus = duL;
@@ -64,8 +62,7 @@ void Ausmdv<T>::compute_flux(const FlowStates<T>& left,
             T duR = 0.5 * (uR - Kokkos::fabs(uR));
             if (Kokkos::fabs(MR) <= 1.0) {
                 pRminus = pR * (MR - 1.0) * (MR - 1.0) * (2.0 + MR) * 0.25;
-                uRminus =
-                    alphaR * (-(uR - am) * (uR - am) / (4.0 * am) - duR) + duR;
+                uRminus = alphaR * (-(uR - am) * (uR - am) / (4.0 * am) - duR) + duR;
             } else {
                 pRminus = pR * duR / uR;
                 uRminus = duR;
@@ -87,8 +84,7 @@ void Ausmdv<T>::compute_flux(const FlowStates<T>& left,
             dp = K_SWITCH * Kokkos::fabs(dp) / Kokkos::fmin(pL, pR);
             T s = 0.5 * Kokkos::fmin(1.0, dp);
             T ru2_AUSMV = uLplus * rL * uL + uRminus * rR * uR;
-            T ru2_AUSMD =
-                0.5 * (ru_half * (uL + uR) - Kokkos::fabs(ru_half) * (uR - uL));
+            T ru2_AUSMD = 0.5 * (ru_half * (uL + uR) - Kokkos::fabs(ru_half) * (uR - uL));
             T ru2_half = (0.5 + s) * ru2_AUSMV + (0.5 - s) * ru2_AUSMD;
 
             // Assemble components of the flux vector.

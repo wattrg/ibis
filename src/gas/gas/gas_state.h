@@ -16,8 +16,7 @@ public:
     T energy;
 };
 
-template <typename T,
-          class Layout = Kokkos::DefaultExecutionSpace::array_layout,
+template <typename T, class Layout = Kokkos::DefaultExecutionSpace::array_layout,
           class Space = Kokkos::DefaultExecutionSpace::memory_space>
 class GasStates {
 private:
@@ -43,11 +42,7 @@ public:
     }
 
     GasStates(view_type gas_data)
-        : data_(gas_data),
-          rho_idx_(0),
-          pressure_idx_(1),
-          temp_idx_(2),
-          energy_idx_(3) {}
+        : data_(gas_data), rho_idx_(0), pressure_idx_(1), temp_idx_(2), energy_idx_(3) {}
 
     KOKKOS_INLINE_FUNCTION
     T& rho(const size_t cell_i) const { return data_(cell_i, rho_idx_); }
@@ -62,22 +57,16 @@ public:
     auto rho() const { return Kokkos::subview(data_, Kokkos::ALL, rho_idx_); }
 
     KOKKOS_INLINE_FUNCTION
-    T& pressure(const size_t cell_i) const {
-        return data_(cell_i, pressure_idx_);
-    }
+    T& pressure(const size_t cell_i) const { return data_(cell_i, pressure_idx_); }
 
     KOKKOS_INLINE_FUNCTION
     T& pressure(const size_t cell_i) { return data_(cell_i, pressure_idx_); }
 
     KOKKOS_INLINE_FUNCTION
-    auto pressure() {
-        return Kokkos::subview(data_, Kokkos::ALL, pressure_idx_);
-    }
+    auto pressure() { return Kokkos::subview(data_, Kokkos::ALL, pressure_idx_); }
 
     KOKKOS_INLINE_FUNCTION
-    auto pressure() const {
-        return Kokkos::subview(data_, Kokkos::ALL, pressure_idx_);
-    }
+    auto pressure() const { return Kokkos::subview(data_, Kokkos::ALL, pressure_idx_); }
 
     KOKKOS_INLINE_FUNCTION
     T& temp(const size_t cell_i) const { return data_(cell_i, temp_idx_); }

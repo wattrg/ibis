@@ -6,8 +6,7 @@
 
 #include <Kokkos_Core.hpp>
 
-template <typename T,
-          class Layout = Kokkos::DefaultExecutionSpace::array_layout,
+template <typename T, class Layout = Kokkos::DefaultExecutionSpace::array_layout,
           class Space = Kokkos::DefaultExecutionSpace::memory_space>
 struct Gradients {
     Gradients() {}
@@ -41,8 +40,7 @@ class WLSGradient {
 public:
     using memory_space = typename ExecSpace::memory_space;
     using view_type = Kokkos::View<T**, Layout, memory_space>;
-    using HostMirror =
-        WLSGradient<T, Kokkos::DefaultHostExecutionSpace, Layout>;
+    using HostMirror = WLSGradient<T, Kokkos::DefaultHostExecutionSpace, Layout>;
 
 public:
     WLSGradient() {}
@@ -50,8 +48,7 @@ public:
     WLSGradient(const GridBlock<T, ExecSpace, Layout>& block) {
         int num_cells = block.num_cells();
         int num_rs = block.dim() == 2 ? 3 : 6;
-        r_ = Kokkos::View<T**, Layout, memory_space>("WLSGradient::r",
-                                                     num_cells, num_rs);
+        r_ = Kokkos::View<T**, Layout, memory_space>("WLSGradient::r", num_cells, num_rs);
         compute_workspace_(block);
     }
 
@@ -59,8 +56,7 @@ public:
 
     template <class SubView>
     void compute_gradients(const GridBlock<T, ExecSpace, Layout>& block,
-                           const SubView values,
-                           Vector3s<T, Layout, memory_space> grad) {
+                           const SubView values, Vector3s<T, Layout, memory_space> grad) {
         auto cells = block.cells();
         int dim = block.dim();
         Kokkos::parallel_for(
@@ -96,8 +92,7 @@ public:
                     T alpha_2 = 1.0 / (r22 * r22) * (dy - r12 * r11 * dx);
                     T alpha_3 = 0.0;
                     if (dim == 3) {
-                        alpha_3 = 1.0 / (r33 * r33) *
-                                  (dz - r23 * r22 * dy + beta * dx);
+                        alpha_3 = 1.0 / (r33 * r33) * (dz - r23 * r22 * dy + beta * dx);
                     }
                     T w_1 = alpha_1 - r12 / r11 * alpha_2 + beta * alpha_3;
                     T w_2 = alpha_2 - r23 / r22 * alpha_3;

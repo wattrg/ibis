@@ -3,9 +3,9 @@
 #include "finite_volume/gradient.h"
 
 template <typename T>
-T PressureAccess<T>::access(
-    const FlowStates<T, array_layout, host_mem_space>& fs, FiniteVolume<T>& fv,
-    const IdealGas<T>& gas_model, const int i) {
+T PressureAccess<T>::access(const FlowStates<T, array_layout, host_mem_space>& fs,
+                            FiniteVolume<T>& fv, const IdealGas<T>& gas_model,
+                            const int i) {
     (void)gas_model;
     (void)fv;
     return fs.gas.pressure(i);
@@ -13,9 +13,9 @@ T PressureAccess<T>::access(
 template class PressureAccess<double>;
 
 template <typename T>
-T TemperatureAccess<T>::access(
-    const FlowStates<T, array_layout, host_mem_space>& fs, FiniteVolume<T>& fv,
-    const IdealGas<T>& gas_model, const int i) {
+T TemperatureAccess<T>::access(const FlowStates<T, array_layout, host_mem_space>& fs,
+                               FiniteVolume<T>& fv, const IdealGas<T>& gas_model,
+                               const int i) {
     (void)gas_model;
     (void)fv;
     return fs.gas.temp(i);
@@ -23,9 +23,9 @@ T TemperatureAccess<T>::access(
 template class TemperatureAccess<double>;
 
 template <typename T>
-T DensityAccess<T>::access(
-    const FlowStates<T, array_layout, host_mem_space>& fs, FiniteVolume<T>& fv,
-    const IdealGas<T>& gas_model, const int i) {
+T DensityAccess<T>::access(const FlowStates<T, array_layout, host_mem_space>& fs,
+                           FiniteVolume<T>& fv, const IdealGas<T>& gas_model,
+                           const int i) {
     (void)gas_model;
     (void)fv;
     return fs.gas.rho(i);
@@ -33,9 +33,9 @@ T DensityAccess<T>::access(
 template class DensityAccess<double>;
 
 template <typename T>
-T InternalEnergyAccess<T>::access(
-    const FlowStates<T, array_layout, host_mem_space>& fs, FiniteVolume<T>& fv,
-    const IdealGas<T>& gas_model, const int i) {
+T InternalEnergyAccess<T>::access(const FlowStates<T, array_layout, host_mem_space>& fs,
+                                  FiniteVolume<T>& fv, const IdealGas<T>& gas_model,
+                                  const int i) {
     (void)gas_model;
     (void)fv;
     return fs.gas.energy(i);
@@ -43,18 +43,18 @@ T InternalEnergyAccess<T>::access(
 template class InternalEnergyAccess<double>;
 
 template <typename T>
-T SpeedOfSoundAccess<T>::access(
-    const FlowStates<T, array_layout, host_mem_space>& fs, FiniteVolume<T>& fv,
-    const IdealGas<T>& gas_model, const int i) {
+T SpeedOfSoundAccess<T>::access(const FlowStates<T, array_layout, host_mem_space>& fs,
+                                FiniteVolume<T>& fv, const IdealGas<T>& gas_model,
+                                const int i) {
     (void)fv;
     return gas_model.speed_of_sound(fs.gas, i);
 }
 template class SpeedOfSoundAccess<double>;
 
 template <typename T>
-T MachNumberAccess<T>::access(
-    const FlowStates<T, array_layout, host_mem_space>& fs, FiniteVolume<T>& fv,
-    const IdealGas<T>& gas_model, const int i) {
+T MachNumberAccess<T>::access(const FlowStates<T, array_layout, host_mem_space>& fs,
+                              FiniteVolume<T>& fv, const IdealGas<T>& gas_model,
+                              const int i) {
     (void)fv;
     T a = gas_model.speed_of_sound(fs.gas, i);
     T vx = fs.vel.x(i);
@@ -79,9 +79,9 @@ Vector3<T> VelocityAccess<T>::access(
 template class VelocityAccess<double>;
 
 template <typename T>
-void ViscousGradVxAccess<T>::init(
-    const FlowStates<T, array_layout, host_mem_space>& fs, FiniteVolume<T>& fv,
-    const GridBlock<T>& grid, const IdealGas<T>& gas_model) {
+void ViscousGradVxAccess<T>::init(const FlowStates<T, array_layout, host_mem_space>& fs,
+                                  FiniteVolume<T>& fv, const GridBlock<T>& grid,
+                                  const IdealGas<T>& gas_model) {
     (void)gas_model;
     FlowStates<T> fs_dev = FlowStates<T>(fs.number_flow_states());
     fs_dev.deep_copy(fs);
@@ -105,9 +105,9 @@ Vector3<T> ViscousGradVxAccess<T>::access(
 template class ViscousGradVxAccess<double>;
 
 template <typename T>
-void ViscousGradVyAccess<T>::init(
-    const FlowStates<T, array_layout, host_mem_space>& fs, FiniteVolume<T>& fv,
-    const GridBlock<T>& grid, const IdealGas<T>& gas_model) {
+void ViscousGradVyAccess<T>::init(const FlowStates<T, array_layout, host_mem_space>& fs,
+                                  FiniteVolume<T>& fv, const GridBlock<T>& grid,
+                                  const IdealGas<T>& gas_model) {
     (void)gas_model;
     FlowStates<T> fs_dev = FlowStates<T>(fs.number_flow_states());
     fs_dev.deep_copy(fs);
@@ -131,9 +131,9 @@ Vector3<T> ViscousGradVyAccess<T>::access(
 template class ViscousGradVyAccess<double>;
 
 template <typename T>
-void ViscousGradVzAccess<T>::init(
-    const FlowStates<T, array_layout, host_mem_space>& fs, FiniteVolume<T>& fv,
-    const GridBlock<T>& grid, const IdealGas<T>& gas_model) {
+void ViscousGradVzAccess<T>::init(const FlowStates<T, array_layout, host_mem_space>& fs,
+                                  FiniteVolume<T>& fv, const GridBlock<T>& grid,
+                                  const IdealGas<T>& gas_model) {
     (void)gas_model;
     FlowStates<T> fs_dev = FlowStates<T>(fs.number_flow_states());
     fs_dev.deep_copy(fs);
@@ -155,7 +155,6 @@ Vector3<T> ViscousGradVzAccess<T>::access(
     return Vector3<T>(grad_x, grad_y, grad_z);
 }
 template class ViscousGradVzAccess<double>;
-
 
 template <typename T>
 void ConvectiveGradVxAccess<T>::init(
@@ -236,28 +235,21 @@ Vector3<T> ConvectiveGradVzAccess<T>::access(
 template class ConvectiveGradVzAccess<double>;
 
 template <typename T>
-std::map<std::string, std::shared_ptr<ScalarAccessor<T>>>
-get_scalar_accessors() {
+std::map<std::string, std::shared_ptr<ScalarAccessor<T>>> get_scalar_accessors() {
     return {
-        {"pressure",
-         std::shared_ptr<ScalarAccessor<T>>(new PressureAccess<T>())},
-        {"temperature",
-         std::shared_ptr<ScalarAccessor<T>>(new TemperatureAccess<T>())},
+        {"pressure", std::shared_ptr<ScalarAccessor<T>>(new PressureAccess<T>())},
+        {"temperature", std::shared_ptr<ScalarAccessor<T>>(new TemperatureAccess<T>())},
         {"density", std::shared_ptr<ScalarAccessor<T>>(new DensityAccess<T>())},
-        {"energy",
-         std::shared_ptr<ScalarAccessor<T>>(new InternalEnergyAccess<T>())},
+        {"energy", std::shared_ptr<ScalarAccessor<T>>(new InternalEnergyAccess<T>())},
         {"a", std::shared_ptr<ScalarAccessor<T>>(new SpeedOfSoundAccess<T>())},
-        {"Mach",
-         std::shared_ptr<ScalarAccessor<T>>(new MachNumberAccess<T>())}};
+        {"Mach", std::shared_ptr<ScalarAccessor<T>>(new MachNumberAccess<T>())}};
 }
 template std::map<std::string, std::shared_ptr<ScalarAccessor<double>>>
 get_scalar_accessors();
 
 template <typename T>
-std::map<std::string, std::shared_ptr<VectorAccessor<T>>>
-get_vector_accessors() {
-    return {{"velocity",
-             std::shared_ptr<VectorAccessor<T>>(new VelocityAccess<T>())}};
+std::map<std::string, std::shared_ptr<VectorAccessor<T>>> get_vector_accessors() {
+    return {{"velocity", std::shared_ptr<VectorAccessor<T>>(new VelocityAccess<T>())}};
 }
 template std::map<std::string, std::shared_ptr<VectorAccessor<double>>>
 get_vector_accessors();

@@ -30,8 +30,7 @@ int Solver::solve() {
 
         int bad_cells = count_bad_cells();
         if (bad_cells > 0) {
-            spdlog::error("Encountered {} bad cells on step {}", bad_cells,
-                          step);
+            spdlog::error("Encountered {} bad cells on step {}", bad_cells, step);
             plot_solution(step);
             return 1;
         }
@@ -65,8 +64,7 @@ std::unique_ptr<Solver> make_solver(json config, std::string grid_dir,
     std::string solver_name = solver_config.at("name");
     if (solver_name == "runge_kutta") {
         GridBlock<double> grid(grid_file, grid_config);
-        return std::unique_ptr<Solver>(
-            new RungeKutta(config, grid, grid_dir, flow_dir));
+        return std::unique_ptr<Solver>(new RungeKutta(config, grid, grid_dir, flow_dir));
     }
     return NULL;
 }
