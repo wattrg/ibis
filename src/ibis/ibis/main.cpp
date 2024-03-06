@@ -1,4 +1,5 @@
 #include <ibis_version.h>
+
 #include <CLI/App.hpp>
 #include <iostream>
 #include <string>
@@ -62,19 +63,15 @@ int cli(int argc, char* argv[]) {
     }
     if (ibis.got_subcommand(clean_command)) {
         return clean(argc, argv);
-    }
-    else if (ibis.got_subcommand(prep_command)) {
+    } else if (ibis.got_subcommand(prep_command)) {
         return prep(argc, argv);
-    }
-    else if (ibis.got_subcommand(run_command)) {
+    } else if (ibis.got_subcommand(run_command)) {
         return run(argc, argv);
-    }
-    else if (ibis.got_subcommand("post")) {
+    } else if (ibis.got_subcommand("post")) {
         if (post_command->got_subcommand(plot_command)) {
             return plot(format, extra_vars, argc, argv);
         }
-    }
-    else {
+    } else {
         spdlog::error("Nothing to do. Try `ibis --help`");
     }
     return 1;

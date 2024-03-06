@@ -1,10 +1,10 @@
-#include <spdlog/spdlog.h>
 #include <finite_volume/convective_flux.h>
 #include <finite_volume/gradient.h>
+#include <spdlog/spdlog.h>
 
 template <typename T>
 ConvectiveFlux<T>::ConvectiveFlux(const GridBlock<T>& grid, json config) {
-    // allocate memory for the reconstructed states to the left and 
+    // allocate memory for the reconstructed states to the left and
     // right of the interfaces
     left_ = FlowStates<T>(grid.num_interfaces());
     right_ = FlowStates<T>(grid.num_interfaces());
@@ -23,23 +23,22 @@ ConvectiveFlux<T>::ConvectiveFlux(const GridBlock<T>& grid, json config) {
 }
 
 template <typename T>
-void ConvectiveFlux<T>::compute_convective_flux(const FlowStates<T>& flow_states,
-                             const GridBlock<T>& grid, 
-                             IdealGas<T>& gas_model,
-                             Gradients<T>& cell_grad,
-                             WLSGradient<T>& grad_calc,
-                             ConservedQuantities<T>& flux) {
-
+void ConvectiveFlux<T>::compute_convective_flux(
+    const FlowStates<T>& flow_states, const GridBlock<T>& grid,
+    IdealGas<T>& gas_model, Gradients<T>& cell_grad, WLSGradient<T>& grad_calc,
+    ConservedQuantities<T>& flux) {
     // reconstruct
     switch (reconstruction_order_) {
         case 1:
             copy_reconstruct(flow_states, grid);
             break;
         case 2:
-            linear_reconstruct(flow_states, grid, cell_grad, grad_calc, gas_model);
+            linear_reconstruct(flow_states, grid, cell_grad, grad_calc,
+                               gas_model);
             break;
         default:
-            spdlog::error("Invalid reconstruction order {}", reconstruction_order_);
+            spdlog::error("Invalid reconstruction order {}",
+                          reconstruction_order_);
     }
 
     // rotate velocity to the interface reference frame
@@ -50,7 +49,8 @@ void ConvectiveFlux<T>::compute_convective_flux(const FlowStates<T>& flow_states
                              faces.tan2());
 
     // compute the flux
-    flux_calculator_->compute_flux(left_, right_, flux, gas_model, grid.dim() == 3);
+    flux_calculator_->compute_flux(left_, right_, flux, gas_model,
+                                   grid.dim() == 3);
 
     // rotate the fluxes to the global frame
     Vector3s<T> norm = faces.norm();
@@ -77,21 +77,20 @@ void ConvectiveFlux<T>::compute_convective_flux(const FlowStates<T>& flow_states
 }
 
 template <typename T>
-void ConvectiveFlux<T>::compute_convective_gradient(const FlowStates<T>& flow_states,
-                                                    const GridBlock<T>& grid,
-                                                    Gradients<T>& cell_grad,
-                                                    WLSGradient<T>& grad_calc) {
-    grad_calc.compute_gradients(grid, flow_states.gas.pressure(), cell_grad.p); 
+void ConvectiveFlux<T>::compute_convective_gradient(
+    const FlowStates<T>& flow_states, const GridBlock<T>& grid,
+    Gradients<T>& cell_grad, WLSGradient<T>& grad_calc) {
+    grad_calc.compute_gradients(grid, flow_states.gas.pressure(), cell_grad.p);
     grad_calc.compute_gradients(grid, flow_states.gas.rho(), cell_grad.rho);
     grad_calc.compute_gradients(grid, flow_states.vel.x(), cell_grad.vx);
     grad_calc.compute_gradients(grid, flow_states.vel.y(), cell_grad.vy);
-    if (grid.dim() == 3){
+    if (grid.dim() == 3) {
         grad_calc.compute_gradients(grid, flow_states.vel.z(), cell_grad.vz);
     }
 }
 
 template <typename T>
-void ConvectiveFlux<T>::copy_reconstruct(const FlowStates<T>& flow_states, 
+void ConvectiveFlux<T>::copy_reconstruct(const FlowStates<T>& flow_states,
                                          const GridBlock<T>& grid) {
     size_t n_faces = grid.num_interfaces();
     FlowStates<T> this_left = left_;
@@ -138,11 +137,11 @@ KOKKOS_INLINE_FUNCTION T linear_interpolate(T value, Vector3s<T> grad, T dx,
 }
 
 template <typename T>
-void ConvectiveFlux<T>::linear_reconstruct(const FlowStates<T>& flow_states, 
-                                            const GridBlock<T>& grid,
-                                            Gradients<T>& cell_grad, 
-                                            WLSGradient<T>& grad_calc, 
-                                            IdealGas<T>& gas_model) {
+void ConvectiveFlux<T>::linear_reconstruct(const FlowStates<T>& flow_states,
+                                           const GridBlock<T>& grid,
+                                           Gradients<T>& cell_grad,
+                                           WLSGradient<T>& grad_calc,
+                                           IdealGas<T>& gas_model) {
     compute_convective_gradient(flow_states, grid, cell_grad, grad_calc);
     compute_limiters(flow_states, grid, cell_grad);
 
@@ -221,7 +220,7 @@ void ConvectiveFlux<T>::linear_reconstruct(const FlowStates<T>& flow_states,
 }
 
 template <typename T>
-void ConvectiveFlux<T>::compute_limiters(const FlowStates<T>& flow_states, 
+void ConvectiveFlux<T>::compute_limiters(const FlowStates<T>& flow_states,
                                          const GridBlock<T>& grid,
                                          Gradients<T>& cell_grad) {
     if (limiter_.enabled()) {
@@ -229,14 +228,14 @@ void ConvectiveFlux<T>::compute_limiters(const FlowStates<T>& flow_states,
         auto faces = grid.interfaces();
         limiter_.calculate_limiters(flow_states.gas.pressure(), limiters_.p,
                                     cells, faces, cell_grad.p);
-        limiter_.calculate_limiters(flow_states.gas.rho(), limiters_.rho,
-                                    cells, faces, cell_grad.rho);
-        limiter_.calculate_limiters(flow_states.vel.x(), limiters_.vx, 
-                                    cells, faces, cell_grad.vx);
-        limiter_.calculate_limiters(flow_states.vel.y(), limiters_.vy, 
-                                    cells, faces, cell_grad.vy);
-        limiter_.calculate_limiters(flow_states.vel.z(), limiters_.vz, 
-                                    cells, faces, cell_grad.vz);
+        limiter_.calculate_limiters(flow_states.gas.rho(), limiters_.rho, cells,
+                                    faces, cell_grad.rho);
+        limiter_.calculate_limiters(flow_states.vel.x(), limiters_.vx, cells,
+                                    faces, cell_grad.vx);
+        limiter_.calculate_limiters(flow_states.vel.y(), limiters_.vy, cells,
+                                    faces, cell_grad.vy);
+        limiter_.calculate_limiters(flow_states.vel.z(), limiters_.vz, cells,
+                                    faces, cell_grad.vz);
     }
 }
 

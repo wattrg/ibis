@@ -60,8 +60,9 @@ size_t FiniteVolume<T>::compute_dudt(FlowStates<T>& flow_state,
                                              cell_grad_, grad_calc_, flux_);
     if (viscous_flux_.enabled()) {
         apply_pre_viscous_grad_bc(flow_state, grid);
-        viscous_flux_.compute_viscous_flux(flow_state, grid, gas_model, trans_prop,
-                                           cell_grad_, grad_calc_, flux_);
+        viscous_flux_.compute_viscous_flux(flow_state, grid, gas_model,
+                                           trans_prop, cell_grad_, grad_calc_,
+                                           flux_);
     }
 
     flux_surface_integral(grid, dudt);
@@ -144,7 +145,6 @@ void FiniteVolume<T>::apply_pre_viscous_grad_bc(FlowStates<T>& fs,
     }
 }
 
-
 template <typename T>
 void FiniteVolume<T>::flux_surface_integral(const GridBlock<T>& grid,
                                             ConservedQuantities<T>& dudt) {
@@ -201,11 +201,11 @@ size_t FiniteVolume<T>::count_bad_cells(const FlowStates<T>& fs,
 }
 
 template <typename T>
-void FiniteVolume<T>::compute_viscous_gradient(FlowStates<T>& fs, const GridBlock<T>& grid){
+void FiniteVolume<T>::compute_viscous_gradient(FlowStates<T>& fs,
+                                               const GridBlock<T>& grid) {
     apply_pre_reconstruction_bc(fs, grid);
     apply_pre_viscous_grad_bc(fs, grid);
     viscous_flux_.compute_viscous_gradient(fs, grid, cell_grad_, grad_calc_);
-        
 }
 
 template class FiniteVolume<double>;

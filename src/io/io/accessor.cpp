@@ -82,7 +82,7 @@ template <typename T>
 void GradVxAccess<T>::init(
     const FlowStates<T, array_layout, host_mem_space>& fs, FiniteVolume<T>& fv,
     const GridBlock<T>& grid, const IdealGas<T>& gas_model) {
-    (void) gas_model;
+    (void)gas_model;
     FlowStates<T> fs_dev = FlowStates<T>(fs.number_flow_states());
     fs_dev.deep_copy(fs);
     fv.compute_viscous_gradient(fs_dev, grid);
@@ -108,7 +108,7 @@ template <typename T>
 void GradVyAccess<T>::init(
     const FlowStates<T, array_layout, host_mem_space>& fs, FiniteVolume<T>& fv,
     const GridBlock<T>& grid, const IdealGas<T>& gas_model) {
-    (void) gas_model;
+    (void)gas_model;
     FlowStates<T> fs_dev = FlowStates<T>(fs.number_flow_states());
     fs_dev.deep_copy(fs);
     fv.compute_viscous_gradient(fs_dev, grid);
@@ -134,7 +134,7 @@ template <typename T>
 void GradVzAccess<T>::init(
     const FlowStates<T, array_layout, host_mem_space>& fs, FiniteVolume<T>& fv,
     const GridBlock<T>& grid, const IdealGas<T>& gas_model) {
-    (void) gas_model;
+    (void)gas_model;
     FlowStates<T> fs_dev = FlowStates<T>(fs.number_flow_states());
     fs_dev.deep_copy(fs);
     fv.compute_viscous_gradient(fs_dev, grid);

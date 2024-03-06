@@ -1,4 +1,5 @@
 #include <finite_volume/viscous_flux.h>
+
 #include "finite_volume/conserved_quantities.h"
 #include "finite_volume/gradient.h"
 #include "gas/transport_properties.h"
@@ -7,20 +8,19 @@ template <typename T>
 ViscousFlux<T>::ViscousFlux(const GridBlock<T>& grid, json config) {
     enabled_ = config.at("enabled");
 
-    if (enabled_){
+    if (enabled_) {
         face_fs_ = FlowStates<T>(grid.num_interfaces());
 
         // we only need viscous gradient info at faces
         face_grad_ = Gradients<T>(grid.num_interfaces(), false, true);
     }
-    
 }
 
 template <typename T>
 void ViscousFlux<T>::compute_viscous_gradient(const FlowStates<T>& flow_states,
                                               const GridBlock<T>& grid,
                                               Gradients<T>& cell_grad,
-                                              WLSGradient<T>& grad_calc){
+                                              WLSGradient<T>& grad_calc) {
     grad_calc.compute_gradients(grid, flow_states.gas.temp(), cell_grad.temp);
     grad_calc.compute_gradients(grid, flow_states.vel.x(), cell_grad.vx);
     grad_calc.compute_gradients(grid, flow_states.vel.y(), cell_grad.vy);
@@ -28,15 +28,14 @@ void ViscousFlux<T>::compute_viscous_gradient(const FlowStates<T>& flow_states,
 }
 
 template <typename T>
-void ViscousFlux<T>::compute_viscous_flux(const FlowStates<T>& flow_states, 
-                                          const GridBlock<T>& grid, 
-                                          const IdealGas<T>& gas_model, 
-                                          const TransportProperties<T>& trans_prop, 
-                                          Gradients<T>& cell_grad,
-                                          WLSGradient<T>& grad_calc,
-                                          ConservedQuantities<T>& flux){
+void ViscousFlux<T>::compute_viscous_flux(
+    const FlowStates<T>& flow_states, const GridBlock<T>& grid,
+    const IdealGas<T>& gas_model, const TransportProperties<T>& trans_prop,
+    Gradients<T>& cell_grad, WLSGradient<T>& grad_calc,
+    ConservedQuantities<T>& flux) {
     compute_viscous_gradient(flow_states, grid, cell_grad, grad_calc);
-    compute_viscous_properties_at_faces(flow_states, grid, gas_model, cell_grad);
+    compute_viscous_properties_at_faces(flow_states, grid, gas_model,
+                                        cell_grad);
 
     size_t num_faces = grid.num_interfaces();
     Interfaces<T> interfaces = grid.interfaces();
@@ -82,10 +81,9 @@ void ViscousFlux<T>::compute_viscous_flux(const FlowStates<T>& flow_states,
 }
 
 template <typename T>
-void ViscousFlux<T>::compute_viscous_properties_at_faces(const FlowStates<T>& flow_states,
-                                         const GridBlock<T>& grid,
-                                         const IdealGas<T>& gas_model,
-                                         Gradients<T>& cell_grad){
+void ViscousFlux<T>::compute_viscous_properties_at_faces(
+    const FlowStates<T>& flow_states, const GridBlock<T>& grid,
+    const IdealGas<T>& gas_model, Gradients<T>& cell_grad) {
     Interfaces<T> faces = grid.interfaces();
     Cells<T> cells = grid.cells();
     FlowStates<T> face_fs = face_fs_;

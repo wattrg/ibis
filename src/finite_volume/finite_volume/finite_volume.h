@@ -3,10 +3,10 @@
 
 #include <finite_volume/boundaries/boundary.h>
 #include <finite_volume/conserved_quantities.h>
+#include <finite_volume/convective_flux.h>
 #include <finite_volume/flux_calc.h>
 #include <finite_volume/gradient.h>
 #include <finite_volume/limiter.h>
-#include <finite_volume/convective_flux.h>
 #include <finite_volume/viscous_flux.h>
 #include <gas/flow_state.h>
 #include <gas/gas_model.h>
@@ -83,8 +83,6 @@ public:
 
     // viscous gradient for post-processing
     void compute_viscous_gradient(FlowStates<T>& fs, const GridBlock<T>& grid);
-
-
 
 private:
     // The flux values
