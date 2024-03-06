@@ -6,6 +6,7 @@
 #include <finite_volume/flux_calc.h>
 #include <finite_volume/gradient.h>
 #include <finite_volume/limiter.h>
+#include <finite_volume/convective_flux.h>
 #include <gas/flow_state.h>
 #include <gas/gas_model.h>
 #include <gas/transport_properties.h>
@@ -68,26 +69,9 @@ public:
     // Apply pre-reconstruction boundary conditions
     void apply_pre_viscous_grad_bc(FlowStates<T>& fs, const GridBlock<T>& grid);
 
-    // Perform reconstruction
-    void reconstruct(FlowStates<T>& flow_states, const GridBlock<T>& grid,
-                     IdealGas<T>& gas_model, TransportProperties<T>& trans_prop,
-                     size_t order);
-
-    // Apply copy-reconstruction
-    void copy_reconstruct(FlowStates<T>& flow_states, const GridBlock<T>& grid);
-
-    // Perform linear reconstruction
-    void linear_reconstruct(const FlowStates<T>& flow_states,
-                            const GridBlock<T>& grid, IdealGas<T>& gas_model,
-                            TransportProperties<T>& trans_prop);
-
     // Perform the surface integral of fluxes over the cells
     void flux_surface_integral(const GridBlock<T>& grid,
                                ConservedQuantities<T>& dudt);
-
-    // Compute the convective fluxes
-    void compute_convective_flux(const GridBlock<T>& grid,
-                                 IdealGas<T>& gas_model);
 
     // Compute the viscous fluxes
     void compute_viscous_flux(const FlowStates<T>& flow_states,
@@ -108,14 +92,11 @@ public:
     const Gradients<T>& cell_gradients() const { return cell_grad_; }
 
 private:
-    // The flow states to the left of the interfaces
-    FlowStates<T> left_;
-
-    // The flow states to the right of the interfaces
-    FlowStates<T> right_;
-
     // The flux values
     ConservedQuantities<T> flux_;
+
+    // The convective flux calculator
+    ConvectiveFlux<T> convective_flux_;
 
     // boundary conditions
     std::vector<std::shared_ptr<BoundaryCondition<T>>> bcs_{};
@@ -126,11 +107,6 @@ private:
     // number of spatial dimensions
     size_t dim_;
 
-    // The reconstruction order
-    size_t reconstruction_order_;
-
-    // The flux calculator
-    std::unique_ptr<FluxCalculator<T>> flux_calculator_;
 
     // Flag for whether viscous fluxes should be included
     bool viscous_;
@@ -146,12 +122,6 @@ private:
 
     // Storage for gradients at interfaces
     Gradients<T> face_grad_;
-
-    // The limiter
-    Limiter<T> limiter_;
-
-    // Storage for limiter values
-    LimiterValues<T> limiters_;
 };
 
 #endif
