@@ -82,10 +82,8 @@ public:
     const Gradients<T>& cell_gradients() const { return cell_grad_; }
 
     // viscous gradient for post-processing
-    void compute_viscous_gradient(const FlowStates<T>& fs, 
-                                  const GridBlock<T>& grid) {
-        viscous_flux_.compute_viscous_gradient(fs, grid, cell_grad_, grad_calc_);
-    }
+    void compute_viscous_gradient(FlowStates<T>& fs, const GridBlock<T>& grid);
+
 
 
 private:

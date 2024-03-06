@@ -85,8 +85,6 @@ void GradVxAccess<T>::init(
     (void) gas_model;
     FlowStates<T> fs_dev = FlowStates<T>(fs.number_flow_states());
     fs_dev.deep_copy(fs);
-    fv.apply_pre_reconstruction_bc(fs_dev, grid);
-    fv.apply_pre_viscous_grad_bc(fs_dev, grid);
     fv.compute_viscous_gradient(fs_dev, grid);
     grad_vx_ = fv.cell_gradients().vx.host_mirror();
     grad_vx_.deep_copy(fv.cell_gradients().vx);
@@ -113,8 +111,6 @@ void GradVyAccess<T>::init(
     (void) gas_model;
     FlowStates<T> fs_dev = FlowStates<T>(fs.number_flow_states());
     fs_dev.deep_copy(fs);
-    fv.apply_pre_reconstruction_bc(fs_dev, grid);
-    fv.apply_pre_viscous_grad_bc(fs_dev, grid);
     fv.compute_viscous_gradient(fs_dev, grid);
     grad_vy_ = fv.cell_gradients().vy.host_mirror();
     grad_vy_.deep_copy(fv.cell_gradients().vy);
@@ -141,8 +137,6 @@ void GradVzAccess<T>::init(
     (void) gas_model;
     FlowStates<T> fs_dev = FlowStates<T>(fs.number_flow_states());
     fs_dev.deep_copy(fs);
-    fv.apply_pre_reconstruction_bc(fs_dev, grid);
-    fv.apply_pre_viscous_grad_bc(fs_dev, grid);
     fv.compute_viscous_gradient(fs_dev, grid);
     grad_vz_ = fv.cell_gradients().vz.host_mirror();
     grad_vz_.deep_copy(fv.cell_gradients().vz);

@@ -200,4 +200,12 @@ size_t FiniteVolume<T>::count_bad_cells(const FlowStates<T>& fs,
     return n_bad_cells;
 }
 
+template <typename T>
+void FiniteVolume<T>::compute_viscous_gradient(FlowStates<T>& fs, const GridBlock<T>& grid){
+    apply_pre_reconstruction_bc(fs, grid);
+    apply_pre_viscous_grad_bc(fs, grid);
+    viscous_flux_.compute_viscous_gradient(fs, grid, cell_grad_, grad_calc_);
+        
+}
+
 template class FiniteVolume<double>;
