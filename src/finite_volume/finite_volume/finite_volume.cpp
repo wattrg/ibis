@@ -77,6 +77,7 @@ double FiniteVolume<T>::estimate_dt(const FlowStates<T>& flow_state, GridBlock<T
     Cells<T> cells = grid.cells();
     FlowStates<T> face_fs = viscous_flux_.face_fs();
     bool viscous = viscous_flux_.enabled();
+    double viscous_signal_factor = viscous_flux_.signal_factor();
     // IdealGas<T> gas_model = gas_model_;
 
     double dt;
@@ -112,7 +113,8 @@ double FiniteVolume<T>::estimate_dt(const FlowStates<T>& flow_state, GridBlock<T
                     spectral_radii_v += tmp / volume;
                 }
             }
-            T local_dt = volume / (spectral_radii_c + 4 * spectral_radii_v);
+            T local_dt =
+                volume / (spectral_radii_c + viscous_signal_factor * spectral_radii_v);
             dt_utd = Kokkos::min(local_dt, dt_utd);
         },
         Kokkos::Min<double>(dt));

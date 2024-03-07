@@ -161,7 +161,7 @@ class ConvectiveFlux:
 
 
 class ViscousFlux:
-    _json_values = ["enabled"]
+    _json_values = ["enabled", "signal_factor"]
     __slots__ = _json_values
     _defaults_file = "viscous_flux.json"
 
@@ -175,7 +175,10 @@ class ViscousFlux:
             setattr(self, key, kwargs[key])
 
     def validate(self):
-        return
+        if self.signal_factor < 0:
+            validation_errors.append(ValidationException(
+                f"Invalid signal_factor {self.signal_factor}")
+            )
 
     def as_dict(self):
         dictionary = {}

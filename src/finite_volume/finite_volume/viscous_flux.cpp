@@ -7,6 +7,7 @@
 template <typename T>
 ViscousFlux<T>::ViscousFlux(const GridBlock<T>& grid, json config) {
     enabled_ = config.at("enabled");
+    signal_factor_ = config.at("signal_factor");
 
     if (enabled_) {
         face_fs_ = FlowStates<T>(grid.num_interfaces());
