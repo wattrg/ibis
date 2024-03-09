@@ -6,8 +6,7 @@
 #include <Kokkos_MathematicalFunctions.hpp>
 
 template <typename T>
-void Ldfss2<T>::compute_flux(const FlowStates<T>& left,
-                             const FlowStates<T>& right,
+void Ldfss2<T>::compute_flux(const FlowStates<T>& left, const FlowStates<T>& right,
                              ConservedQuantities<T>& flux, IdealGas<T>& gm,
                              bool three_d) {
     double delta = delta_;
@@ -63,13 +62,14 @@ void Ldfss2<T>::compute_flux(const FlowStates<T>& left,
             T DR = alphaR * (1.0 + betaR) - betaR * PR;
 
             T Mhalf = 0.25 * betaL * betaR *
-                      Kokkos::powf(
-                          (Kokkos::sqrt(0.5 * (ML * ML + MR * MR)) - 1.0), 2);
+                      Kokkos::powf((Kokkos::sqrt(0.5 * (ML * ML + MR * MR)) - 1.0), 2);
 
-            T MhalfL = Mhalf * (1.0 - ((pL - pR) / (pL + pR) +
-                                       delta * (Kokkos::fabs(pL - pR) / pL)));
-            T MhalfR = Mhalf * (1.0 + ((pL - pR) / (pL + pR) -
-                                       delta * (Kokkos::fabs(pL - pR) / pR)));
+            T MhalfL =
+                Mhalf *
+                (1.0 - ((pL - pR) / (pL + pR) + delta * (Kokkos::fabs(pL - pR) / pL)));
+            T MhalfR =
+                Mhalf *
+                (1.0 + ((pL - pR) / (pL + pR) - delta * (Kokkos::fabs(pL - pR) / pR)));
 
             // C parameter for LDFSS (2) (eqn 13 & eqn 14 & eqn 26 & eqn 27)
             T CL = alphaL * (1.0 + betaL) * ML - betaL * MpL - MhalfL;

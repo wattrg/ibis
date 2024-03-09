@@ -11,9 +11,8 @@ namespace Ibis {
 // The i and j are indices into `positions`, which contains
 // the actual positions of all the points
 template <typename T, class Layout, class Space>
-KOKKOS_INLINE_FUNCTION T
-distance_between_points(const Vector3s<T, Layout, Space> &positions,
-                        const size_t i, const size_t j) {
+KOKKOS_INLINE_FUNCTION T distance_between_points(
+    const Vector3s<T, Layout, Space> &positions, const size_t i, const size_t j) {
     T xi = positions.x(i);
     T xj = positions.x(j);
     T yi = positions.y(i);
@@ -48,8 +47,7 @@ KOKKOS_INLINE_FUNCTION T area_of_triangle(const Vector3s<T, Layout, Space> &pos,
     T cross_y = ab_z * ac_x - ab_x * ac_z;
     T cross_z = ab_x * ac_y - ab_y * ac_x;
 
-    return 0.5 * Kokkos::sqrt(cross_x * cross_x + cross_y * cross_y +
-                              cross_z * cross_z);
+    return 0.5 * Kokkos::sqrt(cross_x * cross_x + cross_y * cross_y + cross_z * cross_z);
 }
 
 // calculate the area of a quadrilateral with vertices
@@ -57,9 +55,9 @@ KOKKOS_INLINE_FUNCTION T area_of_triangle(const Vector3s<T, Layout, Space> &pos,
 // this computation could be bad if the quadrilateral
 // in question is concave...
 template <typename T, class Layout, class Space>
-KOKKOS_INLINE_FUNCTION T
-area_of_quadrilateral(const Vector3s<T, Layout, Space> &pos, const size_t a,
-                      const size_t b, const size_t c, const size_t d) {
+KOKKOS_INLINE_FUNCTION T area_of_quadrilateral(const Vector3s<T, Layout, Space> &pos,
+                                               const size_t a, const size_t b,
+                                               const size_t c, const size_t d) {
     T a1 = area_of_triangle(pos, a, b, c);
     T a2 = area_of_triangle(pos, a, c, d);
     return a1 + a2;

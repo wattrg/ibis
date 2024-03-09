@@ -27,21 +27,19 @@ GridInfo build_test_grid() {
     }
 
     std::vector<std::vector<size_t>> interface_id_list{
-        {0, 1},   {1, 5},  {5, 4},   {4, 0},   {1, 2},   {2, 6},
-        {6, 5},   {2, 3},  {3, 7},   {7, 6},   {5, 9},   {9, 8},
-        {8, 4},   {6, 10}, {10, 9},  {7, 11},  {11, 10}, {9, 13},
-        {13, 12}, {12, 8}, {10, 14}, {14, 13}, {11, 15}, {15, 14}};
+        {0, 1},   {1, 5},  {5, 4},   {4, 0},  {1, 2},   {2, 6},   {6, 5},   {2, 3},
+        {3, 7},   {7, 6},  {5, 9},   {9, 8},  {8, 4},   {6, 10},  {10, 9},  {7, 11},
+        {11, 10}, {9, 13}, {13, 12}, {12, 8}, {10, 14}, {14, 13}, {11, 15}, {15, 14}};
     std::vector<ElemType> shapes = {
-        ElemType::Line, ElemType::Line, ElemType::Line, ElemType::Line,
-        ElemType::Line, ElemType::Line, ElemType::Line, ElemType::Line,
-        ElemType::Line, ElemType::Line, ElemType::Line, ElemType::Line,
-        ElemType::Line, ElemType::Line, ElemType::Line, ElemType::Line,
-        ElemType::Line, ElemType::Line, ElemType::Line, ElemType::Line,
+        ElemType::Line, ElemType::Line, ElemType::Line, ElemType::Line, ElemType::Line,
+        ElemType::Line, ElemType::Line, ElemType::Line, ElemType::Line, ElemType::Line,
+        ElemType::Line, ElemType::Line, ElemType::Line, ElemType::Line, ElemType::Line,
+        ElemType::Line, ElemType::Line, ElemType::Line, ElemType::Line, ElemType::Line,
         ElemType::Line, ElemType::Line, ElemType::Line, ElemType::Line,
     };
 
-    Interfaces<double, Kokkos::DefaultHostExecutionSpace> interfaces(
-        interface_id_list, shapes);
+    Interfaces<double, Kokkos::DefaultHostExecutionSpace> interfaces(interface_id_list,
+                                                                     shapes);
 
     std::vector<std::vector<size_t>> cell_interfaces_list{
         {0, 1, 2, 3},     {4, 5, 6, 1},     {7, 8, 9, 5},
@@ -49,14 +47,12 @@ GridInfo build_test_grid() {
         {11, 17, 18, 19}, {14, 20, 21, 17}, {16, 22, 23, 20}};
 
     std::vector<std::vector<size_t>> cell_vertex_ids_raw{
-        {0, 1, 5, 4},   {1, 2, 6, 5},    {2, 3, 7, 6},
-        {4, 5, 9, 8},   {5, 6, 10, 9},   {6, 7, 11, 10},
-        {8, 9, 13, 12}, {9, 10, 14, 13}, {10, 11, 15, 14}};
+        {0, 1, 5, 4},   {1, 2, 6, 5},   {2, 3, 7, 6},    {4, 5, 9, 8},    {5, 6, 10, 9},
+        {6, 7, 11, 10}, {8, 9, 13, 12}, {9, 10, 14, 13}, {10, 11, 15, 14}};
 
     std::vector<ElemType> cell_shapes{
-        ElemType::Quad, ElemType::Quad, ElemType::Quad,
-        ElemType::Quad, ElemType::Quad, ElemType::Quad,
-        ElemType::Quad, ElemType::Quad, ElemType::Quad,
+        ElemType::Quad, ElemType::Quad, ElemType::Quad, ElemType::Quad, ElemType::Quad,
+        ElemType::Quad, ElemType::Quad, ElemType::Quad, ElemType::Quad,
     };
 
     Cells<double, Kokkos::DefaultHostExecutionSpace> cells(
@@ -144,9 +140,8 @@ TEST_CASE("grid cell outsigns") {
     block.deep_copy(block_dev);
     CHECK(block.cells().num_valid_cells() == expected.cells.num_valid_cells());
     std::vector<std::vector<int>> outsigns = {
-        {1, 1, 1, 1},  {1, 1, 1, -1},  {1, 1, 1, -1},
-        {-1, 1, 1, 1}, {-1, 1, 1, -1}, {-1, 1, 1, -1},
-        {-1, 1, 1, 1}, {-1, 1, 1, -1}, {-1, 1, 1, -1}};
+        {1, 1, 1, 1},   {1, 1, 1, -1}, {1, 1, 1, -1},  {-1, 1, 1, 1}, {-1, 1, 1, -1},
+        {-1, 1, 1, -1}, {-1, 1, 1, 1}, {-1, 1, 1, -1}, {-1, 1, 1, -1}};
     for (size_t i = 0; i < block.cells().num_valid_cells(); i++) {
         for (size_t j = 0; j < block.cells().faces().outsigns(i).size(); j++) {
             CHECK(block.cells().faces().outsigns(i)(j) == outsigns[i][j]);

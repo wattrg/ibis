@@ -18,10 +18,9 @@ size_t vtk_type_from_elem_type(ElemType type) {
 template <typename T>
 void write_scalar_field(std::ofstream& f,
                         const FlowStates<T, array_layout, host_mem_space> fs,
-                        FiniteVolume<T>& fv,
-                        std::shared_ptr<ScalarAccessor<T>> accessor,
-                        const IdealGas<T>& gas_model, std::string name,
-                        std::string type, size_t num_values) {
+                        FiniteVolume<T>& fv, std::shared_ptr<ScalarAccessor<T>> accessor,
+                        const IdealGas<T>& gas_model, std::string name, std::string type,
+                        size_t num_values) {
     f << "<DataArray type='" << type << "' ";
     f << "NumberOfComponents='1' ";
     f << "Name='" << name << "' ";
@@ -37,8 +36,7 @@ void write_scalar_field(std::ofstream& f,
 template <typename T>
 void write_vector_field(std::ofstream& f,
                         const FlowStates<T, array_layout, host_mem_space>& fs,
-                        FiniteVolume<T>& fv,
-                        std::shared_ptr<VectorAccessor<T>> accessor,
+                        FiniteVolume<T>& fv, std::shared_ptr<VectorAccessor<T>> accessor,
                         const IdealGas<T>& gas_model,
                         // const Vector3s<T, array_layout, host_mem_space>& vec,
                         std::string name, std::string type, size_t num_values) {
@@ -72,10 +70,9 @@ void write_vector3s(std::ofstream& f,
     f << "</DataArray>" << std::endl;
 }
 
-void write_int_view(
-    std::ofstream& f,
-    const Kokkos::View<size_t*, array_layout, host_mem_space>& view,
-    std::string name, std::string type, bool skip_first = false) {
+void write_int_view(std::ofstream& f,
+                    const Kokkos::View<size_t*, array_layout, host_mem_space>& view,
+                    std::string name, std::string type, bool skip_first = false) {
     f << "<DataArray type='" << type << "' "
       << "NumberOfComponents='1' "
       << "Name='" << name << "' format='ascii'>" << std::endl;
@@ -87,9 +84,8 @@ void write_int_view(
     f << "</DataArray>" << std::endl;
 }
 
-void write_elem_type(
-    std::ofstream& f,
-    const Field<ElemType, array_layout, host_mem_space>& types) {
+void write_elem_type(std::ofstream& f,
+                     const Field<ElemType, array_layout, host_mem_space>& types) {
     f << "<DataArray type='Int64' NumberOfComponents='1' Name='types' "
          "format='ascii'>"
       << std::endl;
@@ -115,8 +111,7 @@ int VtkOutput<T>::write(const typename FlowStates<T>::mirror_type& fs,
     grid_host.deep_copy(grid);
 
     std::ofstream f(plot_dir + "/" + time_dir + "/" + "/block_0.vtu");
-    f << "<VTKFile type='UnstructuredGrid' byte_order='BigEndian'>"
-      << std::endl;
+    f << "<VTKFile type='UnstructuredGrid' byte_order='BigEndian'>" << std::endl;
     f << "<UnstructuredGrid>" << std::endl;
 
     // points
@@ -127,10 +122,8 @@ int VtkOutput<T>::write(const typename FlowStates<T>::mirror_type& fs,
                    grid.num_vertices());
     f << "</Points>" << std::endl;
     f << "<Cells>" << std::endl;
-    write_int_view(f, grid_host.cells().vertex_ids().data(), "connectivity",
-                   "Int64");
-    write_int_view(f, grid_host.cells().vertex_ids().offsets(), "offsets",
-                   "Int64", true);
+    write_int_view(f, grid_host.cells().vertex_ids().data(), "connectivity", "Int64");
+    write_int_view(f, grid_host.cells().vertex_ids().offsets(), "offsets", "Int64", true);
     write_elem_type(f, grid_host.cells().shapes());
     f << "</Cells>" << std::endl;
 
@@ -169,14 +162,12 @@ template <typename T>
 void VtkOutput<T>::write_coordinating_file(std::string plot_dir) {
     std::ofstream plot_file(plot_dir + "/plot.pvd");
     plot_file << "<?xml version='1.0'?>" << std::endl;
-    plot_file
-        << "<VTKFile type='Collection' version='0.1' byte_order='LittleEndian'>"
-        << std::endl;
+    plot_file << "<VTKFile type='Collection' version='0.1' byte_order='LittleEndian'>"
+              << std::endl;
     plot_file << "<Collection>" << std::endl;
     for (size_t i = 0; i < times_.size(); i++) {
-        plot_file << "<DataSet timestep='" << times_[i]
-                  << "' group='' part='0' file='" << dirs_[i] << "'/>"
-                  << std::endl;
+        plot_file << "<DataSet timestep='" << times_[i] << "' group='' part='0' file='"
+                  << dirs_[i] << "'/>" << std::endl;
     }
     plot_file << "</Collection>" << std::endl;
     plot_file << "</VTKFile>" << std::endl;

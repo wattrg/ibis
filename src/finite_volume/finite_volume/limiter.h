@@ -37,9 +37,8 @@ struct LimiterValues {
 };
 
 template <typename T, class SubView>
-void barth_jespersen(const SubView values, Field<T>& limits,
-                     const Cells<T>& cells, const Interfaces<T>& faces,
-                     Vector3s<T>& grad) {
+void barth_jespersen(const SubView values, Field<T>& limits, const Cells<T>& cells,
+                     const Interfaces<T>& faces, Vector3s<T>& grad) {
     Kokkos::parallel_for(
         "Limiter::barth_jesperson", cells.num_valid_cells(),
         KOKKOS_LAMBDA(const int cell_i) {
@@ -59,8 +58,8 @@ void barth_jespersen(const SubView values, Field<T>& limits,
                 T dx = faces.centre().x(i_face);
                 T dy = faces.centre().y(i_face);
                 T dz = faces.centre().z(i_face);
-                T delta_2 = grad.x(cell_i) * dx + grad.y(cell_i) * dy +
-                            grad.z(cell_i) * dz;
+                T delta_2 =
+                    grad.x(cell_i) * dx + grad.y(cell_i) * dy + grad.z(cell_i) * dz;
                 int sign_delta_2 = (delta_2 > 0) - (delta_2 < 0);
                 delta_2 = sign_delta_2 * (Kokkos::abs(delta_2) + 1e-16);
                 if (sign_delta_2 > 0) {
@@ -85,9 +84,8 @@ public:
     }
 
     template <class SubView>
-    void calculate_limiters(const SubView values, Field<T>& limits,
-                            const Cells<T>& cells, const Interfaces<T>& faces,
-                            Vector3s<T>& grad) {
+    void calculate_limiters(const SubView values, Field<T>& limits, const Cells<T>& cells,
+                            const Interfaces<T>& faces, Vector3s<T>& grad) {
         switch (limiter_) {
             case Limiters::None:
                 break;

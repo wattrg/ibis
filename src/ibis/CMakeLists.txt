@@ -14,6 +14,7 @@ target_link_libraries(
 	grid 
 	doctest 
 	ibis_git_version 
+	ibis_version
 	runtime_dirs
 	spdlog::spdlog
 	solver

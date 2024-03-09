@@ -5,8 +5,7 @@ template <typename T>
 int conserved_to_primatives(ConservedQuantities<T>& cq, FlowStates<T>& fs,
                             const IdealGas<T>& gm) {
     Kokkos::parallel_for(
-        "FS::from_conserved_quantities", fs.gas.size(),
-        KOKKOS_LAMBDA(const int i) {
+        "FS::from_conserved_quantities", fs.gas.size(), KOKKOS_LAMBDA(const int i) {
             T rho = cq.mass(i);
             T vx = cq.momentum_x(i) / rho;
             T vy = cq.momentum_y(i) / rho;
@@ -26,8 +25,7 @@ int conserved_to_primatives(ConservedQuantities<T>& cq, FlowStates<T>& fs,
     return 0;
 }
 template int conserved_to_primatives(ConservedQuantities<double>& cq,
-                                     FlowStates<double>& fs,
-                                     const IdealGas<double>& gm);
+                                     FlowStates<double>& fs, const IdealGas<double>& gm);
 
 template <typename T>
 int primatives_to_conserved(ConservedQuantities<T>& cq, FlowStates<T>& fs,
@@ -51,5 +49,4 @@ int primatives_to_conserved(ConservedQuantities<T>& cq, FlowStates<T>& fs,
     return 0;
 }
 template int primatives_to_conserved(ConservedQuantities<double>& cq,
-                                     FlowStates<double>& fs,
-                                     const IdealGas<double>& gm);
+                                     FlowStates<double>& fs, const IdealGas<double>& gm);

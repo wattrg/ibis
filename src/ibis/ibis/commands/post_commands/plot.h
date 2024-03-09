@@ -9,8 +9,7 @@
 
 using json = nlohmann::json;
 
-int plot(FlowFormat format, std::vector<std::string> extras, int argc,
-         char* argv[]);
+int plot(FlowFormat format, std::vector<std::string> extras, int argc, char* argv[]);
 
 template <typename T>
 void plot_vtk(json directories, std::vector<std::string> extra_vars);

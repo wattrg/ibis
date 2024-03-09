@@ -2,3 +2,4 @@ BasedOnStyle: Google
 IndentWidth: 4
 IndentAccessModifiers: false
 AccessModifierOffset: -4
+ColumnLimit: 90

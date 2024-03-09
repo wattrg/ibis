@@ -9,8 +9,8 @@
 #include "gas/transport_properties.h"
 #include "solvers/cfl.h"
 
-RungeKutta::RungeKutta(json config, GridBlock<double>& grid,
-                       std::string grid_dir, std::string flow_dir)
+RungeKutta::RungeKutta(json config, GridBlock<double>& grid, std::string grid_dir,
+                       std::string flow_dir)
     : Solver(grid_dir, flow_dir) {
     // configuration
     json solver_config = config.at("solver");
@@ -24,8 +24,7 @@ RungeKutta::RungeKutta(json config, GridBlock<double>& grid,
 
     // gas_model
     gas_model_ = IdealGas<double>(config.at("gas_model"));
-    trans_prop_ =
-        TransportProperties<double>(config.at("transport_properties"));
+    trans_prop_ = TransportProperties<double>(config.at("transport_properties"));
 
     // memory
     grid_ = grid;

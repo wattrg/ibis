@@ -26,13 +26,17 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 # get information about the git commit being built
-INCLUDE(${CMAKE_CURRENT_SOURCE_DIR}/cmake/build_env_info.cmake)
+INCLUDE(${CMAKE_CURRENT_SOURCE_DIR}/cmake/ibis_git_info.cmake)
 check_git_setup()
 
 # get information about the install directory
 include(GNUInstallDirs)
 INCLUDE(${CMAKE_CURRENT_SOURCE_DIR}/cmake/runtime_dirs.cmake)
 setup_runtime_dirs()
+
+# embed the version in the executable
+INCLUDE(${CMAKE_CURRENT_SOURCE_DIR}/cmake/ibis_version.cmake)
+setup_ibis_version()
 
 # add external dependancies
 add_subdirectory(extern/doctest EXCLUDE_FROM_ALL)

@@ -9,8 +9,7 @@
 
 namespace Ibis {
 
-template <typename DataType,
-          class Layout = Kokkos::DefaultExecutionSpace::array_layout,
+template <typename DataType, class Layout = Kokkos::DefaultExecutionSpace::array_layout,
           class Space = Kokkos::DefaultExecutionSpace::memory_space>
 class RaggedArray {
 public:
@@ -34,8 +33,7 @@ public:
         : data_("RaggedArray::data", num_values),
           offsets_("RaggedArray::offsets", num_rows + 1) {}
 
-    RaggedArray(ArrayType data, OffsetType offsets)
-        : data_(data), offsets_(offsets) {}
+    RaggedArray(ArrayType data, OffsetType offsets) : data_(data), offsets_(offsets) {}
 
     RaggedArray(std::vector<std::vector<DataType>> data) {
         // count the total number of entries
@@ -163,8 +161,7 @@ public:
         for (size_t row = 0; row < num_rows(); row++) {
             size_t first = offsets_(row);
             size_t last = offsets_(row + 1);
-            auto row_data =
-                Kokkos::subview(data_, Kokkos::make_pair(first, last));
+            auto row_data = Kokkos::subview(data_, Kokkos::make_pair(first, last));
             result.append("[");
             // int size = last - first;
             for (size_t col = 0; col < row_data.size(); col++) {

@@ -24,23 +24,20 @@ public:
 public:
     GridBlock() {}
 
-    GridBlock(const GridIO& grid_io, json& config) {
-        init_grid_block(grid_io, config);
-    }
+    GridBlock(const GridIO& grid_io, json& config) { init_grid_block(grid_io, config); }
 
     GridBlock(std::string file_name, json& config) {
         init_grid_block(GridIO(file_name), config);
     }
 
-    GridBlock(Vertices<T, execution_space, array_layout> vertices,
-              Interfaces<T, execution_space, array_layout> interfaces,
-              Cells<T, execution_space, array_layout> cells, size_t dim,
-              size_t num_valid_cells, size_t num_ghost_cells,
-              std::map<std::string, Field<size_t, array_layout, memory_space>>
-                  ghost_cells,
-              std::map<std::string, Field<size_t, array_layout, memory_space>>
-                  boundary_faces,
-              std::vector<std::string> boundary_tags)
+    GridBlock(
+        Vertices<T, execution_space, array_layout> vertices,
+        Interfaces<T, execution_space, array_layout> interfaces,
+        Cells<T, execution_space, array_layout> cells, size_t dim, size_t num_valid_cells,
+        size_t num_ghost_cells,
+        std::map<std::string, Field<size_t, array_layout, memory_space>> ghost_cells,
+        std::map<std::string, Field<size_t, array_layout, memory_space>> boundary_faces,
+        std::vector<std::string> boundary_tags)
         : vertices_(vertices),
           interfaces_(interfaces),
           cells_(cells),
@@ -61,23 +58,20 @@ public:
         dim_ = dim;
         // int num_total_cells = num_valid_cells + num_ghost_cells;
         vertices_ = Vertices<T, execution_space, array_layout>(num_vertices);
-        interfaces_ = Interfaces<T, execution_space, array_layout>(
-            num_faces, num_face_vertex_ids);
+        interfaces_ =
+            Interfaces<T, execution_space, array_layout>(num_faces, num_face_vertex_ids);
         cells_ = Cells<T, execution_space, array_layout>(
-            num_valid_cells, num_ghost_cells, num_cell_vertex_ids,
-            num_face_ids);
-        ghost_cells_ =
-            std::map<std::string, Field<size_t, array_layout, memory_space>>{};
+            num_valid_cells, num_ghost_cells, num_cell_vertex_ids, num_face_ids);
+        ghost_cells_ = std::map<std::string, Field<size_t, array_layout, memory_space>>{};
         boundary_faces_ =
             std::map<std::string, Field<size_t, array_layout, memory_space>>{};
         for (auto const& [key, val] : ghost_cell_sizes) {
-            ghost_cells_.insert({key, Field<size_t, array_layout, memory_space>(
-                                          "bc_cells", val)});
+            ghost_cells_.insert(
+                {key, Field<size_t, array_layout, memory_space>("bc_cells", val)});
         }
         for (auto const& [key, val] : boundary_face_sizes) {
             boundary_faces_.insert(
-                {key,
-                 Field<size_t, array_layout, memory_space>("bc_faces", val)});
+                {key, Field<size_t, array_layout, memory_space>("bc_faces", val)});
         }
     }
 
@@ -112,8 +106,7 @@ public:
             std::vector<ElemIO> cell_interfaces = cells[cell_i].interfaces();
             std::vector<size_t> cell_face_ids{};
             for (size_t face_i = 0; face_i < cell_interfaces.size(); face_i++) {
-                std::vector<size_t> face_vertices =
-                    cell_interfaces[face_i].vertex_ids();
+                std::vector<size_t> face_vertices = cell_interfaces[face_i].vertex_ids();
 
                 // if this interface already exists, we use the existing one
                 // if the interface doesn't exist, we make a new one
@@ -121,19 +114,18 @@ public:
                 if (face_id == std::numeric_limits<size_t>::max()) {
                     face_id = interfaces.insert(face_vertices);
                     interface_vertices.push_back(face_vertices);
-                    interface_shapes.push_back(
-                        cell_interfaces[face_i].cell_type());
+                    interface_shapes.push_back(cell_interfaces[face_i].cell_type());
                 }
                 cell_face_ids.push_back(face_id);
             }
             cell_interface_ids.push_back(cell_face_ids);
         }
 
-        std::map<size_t, size_t> ghost_cell_map = setup_boundaries(
-            grid_io, boundaries, cell_vertices, interfaces, cell_shapes);
+        std::map<size_t, size_t> ghost_cell_map =
+            setup_boundaries(grid_io, boundaries, cell_vertices, interfaces, cell_shapes);
 
-        interfaces_ = Interfaces<T, execution_space, array_layout>(
-            interface_vertices, interface_shapes);
+        interfaces_ = Interfaces<T, execution_space, array_layout>(interface_vertices,
+                                                                   interface_shapes);
 
         cells_ = Cells<T, execution_space, array_layout>(
             cell_vertices, cell_interface_ids, cell_shapes, num_valid_cells_,
@@ -211,11 +203,9 @@ public:
         auto vertices = vertices_.host_mirror();
         auto interfaces = interfaces_.host_mirror();
         auto cells = cells_.host_mirror();
-        std::map<std::string,
-                 Field<size_t, array_layout, host_mirror_mem_space>>
+        std::map<std::string, Field<size_t, array_layout, host_mirror_mem_space>>
             ghost_cells{};
-        std::map<std::string,
-                 Field<size_t, array_layout, host_mirror_mem_space>>
+        std::map<std::string, Field<size_t, array_layout, host_mirror_mem_space>>
             boundary_faces{};
 
         for (auto const& [key, val] : ghost_cells_) {
@@ -226,8 +216,7 @@ public:
         }
 
         return mirror_type(vertices, interfaces, cells, dim_, num_valid_cells_,
-                           num_ghost_cells_, ghost_cells, boundary_faces,
-                           boundary_tags_);
+                           num_ghost_cells_, ghost_cells, boundary_faces, boundary_tags_);
     }
 
     template <class OtherSpace>
@@ -243,8 +232,8 @@ public:
     }
 
     bool operator==(const GridBlock& other) const {
-        return (vertices_ == other.vertices_) &&
-               (interfaces_ == other.interfaces_) && (cells_ == other.cells_);
+        return (vertices_ == other.vertices_) && (interfaces_ == other.interfaces_) &&
+               (cells_ == other.cells_);
     }
 
     KOKKOS_INLINE_FUNCTION
@@ -259,9 +248,7 @@ public:
     size_t num_vertices() const { return vertices_.size(); }
 
     KOKKOS_INLINE_FUNCTION
-    Interfaces<T, execution_space, array_layout>& interfaces() {
-        return interfaces_;
-    }
+    Interfaces<T, execution_space, array_layout>& interfaces() { return interfaces_; }
 
     KOKKOS_INLINE_FUNCTION
     const Interfaces<T, execution_space, array_layout>& interfaces() const {
@@ -275,9 +262,7 @@ public:
     Cells<T, execution_space, array_layout>& cells() { return cells_; }
 
     KOKKOS_INLINE_FUNCTION
-    const Cells<T, execution_space, array_layout>& cells() const {
-        return cells_;
-    }
+    const Cells<T, execution_space, array_layout>& cells() const { return cells_; }
 
     KOKKOS_INLINE_FUNCTION
     size_t num_cells() const { return num_valid_cells_; }
@@ -286,9 +271,7 @@ public:
     size_t num_ghost_cells() const { return num_ghost_cells_; }
 
     KOKKOS_INLINE_FUNCTION
-    size_t num_total_cells() const {
-        return num_valid_cells_ + num_ghost_cells_;
-    }
+    size_t num_total_cells() const { return num_valid_cells_ + num_ghost_cells_; }
 
     KOKKOS_INLINE_FUNCTION
     bool is_valid(const size_t i) const { return i < num_valid_cells_; }
@@ -306,9 +289,7 @@ public:
         return ghost_cells_.at(boundary_tag);
     }
 
-    const std::vector<std::string>& boundary_tags() const {
-        return boundary_tags_;
-    }
+    const std::vector<std::string>& boundary_tags() const { return boundary_tags_; }
 
     KOKKOS_INLINE_FUNCTION
     size_t dim() const { return dim_; }
@@ -382,8 +363,8 @@ public:
 public:
     std::map<size_t, size_t> setup_boundaries(
         const GridIO& grid_io, json& boundaries,
-        std::vector<std::vector<size_t>>& cell_vertices,
-        InterfaceLookup& interfaces, std::vector<ElemType> cell_shapes) {
+        std::vector<std::vector<size_t>>& cell_vertices, InterfaceLookup& interfaces,
+        std::vector<ElemType> cell_shapes) {
         (void)cell_vertices;
         (void)cell_shapes;
         num_ghost_cells_ = 0;
@@ -399,10 +380,8 @@ public:
             // track of which cells and faces belong to this boundary
             std::vector<size_t> ghost_cells{};
             std::vector<size_t> boundary_faces{};
-            for (size_t boundary_i = 0; boundary_i < bc_faces.size();
-                 boundary_i++) {
-                size_t face_id =
-                    interfaces.id(bc_faces[boundary_i].vertex_ids());
+            for (size_t boundary_i = 0; boundary_i < bc_faces.size(); boundary_i++) {
+                size_t face_id = interfaces.id(bc_faces[boundary_i].vertex_ids());
                 boundary_faces.push_back(face_id);
                 if (boundary_config.at("ghost_cells") == true) {
                     size_t ghost_cell_id = num_valid_cells_ + num_ghost_cells_;
@@ -416,12 +395,10 @@ public:
 
             // keep track of which faces/cells belong to
             // which boundary
-            ghost_cells_.insert(
-                {bc_label, Field<size_t, array_layout, memory_space>(
-                               "bc_cells", ghost_cells)});
-            boundary_faces_.insert(
-                {bc_label, Field<size_t, array_layout, memory_space>(
-                               "bc_faces", boundary_faces)});
+            ghost_cells_.insert({bc_label, Field<size_t, array_layout, memory_space>(
+                                               "bc_cells", ghost_cells)});
+            boundary_faces_.insert({bc_label, Field<size_t, array_layout, memory_space>(
+                                                  "bc_faces", boundary_faces)});
         }
         return ghost_cell_map;
     }
@@ -433,10 +410,8 @@ public:
     size_t dim_;
     size_t num_valid_cells_;
     size_t num_ghost_cells_;
-    std::map<std::string, Field<size_t, array_layout, memory_space>>
-        ghost_cells_;
-    std::map<std::string, Field<size_t, array_layout, memory_space>>
-        boundary_faces_;
+    std::map<std::string, Field<size_t, array_layout, memory_space>> ghost_cells_;
+    std::map<std::string, Field<size_t, array_layout, memory_space>> boundary_faces_;
     std::vector<std::string> boundary_tags_;
 };
 

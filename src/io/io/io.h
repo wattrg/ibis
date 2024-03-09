@@ -20,9 +20,8 @@ class FVInput {
 public:
     virtual ~FVInput() {}
 
-    virtual int read(typename FlowStates<T>::mirror_type& fs,
-                     const GridBlock<T>& grid, const IdealGas<T>& gas_model,
-                     std::string dir, json& meta_data) = 0;
+    virtual int read(typename FlowStates<T>::mirror_type& fs, const GridBlock<T>& grid,
+                     const IdealGas<T>& gas_model, std::string dir, json& meta_data) = 0;
 };
 
 template <typename T>
@@ -30,28 +29,25 @@ class FVOutput {
 public:
     virtual ~FVOutput() {}
 
-    virtual int write(const typename FlowStates<T>::mirror_type& fs,
-                      FiniteVolume<T>& fv, const GridBlock<T>& grid,
-                      const IdealGas<T>& gas_model, std::string plot_dir,
-                      std::string time_dir, double time) = 0;
+    virtual int write(const typename FlowStates<T>::mirror_type& fs, FiniteVolume<T>& fv,
+                      const GridBlock<T>& grid, const IdealGas<T>& gas_model,
+                      std::string plot_dir, std::string time_dir, double time) = 0;
 
     void add_variable(std::string name);
 
     virtual void write_coordinating_file(std::string plot_dir) = 0;
 
 protected:
-    std::map<std::string, std::shared_ptr<ScalarAccessor<T>>>
-        m_scalar_accessors;
-    std::map<std::string, std::shared_ptr<VectorAccessor<T>>>
-        m_vector_accessors;
+    std::map<std::string, std::shared_ptr<ScalarAccessor<T>>> m_scalar_accessors;
+    std::map<std::string, std::shared_ptr<VectorAccessor<T>>> m_vector_accessors;
 };
 
 template <typename T>
 class FVIO {
 public:
     // constructors
-    FVIO(FlowFormat input_format, FlowFormat output_format,
-         std::string input_dir, std::string output_dir, int time_index);
+    FVIO(FlowFormat input_format, FlowFormat output_format, std::string input_dir,
+         std::string output_dir, int time_index);
 
     FVIO(FlowFormat input, FlowFormat output);
 
@@ -63,13 +59,12 @@ public:
     FVIO();
 
     // read a flow state
-    int read(FlowStates<T>& fs, const GridBlock<T>& grid,
-             const IdealGas<T>& gas_model, json& meta_data, int time_idx);
+    int read(FlowStates<T>& fs, const GridBlock<T>& grid, const IdealGas<T>& gas_model,
+             json& meta_data, int time_idx);
 
     // write a flow state
     int write(const FlowStates<T>& flow_state, FiniteVolume<T>& fv,
-              const GridBlock<T>& grid, const IdealGas<T>& gas_model,
-              double time);
+              const GridBlock<T>& grid, const IdealGas<T>& gas_model, double time);
 
     void add_output_variable(std::string name) { output_->add_variable(name); }
 

@@ -1,0 +1,8 @@
+#include "runtime_dirs.h"
+
+namespace Ibis {
+
+std::string IBIS_VERSION = "@CMAKE_PROJECT_VERSION@";
+
+
+}
