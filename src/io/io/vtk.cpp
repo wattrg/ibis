@@ -73,9 +73,8 @@ void write_vector3s(std::ofstream& f,
 void write_int_view(std::ofstream& f,
                     const Kokkos::View<size_t*, array_layout, host_mem_space>& view,
                     std::string name, std::string type, bool skip_first = false) {
-    f << "<DataArray type='" << type << "' "
-      << "NumberOfComponents='1' "
-      << "Name='" << name << "' format='ascii'>" << std::endl;
+    f << "<DataArray type='" << type << "' " << "NumberOfComponents='1' " << "Name='"
+      << name << "' format='ascii'>" << std::endl;
     for (size_t i = 0; i < view.extent(0); i++) {
         if (!(skip_first && i == 0)) {
             f << view(i) << std::endl;
