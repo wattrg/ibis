@@ -7,7 +7,10 @@ using json = nlohmann::json;
 
 class CflSchedule {
 public:
-    CflSchedule(){};
+    CflSchedule() {}
+
+    virtual ~CflSchedule() {}
+
     virtual double eval(double t) = 0;
 };
 
