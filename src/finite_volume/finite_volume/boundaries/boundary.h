@@ -59,6 +59,20 @@ public:
 };
 
 template <typename T>
+class FixTemperature : public BoundaryAction<T> {
+public:
+    ~FixTemperature() {}
+
+    FixTemperature(double temperature) : Twall_(temperature) {}
+
+    void apply(FlowStates<T>& gs, const GridBlock<T>& grid,
+               const Field<size_t>& boundary_faces);
+
+private:
+    double Twall_;
+};
+
+template <typename T>
 class BoundaryCondition {
 public:
     BoundaryCondition(json config);

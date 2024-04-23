@@ -32,6 +32,6 @@ config.grid = Block(
     boundaries = {
         "inflow": supersonic_inflow(inflow),
         "outflow": supersonic_outflow(),
-        "wall": adiabatic_no_slip_wall(),
+        "wall": fixed_temperature_no_slip_wall(temperature = 300),
     }
 )

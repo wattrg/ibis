@@ -20,6 +20,15 @@ A no-slip wall, with no heat-transfer at the wall. Constructed by:
 adiabatic_no_slip_wall()
 ```
 
+## fixed_temperature_no_slip_wall
+A no-slip wall, with a fixed wall temperature. Constructed by:
+```
+fixed_temperature_no_slip_wall(temperature)
+```
+
+Arguments:\
+`temperature`: (double) the desired wall temperature
+
 ## supersonic_inflow
 A supersonic inflow boundary condition.
 This boundary condition assumes no information travels out of the domain.

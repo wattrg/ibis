@@ -321,6 +321,17 @@ class _InternalVelCopyReflect:
         return {"type": "internal_vel_copy_reflect"}
 
 
+class _FixTemperature:
+    def __init__(self, temperature):
+        self._temperature = temperature
+
+    def as_dict(self):
+        return {
+            "type": "fix_temperature",
+            "temperature": self._temperature
+        }
+
+
 def supersonic_inflow(inflow):
     return BoundaryCondition(
         pre_reconstruction=[_FlowStateCopy(inflow)],
@@ -346,6 +357,14 @@ def adiabatic_no_slip_wall():
     return BoundaryCondition(
         pre_reconstruction=[_InternalCopyReflectNormal()],
         pre_viscous_grad=[_InternalVelCopyReflect()]
+    )
+
+
+def fixed_temperature_no_slip_wall(temperature):
+    return BoundaryCondition(
+        pre_reconstruction=[_InternalCopyReflectNormal()],
+        pre_viscous_grad=[_InternalVelCopyReflect(),
+                          _FixTemperature(temperature)]
     )
 
 
@@ -600,6 +619,7 @@ def main(file_name, res_dir):
         "supersonic_outflow": supersonic_outflow,
         "slip_wall": slip_wall,
         "adiabatic_no_slip_wall": adiabatic_no_slip_wall,
+        "fixed_temperature_no_slip_wall": fixed_temperature_no_slip_wall,
     }
 
     # run the user supplied script

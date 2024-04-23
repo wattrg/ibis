@@ -182,6 +182,37 @@ void InternalVelCopyReflect<T>::apply(FlowStates<T>& fs, const GridBlock<T>& gri
 }
 
 template <typename T>
+void FixTemperature<T>::apply(FlowStates<T>& fs, const GridBlock<T>& grid,
+                              const Field<size_t>& boundary_faces) {
+    size_t size = boundary_faces.size();
+    auto interfaces = grid.interfaces();
+    size_t num_valid_cells = grid.num_cells();
+    double Twall = Twall_;
+    Kokkos::parallel_for(
+        "FixTemperature", size, KOKKOS_LAMBDA(const size_t i) {
+            size_t face_id = boundary_faces(i);
+
+            // determine the valid and the ghost cell
+            size_t left_cell = interfaces.left_cell(face_id);
+            size_t right_cell = interfaces.right_cell(face_id);
+            size_t ghost_cell;
+            size_t valid_cell;
+
+            if (left_cell < num_valid_cells) {
+                ghost_cell = right_cell;
+                valid_cell = left_cell;
+            } else {
+                ghost_cell = left_cell;
+                valid_cell = right_cell;
+            }
+
+            // extrapolate the temperature in the ghost cell from the
+            // temperature in the valid cell
+            fs.gas.temp(ghost_cell) = 2 * Twall - fs.gas.temp(valid_cell);
+        });
+}
+
+template <typename T>
 std::shared_ptr<BoundaryAction<T>> build_boundary_action(json config) {
     std::string type = config.at("type");
     std::shared_ptr<BoundaryAction<T>> action;
@@ -194,6 +225,9 @@ std::shared_ptr<BoundaryAction<T>> build_boundary_action(json config) {
         action = std::shared_ptr<BoundaryAction<T>>(new InternalCopyReflectNormal<T>());
     } else if (type == "internal_vel_copy_reflect") {
         action = std::shared_ptr<BoundaryAction<T>>(new InternalVelCopyReflect<T>());
+    } else if (type == "fix_temperature") {
+        double temperature = config.at("temperature");
+        action = std::shared_ptr<BoundaryAction<T>>(new FixTemperature<T>(temperature));
     } else {
         spdlog::error("Unknown boundary action {}", type);
         throw std::runtime_error("Unknown boundary action");
