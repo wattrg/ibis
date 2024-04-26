@@ -11,3 +11,14 @@ defaults:
     values:
       sidebar:
         nav: "docs"
+
+plugins:
+  - jekyll-paginate
+  - jekyll-sitemap
+  - jekyll-gist
+  - jekyll-feed
+  - jemoji
+  - jekyll-include-cache
+
+author:
+  name: "Robert Watt"
