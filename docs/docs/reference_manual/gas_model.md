@@ -17,7 +17,7 @@ A `GasState` contains the following information:
 > `rho` (kg/m^3): density\
 > `energy` (J/kg): internal energy
 
-Only two of the fields need to be filled in by the user; the remainder can be computed using a `IdealGas` ([see here](/documentation/reference_manual/gas_model/gas_model#IdealGas))
+Only two of the fields need to be filled in by the user; the remainder can be computed using a `IdealGas` ([see here](/docs/reference_manual/gas_model#IdealGas))
 
 ## FlowState
 A `FlowState` describes the thermodynamic state of some gas, and the gas's velocity.
@@ -29,7 +29,7 @@ A `FlowState` can be constructed via:
 >
 > Optional arguments:
 >   + `vx`: `float` the velocity in the x direction in (m/s). Defaults to 0
->   + `vy`: `float` the velocity in the y direction in (m/s). Defaults to \
+>   + `vy`: `float` the velocity in the y direction in (m/s). Defaults to 0
 >   + `vz`: `float` the velocity in the z direction in (m/s). Defaults to 0
 
 

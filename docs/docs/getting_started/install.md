@@ -1,11 +1,10 @@
 ---
-title: Ibis
+title: Install
 subtitle: Getting Started
 toc: true
 menubar: getting_started_menu
 ---
 
-# Installation
 ## Dependancies
 To build `ibis`, you will need to have:
   1. A c++ compiler (with c++17 support; g++ 11.4 works)

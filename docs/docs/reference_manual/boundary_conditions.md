@@ -4,7 +4,7 @@ toc: true
 ---
 ## Boundary Conditions
 Boundary conditions are set in the `config.grid` in `job.py`. 
-See the [grid config](/documentation/reference_manual/grid/grid) for details on attaching boundary conditions to the grid.
+See the [grid config](/docs/reference_manual/grid) for details on attaching boundary conditions to the grid.
 This page lists the available boundary conditions.
 
 ### slip_wall
@@ -37,7 +37,7 @@ supersonic_inflow(flow_state)
 ```
 
 Arguments:\
-`inflow`: [FlowState](/documentation/reference_manual/gas_model/gas_model#FlowState) object with the desired supersonic flow state
+`inflow`: [FlowState](/docs/reference_manual/gas_model#FlowState) object with the desired supersonic flow state
 
 ### supersonic_outflow
 A supersonic outflow boundary condition. 
