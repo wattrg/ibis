@@ -1,8 +1,7 @@
 ---
-menubar: reference_manual_menu
+title: Gas Models
+toc: true
 ---
-# Gas Model
-
 ## GasState
 A `GasState` object describes the thermodynamic state of some gas.
 For example:

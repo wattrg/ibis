@@ -1,5 +1,5 @@
 ---
-menubar: reference_manual_menu
+toc: true
 ---
 # Grid
 The grid is configured by setting `config.grid` to an instance of the `Block` class in `job.py`.

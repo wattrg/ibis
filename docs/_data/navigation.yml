@@ -1,11 +1,35 @@
-- name: Examples
-  link: /examples/examples
-- name: Documentation
-  link: /documentation/docs
-  dropdown:
-    - name: Getting Started
-      link: /documentation/getting_started/getting_started
-    - name: Reference Manual
-      link: /documentation/reference_manual/reference_manual
-    - name: Developer Docs
-      link: /documentation/dev_docs/dev_docs
+main:
+  - title: About
+    url: /about
+  - title: Documentation
+    url: /docs/docs
+  - title: Examples
+    url: /examples/examples
+
+docs:
+  - title: Getting Started
+    children:
+      - title: Install
+        url: /docs/getting_started/install
+      - title: Run
+        url: /docs/getting_started/run
+  - title: User Guide
+    children:
+      - title: Overview
+        url: /docs/reference_manual/overview
+      - title: Fluid Setting
+        url: /docs/reference_manual/fluid
+      - title: Boundary conditions
+        url: /docs/reference_manual/boundary_conditions
+      - title: Gas
+        url: /docs/reference_manual/gas_model
+      - title: Grid
+        url: /docs/reference_manual/grid
+      - title: Solvers
+        url: /docs/reference_manual/solvers
+  - title: Developer Docs
+    children:
+      - title: Structure
+        url: /docs/dev_docs/dev_docs
+      
+    

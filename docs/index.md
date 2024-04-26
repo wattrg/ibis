@@ -1,14 +1,14 @@
 ---
 title: Ibis
+layout: splash
 subtitle: Performance portable computational fluid dynamics
-hero_link: /documentation/getting_started/getting_started
-hero_link_text: Get Started
+header:
+  overlay_color: "#000"
+  overlay_filter: "0.5"
+  overlay_image: "/assets/images/supersonic_jet_test.png"
+  actions:
+    - label: "Install"
+      url: "/docs/getting_started/install"
+    - label: "Github"
+      url: "https://github.com/wattrg/ibis"
 ---
-
-# Performance Portability 
-`ibis` uses [Kokkos](https://kokkos.org/) to run effiently on all major HPC platforms.
-
-# Features
-  + Solves compressible Navier-Stokes equations
-  + Fully unstructured grid
-  + Selection of upwind flux calculators with linear reconstruction, and slope limiters

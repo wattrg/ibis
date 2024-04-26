@@ -1,10 +1,13 @@
-remote_theme: chrisrhymes/bulma-clean-theme
+remote_theme: mmistakes/minimal-mistakes@4.24.0
+minimal_mistakes_skin: "dark"
 
 defaults:
-  -
-    scope:
+  - scope:
       path: ""
-      type: "pages"
     values:
-      hero_image: "/examples/supersonic_jet_test.png"
-      title: Ibis
+      layout: single
+  - scope:
+      path: "docs"
+    values:
+      sidebar:
+        nav: "docs"

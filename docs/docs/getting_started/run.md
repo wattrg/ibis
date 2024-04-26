@@ -1,11 +1,11 @@
 ---
-title: Ibis
+title: Running a simulation
+permalink: /docs/getting_started/run
 subtitle: Getting Started
 menubar: getting_started_menu
 toc: true
 ---
 
-# Running a simulation
 Running an `ibis` simulation is done in three parts:
   1. Pre-processing
   2. Execution
