@@ -1,6 +1,9 @@
 remote_theme: mmistakes/minimal-mistakes@4.24.0
 title: "Ibis"
 minimal_mistakes_skin: "dark"
+description: "Performance portable compressible computational fluid dynamics"
+url: "https://wattrg.github.io"
+baseurl: "/ibis"
 
 defaults:
   - scope:

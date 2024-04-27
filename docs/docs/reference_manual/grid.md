@@ -28,14 +28,14 @@ The name of the grid file.
 
 ## initial_condition
 The initial condition to fill the grid with.
-> Type: [FlowState](/docs/reference_manual/gas_model#FlowState)\
+> Type: [FlowState](gas_model#FlowState)\
 > Default: None
 
 ## boundaries
 A dictionary of the boundary conditions to attach to the grid.
 The grid file should have some boundary tags associated with it.
 These boundary tags are the keys in the dictionary, and the values are the `ibis` boundary conditions.
-The available boundary conditions are described [here](/docs/reference_manual/boundary_conditions).
+The available boundary conditions are described [here](boundary_conditions).
 > Type: `dict`: {`String`: `BoundaryCondition`}\
 > Default: None
 
