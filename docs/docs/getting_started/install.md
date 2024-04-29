@@ -2,7 +2,6 @@
 title: Install
 subtitle: Getting Started
 toc: true
-menubar: getting_started_menu
 ---
 
 ## Dependancies
@@ -25,16 +24,15 @@ git submodule update --init --recursive
 ```
 
 ## Configure
-`ibis` uses `cmake` to configure things like the architecture you will run the code on.
-Regardless of the architecture you will be using, `ibis` does not support in-tree builds.
-So, regardless of your architecture, begin with:
+Ibis does not allow you to build the code directly in the source code tree.
+We need to make a separate directory to build the code in.
+In the root of the repository, make a new directory:
 ```
 mkdir build
 cd build
 ```
 
-Now you have to decide what architecture you want. 
-This will most likely be whatever brand of GPU you have, but you may chose to use the CPU flavour for debugging.
+`ibis` uses `cmake` to configure things like the architecture you will run the code on.
 The available architectures are:
   + `CUDA` (NVIDIA GPUs)
   + `HIP` (AMD GPUs)
@@ -44,18 +42,20 @@ The available architectures are:
 The next step is to configure the code.
 Make sure to follow the configuration steps for your chosen architecture.
 
-### Configure CUDA, CPU
+### Configure for CUDA or CPU
 With your chosen architecture, run
 ```
 cmake .. -DKokkos_ENABLE_[ARCH]=ON
 ```
 
-### Configure HIP
+### Configure for HIP
 If using an AMD GPU, make sure that `ROCM_PATH` is set to `/opt/rocm` before proceeding.
 If you are using any machine but Bunya, configure `ibis` with:
 ```
 cmake .. -DKokkos_ENABLE_HIP=ON -DCMAKE_CXX_COMPILER=hipcc
 ```
+
+### Configure for HIP on Bunya
 If you are compiling for the AMD GPUs on Bunya, the filesystem module has to be linked manually.
 Configure `ibis` with:
 ```
@@ -69,4 +69,4 @@ make -j install
 ```
 
 Finally, add the install location to your system path.
-By default, the install location is `path/to/ibis/repo/inst`
+By default, the install location is `<path_to_ibis_repo>/inst`

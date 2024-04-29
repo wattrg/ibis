@@ -28,7 +28,7 @@ The name of the grid file.
 
 ## initial_condition
 The initial condition to fill the grid with.
-> Type: [FlowState](gas_model#FlowState)\
+> Type: [FlowState](gas_model#flowstate)\
 > Default: None
 
 ## boundaries

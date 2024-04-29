@@ -37,7 +37,7 @@ supersonic_inflow(flow_state)
 ```
 
 Arguments:\
-`inflow`: [FlowState](gas_model#FlowState) object with the desired supersonic flow state
+`inflow`: [FlowState](gas_model#flowstate) object with the desired supersonic flow state
 
 ### supersonic_outflow
 A supersonic outflow boundary condition. 

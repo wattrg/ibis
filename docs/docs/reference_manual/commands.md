@@ -1,0 +1,72 @@
+---
+title: Commands
+toc: true
+---
+`ibis` consists of various commands, each performing a specific task.
+You can get help on the command line by adding `--help` to any ibis related command.
+The help message for `ibis` as a whole is:
+```
+compressible computational fluid dynamics
+Usage: ibis [OPTIONS] [SUBCOMMAND]
+
+Options:
+  -h,--help                   Print this help message and exit
+  -v,--version                print the version
+
+Subcommands:
+  clean                       clean the simulation
+  prep                        prepare the simulation
+  run                         run the simulation
+  post                        post-process the simulation
+```
+
+## prep
+`ibis prep` executes `job.py`, and writes detailed configuration files based on the settings in the python script.
+
+```
+prepare the simulation
+Usage: ibis prep [OPTIONS]
+
+Options:
+  -h,--help                   Print this help message and exit
+```
+
+## run
+`ibis run` reads the detailed configuration files written by the preparation stage, and executes the simulation
+
+```
+run the simulation
+Usage: ibis run [OPTIONS]
+
+Options:
+  -h,--help                   Print this help message and exit
+```
+
+## post
+`ibis post` performs post-processing of the simulation.
+There are various sub-commands available for various types of post-processing (discussed below).
+
+```
+post-process the simulation
+Usage: ibis post [OPTIONS] SUBCOMMAND
+
+Options:
+  -h,--help                   Print this help message and exit
+
+Subcommands:
+  plot                        write simulatioin files to visualisation format
+```
+
+### plot
+`ibis post plot` writes the flow solutions written during the simulation to a visualisation format (the default is vtk).
+
+```
+write simulatioin files to visualisation format
+Usage: ibis post plot [OPTIONS]
+
+Options:
+  -h,--help                   Print this help message and exit
+  -f,--format format (default: vtk)
+                              File format
+  --add str ...               Extra variables to add to plot
+```

@@ -17,6 +17,8 @@ docs:
     children:
       - title: Overview
         url: /docs/reference_manual/overview
+      - title: Commands
+        url: /docs/reference_manual/commands
       - title: Fluid Setting
         url: /docs/reference_manual/fluid
       - title: Boundary conditions
