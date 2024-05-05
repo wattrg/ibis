@@ -3,11 +3,13 @@
 
 #include <grid/grid_io.h>
 #include <grid/vertex.h>
+#include <grid/interface.h>
 #include <util/field.h>
 #include <util/geom.h>
 #include <util/ragged_array.h>
 
 #include <Kokkos_Core.hpp>
+#include "Kokkos_Core_fwd.hpp"
 
 template <typename T, class ExecSpace = Kokkos::DefaultExecutionSpace,
           class Layout = Kokkos::DefaultExecutionSpace::array_layout>
@@ -224,7 +226,8 @@ public:
     KOKKOS_INLINE_FUNCTION
     Vector3s<T, array_layout, memory_space>& centroids() { return centroid_; }
 
-    void compute_centroids(const Vertices<T, execution_space, array_layout>& vertices) {
+    void compute_centroids(const Vertices<T, execution_space, array_layout>& vertices,
+                           const Interfaces<T, execution_space, array_layout>& faces) {
         // for the moment, we're using the arithmatic average
         // of the points as the centroid. For cells that aren't
         // nicely shaped, this could be a very bad approximation
@@ -251,7 +254,8 @@ public:
             });
     }
 
-    void compute_volumes(const Vertices<T, execution_space, array_layout>& vertices) {
+    void compute_volumes(const Vertices<T, execution_space, array_layout>& vertices,
+                         const Interfaces<T, execution_space, array_layout>& faces) {
         auto volume = volume_;
         auto shape = shape_;
         auto this_vertex_ids = vertex_ids_;

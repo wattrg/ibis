@@ -1,7 +1,7 @@
 #ifndef INTERFACE_H
 #define INTERFACE_H
 
-#include <grid/cell.h>
+// #include <grid/cell.h>
 #include <grid/grid_io.h>
 #include <grid/vertex.h>
 #include <util/field.h>

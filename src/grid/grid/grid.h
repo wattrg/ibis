@@ -192,11 +192,18 @@ public:
     }
 
     void compute_geometric_data() {
-        cells_.compute_centroids(vertices_);
-        cells_.compute_volumes(vertices_);
+        // compute interface properties first, because they are
+        // sometimes used to compute cell properties
         interfaces_.compute_centres(vertices_);
         interfaces_.compute_areas(vertices_);
         interfaces_.compute_orientations(vertices_);
+
+        // compute the cell volume before centroids, because the
+        // volume may be used to compute the centroid
+        cells_.compute_volumes(vertices_, interfaces_);
+
+        // Finally, we can compute the centroid
+        cells_.compute_centroids(vertices_, interfaces_);
     }
 
     mirror_type host_mirror() const {

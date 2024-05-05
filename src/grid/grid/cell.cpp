@@ -68,8 +68,9 @@ CellInfo generate_cells() {
 TEST_CASE("cell volume") {
     CellInfo info = generate_cells();
     Cells<double> cells = info.cells;
+    Interfaces<double> faces = info.interfaces;
     Vertices<double> vertices = info.vertices;
-    cells.compute_volumes(vertices);
+    cells.compute_volumes(vertices, faces);
     auto cells_mirror = cells.host_mirror();
     cells_mirror.deep_copy(cells);
 
@@ -81,9 +82,10 @@ TEST_CASE("cell volume") {
 TEST_CASE("cell_centre") {
     CellInfo info = generate_cells();
     Cells<double> cells = info.cells;
+    Interfaces<double> faces = info.interfaces;
     Vertices<double> vertices = info.vertices;
 
-    cells.compute_centroids(vertices);
+    cells.compute_centroids(vertices, faces);
     auto cells_mirror = cells.host_mirror();
     cells_mirror.deep_copy(cells);
 

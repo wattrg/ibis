@@ -1,6 +1,5 @@
-#include "geom.h"
-
 #include <doctest/doctest.h>
+#include "geom.h"
 
 const double EPS = 1e-15;
 
