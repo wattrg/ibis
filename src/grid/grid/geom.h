@@ -1,9 +1,7 @@
 #ifndef GEOM_H
 #define GEOM_H
 
-#include <Kokkos_Core.hpp>
-
-#include "vector3.h"
+#include <util/vector3.h>
 
 namespace Ibis {
 
@@ -12,7 +10,7 @@ namespace Ibis {
 // the actual positions of all the points
 template <typename T, class Layout, class Space>
 KOKKOS_INLINE_FUNCTION T distance_between_points(
-    const Vector3s<T, Layout, Space> &positions, const size_t i, const size_t j) {
+    const Vector3s<T, Layout, Space>& positions, const size_t i, const size_t j) {
     T xi = positions.x(i);
     T xj = positions.x(j);
     T yi = positions.y(i);
@@ -29,7 +27,7 @@ KOKKOS_INLINE_FUNCTION T distance_between_points(
 
 // calculate the area of a triangle with vertices a, b, and c
 template <typename T, class Layout, class Space>
-KOKKOS_INLINE_FUNCTION T area_of_triangle(const Vector3s<T, Layout, Space> &pos,
+KOKKOS_INLINE_FUNCTION T area_of_triangle(const Vector3s<T, Layout, Space>& pos,
                                           const size_t a, const size_t b,
                                           const size_t c) {
     // vector from a -> b
@@ -55,12 +53,35 @@ KOKKOS_INLINE_FUNCTION T area_of_triangle(const Vector3s<T, Layout, Space> &pos,
 // this computation could be bad if the quadrilateral
 // in question is concave...
 template <typename T, class Layout, class Space>
-KOKKOS_INLINE_FUNCTION T area_of_quadrilateral(const Vector3s<T, Layout, Space> &pos,
+KOKKOS_INLINE_FUNCTION T area_of_quadrilateral(const Vector3s<T, Layout, Space>& pos,
                                                const size_t a, const size_t b,
                                                const size_t c, const size_t d) {
     T a1 = area_of_triangle(pos, a, b, c);
     T a2 = area_of_triangle(pos, a, c, d);
     return a1 + a2;
+}
+
+// Compute the volume of a generic cell using Eq. 5.15 of
+// Blazek's book
+template <typename T, class Layout, class Space, class SubView>
+KOKKOS_INLINE_FUNCTION T
+volume_of_generic_cell(const Vector3s<T, Space, Layout>& face_cntr,
+                       const Vector3s<T, Space, Layout>& face_norm,
+                       const Field<T, Space, Layout>& face_area, SubView face_ids) {
+    (void)face_cntr;
+    (void)face_norm;
+    (void)face_area;
+    size_t n_faces = face_ids.extent(0);
+
+    T volume = 0.0;
+    for (size_t i = 0; i < n_faces; i++) {
+        size_t face_id = face_ids(i);
+        volume += face_cntr.x(face_id) * face_norm.x(face_id) +
+                  face_cntr.y(face_id) * face_norm.y(face_id) +
+                  face_cntr.z(face_id) * face_norm.z(face_id);
+        volume *= face_area(face_id);
+    }
+    return volume / 3.0;
 }
 
 }  // namespace Ibis

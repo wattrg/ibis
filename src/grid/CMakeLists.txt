@@ -6,6 +6,7 @@ add_library(
 	grid/interface.cpp 
 	grid/grid.cpp 
 	grid/cell.cpp
+	grid/geom.cpp
 )
 
 target_include_directories(
@@ -33,6 +34,7 @@ if (Ibis_BUILD_TESTS)
         grid/interface.cpp
         grid/cell.cpp
         grid/vertex.cpp
+        grid/geom.cpp
     )
 
     target_link_libraries(

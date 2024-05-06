@@ -2,10 +2,10 @@
 #define INTERFACE_H
 
 // #include <grid/cell.h>
+#include <grid/geom.h>
 #include <grid/grid_io.h>
 #include <grid/vertex.h>
 #include <util/field.h>
-#include <util/geom.h>
 #include <util/ragged_array.h>
 #include <util/vector3.h>
 
