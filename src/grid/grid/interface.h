@@ -211,7 +211,7 @@ public:
                     }
                     case ElemType::Tri:
                     case ElemType::Quad: {
-                        auto vertex_ids = this_vertex_ids(i);                        
+                        auto vertex_ids = this_vertex_ids(i);
 
                         // The unit vector in the direction from vertex 0 to vertex 1
                         T t1x = this_tan1.x(i);
@@ -219,11 +219,11 @@ public:
                         T t1z = this_tan1.z(i);
 
                         // The vector in the direction from vertex 0 to vertex 2 (t2star)
-                        T t2xstar = vertices.positions().x(vertex_ids(2)) - 
+                        T t2xstar = vertices.positions().x(vertex_ids(2)) -
                                     vertices.positions().x(vertex_ids(0));
-                        T t2ystar = vertices.positions().y(vertex_ids(2)) - 
+                        T t2ystar = vertices.positions().y(vertex_ids(2)) -
                                     vertices.positions().y(vertex_ids(0));
-                        T t2zstar = vertices.positions().z(vertex_ids(2)) - 
+                        T t2zstar = vertices.positions().z(vertex_ids(2)) -
                                     vertices.positions().z(vertex_ids(0));
 
                         // project t2star onto t1; the direction we're after
