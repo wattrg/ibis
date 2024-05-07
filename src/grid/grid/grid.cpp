@@ -125,7 +125,7 @@ TEST_CASE("3D cell volumes") {
     block.deep_copy(block_dev);
     size_t n_cells = block.num_cells();
     CHECK(n_cells == 27);
-    for (size_t i = 0; i < n_cells; i++){
+    for (size_t i = 0; i < n_cells; i++) {
         CHECK(block.cells().volume(i) == doctest::Approx(1.0 / n_cells));
     }
 }
@@ -136,7 +136,7 @@ TEST_CASE("3D interface orientation lengths") {
     auto block = block_dev.host_mirror();
     block.deep_copy(block_dev);
     size_t n_faces = block.num_interfaces();
-    for (size_t i = 0; i < n_faces; i++){
+    for (size_t i = 0; i < n_faces; i++) {
         double t1x = block.interfaces().tan1().x(i);
         double t1y = block.interfaces().tan1().y(i);
         double t1z = block.interfaces().tan1().z(i);

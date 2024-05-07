@@ -293,9 +293,8 @@ public:
                         auto face_areas = faces.area();
                         auto face_ids = this_faces.face_ids(i);
                         auto outsigns = this_faces.outsigns(i);
-                        volume(i) = Ibis::volume_of_generic_cell(face_cntrs, face_norms,
-                                                                 face_areas, outsigns,
-                                                                 face_ids);
+                        volume(i) = Ibis::volume_of_generic_cell(
+                            face_cntrs, face_norms, face_areas, outsigns, face_ids);
                         break;
                     }
                 }

@@ -64,11 +64,10 @@ KOKKOS_INLINE_FUNCTION T area_of_quadrilateral(const Vector3s<T, Layout, Space>&
 // Compute the volume of a generic cell using Eq. 5.15 of
 // Blazek's book
 template <typename T, class Layout, class Space, class OutSubView, class FaceSubView>
-KOKKOS_INLINE_FUNCTION T
-volume_of_generic_cell(const Vector3s<T, Space, Layout>& face_cntr,
-                       const Vector3s<T, Space, Layout>& face_norm,
-                       const Field<T, Space, Layout>& face_area, 
-                       OutSubView outsign, FaceSubView face_ids) {
+KOKKOS_INLINE_FUNCTION T volume_of_generic_cell(
+    const Vector3s<T, Space, Layout>& face_cntr,
+    const Vector3s<T, Space, Layout>& face_norm, const Field<T, Space, Layout>& face_area,
+    OutSubView outsign, FaceSubView face_ids) {
     size_t n_faces = face_ids.extent(0);
 
     T volume = 0.0;

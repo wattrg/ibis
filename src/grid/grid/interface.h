@@ -195,9 +195,9 @@ public:
                 T y1 = vertices.positions().y(vertex_ids(1));
                 T z0 = vertices.positions().z(vertex_ids(0));
                 T z1 = vertices.positions().z(vertex_ids(1));
-                T ilength = 1. / Kokkos::sqrt((x1 - x0) * (x1 - x0) +
-                                              (y1 - y0) * (y1 - y0) + 
-                                              (z1 - z0) * (z1 - z0));
+                T ilength =
+                    1. / Kokkos::sqrt((x1 - x0) * (x1 - x0) + (y1 - y0) * (y1 - y0) +
+                                      (z1 - z0) * (z1 - z0));
                 this_tan1.x(i) = ilength * (x1 - x0);
                 this_tan1.y(i) = ilength * (y1 - y0);
                 this_tan1.z(i) = ilength * (z1 - z0);
