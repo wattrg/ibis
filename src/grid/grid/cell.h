@@ -284,6 +284,7 @@ public:
                             vertex_ids(2), vertex_ids(3));
                         break;
                     }
+                    case ElemType::Tetra:
                     case ElemType::Hex:
                     case ElemType::Wedge:
                     case ElemType::Pyramid: {

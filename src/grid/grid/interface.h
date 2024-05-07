@@ -279,6 +279,9 @@ public:
                             vertex_ids(2), vertex_ids(3));
                         break;
                     }
+                    case ElemType::Tetra:
+                        printf("Invalid interface");
+                        break;
                     case ElemType::Hex: {
                         printf("Invalid interface");
                         break;
