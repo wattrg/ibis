@@ -131,8 +131,15 @@ public:
             cell_vertices, cell_interface_ids, cell_shapes, num_valid_cells_,
             num_ghost_cells_);
 
-        compute_geometric_data();
+        // compute geometric and connectivity properties of the grid
+        // The order these are done in is important -- some things
+        // rely on other properties already being set
+        interfaces_.compute_centres(vertices_);
+        interfaces_.compute_areas(vertices_);
+        interfaces_.compute_orientations(vertices_);
+        cells_.compute_centroids(vertices_, interfaces_);
         compute_interface_connectivity(ghost_cell_map);
+        cells_.compute_volumes(vertices_, interfaces_);
         compute_cell_neighbours();
         compute_ghost_cell_centres();
     }
@@ -189,21 +196,6 @@ public:
             }
         }
         interfaces_.deep_copy(interfaces_host);
-    }
-
-    void compute_geometric_data() {
-        // compute interface properties first, because they are
-        // sometimes used to compute cell properties
-        interfaces_.compute_centres(vertices_);
-        interfaces_.compute_areas(vertices_);
-        interfaces_.compute_orientations(vertices_);
-
-        // compute the cell volume before centroids, because the
-        // volume may be used to compute the centroid
-        cells_.compute_volumes(vertices_, interfaces_);
-
-        // Finally, we can compute the centroid
-        cells_.compute_centroids(vertices_, interfaces_);
     }
 
     mirror_type host_mirror() const {
