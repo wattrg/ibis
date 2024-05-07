@@ -126,7 +126,7 @@ TEST_CASE("3D cell volumes") {
     size_t n_cells = block.num_cells();
     CHECK(n_cells == 27);
     for (size_t i = 0; i < n_cells; i++){
-        CHECK(block.cells().volume(i) == 1.0 / n_cells);
+        CHECK(block.cells().volume(i) == doctest::Approx(1.0 / n_cells));
     }
 }
 
