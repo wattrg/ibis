@@ -8,7 +8,6 @@ gmsh.option.setNumber("Mesh.Algorithm", 8) # quads
 gmsh.option.setNumber("Mesh.RecombineAll", 1)
 gmsh.option.setNumber("Mesh.SaveAll", 1)
 gmsh.option.setNumber("Mesh.RecombineOptimizeTopology", 100)
-gmsh.option.setNumber("Mesh.Smoothing", 100)
 
 # points
 length = 1.0
