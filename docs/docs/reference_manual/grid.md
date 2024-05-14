@@ -17,7 +17,7 @@ config.grid = Block(
 ```
 
 `config.grid` must be set, there is no default value.
-
+The dimensionality of the simulation will be determined from the grid.
 The settings are described below.
 
 ## file_name

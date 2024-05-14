@@ -17,7 +17,7 @@ To download the code:
 ```
 git clone git@github.com:wattrg/ibis.git --recurse-submodules
 ```
-If you missed the `--recurse-submodules`, you can initialise the submodules them with
+If you missed the `--recurse-submodules`, you can initialise the submodules with
 
 ```
 git submodule update --init --recursive
@@ -39,8 +39,7 @@ The available architectures are:
   + `OPENMP` (Parallel on the CPU)
   + `SERIAL` (Serial on the CPU)
 
-The next step is to configure the code.
-Make sure to follow the configuration steps for your chosen architecture.
+Once you know the architecture you will be using, follow the instructions for that architecture.
 
 ### Configure for CUDA or CPU
 With your chosen architecture, run
@@ -63,7 +62,7 @@ cmake .. -DKokkos_ENABLE_HIP=ON -DCMAKE_CXX_COMPILER=hipcc -DIbis_LINK_FS=ON
 ```
 
 ## Compile and Install
-Finally, to compile and install (regardless of architecture):
+Once configuration is complete, the compilation and install are the same:
 ```
 make -j install
 ```

@@ -49,9 +49,19 @@ Species name:
 > Keyword arguments:
 >   + `species` (`String`): the name of the species
 
-The `IdealGas` can perform calculations on a `GasState` object:
+The `IdealGas` can perform calculations on a `GasState` object.
+For example:
+```
+gas_model = IdealGas(species='air')
+gas_state = GasState()
+gas_state.p = 101325
+gas_state.T = 300
+gas_model.update_thermo_frompT(gas_state)
+```
 
-### ```GasModel.update_from_pT(gas_state)```
+The available methods on a gas model are:
+
+### ```update_from_pT(gas_state)```
 
 Update a gas state from its pressure and temperature
 
@@ -59,3 +69,21 @@ Update a gas state from its pressure and temperature
 > gas_state: `GasState` object. The pressure and temperature should already be set, and the density and energy will be updated.
 > 
 > Returns: None
+
+### ```update_from_rhoT(gas_state)```
+
+Update a gas state from its density and temperature
+
+> Positional arguments:\
+> gas_state: `GasState` object. The density and temperature should already be set, and the pressure and energy will be updated
+>
+> Returns: None
+
+### ```update_from_rhop(gas_state)```
+
+  Update a gas state from its density and pressure
+
+  > Positional arguments:\
+  > gas_state: `GasState` object. The density and pressure should already be set, and the temperature and energy will be calculated
+  >
+  > Returns: None
