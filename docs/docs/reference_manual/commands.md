@@ -70,3 +70,13 @@ Options:
                               File format
   --add str ...               Extra variables to add to plot
 ```
+
+## clean
+`ibis clean` cleans out the automatically generated files.
+```
+clean the simulation
+Usage: ibis clean [OPTIONS]
+
+Options:
+  -h,--help                   Print this help message and exit
+```

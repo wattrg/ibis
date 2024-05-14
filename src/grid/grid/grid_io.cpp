@@ -33,6 +33,8 @@ ElemType elem_type_from_vtk_type(size_t su2_type) {
             return ElemType::Tri;
         case 9:
             return ElemType::Quad;
+        case 10:
+            return ElemType::Tetra;
         case 12:
             return ElemType::Hex;
         case 13:
@@ -52,6 +54,8 @@ size_t number_vertices_from_elem_type(ElemType type) {
         case ElemType::Tri:
             return 3;
         case ElemType::Quad:
+            return 4;
+        case ElemType::Tetra:
             return 4;
         case ElemType::Hex:
             return 8;
@@ -230,14 +234,21 @@ std::vector<ElemIO> vtk_face_order(std::vector<size_t> ids, ElemType type) {
                 ElemIO({ids[2], ids[3]}, ElemType::Line, FaceOrder::Vtk),
                 ElemIO({ids[3], ids[0]}, ElemType::Line, FaceOrder::Vtk),
             };
+        case ElemType::Tetra:
+            return std::vector<ElemIO>{
+                ElemIO({ids[0], ids[1], ids[2]}, ElemType::Tri, FaceOrder::Vtk),
+                ElemIO({ids[0], ids[1], ids[3]}, ElemType::Tri, FaceOrder::Vtk),
+                ElemIO({ids[1], ids[2], ids[3]}, ElemType::Tri, FaceOrder::Vtk),
+                ElemIO({ids[0], ids[2], ids[3]}, ElemType::Tri, FaceOrder::Vtk),
+            };
         case ElemType::Hex:
             return std::vector<ElemIO>{
-                ElemIO({ids[0], ids[2], ids[3], ids[1]}, ElemType::Quad, FaceOrder::Vtk),
+                ElemIO({ids[0], ids[1], ids[2], ids[3]}, ElemType::Quad, FaceOrder::Vtk),
                 ElemIO({ids[0], ids[1], ids[5], ids[4]}, ElemType::Quad, FaceOrder::Vtk),
-                ElemIO({ids[4], ids[5], ids[7], ids[6]}, ElemType::Quad, FaceOrder::Vtk),
-                ElemIO({ids[2], ids[6], ids[7], ids[3]}, ElemType::Quad, FaceOrder::Vtk),
-                ElemIO({ids[0], ids[4], ids[6], ids[2]}, ElemType::Quad, FaceOrder::Vtk),
-                ElemIO({ids[1], ids[3], ids[7], ids[6]}, ElemType::Quad, FaceOrder::Vtk)};
+                ElemIO({ids[4], ids[5], ids[6], ids[7]}, ElemType::Quad, FaceOrder::Vtk),
+                ElemIO({ids[2], ids[3], ids[7], ids[6]}, ElemType::Quad, FaceOrder::Vtk),
+                ElemIO({ids[0], ids[4], ids[7], ids[3]}, ElemType::Quad, FaceOrder::Vtk),
+                ElemIO({ids[1], ids[5], ids[6], ids[2]}, ElemType::Quad, FaceOrder::Vtk)};
         case ElemType::Wedge:
             return std::vector<ElemIO>{
                 ElemIO({ids[0], ids[1], ids[2]}, ElemType::Tri, FaceOrder::Vtk),

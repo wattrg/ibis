@@ -1,13 +1,16 @@
 #ifndef CELL_H
 #define CELL_H
 
+#include <grid/geom.h>
 #include <grid/grid_io.h>
+#include <grid/interface.h>
 #include <grid/vertex.h>
 #include <util/field.h>
-#include <util/geom.h>
 #include <util/ragged_array.h>
 
 #include <Kokkos_Core.hpp>
+
+#include "Kokkos_Core_fwd.hpp"
 
 template <typename T, class ExecSpace = Kokkos::DefaultExecutionSpace,
           class Layout = Kokkos::DefaultExecutionSpace::array_layout>
@@ -224,10 +227,12 @@ public:
     KOKKOS_INLINE_FUNCTION
     Vector3s<T, array_layout, memory_space>& centroids() { return centroid_; }
 
-    void compute_centroids(const Vertices<T, execution_space, array_layout>& vertices) {
+    void compute_centroids(const Vertices<T, execution_space, array_layout>& vertices,
+                           const Interfaces<T, execution_space, array_layout>& faces) {
         // for the moment, we're using the arithmatic average
         // of the points as the centroid. For cells that aren't
         // nicely shaped, this could be a very bad approximation
+        (void)faces;
         auto centroid = centroid_;
         auto vertex_ids = vertex_ids_;
         Kokkos::parallel_for(
@@ -251,10 +256,12 @@ public:
             });
     }
 
-    void compute_volumes(const Vertices<T, execution_space, array_layout>& vertices) {
+    void compute_volumes(const Vertices<T, execution_space, array_layout>& vertices,
+                         const Interfaces<T, execution_space, array_layout>& faces) {
         auto volume = volume_;
         auto shape = shape_;
         auto this_vertex_ids = vertex_ids_;
+        auto this_faces = faces_;
         Kokkos::parallel_for(
             "Cells::compute_volume",
             Kokkos::RangePolicy<execution_space>(0, num_valid_cells_),
@@ -277,15 +284,19 @@ public:
                             vertex_ids(2), vertex_ids(3));
                         break;
                     }
+                    case ElemType::Tetra:
                     case ElemType::Hex:
-                        printf("Volume of Hex not implemented");
-                        break;
                     case ElemType::Wedge:
-                        printf("Volume of Wedge not implemented");
+                    case ElemType::Pyramid: {
+                        auto face_cntrs = faces.centre();
+                        auto face_norms = faces.norm();
+                        auto face_areas = faces.area();
+                        auto face_ids = this_faces.face_ids(i);
+                        auto outsigns = this_faces.outsigns(i);
+                        volume(i) = Ibis::volume_of_generic_cell(
+                            face_cntrs, face_norms, face_areas, outsigns, face_ids);
                         break;
-                    case ElemType::Pyramid:
-                        printf("Volume of pyramid not implemented");
-                        break;
+                    }
                 }
             });
     }

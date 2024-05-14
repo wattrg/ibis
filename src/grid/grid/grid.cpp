@@ -80,6 +80,25 @@ json build_config() {
     return config;
 }
 
+json build_3D_config() {
+    json config{};
+    json boundaries{};
+    json slip_wall{};
+    json inflow{};
+    json outflow{};
+    slip_wall["ghost_cells"] = true;
+    inflow["ghost_cells"] = true;
+    outflow["ghost_cells"] = true;
+    boundaries["bottom"] = slip_wall;
+    boundaries["top"] = slip_wall;
+    boundaries["west"] = inflow;
+    boundaries["east"] = outflow;
+    boundaries["north"] = slip_wall;
+    boundaries["south"] = slip_wall;
+    config["boundaries"] = boundaries;
+    return config;
+}
+
 TEST_CASE("grid vertices") {
     GridInfo expected = build_test_grid();
     json config = build_config();
@@ -97,6 +116,45 @@ TEST_CASE("grid interfaces") {
     auto block = block_dev.host_mirror();
     block.deep_copy(block_dev);
     CHECK(block.interfaces() == expected.faces);
+}
+
+TEST_CASE("3D cell volumes") {
+    json config = build_3D_config();
+    GridBlock<double> block_dev("../../../src/grid/test/cube.su2", config);
+    auto block = block_dev.host_mirror();
+    block.deep_copy(block_dev);
+    size_t n_cells = block.num_cells();
+    CHECK(n_cells == 27);
+    for (size_t i = 0; i < n_cells; i++) {
+        CHECK(block.cells().volume(i) == doctest::Approx(1.0 / n_cells));
+    }
+}
+
+TEST_CASE("3D interface orientation lengths") {
+    json config = build_3D_config();
+    GridBlock<double> block_dev("../../../src/grid/test/cube.su2", config);
+    auto block = block_dev.host_mirror();
+    block.deep_copy(block_dev);
+    size_t n_faces = block.num_interfaces();
+    for (size_t i = 0; i < n_faces; i++) {
+        double t1x = block.interfaces().tan1().x(i);
+        double t1y = block.interfaces().tan1().y(i);
+        double t1z = block.interfaces().tan1().z(i);
+        double t1_length = Kokkos::sqrt(t1x * t1x + t1y * t1y + t1z * t1z);
+        CHECK(t1_length == doctest::Approx(1.0));
+
+        double t2x = block.interfaces().tan2().x(i);
+        double t2y = block.interfaces().tan2().y(i);
+        double t2z = block.interfaces().tan2().z(i);
+        double t2_length = Kokkos::sqrt(t2x * t2x + t2y * t2y + t2z * t2z);
+        CHECK(t2_length == doctest::Approx(1.0));
+
+        double nx = block.interfaces().norm().x(i);
+        double ny = block.interfaces().norm().y(i);
+        double nz = block.interfaces().norm().z(i);
+        double n_length = Kokkos::sqrt(nx * nx + ny * ny + nz * nz);
+        CHECK(n_length == doctest::Approx(1.0));
+    }
 }
 
 TEST_CASE("grid cell faces") {

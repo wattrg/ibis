@@ -1,6 +1,5 @@
-#include "geom.h"
-
 #include <doctest/doctest.h>
+#include <grid/geom.h>
 
 const double EPS = 1e-15;
 

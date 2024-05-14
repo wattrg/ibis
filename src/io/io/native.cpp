@@ -27,7 +27,6 @@ int NativeOutput<T>::write(const typename FlowStates<T>::mirror_type& fs,
     temp << std::fixed << std::setprecision(16);
     for (size_t cell_i = 0; cell_i < grid.num_cells(); cell_i++) {
         temp << fs.gas.temp(cell_i) << std::endl;
-        ;
     }
     temp.close();
 
@@ -39,7 +38,6 @@ int NativeOutput<T>::write(const typename FlowStates<T>::mirror_type& fs,
     pressure << std::fixed << std::setprecision(16);
     for (size_t cell_i = 0; cell_i < grid.num_cells(); cell_i++) {
         pressure << fs.gas.pressure(cell_i) << std::endl;
-        ;
     }
     pressure.close();
 
@@ -51,7 +49,6 @@ int NativeOutput<T>::write(const typename FlowStates<T>::mirror_type& fs,
     vx << std::fixed << std::setprecision(16);
     for (size_t cell_i = 0; cell_i < grid.num_cells(); cell_i++) {
         vx << fs.vel.x(cell_i) << std::endl;
-        ;
     }
     vx.close();
 
@@ -63,7 +60,6 @@ int NativeOutput<T>::write(const typename FlowStates<T>::mirror_type& fs,
     vy << std::fixed << std::setprecision(16);
     for (size_t cell_i = 0; cell_i < grid.num_cells(); cell_i++) {
         vy << fs.vel.y(cell_i) << std::endl;
-        ;
     }
     vy.close();
 
@@ -75,7 +71,6 @@ int NativeOutput<T>::write(const typename FlowStates<T>::mirror_type& fs,
     vz << std::fixed << std::setprecision(16);
     for (size_t cell_i = 0; cell_i < grid.num_cells(); cell_i++) {
         vz << fs.vel.z(cell_i) << std::endl;
-        ;
     }
     vz.close();
 
@@ -149,6 +144,21 @@ int NativeInput<T>::read(typename FlowStates<T>::mirror_type& fs,
         cell_i++;
     }
     vy.close();
+
+    if (grid.dim() == 3) {
+        std::ifstream vz(dir + "/vz");
+        if (!vz) {
+            spdlog::error("Unable to load {}", dir + "/vz");
+            return 1;
+        }
+
+        cell_i = 0;
+        while (getline(vz, line)) {
+            fs.vel.z(cell_i) = stod(line);
+            cell_i++;
+        }
+        vz.close();
+    }
 
     // gas_model.update_thermo_from_pT(fs.gas);
 

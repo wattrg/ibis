@@ -17,6 +17,7 @@ enum class GridFileType {
 enum class ElemType {
     Line,
     Tri,
+    Tetra,
     Quad,
     Hex,
     Wedge,

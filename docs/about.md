@@ -3,4 +3,5 @@ title: About
 permalink: /about
 ---
 
-Ibis is a performance portable compressible CFD solver.
+Ibis is a compressible CFD solver.
+It uses Kokkos to obtain performance portability.

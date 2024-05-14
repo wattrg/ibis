@@ -1,11 +1,11 @@
 #ifndef INTERFACE_H
 #define INTERFACE_H
 
-#include <grid/cell.h>
+// #include <grid/cell.h>
+#include <grid/geom.h>
 #include <grid/grid_io.h>
 #include <grid/vertex.h>
 #include <util/field.h>
-#include <util/geom.h>
 #include <util/ragged_array.h>
 #include <util/vector3.h>
 
@@ -195,8 +195,9 @@ public:
                 T y1 = vertices.positions().y(vertex_ids(1));
                 T z0 = vertices.positions().z(vertex_ids(0));
                 T z1 = vertices.positions().z(vertex_ids(1));
-                T ilength = 1. / Kokkos::sqrt((x1 - x0) * (x1 - x0) +
-                                              (y1 - y0) * (y1 - y0) + (z1 - z0));
+                T ilength =
+                    1. / Kokkos::sqrt((x1 - x0) * (x1 - x0) + (y1 - y0) * (y1 - y0) +
+                                      (z1 - z0) * (z1 - z0));
                 this_tan1.x(i) = ilength * (x1 - x0);
                 this_tan1.y(i) = ilength * (y1 - y0);
                 this_tan1.z(i) = ilength * (z1 - z0);
@@ -210,11 +211,37 @@ public:
                         break;
                     }
                     case ElemType::Tri:
-                        printf("Tri faces not implemented yet");
+                    case ElemType::Quad: {
+                        auto vertex_ids = this_vertex_ids(i);
+
+                        // The unit vector in the direction from vertex 0 to vertex 1
+                        T t1x = this_tan1.x(i);
+                        T t1y = this_tan1.y(i);
+                        T t1z = this_tan1.z(i);
+
+                        // The vector in the direction from vertex 0 to vertex 2 (t2star)
+                        T t2xstar = vertices.positions().x(vertex_ids(2)) -
+                                    vertices.positions().x(vertex_ids(0));
+                        T t2ystar = vertices.positions().y(vertex_ids(2)) -
+                                    vertices.positions().y(vertex_ids(0));
+                        T t2zstar = vertices.positions().z(vertex_ids(2)) -
+                                    vertices.positions().z(vertex_ids(0));
+
+                        // project t2star onto t1; the direction we're after
+                        // is the difference between the projection and the
+                        // actual vector from 0->2
+                        T proj = t1x * t2xstar + t1y * t2ystar + t1z * t2zstar;
+                        T t2x = t2xstar - proj * t1x;
+                        T t2y = t2ystar - proj * t1y;
+                        T t2z = t2zstar - proj * t1z;
+
+                        // normalise the vector
+                        T ilength = 1.0 / Kokkos::sqrt(t2x * t2x + t2y * t2y + t2z * t2z);
+                        this_tan2.x(i) = ilength * t2x;
+                        this_tan2.y(i) = ilength * t2y;
+                        this_tan2.z(i) = ilength * t2z;
                         break;
-                    case ElemType::Quad:
-                        printf("Quad faces not implemented yet");
-                        break;
+                    }
                     default:
                         printf("Invalid interface shape");
                         break;
@@ -252,6 +279,9 @@ public:
                             vertex_ids(2), vertex_ids(3));
                         break;
                     }
+                    case ElemType::Tetra:
+                        printf("Invalid interface");
+                        break;
                     case ElemType::Hex: {
                         printf("Invalid interface");
                         break;
