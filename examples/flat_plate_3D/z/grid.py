@@ -67,8 +67,8 @@ tfv = gmsh.model.geo.mesh.set_transfinite_volume(1, [1, 2, 3, 4, 5, 6, 10, 14])
 gmsh.model.geo.addPhysicalGroup(2, [17, 25], name="sides")
 gmsh.model.geo.addPhysicalGroup(2, [13], name="wall")
 gmsh.model.geo.addPhysicalGroup(2, [21], name="top")
-gmsh.model.geo.addPhysicalGroup(2, [26], name="inflow")
-gmsh.model.geo.addPhysicalGroup(2, [1], name="outflow")
+gmsh.model.geo.addPhysicalGroup(2, [1], name="inflow")
+gmsh.model.geo.addPhysicalGroup(2, [26], name="outflow")
 
 gmsh.model.geo.mesh.set_recombine(2, 1)
 
