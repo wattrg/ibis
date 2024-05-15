@@ -32,18 +32,18 @@ The options are:
   + `rk4`
 
 > Type: `str`\
-> Default: "ssp-rk3"
+> Default: `ssp-rk3`
 
 ### butcher_tableau
 Instead of using one of the existing Runge-Kutta methods, you may provide the Butcher tableau for any explicit Runge Kutta method.
 The tableau is specified as a dictionary of the `b`, `b`, and `c` values of the Butcher tableau.
 Only the `a` values below the diagonal should are included, and the first `c` value, which is always 0 for explicit Runge-Kutta methods is not included either.
-For example, the classic RK4 method is specified:
+For example, the classic RK4 method can be specified as:
 ```
 butcher_tableau = {
   "a": [[0.5], [0, 0.5], [0, 0, 1]],
-  "b": [0.5, 0.5, 1.0],
-  "c": [1/6, 1/3, 1/3, 1/6]
+  "b": [1/6, 1/3, 1/3, 1/6],
+  "c": [0.5, 0.5, 1.0]
 }
 ```
 
