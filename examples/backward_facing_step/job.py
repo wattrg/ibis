@@ -16,7 +16,7 @@ config.gas_model = gas_model
 
 config.solver = RungeKutta(
     method = "ssp-rk3",
-    cfl = 5.0,
+    cfl = 3.0,
     max_step = 100000,
     max_time = max_time,
     plot_every_n_steps = -1,

@@ -19,7 +19,7 @@ config.gas_model = gas_model
 
 config.solver = RungeKutta(
     method="ssp-rk3",
-    cfl = 1.4,
+    cfl = 2.0,
     max_step = 500000,
     max_time = max_time,
     plot_every_n_steps = -20,
@@ -34,7 +34,6 @@ config.grid = Block(
         "inflow": supersonic_inflow(inflow),
         "outflow": supersonic_outflow(),
         "wall": fixed_temperature_no_slip_wall(temperature = 300),
-        # "wall": slip_wall(),
         "sides": supersonic_outflow(),
         "top": supersonic_outflow()
     }
