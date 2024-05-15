@@ -15,7 +15,7 @@ initial = FlowState(gas=initial_gs, vx=0)
 max_time = 5 * 1.0 / vx
 
 config.convective_flux = ConvectiveFlux(
-    flux_calculator = FluxCalculator.Ausmdv,
+    flux_calculator = Ausmdv(),
     reconstruction_order = 2
 )
 
@@ -24,7 +24,8 @@ config.viscous_flux = ViscousFlux(enabled = False)
 config.gas_model = gas_model
 
 config.solver = RungeKutta(
-    cfl = 0.5,
+    method="ssp-rk3",
+    cfl = 4.0,
     max_step = 10000000,
     max_time = max_time,
     plot_every_n_steps = -1,
