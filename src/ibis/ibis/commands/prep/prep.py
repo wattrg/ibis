@@ -419,9 +419,40 @@ def make_cfl_schedule(config):
         )
 
 
+class ButcherTableau:
+    def __init__(self, a, b, c):
+        self._a = a
+        self._b = b
+        self._c = c
+
+    def n_stages(self):
+        return len(self._b)
+
+    def as_dict(self):
+        return {"a": self._a, "b": self._b, "c": self._c}
+
+
+def butcher_tableau(method):
+    if method == "euler":
+        return ButcherTableau([[]], [1.0], [])
+    elif method == "midpoint":
+        return ButcherTableau([[0.5]], [0, 1], [0.5])
+    elif method == "rk3":
+        return ButcherTableau([[0.5, 2], [-1]], [0.5, 1.0], [1/6, 2/3, 1/6])
+    elif method == "ssp-rk3":
+        return ButcherTableau([[1, 0.25], [0.25]], [1, 0.5], [1/6, 1/6, 2/3])
+    elif method == "rk4":
+        return ButcherTableau([[0.5, 0.5, 1.0], [0, 0], [0]],
+                              [0.5, 0.5, 1.0],
+                              [1/6, 1/3, 1/3, 1/6])
+    else:
+        raise ValidationException(f"Unknown method {method}")
+
+
 class RungeKutta:
     _json_values = ["cfl", "max_time", "max_step", "print_frequency",
-                    "plot_frequency", "plot_every_n_steps", "dt_init"]
+                    "plot_frequency", "plot_every_n_steps", "dt_init",
+                    "method", "butcher_tableau"]
     _defaults_file = "runge_kutta.json"
     _name = Solver.RungeKutta.value
     __slots__ = _json_values
@@ -429,7 +460,17 @@ class RungeKutta:
     def __init__(self, **kwargs):
         json_data = read_defaults(DEFAULTS_DIRECTORY,
                                   self._defaults_file)
+        if "butcher_tableau" in kwargs and "method" in kwargs:
+            validation_errors.append(
+                ValidationException("butcher_tableau and method provided")
+            )
+
         for key in json_data:
+            # we have a default method, from which the butcher_tableau will
+            # be generated, but we don't explicitly have a default Butcher
+            # tableau, so we'll just skip this key
+            if key == "butcher_tableau":
+                continue
             setattr(self, key, json_data[key])
 
         for key in kwargs:
@@ -437,9 +478,13 @@ class RungeKutta:
 
     def as_dict(self):
         dictionary = {"name": self._name}
+
         for key in self._json_values:
             if key == "cfl" and type(self.cfl) is not CflSchedule:
                 self.cfl = make_cfl_schedule(self.cfl).as_dict()
+            if key == "method":
+                self.butcher_tableau = butcher_tableau(self.method).as_dict()
+                continue
             dictionary[key] = getattr(self, key)
         return dictionary
 
