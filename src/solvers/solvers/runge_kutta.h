@@ -14,15 +14,15 @@
 class ButcherTableau {
 public:
     ButcherTableau() {}
-    
-    ButcherTableau(std::vector<std::vector<double>> a,
-                   std::vector<double> b,
-                   std::vector<double> c) : a_(a), b_(b), c_(c) {
-        num_stages_ = b_.size();
-    } 
 
-    ButcherTableau(json config) : 
-        ButcherTableau(config.at("a"), config.at("b"), config.at("c")) {}
+    ButcherTableau(std::vector<std::vector<double>> a, std::vector<double> b,
+                   std::vector<double> c)
+        : a_(a), b_(b), c_(c) {
+        num_stages_ = b_.size();
+    }
+
+    ButcherTableau(json config)
+        : ButcherTableau(config.at("a"), config.at("b"), config.at("c")) {}
 
     double a(size_t i, size_t j);
     double b(size_t i);

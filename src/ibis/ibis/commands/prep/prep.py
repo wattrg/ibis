@@ -438,11 +438,11 @@ def butcher_tableau(method):
     elif method == "midpoint":
         return ButcherTableau([[0.5]], [0, 1], [0.5])
     elif method == "rk3":
-        return ButcherTableau([[0.5, 2], [-1]], [0.5, 1.0], [1/6, 2/3, 1/6])
+        return ButcherTableau([[1/2], [-1, 2]], [0.5, 1.0], [1/6, 2/3, 1/6])
     elif method == "ssp-rk3":
-        return ButcherTableau([[1, 0.25], [0.25]], [1, 0.5], [1/6, 1/6, 2/3])
+        return ButcherTableau([[1], [0.25, 0.25]], [1, 0.5], [1/6, 1/6, 2/3])
     elif method == "rk4":
-        return ButcherTableau([[0.5, 0.5, 1.0], [0, 0], [0]],
+        return ButcherTableau([[0.5], [0, 0.5], [0, 0, 1]],
                               [0.5, 0.5, 1.0],
                               [1/6, 1/3, 1/3, 1/6])
     else:
@@ -482,7 +482,7 @@ class RungeKutta:
         for key in self._json_values:
             if key == "cfl" and type(self.cfl) is not CflSchedule:
                 self.cfl = make_cfl_schedule(self.cfl).as_dict()
-            if key == "method":
+            if key == "method" and not hasattr(self, "butcher_tableau"):
                 self.butcher_tableau = butcher_tableau(self.method).as_dict()
                 continue
             dictionary[key] = getattr(self, key)

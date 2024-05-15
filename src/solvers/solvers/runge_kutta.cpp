@@ -11,10 +11,10 @@
 #include "solvers/cfl.h"
 
 // Implementation of Butcher tableau
-double ButcherTableau::a(size_t i, size_t j) {return a_[i][j];}
-double ButcherTableau::b(size_t i) {return b_[i];}
-double ButcherTableau::c(size_t i) {return c_[i];}
-size_t ButcherTableau::num_stages() {return num_stages_;}
+double ButcherTableau::a(size_t i, size_t j) { return a_[i][j]; }
+double ButcherTableau::b(size_t i) { return b_[i]; }
+double ButcherTableau::c(size_t i) { return c_[i]; }
+size_t ButcherTableau::num_stages() { return num_stages_; }
 
 RungeKutta::RungeKutta(json config, GridBlock<double>& grid, std::string grid_dir,
                        std::string flow_dir)
@@ -43,9 +43,7 @@ RungeKutta::RungeKutta(json config, GridBlock<double>& grid, std::string grid_di
     flow_ = FlowStates<double>(number_cells);
     conserved_quantities_ = ConservedQuantities<double>(number_cells, dim);
     k_ = std::vector<ConservedQuantities<double>>(
-        tableau_.num_stages(), 
-        ConservedQuantities<double>(number_cells, dim)
-    );
+        tableau_.num_stages(), ConservedQuantities<double>(number_cells, dim));
     if (tableau_.num_stages() > 1) {
         k_tmp_ = ConservedQuantities<double>(number_cells, dim);
         flow_tmp_ = FlowStates<double>(number_cells);
@@ -96,14 +94,15 @@ int RungeKutta::take_step() {
 
     // the main part of the runge-kutta method. We've already done stage 0
     // so we start the loop at stage 1.
-    for (size_t i = 1; i < tableau_.num_stages(); i++){
+    for (size_t i = 1; i < tableau_.num_stages(); i++) {
         // The first evaluation for each row of the tabluea includes the initial state
         // so we treat it separately. Even if the coefficient for this stage is zero,
         // we do this step to make sure k_tmp_ is set correctly.
-        apply_time_derivative(conserved_quantities_, k_tmp_, k_[0], tableau_.a(i, 0) * dt_);
+        apply_time_derivative(conserved_quantities_, k_tmp_, k_[0],
+                              tableau_.a(i, 0) * dt_);
 
         // The remaining coefficients for this row
-        for (size_t j = 1; j < i - 1; j++){
+        for (size_t j = 1; j < i - 1; j++) {
             // If the coefficient for this particular stage is zero,
             // then we skip to save adding zero to every number
             if (tableau_.a(i, j) < 1e-14) continue;
@@ -116,12 +115,12 @@ int RungeKutta::take_step() {
         conserved_to_primatives(k_tmp_, flow_tmp_, gas_model_);
         fv_.compute_dudt(flow_tmp_, grid_, k_[i], gas_model_, trans_prop_);
     }
-    
+
     // Update the flow state
-    for (size_t i = 0; i < tableau_.num_stages(); i++){
+    for (size_t i = 0; i < tableau_.num_stages(); i++) {
         conserved_quantities_.apply_time_derivative(k_[i], tableau_.b(i) * dt_);
     }
-    
+
     conserved_to_primatives(conserved_quantities_, flow_, gas_model_);
 
     // book keeping
