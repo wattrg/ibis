@@ -102,7 +102,7 @@ int RungeKutta::take_step() {
                               tableau_.a(i, 0) * dt_);
 
         // The remaining coefficients for this row
-        for (size_t j = 1; j < i - 1; j++) {
+        for (size_t j = 1; j < i; j++) {
             // If the coefficient for this particular stage is zero,
             // then we skip to save adding zero to every number
             if (tableau_.a(i, j) < 1e-14) continue;

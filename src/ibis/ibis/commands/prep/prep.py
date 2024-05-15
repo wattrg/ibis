@@ -438,13 +438,13 @@ def butcher_tableau(method):
     elif method == "midpoint":
         return ButcherTableau([[0.5]], [0, 1], [0.5])
     elif method == "rk3":
-        return ButcherTableau([[1/2], [-1, 2]], [0.5, 1.0], [1/6, 2/3, 1/6])
+        return ButcherTableau([[1/2], [-1, 2]], [1/6, 2/3, 1/6], [0.5, 1.0])
     elif method == "ssp-rk3":
-        return ButcherTableau([[1], [0.25, 0.25]], [1, 0.5], [1/6, 1/6, 2/3])
+        return ButcherTableau([[1], [0.25, 0.25]], [1/6, 1/6, 2/3], [1, 0.5])
     elif method == "rk4":
         return ButcherTableau([[0.5], [0, 0.5], [0, 0, 1]],
-                              [0.5, 0.5, 1.0],
-                              [1/6, 1/3, 1/3, 1/6])
+                              [1/6, 1/3, 1/3, 1/6],
+                              [0.5, 0.5, 1.0])
     else:
         raise ValidationException(f"Unknown method {method}")
 
