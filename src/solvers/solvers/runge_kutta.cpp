@@ -11,9 +11,9 @@
 #include "solvers/cfl.h"
 
 // Implementation of Butcher tableau
-double ButcherTableau::a(size_t i, size_t j) { return a_[i-1][j]; }
+double ButcherTableau::a(size_t i, size_t j) { return a_[i - 1][j]; }
 double ButcherTableau::b(size_t i) { return b_[i]; }
-double ButcherTableau::c(size_t i) { return c_[i-1]; }
+double ButcherTableau::c(size_t i) { return c_[i - 1]; }
 size_t ButcherTableau::num_stages() { return num_stages_; }
 
 RungeKutta::RungeKutta(json config, GridBlock<double>& grid, std::string grid_dir,
