@@ -21,7 +21,7 @@ int plot(FlowFormat format, std::vector<std::string> extras, int argc, char* arg
     json directories = read_directories();
     if (format == FlowFormat::Vtk) {
         plot_vtk<double>(directories, extras);
-    } else if (format == FlowFormat::Native) {
+    } else if (format == FlowFormat::NativeText || format == FlowFormat::NativeBinary) {
         spdlog::error("Unable to plot in Native format");
         throw std::runtime_error("Unable to plot in Native format");
     }
@@ -46,7 +46,7 @@ void plot_vtk(json directories, std::vector<std::string> extra_vars) {
     json config = read_config(directories);
     IdealGas<double> gas_model{config.at("gas_model")};
 
-    FVIO<T> io(FlowFormat::Native, FlowFormat::Vtk, flow_dir, plot_dir);
+    FVIO<T> io(FlowFormat::NativeBinary, FlowFormat::Vtk, flow_dir, plot_dir);
     for (auto& extra_var : extra_vars) {
         io.add_output_variable(extra_var);
     }

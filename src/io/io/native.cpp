@@ -2,7 +2,7 @@
 #include <spdlog/spdlog.h>
 
 template <typename T>
-int NativeOutput<T>::write(const typename FlowStates<T>::mirror_type& fs,
+int NativeTextOutput<T>::write(const typename FlowStates<T>::mirror_type& fs,
                            FiniteVolume<T>& fv, const GridBlock<T>& grid,
                            const IdealGas<T>& gas_model, std::string plot_dir,
                            std::string time_dir, double time) {
@@ -63,23 +63,25 @@ int NativeOutput<T>::write(const typename FlowStates<T>::mirror_type& fs,
     }
     vy.close();
 
-    std::ofstream vz(dir + "/vz");
-    if (!vz) {
-        spdlog::error("failed to open {}", dir + "/vz");
-        return 1;
+    if (grid.dim() == 3){
+        std::ofstream vz(dir + "/vz");
+        if (!vz) {
+            spdlog::error("failed to open {}", dir + "/vz");
+            return 1;
+        }
+        vz << std::fixed << std::setprecision(16);
+        for (size_t cell_i = 0; cell_i < grid.num_cells(); cell_i++) {
+            vz << fs.vel.z(cell_i) << std::endl;
+        }
+        vz.close();
     }
-    vz << std::fixed << std::setprecision(16);
-    for (size_t cell_i = 0; cell_i < grid.num_cells(); cell_i++) {
-        vz << fs.vel.z(cell_i) << std::endl;
-    }
-    vz.close();
 
     return 0;
 }
-template class NativeOutput<double>;
+template class NativeTextOutput<double>;
 
 template <typename T>
-int NativeInput<T>::read(typename FlowStates<T>::mirror_type& fs,
+int NativeTextInput<T>::read(typename FlowStates<T>::mirror_type& fs,
                          const GridBlock<T>& grid, const IdealGas<T>& gas_model,
                          std::string dir, json& meta_data) {
     size_t num_cells = grid.num_cells();
@@ -168,4 +170,163 @@ int NativeInput<T>::read(typename FlowStates<T>::mirror_type& fs,
 
     return 0;
 }
-template class NativeInput<double>;
+template class NativeTextInput<double>;
+
+void write_double(std::ofstream& f, double value) {
+    f.write(reinterpret_cast<const char*>(&value), sizeof(double));
+}
+
+template <typename T>
+int NativeBinaryOutput<T>::write(const typename FlowStates<T>::mirror_type& fs,
+                           FiniteVolume<T>& fv, const GridBlock<T>& grid,
+                           const IdealGas<T>& gas_model, std::string plot_dir,
+                           std::string time_dir, double time) {
+    (void)gas_model;
+    (void)fv;
+    std::string dir = plot_dir + "/" + time_dir;
+    std::ofstream meta_f(dir + "/meta_data.json");
+    json meta;
+    meta["time"] = time;
+    meta_f << meta.dump(4);
+    meta_f.close();
+
+    std::ofstream flows(plot_dir + "/flows", std::ios_base::app);
+    flows << time_dir << std::endl;
+    flows.close();
+
+    std::ofstream temp(dir + "/T", std::ios::binary);
+    if (!temp) {
+        spdlog::error("failed to open {}", dir + "/T");
+        return 1;
+    }
+    for (size_t cell_i = 0; cell_i < grid.num_cells(); cell_i++) {
+        write_double(temp, fs.gas.temp(cell_i));
+    }
+    temp.close();
+
+    std::ofstream pressure(dir + "/p", std::ios::binary);
+    if (!pressure) {
+        spdlog::error("failed to open {}", dir + "/p");
+        return 1;
+    }
+    for (size_t cell_i = 0; cell_i < grid.num_cells(); cell_i++) {
+        write_double(pressure, fs.gas.pressure(cell_i));
+    }
+    pressure.close();
+
+    std::ofstream vx(dir + "/vx", std::ios::binary);
+    if (!vx) {
+        spdlog::error("failed to open {}", dir + "/vx");
+        return 1;
+    }
+    for (size_t cell_i = 0; cell_i < grid.num_cells(); cell_i++) {
+        write_double(vx, fs.vel.x(cell_i));
+    }
+    vx.close();
+
+    std::ofstream vy(dir + "/vy", std::ios::binary);
+    if (!vy) {
+        spdlog::error("failed to open {}", dir + "/vy");
+        return 1;
+    }
+    for (size_t cell_i = 0; cell_i < grid.num_cells(); cell_i++) {
+        write_double(vy, fs.vel.y(cell_i));
+    }
+    vy.close();
+
+    if (grid.dim() == 3) {
+        std::ofstream vz(dir + "/vz", std::ios::binary);
+        if (!vz) {
+            spdlog::error("failed to open {}", dir + "/vz");
+            return 1;
+        }
+        for (size_t cell_i = 0; cell_i < grid.num_cells(); cell_i++) {
+            write_double(vz, fs.vel.z(cell_i));
+        }
+        vz.close();
+    }
+
+    return 0;
+}
+template class NativeBinaryOutput<double>;
+
+void read_double(std::ifstream& f, double& value) {
+    f.read(reinterpret_cast<char*>(&value), sizeof(double));
+}
+
+template <typename T>
+int NativeBinaryInput<T>::read(typename FlowStates<T>::mirror_type& fs,
+                         const GridBlock<T>& grid, const IdealGas<T>& gas_model,
+                         std::string dir, json& meta_data) {
+    size_t num_cells = grid.num_cells();
+    std::ifstream meta_f(dir + "/meta_data.json");
+    if (!meta_f) {
+        spdlog::error("Unable to load {}", dir + "/meta_dta.json");
+        return 1;
+    }
+    meta_data = json::parse(meta_f);
+    meta_f.close();
+
+    std::string line;
+    std::ifstream temp(dir + "/T", std::ios::binary);
+    if (!temp) {
+        spdlog::error("Unable to load {}", dir + "/T");
+        return 1;
+    }
+    for (size_t cell_i = 0; cell_i < num_cells; cell_i++) {
+        read_double(temp, fs.gas.temp(cell_i));
+    }
+
+    std::ifstream pressure(dir + "/p", std::ios::binary);
+    if (!pressure) {
+        spdlog::error("Unable to load {}", dir + "/p");
+        return 1;
+    }
+    for (size_t cell_i = 0; cell_i < num_cells; cell_i++) {
+        read_double(pressure, fs.gas.pressure(cell_i));
+    }
+    pressure.close();
+
+    std::ifstream vx(dir + "/vx", std::ios::binary);
+    if (!vx) {
+        spdlog::error("Unable to load {}", dir + "/vx");
+        return 1;
+    }
+    for (size_t cell_i = 0; cell_i < num_cells; cell_i++) {
+        read_double(vx, fs.vel.x(cell_i));
+    }
+    vx.close();
+
+    std::ifstream vy(dir + "/vy", std::ios::binary);
+    if (!vy) {
+        spdlog::error("Unable to load {}", dir + "/vy");
+        return 1;
+    }
+    for (size_t cell_i = 0; cell_i < num_cells; cell_i++) {
+        read_double(vy, fs.vel.y(cell_i));
+    }
+    vy.close();
+
+    if (grid.dim() == 3) {
+        std::ifstream vz(dir + "/vz", std::ios::binary);
+        if (!vz) {
+            spdlog::error("Unable to load {}", dir + "/vz");
+            return 1;
+        }
+
+        for (size_t cell_i = 0; cell_i < num_cells; cell_i++) {
+            read_double(vz, fs.vel.z(cell_i));
+        }
+        vz.close();
+    }
+
+    // gas_model.update_thermo_from_pT(fs.gas);
+
+    for (size_t cell_i = 0; cell_i < num_cells; cell_i++) {
+        gas_model.update_thermo_from_pT(fs.gas, cell_i);
+    }
+
+    return 0;
+}
+template class NativeBinaryInput<double>;
+

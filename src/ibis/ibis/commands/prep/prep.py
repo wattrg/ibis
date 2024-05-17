@@ -2,6 +2,7 @@ import json
 import os
 import shutil
 from enum import Enum
+import struct
 
 from ibis_py_utils import (
     ConstantPrandtlNumber,
@@ -222,7 +223,12 @@ class Block:
                 ValidationException("No grid blocks specified")
             )
 
-    def write(self, grid_directory, flow_directory):
+    def _number(self, number, binary):
+        if binary:
+            return struct.pack("d", number)
+        return f"{number:.16e}\n"
+
+    def write(self, grid_directory, flow_directory, binary):
         if not os.path.exists(grid_directory):
             os.mkdir(grid_directory)
         if not os.path.exists(flow_directory):
@@ -235,24 +241,27 @@ class Block:
         shutil.copy(self._block, f"{grid_directory}/block_{0:04}.su2")
 
         # write the initial condition
+        format = "wb" if binary else "w"
         ic_directory = f"{flow_directory}/{0:04}"
-        temp = open(f"{ic_directory}/T", "w")
-        pressure = open(f"{ic_directory}/p", "w")
-        vx = open(f"{ic_directory}/vx", "w")
-        vy = open(f"{ic_directory}/vy", "w")
+        temp = open(f"{ic_directory}/T", format)
+        pressure = open(f"{ic_directory}/p", format)
+        vx = open(f"{ic_directory}/vx", format)
+        vy = open(f"{ic_directory}/vy", format)
         if self.dim == 3:
-            vz = open(f"{ic_directory}/vz", "w")
+            vz = open(f"{ic_directory}/vz", format)
         meta_data = open(f"{ic_directory}/meta_data.json", "w")
         times = open(f"{flow_directory}/flows", "w")
 
         if type(self._initial_condition) is FlowState:
             for _ in range(self.number_cells):
-                temp.write(f"{self._initial_condition.gas.T:.16e}\n")
-                pressure.write(f"{self._initial_condition.gas.p:.16e}\n")
-                vx.write(f"{self._initial_condition.vel.x:.16e}\n")
-                vy.write(f"{self._initial_condition.vel.y:.16e}\n")
+                temp.write(self._number(self._initial_condition.gas.T, binary))
+                pressure.write(self._number(self._initial_condition.gas.p,
+                                            binary))
+                vx.write(self._number(self._initial_condition.vel.x, binary))
+                vy.write(self._number(self._initial_condition.vel.y, binary))
                 if self.dim == 3:
-                    vz.write(f"{self._initial_condition.vel.z:.16e}\n")
+                    vz.write(self._number(self._initial_condition.vel.z,
+                                          binary))
         json.dump({"time": 0.0}, meta_data, indent=4)
         times.write("0000\n")
 
@@ -586,9 +595,63 @@ def build_transport_property_model(gas_model):
     return TransportPropertyModel(viscosity_model, thermal_conductivity_model)
 
 
+class IOFormat(Enum):
+    NativeText = "native_text"
+    NativeBinary = "native_binary"
+    VtkText = "vtk_text"
+    VtkBinary = "vtk_binary"
+
+
+def string_to_io_format(string):
+    if string == IOFormat.NativeText.value:
+        return IOFormat.NativeText
+    elif string == IOFormat.NativeBinary.value:
+        return IOFormat.NativeBinary
+    elif string == IOFormat.VtkText.value:
+        return IOFormat.VtkText
+    elif string == IOFormat.VtkBinary.value:
+        return IOFormat.VtkBinary
+    else:
+        raise ValidationException(f"Unkown IO format {string}")
+
+
+class IO:
+    _json_values = ["flow_format", "plot_format"]
+    __slots__ = _json_values
+    _defaults_file = "io.json"
+
+    def __init__(self, **kwargs):
+        json_data = read_defaults(DEFAULTS_DIRECTORY,
+                                  self._defaults_file)
+
+        for key in self._json_values:
+            setattr(self, key, string_to_io_format(json_data[key]))
+
+        for key in kwargs:
+            if type(kwargs[key]) is IOFormat:
+                setattr(self, key, kwargs[key])
+            else:
+                setattr(self, key, string_to_io_format(kwargs[key]))
+
+    def validate(self):
+        if (self.flow_format is IOFormat.VtkText or
+                self.flow_format is IOFormat.VtkBinary):
+            validation_errors.append(
+                ValidationException("Vtk not supported as input format")
+            )
+
+    def as_dict(self):
+        values = {}
+        for key in self._json_values:
+            format = getattr(self, key)
+            if type(format) is IOFormat:
+                format = format.value
+            values[key] = format
+
+
 class Config:
     _json_values = ["convective_flux", "viscous_flux", "solver", "grid",
-                    "gas_model", "transport_properties"]
+                    "gas_model", "transport_properties", "io"]
     __slots__ = _json_values
 
     def __init__(self):
@@ -599,6 +662,7 @@ class Config:
         self.transport_properties = build_transport_property_model(
             self.gas_model
         )
+        self.io = IO()
 
     def validate(self):
         for setting in self.__slots__:
@@ -624,7 +688,8 @@ class Config:
         # write the grid files
         grid_directory = directories["grid_dir"]
         flow_directory = directories["flow_dir"]
-        self.grid.write(grid_directory, flow_directory)
+        binary = self.io.flow_format is IOFormat.NativeBinary
+        self.grid.write(grid_directory, flow_directory, binary)
 
 
 def main(file_name, res_dir):
@@ -660,6 +725,8 @@ def main(file_name, res_dir):
         "GasModel": GasModel,
         "IdealGas": IdealGas,
         "RungeKutta": RungeKutta,
+        "IO": IO,
+        "IOFormat": IOFormat,
         "supersonic_inflow": supersonic_inflow,
         "supersonic_outflow": supersonic_outflow,
         "slip_wall": slip_wall,

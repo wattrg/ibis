@@ -22,8 +22,10 @@ std::string pad_time_index(int time_idx, unsigned long len) {
 template <typename T>
 std::unique_ptr<FVInput<T>> make_fv_input(FlowFormat format) {
     switch (format) {
-        case FlowFormat::Native:
-            return std::unique_ptr<FVInput<T>>(new NativeInput<T>());
+        case FlowFormat::NativeText:
+            return std::unique_ptr<FVInput<T>>(new NativeTextInput<T>());
+        case FlowFormat::NativeBinary:
+            return std::unique_ptr<FVInput<T>>(new NativeBinaryInput<T>());
         case FlowFormat::Vtk:
             spdlog::error("Reading VTK files not supported");
             throw std::runtime_error("Reading VTK files not supported");
@@ -35,8 +37,10 @@ std::unique_ptr<FVInput<T>> make_fv_input(FlowFormat format) {
 template <typename T>
 std::unique_ptr<FVOutput<T>> make_fv_output(FlowFormat format) {
     switch (format) {
-        case FlowFormat::Native:
-            return std::unique_ptr<FVOutput<T>>(new NativeOutput<T>());
+        case FlowFormat::NativeText:
+            return std::unique_ptr<FVOutput<T>>(new NativeTextOutput<T>());
+        case FlowFormat::NativeBinary:
+            return std::unique_ptr<FVOutput<T>>(new NativeBinaryOutput<T>());
         case FlowFormat::Vtk:
             return std::unique_ptr<FVOutput<T>>(new VtkOutput<T>());
         default:
@@ -63,11 +67,11 @@ FVIO<T>::FVIO(FlowFormat input, FlowFormat output, std::string input_dir,
     : FVIO(input, output, input_dir, output_dir, 0) {}
 
 template <typename T>
-FVIO<T>::FVIO() : FVIO(FlowFormat::Native, FlowFormat::Native, "flow", "flow", 0) {}
+FVIO<T>::FVIO() : FVIO(FlowFormat::NativeBinary, FlowFormat::NativeBinary, "flow", "flow", 0) {}
 
 template <typename T>
 FVIO<T>::FVIO(int time_index)
-    : FVIO(FlowFormat::Native, FlowFormat::Native, "flow", "flow", time_index) {}
+    : FVIO(FlowFormat::NativeBinary, FlowFormat::NativeBinary, "flow", "flow", time_index) {}
 
 template <typename T>
 int FVIO<T>::write(const FlowStates<T>& fs, FiniteVolume<T>& fv, const GridBlock<T>& grid,

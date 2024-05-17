@@ -120,7 +120,7 @@ int VtkOutput<T>::write(const typename FlowStates<T>::mirror_type& fs,
     grid_host.deep_copy(grid);
 
     std::ofstream f(plot_dir + "/" + time_dir + "/" + "/block_0.vtu");
-    f << "<VTKFile type='UnstructuredGrid' byte_order='BigEndian'>" << std::endl;
+    f << "<VTKFile type='UnstructuredGrid' byte_order='LittleEndian'>" << std::endl;
     f << "<UnstructuredGrid>" << std::endl;
 
     // points
