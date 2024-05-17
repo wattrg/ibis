@@ -8,8 +8,8 @@ gas_state = GasState()
 gas_state.rho = 1.225
 gas_state.T = T
 gas_model.update_thermo_from_rhoT(gas_state)
-vx = mach * gas_model.speed_of_sound(gas_state)
-flow_state = FlowState(gas=gas_state, vx=vx)
+v = mach * gas_model.speed_of_sound(gas_state)
+flow_state = FlowState(gas=gas_state, vz=v)
 
 config.convective_flux = ConvectiveFlux(
     flux_calculator = Ausmdv(),
@@ -19,11 +19,12 @@ config.convective_flux = ConvectiveFlux(
 config.gas_model = gas_model
 
 config.solver = RungeKutta(
-    cfl = 0.5,
+    method = "ssp-rk3",
+    cfl = 3.0,
     max_step = 100000,
-    max_time = n_flows * length / vx,
+    max_time = n_flows * length / v,
     plot_every_n_steps = -1,
-    plot_frequency = n_flows / n_plots * length / vx,
+    plot_frequency = n_flows / n_plots * length / v,
     print_frequency = 500
 )
 

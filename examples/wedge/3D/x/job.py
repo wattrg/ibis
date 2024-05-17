@@ -1,11 +1,15 @@
-gas_model = IdealGas(R=287.0)
+mach = 3.0
+T = 300
+n_flows = 3
+n_plots = 10
+length = 1.0
+gas_model = IdealGas(R = 287.0)
 gas_state = GasState()
-gas_state.p = 101325
-gas_state.T = 300.0
-gas_model.update_thermo_from_pT(gas_state)
-vx = 3 * gas_model.speed_of_sound(gas_state)
+gas_state.rho = 1.225
+gas_state.T = T
+gas_model.update_thermo_from_rhoT(gas_state)
+vx = mach * gas_model.speed_of_sound(gas_state)
 flow_state = FlowState(gas=gas_state, vx=vx)
-max_time = 5e-3
 
 config.convective_flux = ConvectiveFlux(
     flux_calculator = Ausmdv(),
@@ -18,9 +22,9 @@ config.solver = RungeKutta(
     method = "ssp-rk3",
     cfl = 3.0,
     max_step = 100000,
-    max_time = max_time,
+    max_time = n_flows * length / vx,
     plot_every_n_steps = -1,
-    plot_frequency = max_time / 10,
+    plot_frequency = n_flows / n_plots * length / vx,
     print_frequency = 500
 )
 
@@ -30,6 +34,9 @@ config.grid = Block(
     boundaries = {
         "inflow": supersonic_inflow(flow_state),
         "outflow": supersonic_outflow(),
-        "wall": slip_wall(),
+        "ramp": slip_wall(),
+        "symmetry": slip_wall(),
+        "sides": slip_wall(),
+        "top": supersonic_outflow(),
     }
 )

@@ -26,3 +26,24 @@ void ConservedQuantities<T>::apply_time_derivative(const ConservedQuantities<T>&
 }
 
 template class ConservedQuantities<double>;
+
+template <typename T>
+void apply_time_derivative(const ConservedQuantities<T>& U0, ConservedQuantities<T>& U1,
+                           ConservedQuantities<T>& dUdt, double dt) {
+    size_t n_values = U0.size();
+    size_t dim = U0.dim();
+    Kokkos::parallel_for(
+        "apply_time_derivative", n_values, KOKKOS_LAMBDA(const int i) {
+            U1.mass(i) = U0.mass(i) + dUdt.mass(i) * dt;
+            U1.momentum_x(i) = U0.momentum_x(i) + dUdt.momentum_x(i) * dt;
+            U1.momentum_y(i) = U0.momentum_y(i) + dUdt.momentum_y(i) * dt;
+            if (dim == 3) {
+                U1.momentum_z(i) = U0.momentum_z(i) + dUdt.momentum_z(i) * dt;
+            }
+            U1.energy(i) = U0.energy(i) + dUdt.energy(i) * dt;
+        });
+}
+
+template void apply_time_derivative(const ConservedQuantities<double>&,
+                                    ConservedQuantities<double>&,
+                                    ConservedQuantities<double>&, double);

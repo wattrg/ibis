@@ -11,6 +11,31 @@
 
 #include <memory>
 
+class ButcherTableau {
+public:
+    ButcherTableau() {}
+
+    ButcherTableau(std::vector<std::vector<double>> a, std::vector<double> b,
+                   std::vector<double> c)
+        : a_(a), b_(b), c_(c) {
+        num_stages_ = b_.size();
+    }
+
+    ButcherTableau(json config)
+        : ButcherTableau(config.at("a"), config.at("b"), config.at("c")) {}
+
+    double a(size_t i, size_t j);
+    double b(size_t i);
+    double c(size_t i);
+    size_t num_stages();
+
+private:
+    std::vector<std::vector<double>> a_;
+    std::vector<double> b_;
+    std::vector<double> c_;
+    size_t num_stages_;
+};
+
 class RungeKutta : public Solver {
 public:
     RungeKutta(json config, GridBlock<double>& grid, std::string grid_dir,
@@ -46,6 +71,7 @@ private:
     int initialise();
     int finalise();
     int take_step();
+    void estimate_dt();
     bool print_this_step(unsigned int step);
     bool plot_this_step(unsigned int step);
     int plot_solution(unsigned int step);
@@ -59,7 +85,12 @@ private:
     // memory
     FlowStates<double> flow_;
     ConservedQuantities<double> conserved_quantities_;
-    ConservedQuantities<double> dUdt_;
+    std::vector<ConservedQuantities<double>> k_;
+    ConservedQuantities<double> k_tmp_;
+    FlowStates<double> flow_tmp_;
+
+    // butcher tableau
+    ButcherTableau tableau_;
 
 private:
     // spatial discretisation

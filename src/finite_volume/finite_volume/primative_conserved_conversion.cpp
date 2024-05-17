@@ -9,7 +9,8 @@ int conserved_to_primatives(ConservedQuantities<T>& cq, FlowStates<T>& fs,
             T rho = cq.mass(i);
             T vx = cq.momentum_x(i) / rho;
             T vy = cq.momentum_y(i) / rho;
-            T vz = 0.0;
+            T vz = (cq.dim() == 3) ? cq.momentum_z(i) / rho : 0.0;
+            // T vz = 0.0;
             if (cq.dim() == 3) {
                 vz = cq.momentum_z(i) / rho;
             }

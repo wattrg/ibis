@@ -18,7 +18,8 @@ config.viscous_flux = ViscousFlux(enabled = True)
 config.gas_model = gas_model
 
 config.solver = RungeKutta(
-    cfl = 0.5,
+    method="ssp-rk3",
+    cfl = 2.0,
     max_step = 500000,
     max_time = max_time,
     plot_every_n_steps = -20,
@@ -33,7 +34,5 @@ config.grid = Block(
         "inflow": supersonic_inflow(inflow),
         "outflow": supersonic_outflow(),
         "wall": fixed_temperature_no_slip_wall(temperature = 300),
-        "sides": supersonic_outflow(),
-        "top": supersonic_outflow()
     }
 )

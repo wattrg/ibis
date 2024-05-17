@@ -8,6 +8,7 @@ It is configured by setting `config.solver` in `job.py` to an instance of `Runge
 For example:
 ```
 config.solver = RungeKutta(
+    method="ssp-rk3",
     cfl = 0.5,
     max_step = 10000,
     max_time = 1e-3,
@@ -20,6 +21,33 @@ config.solver = RungeKutta(
 Each option is optional, default values will be used if they are not provided.
 
 Each option is described below.
+
+### method
+The specific Runge-Kutta scheme to use.
+The options are:
+  + `euler`
+  + `midpoint`
+  + `rk3`
+  + `ssp-rk3`
+  + `rk4`
+
+> Type: `str`\
+> Default: `ssp-rk3`
+
+### butcher_tableau
+Instead of using one of the existing Runge-Kutta methods, you may provide the Butcher tableau for any explicit Runge Kutta method.
+The tableau is specified as a dictionary of the `b`, `b`, and `c` values of the Butcher tableau.
+Only the `a` values below the diagonal should are included, and the first `c` value, which is always 0 for explicit Runge-Kutta methods is not included either.
+For example, the classic RK4 method can be specified as:
+```
+butcher_tableau = {
+  "a": [[0.5], [0, 0.5], [0, 0, 1]],
+  "b": [1/6, 1/3, 1/3, 1/6],
+  "c": [0.5, 0.5, 1.0]
+}
+```
+
+It is an error to provide both `method` and `butcher_tableau` to the `RungeKutta` constructor.
 
 ### cfl
 The cfl value to dictate how big of a step to take

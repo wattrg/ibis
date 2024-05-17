@@ -65,4 +65,8 @@ private:
     int num_values_, dim_;
 };
 
+template <typename T>
+void apply_time_derivative(const ConservedQuantities<T>& U0, ConservedQuantities<T>& U1,
+                           ConservedQuantities<T>& dUdt, double dt);
+
 #endif
