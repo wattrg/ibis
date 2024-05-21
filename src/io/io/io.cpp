@@ -67,11 +67,13 @@ FVIO<T>::FVIO(FlowFormat input, FlowFormat output, std::string input_dir,
     : FVIO(input, output, input_dir, output_dir, 0) {}
 
 template <typename T>
-FVIO<T>::FVIO() : FVIO(FlowFormat::NativeBinary, FlowFormat::NativeBinary, "flow", "flow", 0) {}
+FVIO<T>::FVIO()
+    : FVIO(FlowFormat::NativeBinary, FlowFormat::NativeBinary, "flow", "flow", 0) {}
 
 template <typename T>
 FVIO<T>::FVIO(int time_index)
-    : FVIO(FlowFormat::NativeBinary, FlowFormat::NativeBinary, "flow", "flow", time_index) {}
+    : FVIO(FlowFormat::NativeBinary, FlowFormat::NativeBinary, "flow", "flow",
+           time_index) {}
 
 template <typename T>
 int FVIO<T>::write(const FlowStates<T>& fs, FiniteVolume<T>& fv, const GridBlock<T>& grid,

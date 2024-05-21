@@ -3,9 +3,9 @@
 
 template <typename T>
 int NativeTextOutput<T>::write(const typename FlowStates<T>::mirror_type& fs,
-                           FiniteVolume<T>& fv, const GridBlock<T>& grid,
-                           const IdealGas<T>& gas_model, std::string plot_dir,
-                           std::string time_dir, double time) {
+                               FiniteVolume<T>& fv, const GridBlock<T>& grid,
+                               const IdealGas<T>& gas_model, std::string plot_dir,
+                               std::string time_dir, double time) {
     (void)gas_model;
     (void)fv;
     std::string dir = plot_dir + "/" + time_dir;
@@ -63,7 +63,7 @@ int NativeTextOutput<T>::write(const typename FlowStates<T>::mirror_type& fs,
     }
     vy.close();
 
-    if (grid.dim() == 3){
+    if (grid.dim() == 3) {
         std::ofstream vz(dir + "/vz");
         if (!vz) {
             spdlog::error("failed to open {}", dir + "/vz");
@@ -82,8 +82,8 @@ template class NativeTextOutput<double>;
 
 template <typename T>
 int NativeTextInput<T>::read(typename FlowStates<T>::mirror_type& fs,
-                         const GridBlock<T>& grid, const IdealGas<T>& gas_model,
-                         std::string dir, json& meta_data) {
+                             const GridBlock<T>& grid, const IdealGas<T>& gas_model,
+                             std::string dir, json& meta_data) {
     size_t num_cells = grid.num_cells();
     std::ifstream meta_f(dir + "/meta_data.json");
     if (!meta_f) {
@@ -178,9 +178,9 @@ void write_double(std::ofstream& f, double value) {
 
 template <typename T>
 int NativeBinaryOutput<T>::write(const typename FlowStates<T>::mirror_type& fs,
-                           FiniteVolume<T>& fv, const GridBlock<T>& grid,
-                           const IdealGas<T>& gas_model, std::string plot_dir,
-                           std::string time_dir, double time) {
+                                 FiniteVolume<T>& fv, const GridBlock<T>& grid,
+                                 const IdealGas<T>& gas_model, std::string plot_dir,
+                                 std::string time_dir, double time) {
     (void)gas_model;
     (void)fv;
     std::string dir = plot_dir + "/" + time_dir;
@@ -256,8 +256,8 @@ void read_double(std::ifstream& f, double& value) {
 
 template <typename T>
 int NativeBinaryInput<T>::read(typename FlowStates<T>::mirror_type& fs,
-                         const GridBlock<T>& grid, const IdealGas<T>& gas_model,
-                         std::string dir, json& meta_data) {
+                               const GridBlock<T>& grid, const IdealGas<T>& gas_model,
+                               std::string dir, json& meta_data) {
     size_t num_cells = grid.num_cells();
     std::ifstream meta_f(dir + "/meta_data.json");
     if (!meta_f) {
@@ -329,4 +329,3 @@ int NativeBinaryInput<T>::read(typename FlowStates<T>::mirror_type& fs,
     return 0;
 }
 template class NativeBinaryInput<double>;
-
