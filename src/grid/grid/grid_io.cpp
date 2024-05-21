@@ -210,7 +210,20 @@ void GridIO::_read_su2_grid(std::ifstream &grid_file) {
             n_mark = read_int(line);
             for (size_t mark_i = 0; mark_i < n_mark; mark_i++) {
                 get_next_line(grid_file, line);
-                bcs_.insert(read_su2_boundary_marker(grid_file, line));
+
+                auto boundary = read_su2_boundary_marker(grid_file, line);
+
+                if (bcs_.find(boundary.first) == bcs_.end()) {
+                    // we haven't seen a boundary with this tag before
+                    bcs_.insert(boundary);
+                } else {
+                    // we have seen a boundary with this tag before,
+                    // so we append the ElemIO's that we just read
+                    // to the existing ones
+                    bcs_[boundary.first].insert(bcs_[boundary.first].end(),
+                                                boundary.second.begin(),
+                                                boundary.second.end());
+                }
             }
         }
     }
