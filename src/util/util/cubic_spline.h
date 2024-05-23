@@ -1,4 +1,5 @@
 #include <Kokkos_Core.hpp>
+#include <cassert>
 #include <vector>
 
 class CubicSpline {
@@ -8,6 +9,11 @@ public:
 
     KOKKOS_INLINE_FUNCTION
     double eval(const double x) const {
+        // return the extreme values if a point outside the interpolation
+        // region is asked for
+        if (x <= x_min_) return y_(0);
+        if (x >= x_max_) return y_(n_pts_ - 1);
+
         // find the index to interpolate inside of
         size_t idx = 0;
         for (size_t i = 0; i < n_pts_; i++) {
@@ -34,6 +40,9 @@ private:
 
     // the second derivatives to make evaluating the interpolation efficient
     Kokkos::View<double*> y_dash_dash_;
+
+    double x_min_;
+    double x_max_;
 
     size_t n_pts_;
 };

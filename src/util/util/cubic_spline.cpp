@@ -15,6 +15,9 @@ CubicSpline::CubicSpline(std::vector<double> x_vec, std::vector<double> y_vec) {
             "Cubic spline has different number of x and y points");
     }
 
+    x_min_ = x_vec[0];
+    x_max_ = x_vec[n_pts - 1];
+
     Kokkos::View<double*, Kokkos::DefaultHostExecutionSpace> x("x", n_pts);
     Kokkos::View<double*, Kokkos::DefaultHostExecutionSpace> y("y", n_pts);
     for (size_t i = 0; i < n_pts; i++) {
@@ -86,8 +89,8 @@ TEST_CASE("CubicSpline"){
 
     CubicSpline spline(x, y);
 
-    Kokkos::View<double*> results_dev ("Results", 4);
-    Kokkos::View<double*, Kokkos::DefaultHostExecutionSpace> results_host("Results_host", 4);
+    Kokkos::View<double*> results_dev ("Results", 6);
+    Kokkos::View<double*, Kokkos::DefaultHostExecutionSpace> results_host("Results_host", 6);
 
     Kokkos::parallel_for("Run cubic spline", 1, KOKKOS_LAMBDA(const size_t i) {
         (void) i;
@@ -95,6 +98,8 @@ TEST_CASE("CubicSpline"){
         results_dev(1) = spline.eval(1.5);                         
         results_dev(2) = spline.eval(2.0);
         results_dev(3) = spline.eval(4.0);
+        results_dev(4) = spline.eval(5.0);
+        results_dev(5) = spline.eval(0.0);
     });
 
     Kokkos::deep_copy(results_host, results_dev);
@@ -103,4 +108,6 @@ TEST_CASE("CubicSpline"){
     CHECK(results_host(1) == doctest::Approx(5.0));
     CHECK(results_host(2) == doctest::Approx(6.0));
     CHECK(results_host(3) == doctest::Approx(10.0));
+    CHECK(results_host(4) == doctest::Approx(10.0));
+    CHECK(results_host(5) == doctest::Approx(4.0));
 }

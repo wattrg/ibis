@@ -324,10 +324,13 @@ class _BoundaryLayerProfile:
 
     def as_dict(self):
         return {
-            "height": self.height,
-            "v": self.vel_profile,
-            "T": self.temp_profile,
-            "p": self.pressure,
+            "type": "boundary_layer_profile",
+            "profile": {
+                "height": self.height,
+                "v": self.vel_profile,
+                "T": self.temp_profile,
+                "p": self.pressure,
+            }
         }
 
 
@@ -754,6 +757,7 @@ def main(file_name, res_dir):
         "IO": IO,
         "IOFormat": IOFormat,
         "supersonic_inflow": supersonic_inflow,
+        "boundary_layer_inflow": boundary_layer_inflow,
         "supersonic_outflow": supersonic_outflow,
         "slip_wall": slip_wall,
         "adiabatic_no_slip_wall": adiabatic_no_slip_wall,

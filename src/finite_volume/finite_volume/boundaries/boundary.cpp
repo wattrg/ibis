@@ -284,7 +284,8 @@ void FixTemperature<T>::apply(FlowStates<T>& fs, const GridBlock<T>& grid,
             // extrapolate the temperature in the ghost cell from the
             // temperature in the valid cell
             fs.gas.temp(ghost_cell) = 2 * Twall - fs.gas.temp(valid_cell);
-        });
+        }
+    );
 }
 
 template <typename T>
