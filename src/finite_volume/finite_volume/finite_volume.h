@@ -63,10 +63,14 @@ public:
     // post-processing will call them.
 
     // Apply pre-reconstruction boundary conditions
-    void apply_pre_reconstruction_bc(FlowStates<T>& fs, const GridBlock<T>& grid);
+    void apply_pre_reconstruction_bc(FlowStates<T>& fs, const GridBlock<T>& grid,
+                                     const IdealGas<T>& gas_model,
+                                     const TransportProperties<T>& trans_prop);
 
     // Apply pre-reconstruction boundary conditions
-    void apply_pre_viscous_grad_bc(FlowStates<T>& fs, const GridBlock<T>& grid);
+    void apply_pre_viscous_grad_bc(FlowStates<T>& fs, const GridBlock<T>& grid,
+                                   const IdealGas<T>& gas_model,
+                                   const TransportProperties<T>& trans_prop);
 
     // Perform the surface integral of fluxes over the cells
     void flux_surface_integral(const GridBlock<T>& grid, ConservedQuantities<T>& dudt);
@@ -79,10 +83,14 @@ public:
     const Gradients<T>& cell_gradients() const { return cell_grad_; }
 
     // viscous gradients for post-processing
-    void compute_viscous_gradient(FlowStates<T>& fs, const GridBlock<T>& grid);
+    void compute_viscous_gradient(FlowStates<T>& fs, const GridBlock<T>& grid,
+                                  const IdealGas<T>& gas_model,
+                                  const TransportProperties<T>& trans_prop);
 
     // convective gradients for post-processing
-    void compute_convective_gradient(FlowStates<T>& fs, const GridBlock<T>& grid);
+    void compute_convective_gradient(FlowStates<T>& fs, const GridBlock<T>& grid,
+                                     const IdealGas<T>& gas_model,
+                                     const TransportProperties<T>& trans_prop);
 
 private:
     // The flux values

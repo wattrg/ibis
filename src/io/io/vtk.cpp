@@ -114,8 +114,9 @@ VtkOutput<T>::VtkOutput() {
 template <typename T>
 int VtkOutput<T>::write(const typename FlowStates<T>::mirror_type& fs,
                         FiniteVolume<T>& fv, const GridBlock<T>& grid,
-                        const IdealGas<T>& gas_model, std::string plot_dir,
-                        std::string time_dir, double time) {
+                        const IdealGas<T>& gas_model,
+                        const TransportProperties<T>& trans_prop,
+                        std::string plot_dir, std::string time_dir, double time) {
     auto grid_host = grid.host_mirror();
     grid_host.deep_copy(grid);
 
@@ -141,7 +142,7 @@ int VtkOutput<T>::write(const typename FlowStates<T>::mirror_type& fs,
     for (auto& key_value : this->m_scalar_accessors) {
         std::string name = key_value.first;
         std::shared_ptr<ScalarAccessor<T>> accessor = key_value.second;
-        accessor->init(fs, fv, grid, gas_model);
+        accessor->init(fs, fv, grid, gas_model, trans_prop);
         write_scalar_field(f, fs, fv, accessor, gas_model, name, "Float64",
                            grid.num_cells());
     }
@@ -149,7 +150,7 @@ int VtkOutput<T>::write(const typename FlowStates<T>::mirror_type& fs,
     for (auto& key_value : this->m_vector_accessors) {
         std::string name = key_value.first;
         std::shared_ptr<VectorAccessor<T>> accessor = key_value.second;
-        accessor->init(fs, fv, grid, gas_model);
+        accessor->init(fs, fv, grid, gas_model, trans_prop);
         write_vector_field(f, fs, fv, accessor, gas_model, name, "Float64",
                            grid.num_cells());
     }

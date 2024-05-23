@@ -10,6 +10,7 @@
 
 #include <Kokkos_Core.hpp>
 #include <map>
+#include "gas/transport_properties.h"
 
 using array_layout = Kokkos::DefaultExecutionSpace::array_layout;
 using host_mem_space = Kokkos::DefaultHostExecutionSpace::memory_space;
@@ -22,11 +23,12 @@ public:
 
     virtual void init(const FlowStates<T, array_layout, host_mem_space>& fs,
                       FiniteVolume<T>& fv, const GridBlock<T>& grid,
-                      const IdealGas<T>& gas_model) {
+                      const IdealGas<T>& gas_model, const TransportProperties<T>& trans_prop) {
         (void)grid;
         (void)fs;
         (void)fv;
         (void)gas_model;
+        (void)trans_prop;
     }
 
     virtual T access(const FlowStates<T, array_layout, host_mem_space>& fs,
@@ -40,11 +42,12 @@ public:
 
     virtual void init(const FlowStates<T, array_layout, host_mem_space>& fs,
                       FiniteVolume<T>& fv, const GridBlock<T>& grid,
-                      const IdealGas<T>& gas_model) {
+                      const IdealGas<T>& gas_model, const TransportProperties<T>& trans_prop) {
         (void)grid;
         (void)fs;
         (void)fv;
         (void)gas_model;
+        (void)trans_prop;
     }
 
     virtual Vector3<T> access(const FlowStates<T, array_layout, host_mem_space>& fs,
@@ -99,7 +102,8 @@ template <typename T>
 class ViscousGradVxAccess : public VectorAccessor<T> {
 public:
     void init(const FlowStates<T, array_layout, host_mem_space>& fs, FiniteVolume<T>& fv,
-              const GridBlock<T>& grid, const IdealGas<T>& gas_model) override;
+              const GridBlock<T>& grid, const IdealGas<T>& gas_model,
+              const TransportProperties<T>& trans_prop) override;
 
     Vector3<T> access(const FlowStates<T, array_layout, host_mem_space>& fs,
                       FiniteVolume<T>& fv, const IdealGas<T>& gas_model,
@@ -113,7 +117,8 @@ template <typename T>
 class ViscousGradVyAccess : public VectorAccessor<T> {
 public:
     void init(const FlowStates<T, array_layout, host_mem_space>& fs, FiniteVolume<T>& fv,
-              const GridBlock<T>& grid, const IdealGas<T>& gas_model) override;
+              const GridBlock<T>& grid, const IdealGas<T>& gas_model,
+              const TransportProperties<T>& trans_prop) override;
 
     Vector3<T> access(const FlowStates<T, array_layout, host_mem_space>& fs,
                       FiniteVolume<T>& fv, const IdealGas<T>& gas_model,
@@ -127,7 +132,8 @@ template <typename T>
 class ViscousGradVzAccess : public VectorAccessor<T> {
 public:
     void init(const FlowStates<T, array_layout, host_mem_space>& fs, FiniteVolume<T>& fv,
-              const GridBlock<T>& grid, const IdealGas<T>& gas_model) override;
+              const GridBlock<T>& grid, const IdealGas<T>& gas_model,
+              const TransportProperties<T>& trans_prop) override;
 
     Vector3<T> access(const FlowStates<T, array_layout, host_mem_space>& fs,
                       FiniteVolume<T>& fv, const IdealGas<T>& gas_model,
@@ -142,7 +148,8 @@ template <typename T>
 class ConvectiveGradVxAccess : public VectorAccessor<T> {
 public:
     void init(const FlowStates<T, array_layout, host_mem_space>& fs, FiniteVolume<T>& fv,
-              const GridBlock<T>& grid, const IdealGas<T>& gas_model) override;
+              const GridBlock<T>& grid, const IdealGas<T>& gas_model,
+              const TransportProperties<T>& trans_prop) override;
 
     Vector3<T> access(const FlowStates<T, array_layout, host_mem_space>& fs,
                       FiniteVolume<T>& fv, const IdealGas<T>& gas_model,
@@ -156,7 +163,8 @@ template <typename T>
 class ConvectiveGradVyAccess : public VectorAccessor<T> {
 public:
     void init(const FlowStates<T, array_layout, host_mem_space>& fs, FiniteVolume<T>& fv,
-              const GridBlock<T>& grid, const IdealGas<T>& gas_model) override;
+              const GridBlock<T>& grid, const IdealGas<T>& gas_model,
+              const TransportProperties<T>& trans_prop) override;
 
     Vector3<T> access(const FlowStates<T, array_layout, host_mem_space>& fs,
                       FiniteVolume<T>& fv, const IdealGas<T>& gas_model,
@@ -170,7 +178,8 @@ template <typename T>
 class ConvectiveGradVzAccess : public VectorAccessor<T> {
 public:
     void init(const FlowStates<T, array_layout, host_mem_space>& fs, FiniteVolume<T>& fv,
-              const GridBlock<T>& grid, const IdealGas<T>& gas_model) override;
+              const GridBlock<T>& grid, const IdealGas<T>& gas_model,
+              const TransportProperties<T>& trans_prop) override;
 
     Vector3<T> access(const FlowStates<T, array_layout, host_mem_space>& fs,
                       FiniteVolume<T>& fv, const IdealGas<T>& gas_model,

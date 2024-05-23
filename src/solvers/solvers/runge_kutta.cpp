@@ -60,7 +60,7 @@ RungeKutta::RungeKutta(json config, GridBlock<double>& grid, std::string grid_di
 
 int RungeKutta::initialise() {
     json meta_data;
-    int ic_result = io_.read(flow_, grid_, gas_model_, meta_data, 0);
+    int ic_result = io_.read(flow_, grid_, gas_model_, trans_prop_, meta_data, 0);
     int conversion_result =
         primatives_to_conserved(conserved_quantities_, flow_, gas_model_);
     dt_ = (dt_init_ > 0) ? dt_init_ : std::numeric_limits<double>::max();
@@ -144,7 +144,7 @@ bool RungeKutta::plot_this_step(unsigned int step) {
 }
 
 int RungeKutta::plot_solution(unsigned int step) {
-    int result = io_.write(flow_, fv_, grid_, gas_model_, t_);
+    int result = io_.write(flow_, fv_, grid_, gas_model_, trans_prop_, t_);
     time_since_last_plot_ = 0.0;
     spdlog::info("  written flow solution: step {}, time {:.6e}", step, t_);
     return result;

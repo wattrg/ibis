@@ -45,6 +45,7 @@ void plot_vtk(json directories, std::vector<std::string> extra_vars) {
     }
     json config = read_config(directories);
     IdealGas<double> gas_model{config.at("gas_model")};
+    TransportProperties<double> trans_prop {config.at("transport_properties")};
 
     FVIO<T> io(FlowFormat::NativeBinary, FlowFormat::Vtk, flow_dir, plot_dir);
     for (auto& extra_var : extra_vars) {
@@ -56,8 +57,8 @@ void plot_vtk(json directories, std::vector<std::string> extra_vars) {
     FlowStates<T> fs(grid.num_total_cells());
     for (unsigned int time_idx = 0; time_idx < dirs.size(); time_idx++) {
         json meta_data;
-        io.read(fs, grid, gas_model, meta_data, time_idx);
-        io.write(fs, fv, grid, gas_model, meta_data.at("time"));
+        io.read(fs, grid, gas_model, trans_prop, meta_data, time_idx);
+        io.write(fs, fv, grid, gas_model, trans_prop, meta_data.at("time"));
         spdlog::info("Written VTK file at time index {}", time_idx);
     }
     io.write_coordinating_file();

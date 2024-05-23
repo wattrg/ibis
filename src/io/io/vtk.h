@@ -5,6 +5,7 @@
 #include <io/io.h>
 
 #include "finite_volume/finite_volume.h"
+#include "gas/transport_properties.h"
 
 template <typename T>
 class VtkOutput : public FVOutput<T> {
@@ -13,6 +14,7 @@ public:
 
     int write(const typename FlowStates<T>::mirror_type& fs, FiniteVolume<T>& fv,
               const GridBlock<T>& grid, const IdealGas<T>& gas_model,
+              const TransportProperties<T>& trans_prop,
               std::string plot_dir, std::string time_dir, double time);
 
     void write_coordinating_file(std::string plot_dir);

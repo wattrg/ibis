@@ -315,6 +315,22 @@ class _FlowStateCopy:
         }
 
 
+class _BoundaryLayerProfile:
+    def __init__(self, height, vel_profile, temp_profile, pressure):
+        self.height = height
+        self.vel_profile = vel_profile
+        self.temp_profile = temp_profile
+        self.pressure = pressure
+
+    def as_dict(self):
+        return {
+            "height": self.height,
+            "v": self.vel_profile,
+            "T": self.temp_profile,
+            "p": self.pressure,
+        }
+
+
 class _InternalCopy:
     def as_dict(self):
         return {"type": "internal_copy"}
@@ -344,6 +360,16 @@ class _FixTemperature:
 def supersonic_inflow(inflow):
     return BoundaryCondition(
         pre_reconstruction=[_FlowStateCopy(inflow)],
+        pre_viscous_grad=[]
+    )
+
+
+def boundary_layer_inflow(height, velocity_profile,
+                          temperature_profile, pressure):
+    return BoundaryCondition(
+        pre_reconstruction=[_BoundaryLayerProfile(height, velocity_profile,
+                                                  temperature_profile,
+                                                  pressure)],
         pre_viscous_grad=[]
     )
 
