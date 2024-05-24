@@ -7,21 +7,21 @@ public:
     CubicSpline() {}
     CubicSpline(std::vector<double> x, std::vector<double> y);
 
-    KOKKOS_INLINE_FUNCTION
+    KOKKOS_FUNCTION
     double eval(const double x) const {
         // return the extreme values if a point outside the interpolation
         // region is asked for
-        if (x <= x_min_) return y_(0);
-        if (x >= x_max_) return y_(n_pts_ - 1);
+        if (x <= x_min_) { return y_min_; }
+        if (x >= x_max_) { return y_max_; }
 
         // find the index to interpolate inside of
         size_t idx = 0;
         for (size_t i = 0; i < n_pts_; i++) {
             if (x_(i) >= x) {
                 idx = i - 1;
+                break;
             }
         }
-
         double dx_plus = x_(idx + 1) - x;
         double dx_minus = x - x_(idx);
         double delta_xi = x_(idx + 1) - x_(idx);
@@ -43,6 +43,8 @@ private:
 
     double x_min_;
     double x_max_;
+    double y_min_;
+    double y_max_;
 
     size_t n_pts_;
 };

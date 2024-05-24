@@ -95,6 +95,7 @@ void BoundaryLayerProfile<T>::apply(FlowStates<T>& fs, const GridBlock<T>& grid,
             else {
                 ghost_cell = left_cell;
             }
+
             T pos = cells.centroids().y(ghost_cell);
             fs.gas.pressure(ghost_cell) = p;
             fs.gas.temp(ghost_cell) = temp.eval(pos);
