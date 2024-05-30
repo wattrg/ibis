@@ -4,6 +4,7 @@
 #include <gas/flow_state.h>
 #include <grid/grid.h>
 #include <util/vector3.h>
+#include <util/types.h>
 
 #include <nlohmann/json.hpp>
 
@@ -36,8 +37,8 @@ struct LimiterValues {
     Field<T> vz;
 };
 
-template <typename T, class SubView>
-void barth_jespersen(const SubView values, Field<T>& limits, const Cells<T>& cells,
+template <typename T>
+void barth_jespersen(const Ibis::SubArray2D<T> values, Field<T>& limits, const Cells<T>& cells,
                      const Interfaces<T>& faces, Vector3s<T>& grad) {
     Kokkos::parallel_for(
         "Limiter::barth_jesperson", cells.num_valid_cells(),
@@ -83,8 +84,7 @@ public:
         limiter_ = Ibis::string_to_limiter(config.at("limiter"));
     }
 
-    template <class SubView>
-    void calculate_limiters(const SubView values, Field<T>& limits, const Cells<T>& cells,
+    void calculate_limiters(const Ibis::SubArray2D<T> values, Field<T>& limits, const Cells<T>& cells,
                             const Interfaces<T>& faces, Vector3s<T>& grad) {
         switch (limiter_) {
             case Limiters::None:

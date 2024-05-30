@@ -2,7 +2,7 @@
 #define GAS_H
 
 #include <Kokkos_Core.hpp>
-
+#include <util/types.h>
 #include "Kokkos_Macros.hpp"
 
 template <typename T>
@@ -20,7 +20,8 @@ template <typename T, class Layout = Kokkos::DefaultExecutionSpace::array_layout
           class Space = Kokkos::DefaultExecutionSpace::memory_space>
 class GasStates {
 private:
-    using view_type = Kokkos::View<T**, Layout, Space>;
+    // using view_type = Kokkos::View<T**, Layout, Space>;
+    using view_type = Ibis::Array2D<T, Layout, Space>;
 
 public:
     using array_layout = Layout;
