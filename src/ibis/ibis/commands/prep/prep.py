@@ -32,9 +32,6 @@ class Solver(Enum):
     RungeKutta = "runge_kutta"
 
 
-class Limiter(Enum):
-    BarthJespersen = "barth_jespersen"
-
 
 def string_to_solver(string):
     if string == Solver.RungeKutta.value:
@@ -42,21 +39,50 @@ def string_to_solver(string):
     validation_errors.append(ValidationException(f"Unknown solver {string}"))
 
 
+class Limiter:
+    def _read_defaults(self):
+        json_data = read_defaults(DEFAULTS_DIRECTORY, self._defaults_file)
+        for key in self._json_values:
+            setattr(self, key, json_data[key])
+
+
+class Unlimited(Limiter):
+    _defaults_file = "unlimited.json"
+    _json_values = []
+
+    def __init__(self):
+        self._read_defaults()
+        self._name = "unlimited"
+
+    def as_dict(self):
+        return {"type": self._name}
+
+
+class BarthJespersen(Limiter):
+    _defaults_file = "barth_jespersen.json"
+    _json_values = ["epsilon"]
+    __slots__ = _json_values
+
+    def __init__(self, **kwargs):
+        self._read_defaults()
+        self._name = "barth_jespersen"
+
+        for key in kwargs:
+            setattr(self, key, kwargs[key])
+
+    def as_dict(self):
+        dictionary = {"type": self._name, }
+        for key in self._json_values:
+            dictionary[key] = getattr(self, key)
+        return dictionary
+
+
 def string_to_limiter(string):
-    if string == Limiter.BarthJespersen.value:
-        return Limiter.BarthJespersen
-    if string == "none":
-        return None
-    else:
-        validation_errors.append(
-            ValidationException(f"Unknown limiter {string}")
-        )
-
-
-def string_from_limiter(limiter):
-    if limiter:
-        return limiter.value
-    return "none"
+    if string == "barth_jespersen":
+        return BarthJespersen()
+    if string == "unlimited":
+        return Unlimited()
+    validation_errors.append(ValidationException(f"Unknown limiter {string}"))
 
 
 class FluxCalculator:
@@ -132,13 +158,14 @@ class ConvectiveFlux:
                 self.flux_calculator = string_to_flux_calc(
                     json_data["flux_calculator"]
                 )
-            setattr(self, key, json_data[key])
+            elif key == "limiter":
+                self.limiter = string_to_limiter(json_data["limiter"])
+            else:
+                setattr(self, key, json_data[key])
 
         for key in kwargs:
             setattr(self, key, kwargs[key])
 
-        if type(self.limiter) is not Limiter:
-            self.limiter = string_to_limiter(self.limiter)
 
     def validate(self):
         if self.reconstruction_order not in (1, 2):
@@ -155,7 +182,7 @@ class ConvectiveFlux:
             if key == "flux_calculator":
                 dictionary[key] = self.flux_calculator.as_dict()
             elif key == "limiter":
-                dictionary[key] = string_from_limiter(self.limiter)
+                dictionary[key] = self.limiter.as_dict()
             else:
                 dictionary[key] = getattr(self, key)
         return dictionary
@@ -762,6 +789,8 @@ def main(file_name, res_dir):
         "slip_wall": slip_wall,
         "adiabatic_no_slip_wall": adiabatic_no_slip_wall,
         "fixed_temperature_no_slip_wall": fixed_temperature_no_slip_wall,
+        "BarthJespersen": BarthJespersen,
+        "Unlimited": Unlimited,
     }
 
     # run the user supplied script

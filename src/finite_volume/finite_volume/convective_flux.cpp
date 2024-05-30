@@ -15,8 +15,8 @@ ConvectiveFlux<T>::ConvectiveFlux(const GridBlock<T>& grid, json config) {
     // set up reconstruction
     reconstruction_order_ = config.at("reconstruction_order");
     if (reconstruction_order_ > 1) {
-        limiter_ = Limiter<T>(config);
-        if (limiter_.enabled()) {
+        limiter_ = make_limiter<T>(config.at("limiter"));
+        if (limiter_->enabled()) {
             limiters_ = LimiterValues<T>(grid.num_cells());
         }
     }
@@ -145,7 +145,7 @@ void ConvectiveFlux<T>::linear_reconstruct(const FlowStates<T>& flow_states,
     auto left = left_;
     auto right = right_;
     size_t num_cells = grid.num_cells();
-    bool limiter_enabled = limiter_.enabled();
+    bool limiter_enabled = limiter_->enabled();
     Kokkos::parallel_for(
         "FV::linear_reconstruct", grid.num_interfaces(), KOKKOS_LAMBDA(const int i_face) {
             // left state
@@ -215,18 +215,18 @@ template <typename T>
 void ConvectiveFlux<T>::compute_limiters(const FlowStates<T>& flow_states,
                                          const GridBlock<T>& grid,
                                          Gradients<T>& cell_grad) {
-    if (limiter_.enabled()) {
+    if (limiter_->enabled()) {
         auto cells = grid.cells();
         auto faces = grid.interfaces();
-        limiter_.calculate_limiters(flow_states.gas.pressure(), limiters_.p, cells, faces,
+        limiter_->calculate_limiters(flow_states.gas.pressure(), limiters_.p, cells, faces,
                                     cell_grad.p);
-        limiter_.calculate_limiters(flow_states.gas.rho(), limiters_.rho, cells, faces,
+        limiter_->calculate_limiters(flow_states.gas.rho(), limiters_.rho, cells, faces,
                                     cell_grad.rho);
-        limiter_.calculate_limiters(flow_states.vel.x(), limiters_.vx, cells, faces,
+        limiter_->calculate_limiters(flow_states.vel.x(), limiters_.vx, cells, faces,
                                     cell_grad.vx);
-        limiter_.calculate_limiters(flow_states.vel.y(), limiters_.vy, cells, faces,
+        limiter_->calculate_limiters(flow_states.vel.y(), limiters_.vy, cells, faces,
                                     cell_grad.vy);
-        limiter_.calculate_limiters(flow_states.vel.z(), limiters_.vz, cells, faces,
+        limiter_->calculate_limiters(flow_states.vel.z(), limiters_.vz, cells, faces,
                                     cell_grad.vz);
     }
 }

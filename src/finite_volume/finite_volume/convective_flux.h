@@ -59,7 +59,7 @@ private:
     size_t reconstruction_order_;
 
     // The limiter
-    Limiter<T> limiter_;
+    std::unique_ptr<Limiter<T>> limiter_;
 
     // Storage for the limiter values
     LimiterValues<T> limiters_;
