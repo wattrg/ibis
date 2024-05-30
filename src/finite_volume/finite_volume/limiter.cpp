@@ -53,7 +53,6 @@ void BarthJespersen<T>::calculate_limiters(const Ibis::SubArray2D<T> values, Fie
                 }
             }
             limits(cell_i) = phi;
-            printf("%f\n", phi);
         });
 }
 
