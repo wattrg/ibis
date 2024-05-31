@@ -49,7 +49,7 @@ void BarthJespersen<T>::calculate_limiters(const Ibis::SubArray2D<T> values, Fie
                 T delta_2 =
                     grad.x(cell_i) * dx + grad.y(cell_i) * dy + grad.z(cell_i) * dz;
                 int sign_delta_2 = (delta_2 > 0) - (delta_2 < 0);
-                delta_2 = sign_delta_2 * (Kokkos::abs(delta_2) + epsilon * 0.5 * (U_min + U_max));
+                delta_2 = sign_delta_2 * (Kokkos::abs(delta_2) + epsilon);
                 if (sign_delta_2 > 0) {
                     phi = Kokkos::min(phi, (U_max - Ui) / delta_2);
                 } else if (sign_delta_2 < 0) {
