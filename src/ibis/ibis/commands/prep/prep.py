@@ -145,8 +145,27 @@ def string_to_flux_calc(name):
         )
 
 
+class ThermoInterp(Enum):
+    RhoP = "rho_p"
+    RhoT = "rho_T"
+    RhoU = "rho_u"
+    PT = "p_T"
+
+
+def string_to_thermo_interp(name):
+    if name == ThermoInterp.RhoP.value:
+        return ThermoInterp.RhoP
+    if name == ThermoInterp.RhoT.value:
+        return ThermoInterp.RhoT
+    if name == ThermoInterp.RhoU.value:
+        return ThermoInterp.RhoU
+    if name == ThermoInterp.PT.value:
+        return ThermoInterp.PT
+
+
 class ConvectiveFlux:
-    _json_values = ["flux_calculator", "reconstruction_order", "limiter"]
+    _json_values = ["flux_calculator", "reconstruction_order", "limiter",
+                    "thermo_interpolator"]
     __slots__ = _json_values
     _defaults_file = "convective_flux.json"
 
@@ -160,6 +179,8 @@ class ConvectiveFlux:
                 )
             elif key == "limiter":
                 self.limiter = string_to_limiter(json_data["limiter"])
+            elif key == "thermo_interpolator":
+                self.thermo_interpolator = string_to_thermo_interp(json_data[key])
             else:
                 setattr(self, key, json_data[key])
 
@@ -183,6 +204,11 @@ class ConvectiveFlux:
                 dictionary[key] = self.flux_calculator.as_dict()
             elif key == "limiter":
                 dictionary[key] = self.limiter.as_dict()
+            elif key == "thermo_interpolator":
+                interp = self.thermo_interpolator
+                if type(interp) is str:
+                    self.thermo_interpolator = string_to_thermo_interp(interp)
+                dictionary[key] = self.thermo_interpolator.value
             else:
                 dictionary[key] = getattr(self, key)
         return dictionary

@@ -29,9 +29,10 @@ FiniteVolume<T>::FiniteVolume(const GridBlock<T>& grid, json config) {
     size_t reconstruction_order = convective_flux_.reconstruction_order();
     bool viscous = viscous_flux_.enabled();
     if (viscous || reconstruction_order > 1) {
-        bool convective_grad = reconstruction_order > 1;
         grad_calc_ = WLSGradient<T>(grid);
-        cell_grad_ = Gradients<T>(grid.num_cells(), convective_grad, viscous);
+        const RequiredGradients grads = convective_flux_.required_gradients();
+        cell_grad_ = Gradients<T>(grid.num_cells(), grads.pressure, grads.temp,
+                                  grads.u, grads.rho, viscous);
     }
 
     // set up boundary conditions

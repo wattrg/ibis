@@ -11,23 +11,31 @@ template <typename T, class Layout = Kokkos::DefaultExecutionSpace::array_layout
 struct Gradients {
     Gradients() {}
 
-    Gradients(int num_cells, bool convective, bool viscous) {
-        vx = Vector3s<T, Layout, Space>("Gradients::vx", num_cells);
-        vy = Vector3s<T, Layout, Space>("Gradients::vy", num_cells);
-        vz = Vector3s<T, Layout, Space>("Gradients::vz", num_cells);
-
-        if (convective) {
+    Gradients(int num_cells, bool need_pressure, bool need_temp, bool need_u, bool need_rho,
+              bool viscous) {
+        bool high_order = (need_pressure || need_temp || need_u || need_rho);
+        if (high_order || viscous) {
+            vx = Vector3s<T, Layout, Space>("Gradients::vx", num_cells);
+            vy = Vector3s<T, Layout, Space>("Gradients::vy", num_cells);
+            vz = Vector3s<T, Layout, Space>("Gradients::vz", num_cells);
+        }
+        if (need_pressure) {
             p = Vector3s<T, Layout, Space>("Gradients::p", num_cells);
+        }
+        if (need_u) {
+            u = Vector3s<T, Layout, Space>("Gradients::u", num_cells);
+        }
+        if (need_rho) {
             rho = Vector3s<T, Layout, Space>("Gradients::rho", num_cells);
         }
-
-        if (viscous) {
-            temp = Vector3s<T, Layout, Space>("Gradients::temp", num_cells);
+        if (need_temp || viscous) {
+            temp = Vector3s<T, Layout, Space>("Gradients::T", num_cells);
         }
     }
 
     Vector3s<T, Layout, Space> p;
     Vector3s<T, Layout, Space> rho;
+    Vector3s<T, Layout, Space> u;
     Vector3s<T, Layout, Space> temp;
     Vector3s<T, Layout, Space> vx;
     Vector3s<T, Layout, Space> vy;

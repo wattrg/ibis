@@ -88,6 +88,12 @@ public:
     T& energy(const size_t cell_i) { return data_(cell_i, energy_idx_); }
 
     KOKKOS_INLINE_FUNCTION
+    auto energy() { return Kokkos::subview(data_, Kokkos::ALL, energy_idx_); }
+    
+    KOKKOS_INLINE_FUNCTION
+    auto energy() const { return Kokkos::subview(data_, Kokkos::ALL, energy_idx_); }
+
+    KOKKOS_INLINE_FUNCTION
     void copy_gas_state(const GasState<T>& gs, const size_t i) {
         rho(i) = gs.rho;
         pressure(i) = gs.pressure;

@@ -13,7 +13,7 @@ ViscousFlux<T>::ViscousFlux(const GridBlock<T>& grid, json config) {
         face_fs_ = FlowStates<T>(grid.num_interfaces());
 
         // we only need viscous gradient info at faces
-        face_grad_ = Gradients<T>(grid.num_interfaces(), false, true);
+        face_grad_ = Gradients<T>(grid.num_interfaces(), false, false, false, false, true);
     }
 }
 

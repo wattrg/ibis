@@ -1,5 +1,6 @@
 {
     "reconstruction_order": 2,
     "flux_calculator": "hanel",
-    "limiter": "barth_jespersen"
+    "limiter": "barth_jespersen",
+    "thermo_interpolator": "rho_u"
 }
