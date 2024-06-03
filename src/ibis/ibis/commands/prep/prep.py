@@ -163,9 +163,20 @@ def string_to_thermo_interp(name):
         return ThermoInterp.PT
 
 
+def ensure_custom_type(value, conversion_func):
+    if type(value) is str:
+        return conversion_func(value)
+    return value
+
+
 class ConvectiveFlux:
     _json_values = ["flux_calculator", "reconstruction_order", "limiter",
                     "thermo_interpolator"]
+    _custom_types = {
+        "flux_calculator": string_to_flux_calc,
+        "limiter": string_to_limiter,
+        "thermo_interpolator": string_to_thermo_interp,
+    }
     __slots__ = _json_values
     _defaults_file = "convective_flux.json"
 
@@ -173,20 +184,19 @@ class ConvectiveFlux:
         json_data = read_defaults(DEFAULTS_DIRECTORY,
                                   self._defaults_file)
         for key in self._json_values:
-            if key == "flux_calculator":
-                self.flux_calculator = string_to_flux_calc(
-                    json_data["flux_calculator"]
-                )
-            elif key == "limiter":
-                self.limiter = string_to_limiter(json_data["limiter"])
-            elif key == "thermo_interpolator":
-                self.thermo_interpolator = string_to_thermo_interp(json_data[key])
+            if key in self._custom_types:
+                setattr(self, key, ensure_custom_type(json_data[key],
+                                                      self._custom_types[key]))
             else:
                 setattr(self, key, json_data[key])
 
         for key in kwargs:
-            setattr(self, key, kwargs[key])
-
+            print(key)
+            if key in self._custom_types:
+                setattr(self, key, ensure_custom_type(kwargs[key],
+                                                      self._custom_types[key]))
+            else:
+                setattr(self, key, kwargs[key])
 
     def validate(self):
         if self.reconstruction_order not in (1, 2):
@@ -817,6 +827,7 @@ def main(file_name, res_dir):
         "fixed_temperature_no_slip_wall": fixed_temperature_no_slip_wall,
         "BarthJespersen": BarthJespersen,
         "Unlimited": Unlimited,
+        "ThermoInterp": ThermoInterp,
     }
 
     # run the user supplied script
