@@ -1,5 +1,6 @@
 #include <io/native.h>
 #include <spdlog/spdlog.h>
+
 #include "gas/transport_properties.h"
 
 template <typename T>
@@ -7,8 +8,7 @@ int NativeTextOutput<T>::write(const typename FlowStates<T>::mirror_type& fs,
                                FiniteVolume<T>& fv, const GridBlock<T>& grid,
                                const IdealGas<T>& gas_model,
                                const TransportProperties<T>& trans_prop,
-                               std::string plot_dir,
-                               std::string time_dir, double time) {
+                               std::string plot_dir, std::string time_dir, double time) {
     (void)gas_model;
     (void)trans_prop;
     (void)fv;
@@ -87,9 +87,9 @@ template class NativeTextOutput<double>;
 template <typename T>
 int NativeTextInput<T>::read(typename FlowStates<T>::mirror_type& fs,
                              const GridBlock<T>& grid, const IdealGas<T>& gas_model,
-                             const TransportProperties<T>& trans_prop,
-                             std::string dir, json& meta_data) {
-    (void) trans_prop;
+                             const TransportProperties<T>& trans_prop, std::string dir,
+                             json& meta_data) {
+    (void)trans_prop;
     size_t num_cells = grid.num_cells();
     std::ifstream meta_f(dir + "/meta_data.json");
     if (!meta_f) {
@@ -187,8 +187,8 @@ int NativeBinaryOutput<T>::write(const typename FlowStates<T>::mirror_type& fs,
                                  FiniteVolume<T>& fv, const GridBlock<T>& grid,
                                  const IdealGas<T>& gas_model,
                                  const TransportProperties<T>& trans_prop,
-                                 std::string plot_dir,
-                                 std::string time_dir, double time) {
+                                 std::string plot_dir, std::string time_dir,
+                                 double time) {
     (void)gas_model;
     (void)trans_prop;
     (void)fv;
@@ -266,8 +266,8 @@ void read_double(std::ifstream& f, double& value) {
 template <typename T>
 int NativeBinaryInput<T>::read(typename FlowStates<T>::mirror_type& fs,
                                const GridBlock<T>& grid, const IdealGas<T>& gas_model,
-                               const TransportProperties<T>& trans_prop,
-                               std::string dir, json& meta_data) {
+                               const TransportProperties<T>& trans_prop, std::string dir,
+                               json& meta_data) {
     (void)trans_prop;
 
     size_t num_cells = grid.num_cells();

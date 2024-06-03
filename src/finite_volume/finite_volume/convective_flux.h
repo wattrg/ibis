@@ -12,7 +12,6 @@
 
 using json = nlohmann::json;
 
-
 enum class ThermoReconstructionVars {
     rho_p,
     rho_T,
@@ -22,7 +21,7 @@ enum class ThermoReconstructionVars {
 
 struct RequiredGradients {
     RequiredGradients() {}
-    
+
     bool pressure = false;
     bool temp = false;
     bool u = false;

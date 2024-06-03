@@ -2,9 +2,9 @@
 #define BOUNDARY_H
 
 #include <gas/flow_state.h>
+#include <gas/transport_properties.h>
 #include <grid/grid.h>
 #include <util/cubic_spline.h>
-#include <gas/transport_properties.h>
 
 enum class BoundaryConditions { SupersonicInflow, SlipWall, SupersonicOutflow };
 
@@ -14,8 +14,7 @@ public:
     virtual ~BoundaryAction() {}
 
     virtual void apply(FlowStates<T>& fs, const GridBlock<T>& grid,
-                       const Field<size_t>& boundary_faces, 
-                       const IdealGas<T>& gas_model,
+                       const Field<size_t>& boundary_faces, const IdealGas<T>& gas_model,
                        const TransportProperties<T>& trans_prop) = 0;
 };
 
@@ -44,8 +43,7 @@ public:
     ~BoundaryLayerProfile() {}
 
     void apply(FlowStates<T>& fs, const GridBlock<T>& grid,
-               const Field<size_t>& boundary_faces,
-               const IdealGas<T>& gas_model,
+               const Field<size_t>& boundary_faces, const IdealGas<T>& gas_model,
                const TransportProperties<T>& trans_prop);
 
 private:
@@ -60,8 +58,7 @@ public:
     ~InternalCopy() {}
 
     void apply(FlowStates<T>& fs, const GridBlock<T>& grid,
-               const Field<size_t>& boundary_faces,
-               const IdealGas<T>& gas_model,
+               const Field<size_t>& boundary_faces, const IdealGas<T>& gas_model,
                const TransportProperties<T>& trans_prop);
 };
 
@@ -71,8 +68,7 @@ public:
     ~InternalCopyReflectNormal() {}
 
     void apply(FlowStates<T>& fs, const GridBlock<T>& grid,
-               const Field<size_t>& boundary_faces,
-               const IdealGas<T>& gas_model,
+               const Field<size_t>& boundary_faces, const IdealGas<T>& gas_model,
                const TransportProperties<T>& trans_prop);
 };
 
@@ -82,9 +78,8 @@ public:
     ~InternalVelCopyReflect() {}
 
     void apply(FlowStates<T>& fs, const GridBlock<T>& grid,
-               const Field<size_t>& boundary_faces,
-               const IdealGas<T>& gas_model,
-               const TransportProperties<T>&trans_prop);
+               const Field<size_t>& boundary_faces, const IdealGas<T>& gas_model,
+               const TransportProperties<T>& trans_prop);
 };
 
 template <typename T>
@@ -95,8 +90,7 @@ public:
     FixTemperature(double temperature) : Twall_(temperature) {}
 
     void apply(FlowStates<T>& gs, const GridBlock<T>& grid,
-               const Field<size_t>& boundary_faces,
-               const IdealGas<T>& gas_model,
+               const Field<size_t>& boundary_faces, const IdealGas<T>& gas_model,
                const TransportProperties<T>& trans_prop);
 
 private:

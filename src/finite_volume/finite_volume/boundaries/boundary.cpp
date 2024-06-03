@@ -2,6 +2,7 @@
 #include <spdlog/spdlog.h>
 
 #include <Kokkos_Core.hpp>
+
 #include "gas/transport_properties.h"
 
 template <typename T>
@@ -29,8 +30,8 @@ void FlowStateCopy<T>::apply(FlowStates<T>& fs, const GridBlock<T>& grid,
                              const Field<size_t>& boundary_faces,
                              const IdealGas<T>& gas_model,
                              const TransportProperties<T>& trans_prop) {
-    (void) gas_model;
-    (void) trans_prop;
+    (void)gas_model;
+    (void)trans_prop;
 
     size_t size = boundary_faces.size();
     auto this_fs = fs_;
@@ -71,10 +72,10 @@ BoundaryLayerProfile<T>::BoundaryLayerProfile(json config) {
 
 template <typename T>
 void BoundaryLayerProfile<T>::apply(FlowStates<T>& fs, const GridBlock<T>& grid,
-                        const Field<size_t>& boundary_faces,
-                        const IdealGas<T>& gas_model,
-                        const TransportProperties<T>& trans_prop) {
-    (void) trans_prop;
+                                    const Field<size_t>& boundary_faces,
+                                    const IdealGas<T>& gas_model,
+                                    const TransportProperties<T>& trans_prop) {
+    (void)trans_prop;
 
     size_t size = boundary_faces.size();
     auto interfaces = grid.interfaces();
@@ -91,8 +92,7 @@ void BoundaryLayerProfile<T>::apply(FlowStates<T>& fs, const GridBlock<T>& grid,
             size_t ghost_cell;
             if (left_cell < num_valid_cells) {
                 ghost_cell = right_cell;
-            }
-            else {
+            } else {
                 ghost_cell = left_cell;
             }
 
@@ -104,8 +104,7 @@ void BoundaryLayerProfile<T>::apply(FlowStates<T>& fs, const GridBlock<T>& grid,
             fs.vel.x(ghost_cell) = v.eval(pos);
             fs.vel.y(ghost_cell) = 0.0;
             fs.vel.z(ghost_cell) = 0.0;
-        }  
-    );
+        });
 }
 template class BoundaryLayerProfile<double>;
 
@@ -114,9 +113,9 @@ void InternalCopy<T>::apply(FlowStates<T>& fs, const GridBlock<T>& grid,
                             const Field<size_t>& boundary_faces,
                             const IdealGas<T>& gas_model,
                             const TransportProperties<T>& trans_prop) {
-    (void) gas_model;
-    (void) trans_prop;
-    
+    (void)gas_model;
+    (void)trans_prop;
+
     size_t size = boundary_faces.size();
     auto interfaces = grid.interfaces();
     size_t num_valid_cells = grid.num_cells();
@@ -155,8 +154,8 @@ void InternalCopyReflectNormal<T>::apply(FlowStates<T>& fs, const GridBlock<T>& 
                                          const Field<size_t>& boundary_faces,
                                          const IdealGas<T>& gas_model,
                                          const TransportProperties<T>& trans_prop) {
-    (void) gas_model;
-    (void) trans_prop;
+    (void)gas_model;
+    (void)trans_prop;
 
     size_t size = boundary_faces.size();
     auto interfaces = grid.interfaces();
@@ -222,8 +221,8 @@ void InternalVelCopyReflect<T>::apply(FlowStates<T>& fs, const GridBlock<T>& gri
                                       const Field<size_t>& boundary_faces,
                                       const IdealGas<T>& gas_model,
                                       const TransportProperties<T>& trans_prop) {
-    (void) gas_model;
-    (void) trans_prop;
+    (void)gas_model;
+    (void)trans_prop;
 
     size_t size = boundary_faces.size();
     auto interfaces = grid.interfaces();
@@ -257,8 +256,8 @@ void FixTemperature<T>::apply(FlowStates<T>& fs, const GridBlock<T>& grid,
                               const Field<size_t>& boundary_faces,
                               const IdealGas<T>& gas_model,
                               const TransportProperties<T>& trans_prop) {
-    (void) gas_model;
-    (void) trans_prop;
+    (void)gas_model;
+    (void)trans_prop;
 
     size_t size = boundary_faces.size();
     auto interfaces = grid.interfaces();
@@ -285,8 +284,7 @@ void FixTemperature<T>::apply(FlowStates<T>& fs, const GridBlock<T>& grid,
             // extrapolate the temperature in the ghost cell from the
             // temperature in the valid cell
             fs.gas.temp(ghost_cell) = 2 * Twall - fs.gas.temp(valid_cell);
-        }
-    );
+        });
 }
 
 template <typename T>
@@ -332,22 +330,18 @@ BoundaryCondition<T>::BoundaryCondition(json config) {
 }
 
 template <typename T>
-void BoundaryCondition<T>::apply_pre_reconstruction(FlowStates<T>& fs,
-                                                    const GridBlock<T>& grid,
-                                                    const Field<size_t>& boundary_faces,
-                                                    const IdealGas<T>& gas_model,
-                                                    const TransportProperties<T>& trans_prop) {
+void BoundaryCondition<T>::apply_pre_reconstruction(
+    FlowStates<T>& fs, const GridBlock<T>& grid, const Field<size_t>& boundary_faces,
+    const IdealGas<T>& gas_model, const TransportProperties<T>& trans_prop) {
     for (size_t i = 0; i < pre_reconstruction_.size(); i++) {
         pre_reconstruction_[i]->apply(fs, grid, boundary_faces, gas_model, trans_prop);
     }
 }
 
 template <typename T>
-void BoundaryCondition<T>::apply_pre_viscous_grad(FlowStates<T>& fs,
-                                                  const GridBlock<T>& grid,
-                                                  const Field<size_t>& boundary_faces,
-                                                  const IdealGas<T>& gas_model,
-                                                  const TransportProperties<T>& trans_prop) {
+void BoundaryCondition<T>::apply_pre_viscous_grad(
+    FlowStates<T>& fs, const GridBlock<T>& grid, const Field<size_t>& boundary_faces,
+    const IdealGas<T>& gas_model, const TransportProperties<T>& trans_prop) {
     for (size_t i = 0; i < pre_viscous_grad_.size(); i++) {
         pre_viscous_grad_[i]->apply(fs, grid, boundary_faces, gas_model, trans_prop);
     }

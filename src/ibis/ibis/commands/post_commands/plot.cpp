@@ -45,7 +45,7 @@ void plot_vtk(json directories, std::vector<std::string> extra_vars) {
     }
     json config = read_config(directories);
     IdealGas<double> gas_model{config.at("gas_model")};
-    TransportProperties<double> trans_prop {config.at("transport_properties")};
+    TransportProperties<double> trans_prop{config.at("transport_properties")};
 
     FVIO<T> io(FlowFormat::NativeBinary, FlowFormat::Vtk, flow_dir, plot_dir);
     for (auto& extra_var : extra_vars) {

@@ -1,8 +1,10 @@
 #ifndef GAS_H
 #define GAS_H
 
-#include <Kokkos_Core.hpp>
 #include <util/types.h>
+
+#include <Kokkos_Core.hpp>
+
 #include "Kokkos_Macros.hpp"
 
 template <typename T>
@@ -89,7 +91,7 @@ public:
 
     KOKKOS_INLINE_FUNCTION
     auto energy() { return Kokkos::subview(data_, Kokkos::ALL, energy_idx_); }
-    
+
     KOKKOS_INLINE_FUNCTION
     auto energy() const { return Kokkos::subview(data_, Kokkos::ALL, energy_idx_); }
 

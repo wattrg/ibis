@@ -6,10 +6,10 @@
 template <typename T>
 std::unique_ptr<Limiter<T>> make_limiter(json config) {
     std::string limiter_type = config.at("type");
-    if (limiter_type == "barth_jespersen"){
+    if (limiter_type == "barth_jespersen") {
         double epsilon = config.at("epsilon");
         return std::unique_ptr<Limiter<T>>(new BarthJespersen<T>(epsilon));
-    } else if (limiter_type == "unlimited"){
+    } else if (limiter_type == "unlimited") {
         return std::unique_ptr<Limiter<T>>(new Unlimited<T>());
     } else {
         spdlog::error("Unknown limiter {}", limiter_type);
@@ -18,10 +18,10 @@ std::unique_ptr<Limiter<T>> make_limiter(json config) {
 }
 template std::unique_ptr<Limiter<double>> make_limiter<double>(json);
 
-
 template <typename T>
-void BarthJespersen<T>::calculate_limiters(const Ibis::SubArray2D<T> values, Field<T>& limits,
-                                           const Cells<T>& cells, const Interfaces<T>& faces,
+void BarthJespersen<T>::calculate_limiters(const Ibis::SubArray2D<T> values,
+                                           Field<T>& limits, const Cells<T>& cells,
+                                           const Interfaces<T>& faces,
                                            Vector3s<T>& grad) {
     double epsilon = epsilon_;
     Kokkos::parallel_for(
@@ -73,7 +73,7 @@ template class BarthJespersen<double>;
 //             T U_min = Ui;
 //             T U_max = Ui;
 //             for (size_t j = 0; j < cells.neighbour_cells(cell_i).size(); j++) {
-//                 size_t neighbour_cell = cells.neighbour_cells(cell_i, j);                       
+//                 size_t neighbour_cell = cells.neighbour_cells(cell_i, j);
 //                 U_min = Kokkos::min(U_min, values(neighbour_cell));
 //                 U_max = Kokkos::max(U_max, values(neighbour_cell));
 //             }
@@ -91,7 +91,7 @@ template class BarthJespersen<double>;
 //                 T dx = faces.centre().x(i_face) - x;
 //                 T dy = faces.centre().y(i_face) - y;
 //                 T dz = faces.centre().z(i_face) - z;
-//                 T delta_2 = 
+//                 T delta_2 =
 //                     grad.x(cell_i) * dx + grad.y(cell_i) * dy + grad.z(cell_i) * dz;
 //                 if (delta_2 > 0) {
 //                     // nothing for the moment
@@ -107,12 +107,12 @@ template class BarthJespersen<double>;
 
 template <typename T>
 void Unlimited<T>::calculate_limiters(const Ibis::SubArray2D<T> values, Field<T>& limits,
-                                           const Cells<T>& cells, const Interfaces<T>& faces,
-                                           Vector3s<T>& grad) {
-    (void) values;
-    (void) limits;
-    (void) cells;
-    (void) faces;
-    (void) grad;
+                                      const Cells<T>& cells, const Interfaces<T>& faces,
+                                      Vector3s<T>& grad) {
+    (void)values;
+    (void)limits;
+    (void)cells;
+    (void)faces;
+    (void)grad;
 }
 template class Unlimited<double>;

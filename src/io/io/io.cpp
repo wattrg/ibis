@@ -11,6 +11,7 @@
 #include <fstream>
 #include <iostream>
 #include <stdexcept>
+
 #include "gas/transport_properties.h"
 
 std::string pad_time_index(int time_idx, unsigned long len) {
@@ -88,8 +89,8 @@ int FVIO<T>::write(const FlowStates<T>& fs, FiniteVolume<T>& fv, const GridBlock
     std::string directory_name = output_dir_ + "/" + time_index;
     std::filesystem::create_directory(output_dir_);
     std::filesystem::create_directory(directory_name);
-    int result =
-        output_->write(fs_host, fv, grid, gas_model, trans_prop, output_dir_, time_index, time);
+    int result = output_->write(fs_host, fv, grid, gas_model, trans_prop, output_dir_,
+                                time_index, time);
     time_index_++;
     return result;
 }
@@ -102,7 +103,8 @@ int FVIO<T>::read(FlowStates<T>& fs, const GridBlock<T>& grid,
     auto fs_host = fs.host_mirror();
     std::string time_index = pad_time_index(time_idx, 4);
     std::string directory_name = input_dir_ + "/" + time_index;
-    int result = input_->read(fs_host, grid, gas_model, trans_prop, directory_name, meta_data);
+    int result =
+        input_->read(fs_host, grid, gas_model, trans_prop, directory_name, meta_data);
     fs.deep_copy(fs_host);
     return result;
 }

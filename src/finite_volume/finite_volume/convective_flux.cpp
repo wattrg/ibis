@@ -19,18 +19,14 @@ std::string string_from_reconstruction_vars(ThermoReconstructionVars vars) {
 
 ThermoReconstructionVars reconstruction_vars_from_string(std::string variables) {
     if (variables == "rho_p") {
-        return ThermoReconstructionVars::rho_p;    
-    }
-    else if (variables == "rho_T") {
+        return ThermoReconstructionVars::rho_p;
+    } else if (variables == "rho_T") {
         return ThermoReconstructionVars::rho_T;
-    }
-    else if (variables == "rho_u") {
+    } else if (variables == "rho_u") {
         return ThermoReconstructionVars::rho_u;
-    }
-    else if (variables == "p_T") {
+    } else if (variables == "p_T") {
         return ThermoReconstructionVars::p_T;
-    }
-    else {
+    } else {
         spdlog::error("Unknown thermo interpolator {}", variables);
         throw new std::runtime_error("Unknown thermo interpolator");
     }
@@ -72,7 +68,8 @@ ConvectiveFlux<T>::ConvectiveFlux(const GridBlock<T>& grid, json config) {
     // set up reconstruction
     reconstruction_order_ = config.at("reconstruction_order");
     if (reconstruction_order_ > 1) {
-        reconstruction_vars_ = reconstruction_vars_from_string(config.at("thermo_interpolator"));
+        reconstruction_vars_ =
+            reconstruction_vars_from_string(config.at("thermo_interpolator"));
         limiter_ = make_limiter<T>(config.at("limiter"));
         if (limiter_->enabled()) {
             const RequiredGradients grads = required_gradients();
@@ -238,48 +235,48 @@ void ConvectiveFlux<T>::linear_reconstruct(const FlowStates<T>& flow_states,
                 case ThermoReconstructionVars::rho_p: {
                     T p_limit = limit_left ? limiters.p(left_cell) : 1.0;
                     left.gas.pressure(i_face) =
-                        linear_interpolate(flow_states.gas.pressure(left_cell), grad.p, dx, dy,
-                                           dz, left_cell, p_limit, left_valid);
+                        linear_interpolate(flow_states.gas.pressure(left_cell), grad.p,
+                                           dx, dy, dz, left_cell, p_limit, left_valid);
                     T rho_limit = (limit_left) ? limiters.rho(left_cell) : 1.0;
                     left.gas.rho(i_face) =
-                        linear_interpolate(flow_states.gas.rho(left_cell), grad.rho, dx, dy, dz,
-                                           left_cell, rho_limit, left_valid);
+                        linear_interpolate(flow_states.gas.rho(left_cell), grad.rho, dx,
+                                           dy, dz, left_cell, rho_limit, left_valid);
                     gas_model.update_thermo_from_rhop(left.gas, i_face);
                     break;
                 }
                 case ThermoReconstructionVars::rho_u: {
                     T rho_limit = limit_left ? limiters.rho(left_cell) : 1.0;
                     left.gas.rho(i_face) =
-                        linear_interpolate(flow_states.gas.rho(left_cell), grad.rho, dx, dy,
-                                           dz, left_cell, rho_limit, left_valid);
+                        linear_interpolate(flow_states.gas.rho(left_cell), grad.rho, dx,
+                                           dy, dz, left_cell, rho_limit, left_valid);
                     T u_limit = (limit_left) ? limiters.u(left_cell) : 1.0;
                     left.gas.energy(i_face) =
-                        linear_interpolate(flow_states.gas.energy(left_cell), grad.u, dx, dy, dz,
-                                           left_cell, u_limit, left_valid);
+                        linear_interpolate(flow_states.gas.energy(left_cell), grad.u, dx,
+                                           dy, dz, left_cell, u_limit, left_valid);
                     gas_model.update_thermo_from_rhou(left.gas, i_face);
                     break;
                 }
                 case ThermoReconstructionVars::rho_T: {
                     T rho_limit = limit_left ? limiters.rho(left_cell) : 1.0;
                     left.gas.rho(i_face) =
-                        linear_interpolate(flow_states.gas.rho(left_cell), grad.rho, dx, dy,
-                                           dz, left_cell, rho_limit, left_valid);
+                        linear_interpolate(flow_states.gas.rho(left_cell), grad.rho, dx,
+                                           dy, dz, left_cell, rho_limit, left_valid);
                     T T_limit = (limit_left) ? limiters.temp(left_cell) : 1.0;
                     left.gas.temp(i_face) =
-                        linear_interpolate(flow_states.gas.temp(left_cell), grad.temp, dx, dy, dz,
-                                           left_cell, T_limit, left_valid);
+                        linear_interpolate(flow_states.gas.temp(left_cell), grad.temp, dx,
+                                           dy, dz, left_cell, T_limit, left_valid);
                     gas_model.update_thermo_from_rhoT(left.gas, i_face);
                     break;
                 }
                 case ThermoReconstructionVars::p_T: {
                     T p_limit = limit_left ? limiters.p(left_cell) : 1.0;
                     left.gas.pressure(i_face) =
-                        linear_interpolate(flow_states.gas.pressure(left_cell), grad.p, dx, dy,
-                                           dz, left_cell, p_limit, left_valid);
+                        linear_interpolate(flow_states.gas.pressure(left_cell), grad.p,
+                                           dx, dy, dz, left_cell, p_limit, left_valid);
                     T T_limit = (limit_left) ? limiters.temp(left_cell) : 1.0;
                     left.gas.temp(i_face) =
-                        linear_interpolate(flow_states.gas.temp(left_cell), grad.temp, dx, dy, dz,
-                                           left_cell, T_limit, left_valid);
+                        linear_interpolate(flow_states.gas.temp(left_cell), grad.temp, dx,
+                                           dy, dz, left_cell, T_limit, left_valid);
                     gas_model.update_thermo_from_pT(left.gas, i_face);
                     break;
                 }
@@ -306,52 +303,52 @@ void ConvectiveFlux<T>::linear_reconstruct(const FlowStates<T>& flow_states,
             dy = faces.centre().y(i_face) - cells.centroids().y(right_cell);
             dz = faces.centre().z(i_face) - cells.centroids().z(right_cell);
 
-            switch (thermo_interpolator){
+            switch (thermo_interpolator) {
                 case ThermoReconstructionVars::rho_p: {
                     T p_limit = (limit_right) ? limiters.p(right_cell) : 1.0;
                     right.gas.pressure(i_face) =
-                        linear_interpolate(flow_states.gas.pressure(right_cell), grad.p, dx, dy,
-                                           dz, right_cell, p_limit, right_valid);
+                        linear_interpolate(flow_states.gas.pressure(right_cell), grad.p,
+                                           dx, dy, dz, right_cell, p_limit, right_valid);
                     T rho_limit = (limit_right) ? limiters.rho(right_cell) : 1.0;
                     right.gas.rho(i_face) =
-                        linear_interpolate(flow_states.gas.rho(right_cell), grad.rho, dx, dy, dz,
-                                           right_cell, rho_limit, right_valid);
+                        linear_interpolate(flow_states.gas.rho(right_cell), grad.rho, dx,
+                                           dy, dz, right_cell, rho_limit, right_valid);
                     gas_model.update_thermo_from_rhop(right.gas, i_face);
                     break;
                 }
                 case ThermoReconstructionVars::rho_u: {
                     T u_limit = (limit_right) ? limiters.u(right_cell) : 1.0;
                     right.gas.energy(i_face) =
-                        linear_interpolate(flow_states.gas.energy(right_cell), grad.u, dx, dy,
-                                           dz, right_cell, u_limit, right_valid);
+                        linear_interpolate(flow_states.gas.energy(right_cell), grad.u, dx,
+                                           dy, dz, right_cell, u_limit, right_valid);
                     T rho_limit = (limit_right) ? limiters.rho(right_cell) : 1.0;
                     right.gas.rho(i_face) =
-                        linear_interpolate(flow_states.gas.rho(right_cell), grad.rho, dx, dy, dz,
-                                           right_cell, rho_limit, right_valid);
+                        linear_interpolate(flow_states.gas.rho(right_cell), grad.rho, dx,
+                                           dy, dz, right_cell, rho_limit, right_valid);
                     gas_model.update_thermo_from_rhou(right.gas, i_face);
                     break;
                 }
                 case ThermoReconstructionVars::rho_T: {
                     T T_limit = (limit_right) ? limiters.temp(right_cell) : 1.0;
                     right.gas.temp(i_face) =
-                        linear_interpolate(flow_states.gas.temp(right_cell), grad.temp, dx, dy,
-                                           dz, right_cell, T_limit, right_valid);
+                        linear_interpolate(flow_states.gas.temp(right_cell), grad.temp,
+                                           dx, dy, dz, right_cell, T_limit, right_valid);
                     T rho_limit = (limit_right) ? limiters.rho(right_cell) : 1.0;
                     right.gas.rho(i_face) =
-                        linear_interpolate(flow_states.gas.rho(right_cell), grad.rho, dx, dy, dz,
-                                           right_cell, rho_limit, right_valid);
+                        linear_interpolate(flow_states.gas.rho(right_cell), grad.rho, dx,
+                                           dy, dz, right_cell, rho_limit, right_valid);
                     gas_model.update_thermo_from_rhoT(right.gas, i_face);
                     break;
                 }
                 case ThermoReconstructionVars::p_T: {
                     T T_limit = (limit_right) ? limiters.temp(right_cell) : 1.0;
                     right.gas.temp(i_face) =
-                        linear_interpolate(flow_states.gas.temp(right_cell), grad.temp, dx, dy,
-                                           dz, right_cell, T_limit, right_valid);
+                        linear_interpolate(flow_states.gas.temp(right_cell), grad.temp,
+                                           dx, dy, dz, right_cell, T_limit, right_valid);
                     T p_limit = (limit_right) ? limiters.p(right_cell) : 1.0;
                     right.gas.pressure(i_face) =
-                        linear_interpolate(flow_states.gas.pressure(right_cell), grad.p, dx, dy, dz,
-                                           right_cell, p_limit, right_valid);
+                        linear_interpolate(flow_states.gas.pressure(right_cell), grad.p,
+                                           dx, dy, dz, right_cell, p_limit, right_valid);
                     gas_model.update_thermo_from_pT(right.gas, i_face);
                     break;
                 }
@@ -378,40 +375,38 @@ void ConvectiveFlux<T>::compute_limiters(const FlowStates<T>& flow_states,
     if (limiter_->enabled()) {
         auto cells = grid.cells();
         auto faces = grid.interfaces();
-        switch (reconstruction_vars_){
+        switch (reconstruction_vars_) {
             case ThermoReconstructionVars::rho_p:
                 limiter_->calculate_limiters(flow_states.gas.pressure(), limiters_.p,
                                              cells, faces, cell_grad.p);
-                limiter_->calculate_limiters(flow_states.gas.rho(), limiters_.rho, 
-                                             cells, faces, cell_grad.rho);
+                limiter_->calculate_limiters(flow_states.gas.rho(), limiters_.rho, cells,
+                                             faces, cell_grad.rho);
                 break;
             case ThermoReconstructionVars::rho_u:
-                limiter_->calculate_limiters(flow_states.gas.rho(), limiters_.rho, 
-                                             cells, faces, cell_grad.rho);
-                limiter_->calculate_limiters(flow_states.gas.energy(), limiters_.u, 
-                                             cells, faces, cell_grad.u);
+                limiter_->calculate_limiters(flow_states.gas.rho(), limiters_.rho, cells,
+                                             faces, cell_grad.rho);
+                limiter_->calculate_limiters(flow_states.gas.energy(), limiters_.u, cells,
+                                             faces, cell_grad.u);
                 break;
             case ThermoReconstructionVars::rho_T:
-                limiter_->calculate_limiters(flow_states.gas.rho(), limiters_.rho, 
-                                             cells, faces, cell_grad.rho);
-                limiter_->calculate_limiters(flow_states.gas.temp(), limiters_.temp, 
+                limiter_->calculate_limiters(flow_states.gas.rho(), limiters_.rho, cells,
+                                             faces, cell_grad.rho);
+                limiter_->calculate_limiters(flow_states.gas.temp(), limiters_.temp,
                                              cells, faces, cell_grad.temp);
                 break;
             case ThermoReconstructionVars::p_T:
-                limiter_->calculate_limiters(flow_states.gas.pressure(), limiters_.p, 
+                limiter_->calculate_limiters(flow_states.gas.pressure(), limiters_.p,
                                              cells, faces, cell_grad.p);
-                limiter_->calculate_limiters(flow_states.gas.temp(), limiters_.temp, 
+                limiter_->calculate_limiters(flow_states.gas.temp(), limiters_.temp,
                                              cells, faces, cell_grad.temp);
                 break;
-                
-                
         }
         limiter_->calculate_limiters(flow_states.vel.x(), limiters_.vx, cells, faces,
-                                    cell_grad.vx);
+                                     cell_grad.vx);
         limiter_->calculate_limiters(flow_states.vel.y(), limiters_.vy, cells, faces,
-                                    cell_grad.vy);
+                                     cell_grad.vy);
         limiter_->calculate_limiters(flow_states.vel.z(), limiters_.vz, cells, faces,
-                                    cell_grad.vz);
+                                     cell_grad.vz);
     }
 }
 

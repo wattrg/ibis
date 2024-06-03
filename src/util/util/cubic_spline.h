@@ -11,8 +11,12 @@ public:
     double eval(const double x) const {
         // return the extreme values if a point outside the interpolation
         // region is asked for
-        if (x <= x_min_) { return y_min_; }
-        if (x >= x_max_) { return y_max_; }
+        if (x <= x_min_) {
+            return y_min_;
+        }
+        if (x >= x_max_) {
+            return y_max_;
+        }
 
         // find the index to interpolate inside of
         size_t idx = 0;
@@ -29,7 +33,8 @@ public:
                     y_dash_dash_(idx + 1) * dx_minus * dx_minus * dx_minus) /
                    (6 * delta_xi);
         double b = (y_(idx) / delta_xi - y_dash_dash_(idx) * delta_xi / 6) * dx_plus;
-        double c = (y_(idx + 1) / delta_xi - y_dash_dash_(idx + 1) * delta_xi / 6) * dx_minus;
+        double c =
+            (y_(idx + 1) / delta_xi - y_dash_dash_(idx + 1) * delta_xi / 6) * dx_minus;
         return a + b + c;
     }
 

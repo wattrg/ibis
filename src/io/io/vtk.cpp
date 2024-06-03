@@ -115,8 +115,8 @@ template <typename T>
 int VtkOutput<T>::write(const typename FlowStates<T>::mirror_type& fs,
                         FiniteVolume<T>& fv, const GridBlock<T>& grid,
                         const IdealGas<T>& gas_model,
-                        const TransportProperties<T>& trans_prop,
-                        std::string plot_dir, std::string time_dir, double time) {
+                        const TransportProperties<T>& trans_prop, std::string plot_dir,
+                        std::string time_dir, double time) {
     auto grid_host = grid.host_mirror();
     grid_host.deep_copy(grid);
 

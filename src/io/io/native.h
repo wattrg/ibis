@@ -2,6 +2,7 @@
 #define NATIVE_FLOW_FORMAT_H
 
 #include <io/io.h>
+
 #include "gas/transport_properties.h"
 
 template <typename T>
@@ -10,8 +11,7 @@ public:
     NativeTextInput() {}
 
     int read(typename FlowStates<T>::mirror_type& fs, const GridBlock<T>& grid,
-             const IdealGas<T>& gas_model, 
-             const TransportProperties<T>& trans_prop,
+             const IdealGas<T>& gas_model, const TransportProperties<T>& trans_prop,
              std::string dir, json& meta_data);
 };
 
@@ -22,8 +22,8 @@ public:
 
     int write(const typename FlowStates<T>::mirror_type& fs, FiniteVolume<T>& fv,
               const GridBlock<T>& grid, const IdealGas<T>& gas_model,
-              const TransportProperties<T>& trans_prop,
-              std::string plot_dir, std::string time_dir, double time);
+              const TransportProperties<T>& trans_prop, std::string plot_dir,
+              std::string time_dir, double time);
 
     void write_coordinating_file(std::string plot_dir) { (void)plot_dir; }
 };
@@ -45,8 +45,8 @@ public:
 
     int write(const typename FlowStates<T>::mirror_type& fs, FiniteVolume<T>& fv,
               const GridBlock<T>& grid, const IdealGas<T>& gas_model,
-              const TransportProperties<T>& trans_prop,
-              std::string plot_dir, std::string time_dir, double time);
+              const TransportProperties<T>& trans_prop, std::string plot_dir,
+              std::string time_dir, double time);
 
     void write_coordinating_file(std::string plot_dir) { (void)plot_dir; }
 };

@@ -11,8 +11,8 @@ template <typename T, class Layout = Kokkos::DefaultExecutionSpace::array_layout
 struct Gradients {
     Gradients() {}
 
-    Gradients(int num_cells, bool need_pressure, bool need_temp, bool need_u, bool need_rho,
-              bool viscous) {
+    Gradients(int num_cells, bool need_pressure, bool need_temp, bool need_u,
+              bool need_rho, bool viscous) {
         bool high_order = (need_pressure || need_temp || need_u || need_rho);
         if (high_order || viscous) {
             vx = Vector3s<T, Layout, Space>("Gradients::vx", num_cells);

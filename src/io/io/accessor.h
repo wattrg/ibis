@@ -10,6 +10,7 @@
 
 #include <Kokkos_Core.hpp>
 #include <map>
+
 #include "gas/transport_properties.h"
 
 using array_layout = Kokkos::DefaultExecutionSpace::array_layout;
@@ -23,7 +24,8 @@ public:
 
     virtual void init(const FlowStates<T, array_layout, host_mem_space>& fs,
                       FiniteVolume<T>& fv, const GridBlock<T>& grid,
-                      const IdealGas<T>& gas_model, const TransportProperties<T>& trans_prop) {
+                      const IdealGas<T>& gas_model,
+                      const TransportProperties<T>& trans_prop) {
         (void)grid;
         (void)fs;
         (void)fv;
@@ -42,7 +44,8 @@ public:
 
     virtual void init(const FlowStates<T, array_layout, host_mem_space>& fs,
                       FiniteVolume<T>& fv, const GridBlock<T>& grid,
-                      const IdealGas<T>& gas_model, const TransportProperties<T>& trans_prop) {
+                      const IdealGas<T>& gas_model,
+                      const TransportProperties<T>& trans_prop) {
         (void)grid;
         (void)fs;
         (void)fv;

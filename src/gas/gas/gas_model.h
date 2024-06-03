@@ -93,8 +93,8 @@ public:
     }
 
     template <typename layout = default_layout, typename space = default_space>
-    KOKKOS_INLINE_FUNCTION void update_thermo_from_rhoT(const GasStates<T, layout, space> &gs,
-                                                        const size_t i) const {
+    KOKKOS_INLINE_FUNCTION void update_thermo_from_rhoT(
+        const GasStates<T, layout, space> &gs, const size_t i) const {
         gs.pressure(i) = p_from_rhoT(gs.rho(i), gs.temp(i), R_);
         gs.energy(i) = energy_from_temp(gs.temp(i), Cv_);
     }
