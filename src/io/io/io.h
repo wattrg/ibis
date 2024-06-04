@@ -14,7 +14,7 @@
 
 using json = nlohmann::json;
 
-enum class FlowFormat { NativeText, NativeBinary, Vtk };
+enum class FlowFormat { NativeText, NativeBinary, VtkText, VtkBinary };
 
 template <typename T>
 class FVInput {

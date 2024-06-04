@@ -8,9 +8,9 @@
 #include "gas/transport_properties.h"
 
 template <typename T>
-class VtkOutput : public FVOutput<T> {
+class VtkTextOutput : public FVOutput<T> {
 public:
-    VtkOutput();
+    VtkTextOutput();
 
     int write(const typename FlowStates<T>::mirror_type& fs, FiniteVolume<T>& fv,
               const GridBlock<T>& grid, const IdealGas<T>& gas_model,
@@ -22,10 +22,23 @@ public:
 private:
     std::vector<double> times_;
     std::vector<std::string> dirs_;
-    // std::map<std::string, std::shared_ptr<ScalarAccessor<T>>>
-    //     m_scalar_accessors;
-    // std::map<std::string, std::shared_ptr<VectorAccessor<T>>>
-    //     m_vector_accessors;
+};
+
+template <typename T>
+class VtkBinaryOutput : public FVOutput<T> {
+public:
+    VtkBinaryOutput();
+
+    int write(const typename FlowStates<T>::mirror_type& fs, FiniteVolume<T>& fv,
+              const GridBlock<T>& grid, const IdealGas<T>& gas_model,
+              const TransportProperties<T>& trans_prop, std::string plot_dir,
+              std::string time_dir, double time);
+
+    void write_coordinating_file(std::string plot_dir);
+
+private:
+    std::vector<double> times_;
+    std::vector<std::string> dirs_;
 };
 
 #endif

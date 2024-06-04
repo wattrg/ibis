@@ -1,3 +1,4 @@
+#include <io/binary_util.h>
 #include <io/native.h>
 #include <spdlog/spdlog.h>
 
@@ -178,10 +179,6 @@ int NativeTextInput<T>::read(typename FlowStates<T>::mirror_type& fs,
 }
 template class NativeTextInput<double>;
 
-void write_double(std::ofstream& f, double value) {
-    f.write(reinterpret_cast<const char*>(&value), sizeof(double));
-}
-
 template <typename T>
 int NativeBinaryOutput<T>::write(const typename FlowStates<T>::mirror_type& fs,
                                  FiniteVolume<T>& fv, const GridBlock<T>& grid,
@@ -209,7 +206,7 @@ int NativeBinaryOutput<T>::write(const typename FlowStates<T>::mirror_type& fs,
         return 1;
     }
     for (size_t cell_i = 0; cell_i < grid.num_cells(); cell_i++) {
-        write_double(temp, fs.gas.temp(cell_i));
+        write_binary<double>(temp, fs.gas.temp(cell_i));
     }
     temp.close();
 
@@ -219,7 +216,7 @@ int NativeBinaryOutput<T>::write(const typename FlowStates<T>::mirror_type& fs,
         return 1;
     }
     for (size_t cell_i = 0; cell_i < grid.num_cells(); cell_i++) {
-        write_double(pressure, fs.gas.pressure(cell_i));
+        write_binary<double>(pressure, fs.gas.pressure(cell_i));
     }
     pressure.close();
 
@@ -229,7 +226,7 @@ int NativeBinaryOutput<T>::write(const typename FlowStates<T>::mirror_type& fs,
         return 1;
     }
     for (size_t cell_i = 0; cell_i < grid.num_cells(); cell_i++) {
-        write_double(vx, fs.vel.x(cell_i));
+        write_binary<double>(vx, fs.vel.x(cell_i));
     }
     vx.close();
 
@@ -239,7 +236,7 @@ int NativeBinaryOutput<T>::write(const typename FlowStates<T>::mirror_type& fs,
         return 1;
     }
     for (size_t cell_i = 0; cell_i < grid.num_cells(); cell_i++) {
-        write_double(vy, fs.vel.y(cell_i));
+        write_binary<double>(vy, fs.vel.y(cell_i));
     }
     vy.close();
 
@@ -250,7 +247,7 @@ int NativeBinaryOutput<T>::write(const typename FlowStates<T>::mirror_type& fs,
             return 1;
         }
         for (size_t cell_i = 0; cell_i < grid.num_cells(); cell_i++) {
-            write_double(vz, fs.vel.z(cell_i));
+            write_binary<double>(vz, fs.vel.z(cell_i));
         }
         vz.close();
     }
@@ -258,10 +255,6 @@ int NativeBinaryOutput<T>::write(const typename FlowStates<T>::mirror_type& fs,
     return 0;
 }
 template class NativeBinaryOutput<double>;
-
-void read_double(std::ifstream& f, double& value) {
-    f.read(reinterpret_cast<char*>(&value), sizeof(double));
-}
 
 template <typename T>
 int NativeBinaryInput<T>::read(typename FlowStates<T>::mirror_type& fs,
@@ -286,7 +279,7 @@ int NativeBinaryInput<T>::read(typename FlowStates<T>::mirror_type& fs,
         return 1;
     }
     for (size_t cell_i = 0; cell_i < num_cells; cell_i++) {
-        read_double(temp, fs.gas.temp(cell_i));
+        read_binary<double>(temp, fs.gas.temp(cell_i));
     }
 
     std::ifstream pressure(dir + "/p", std::ios::binary);
@@ -295,7 +288,7 @@ int NativeBinaryInput<T>::read(typename FlowStates<T>::mirror_type& fs,
         return 1;
     }
     for (size_t cell_i = 0; cell_i < num_cells; cell_i++) {
-        read_double(pressure, fs.gas.pressure(cell_i));
+        read_binary<double>(pressure, fs.gas.pressure(cell_i));
     }
     pressure.close();
 
@@ -305,7 +298,7 @@ int NativeBinaryInput<T>::read(typename FlowStates<T>::mirror_type& fs,
         return 1;
     }
     for (size_t cell_i = 0; cell_i < num_cells; cell_i++) {
-        read_double(vx, fs.vel.x(cell_i));
+        read_binary<double>(vx, fs.vel.x(cell_i));
     }
     vx.close();
 
@@ -315,7 +308,7 @@ int NativeBinaryInput<T>::read(typename FlowStates<T>::mirror_type& fs,
         return 1;
     }
     for (size_t cell_i = 0; cell_i < num_cells; cell_i++) {
-        read_double(vy, fs.vel.y(cell_i));
+        read_binary<double>(vy, fs.vel.y(cell_i));
     }
     vy.close();
 
@@ -327,7 +320,7 @@ int NativeBinaryInput<T>::read(typename FlowStates<T>::mirror_type& fs,
         }
 
         for (size_t cell_i = 0; cell_i < num_cells; cell_i++) {
-            read_double(vz, fs.vel.z(cell_i));
+            read_binary<double>(vz, fs.vel.z(cell_i));
         }
         vz.close();
     }

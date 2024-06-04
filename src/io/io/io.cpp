@@ -28,7 +28,8 @@ std::unique_ptr<FVInput<T>> make_fv_input(FlowFormat format) {
             return std::unique_ptr<FVInput<T>>(new NativeTextInput<T>());
         case FlowFormat::NativeBinary:
             return std::unique_ptr<FVInput<T>>(new NativeBinaryInput<T>());
-        case FlowFormat::Vtk:
+        case FlowFormat::VtkText:
+        case FlowFormat::VtkBinary:
             spdlog::error("Reading VTK files not supported");
             throw std::runtime_error("Reading VTK files not supported");
         default:
@@ -43,8 +44,10 @@ std::unique_ptr<FVOutput<T>> make_fv_output(FlowFormat format) {
             return std::unique_ptr<FVOutput<T>>(new NativeTextOutput<T>());
         case FlowFormat::NativeBinary:
             return std::unique_ptr<FVOutput<T>>(new NativeBinaryOutput<T>());
-        case FlowFormat::Vtk:
-            return std::unique_ptr<FVOutput<T>>(new VtkOutput<T>());
+        case FlowFormat::VtkText:
+            return std::unique_ptr<FVOutput<T>>(new VtkTextOutput<T>());
+        case FlowFormat::VtkBinary:
+            return std::unique_ptr<FVOutput<T>>(new VtkBinaryOutput<T>());
         default:
             throw std::runtime_error("Unreachable");
     }
