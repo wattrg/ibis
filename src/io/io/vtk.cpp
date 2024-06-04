@@ -223,13 +223,13 @@ void VtkBinaryOutput<T>::write_scalar_field_binary(std::ofstream& f,
     std::uint32_t num_bytes = num_values * sizeof(T);
 
     // Reserve enough space in the packed data for this scalar field.
-    // This avoid repeated re-allocation while adding the data from this
+    // This avoids repeated re-allocation while adding the data from this
     // field.
     packed_data_.reserve(num_bytes + sizeof(num_bytes));
 
     // Write the number of bytes this field will use
     std::byte* num_bytes_begin = reinterpret_cast<std::byte*>(&num_bytes);
-    std::byte* num_bytes_end = reinterpret_cast<std::byte*>(&num_bytes+1);
+    std::byte* num_bytes_end = num_bytes_begin + sizeof(num_bytes);
     packed_data_.insert(packed_data_.end(), num_bytes_begin, num_bytes_end);
 
     // pack the data into the bytes array
@@ -261,7 +261,7 @@ void VtkBinaryOutput<T>::write_vector_field_binary(std::ofstream& f,
     packed_data_.reserve(num_bytes + sizeof(num_bytes));
 
     std::byte* num_bytes_begin = reinterpret_cast<std::byte*>(&num_bytes);
-    std::byte* num_bytes_end = reinterpret_cast<std::byte*>(&num_bytes + 1);
+    std::byte* num_bytes_end = num_bytes_begin + sizeof(num_bytes);
     packed_data_.insert(packed_data_.end(), num_bytes_begin, num_bytes_end);
 
     for (size_t i = 0; i < num_values; i++) {
