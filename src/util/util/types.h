@@ -4,6 +4,7 @@
 #include <Kokkos_Core.hpp>
 
 namespace Ibis {
+
 using DefaultExecSpace = Kokkos::DefaultExecutionSpace;
 using DefaultHostExecSpace = Kokkos::DefaultHostExecutionSpace;
 using DefaultArrayLayout = Kokkos::DefaultExecutionSpace::array_layout;
@@ -27,6 +28,7 @@ using SubArray2D = Kokkos::View<T*, Kokkos::LayoutStride, Space>;
 template <typename T, class Layout = Kokkos::DefaultExecutionSpace::array_layout,
           class Space = Kokkos::DefaultExecutionSpace::memory_space>
 using ArrayNby3 = Kokkos::View<T* [3], Layout, Space>;
-};  // namespace Ibis
+
+}  // namespace Ibis
 
 #endif

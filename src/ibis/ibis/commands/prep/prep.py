@@ -707,7 +707,7 @@ def string_to_io_format(string):
 
 
 class IO:
-    _json_values = ["flow_format", "plot_format"]
+    _json_values = ["flow_format",]
     __slots__ = _json_values
     _defaults_file = "io.json"
 
@@ -732,12 +732,7 @@ class IO:
             )
 
     def as_dict(self):
-        values = {}
-        for key in self._json_values:
-            format = getattr(self, key)
-            if type(format) is IOFormat:
-                format = format.value
-            values[key] = format
+        return {"flow_format": self.flow_format.value}
 
 
 class Config:
@@ -767,6 +762,8 @@ class Config:
         config_file = directories["config_file"]
         config_file = f"{config_directory}/{config_file}"
 
+        binary = self.io.flow_format is IOFormat.NativeBinary
+
         # extract all the values to go in the json config file
         json_values = {}
         for setting in self._json_values:
@@ -779,7 +776,6 @@ class Config:
         # write the grid files
         grid_directory = directories["grid_dir"]
         flow_directory = directories["flow_dir"]
-        binary = self.io.flow_format is IOFormat.NativeBinary
         self.grid.write(grid_directory, flow_directory, binary)
 
 

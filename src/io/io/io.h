@@ -16,6 +16,8 @@ using json = nlohmann::json;
 
 enum class FlowFormat { NativeText, NativeBinary, VtkText, VtkBinary };
 
+FlowFormat string_to_flow_format(std::string format);
+
 template <typename T>
 class FVInput {
 public:
@@ -58,6 +60,8 @@ public:
     FVIO(FlowFormat input, FlowFormat output, std::string input_dir,
          std::string output_dir);
 
+    FVIO(FlowFormat input, FlowFormat output, int time_index);
+    
     FVIO(int time_index);
 
     FVIO();

@@ -49,9 +49,11 @@ void plot_vtk(json directories, std::vector<std::string> extra_vars) {
     IdealGas<double> gas_model{config.at("gas_model")};
     TransportProperties<double> trans_prop{config.at("transport_properties")};
 
-    constexpr FlowFormat format = (binary) ? FlowFormat::VtkBinary : FlowFormat::VtkText;
+    // get the input and output flow formats
+    FlowFormat flow_format = string_to_flow_format(config.at("io").at("flow_format"));
+    constexpr FlowFormat plot_format = (binary) ? FlowFormat::VtkBinary : FlowFormat::VtkText;
+    FVIO<T> io(flow_format, plot_format, flow_dir, plot_dir);
 
-    FVIO<T> io(FlowFormat::NativeBinary, format, flow_dir, plot_dir);
     for (auto& extra_var : extra_vars) {
         io.add_output_variable(extra_var);
     }
