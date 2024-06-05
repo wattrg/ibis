@@ -191,7 +191,6 @@ class ConvectiveFlux:
                 setattr(self, key, json_data[key])
 
         for key in kwargs:
-            print(key)
             if key in self._custom_types:
                 setattr(self, key, ensure_custom_type(kwargs[key],
                                                       self._custom_types[key]))
