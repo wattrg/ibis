@@ -1,3 +1,6 @@
+#ifndef BINARY_UTIL
+#define BINARY_UTIL
+
 #include <fstream>
 #include <string>
 #include <vector>
@@ -11,3 +14,5 @@ template <typename T>
 void read_binary(std::ifstream& f, T& value) {
     f.read(reinterpret_cast<char*>(&value), sizeof(T));
 }
+
+#endif
