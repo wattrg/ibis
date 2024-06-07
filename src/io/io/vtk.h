@@ -44,18 +44,18 @@ private:
 
 private:
     void write_scalar_field_binary(std::ofstream& f,
-                                  const FlowStates<T, array_layout, host_mem_space> fs,
-                                  FiniteVolume<T>& fv,
-                                  std::shared_ptr<ScalarAccessor<T>> accessor,
-                                  const IdealGas<T>& gas_model, std::string name,
-                                  std::string type, size_t num_values);
+                                   const FlowStates<T, array_layout, host_mem_space> fs,
+                                   FiniteVolume<T>& fv,
+                                   std::shared_ptr<ScalarAccessor<T>> accessor,
+                                   const IdealGas<T>& gas_model, std::string name,
+                                   std::string type, size_t num_values);
 
     void write_vector_field_binary(std::ofstream& f,
-                                  const FlowStates<T, array_layout, host_mem_space> fs,
-                                  FiniteVolume<T>& fv,
-                                  std::shared_ptr<VectorAccessor<T>> accessor,
-                                  const IdealGas<T>& gas_model, std::string name,
-                                  std::string type, size_t num_values);
+                                   const FlowStates<T, array_layout, host_mem_space> fs,
+                                   FiniteVolume<T>& fv,
+                                   std::shared_ptr<VectorAccessor<T>> accessor,
+                                   const IdealGas<T>& gas_model, std::string name,
+                                   std::string type, size_t num_values);
 
     void write_appended_data(std::ofstream& f);
 };

@@ -51,7 +51,8 @@ void plot_vtk(json directories, std::vector<std::string> extra_vars) {
 
     // get the input and output flow formats
     FlowFormat flow_format = string_to_flow_format(config.at("io").at("flow_format"));
-    constexpr FlowFormat plot_format = (binary) ? FlowFormat::VtkBinary : FlowFormat::VtkText;
+    constexpr FlowFormat plot_format =
+        (binary) ? FlowFormat::VtkBinary : FlowFormat::VtkText;
     FVIO<T> io(flow_format, plot_format, flow_dir, plot_dir);
 
     for (auto& extra_var : extra_vars) {

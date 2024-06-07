@@ -61,7 +61,7 @@ public:
          std::string output_dir);
 
     FVIO(FlowFormat input, FlowFormat output, int time_index);
-    
+
     FVIO(int time_index);
 
     FVIO();
