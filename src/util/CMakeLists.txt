@@ -3,6 +3,7 @@ add_library(
     STATIC 
     util/vector3.cpp
     util/ragged_array.cpp
+    util/cubic_spline.cpp
 )
 target_link_libraries(util PUBLIC Kokkos::kokkos doctest)
 target_include_directories(util PUBLIC .)
@@ -14,6 +15,7 @@ if (Ibis_BUILD_TESTS)
     	  test/unittest.cpp 
     	  util/vector3.cpp 
     	  util/ragged_array.cpp
+    	  util/cubic_spline.cpp
     )
 
     target_link_libraries(

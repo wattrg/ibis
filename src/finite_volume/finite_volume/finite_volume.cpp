@@ -29,9 +29,10 @@ FiniteVolume<T>::FiniteVolume(const GridBlock<T>& grid, json config) {
     size_t reconstruction_order = convective_flux_.reconstruction_order();
     bool viscous = viscous_flux_.enabled();
     if (viscous || reconstruction_order > 1) {
-        bool convective_grad = reconstruction_order > 1;
         grad_calc_ = WLSGradient<T>(grid);
-        cell_grad_ = Gradients<T>(grid.num_cells(), convective_grad, viscous);
+        const RequiredGradients grads = convective_flux_.required_gradients();
+        cell_grad_ = Gradients<T>(grid.num_cells(), grads.pressure, grads.temp, grads.u,
+                                  grads.rho, viscous);
     }
 
     // set up boundary conditions
@@ -53,11 +54,11 @@ template <typename T>
 size_t FiniteVolume<T>::compute_dudt(FlowStates<T>& flow_state, const GridBlock<T>& grid,
                                      ConservedQuantities<T>& dudt, IdealGas<T>& gas_model,
                                      TransportProperties<T>& trans_prop) {
-    apply_pre_reconstruction_bc(flow_state, grid);
+    apply_pre_reconstruction_bc(flow_state, grid, gas_model, trans_prop);
     convective_flux_.compute_convective_flux(flow_state, grid, gas_model, cell_grad_,
                                              grad_calc_, flux_);
     if (viscous_flux_.enabled()) {
-        apply_pre_viscous_grad_bc(flow_state, grid);
+        apply_pre_viscous_grad_bc(flow_state, grid, gas_model, trans_prop);
         viscous_flux_.compute_viscous_flux(flow_state, grid, gas_model, trans_prop,
                                            cell_grad_, grad_calc_, flux_);
     }
@@ -123,22 +124,24 @@ double FiniteVolume<T>::estimate_dt(const FlowStates<T>& flow_state, GridBlock<T
 }
 
 template <typename T>
-void FiniteVolume<T>::apply_pre_reconstruction_bc(FlowStates<T>& fs,
-                                                  const GridBlock<T>& grid) {
+void FiniteVolume<T>::apply_pre_reconstruction_bc(
+    FlowStates<T>& fs, const GridBlock<T>& grid, const IdealGas<T>& gas_model,
+    const TransportProperties<T>& trans_prop) {
     for (size_t i = 0; i < bcs_.size(); i++) {
         std::shared_ptr<BoundaryCondition<T>> bc = bcs_[i];
         Field<size_t> bc_faces = bc_interfaces_[i];
-        bc->apply_pre_reconstruction(fs, grid, bc_faces);
+        bc->apply_pre_reconstruction(fs, grid, bc_faces, gas_model, trans_prop);
     }
 }
 
 template <typename T>
-void FiniteVolume<T>::apply_pre_viscous_grad_bc(FlowStates<T>& fs,
-                                                const GridBlock<T>& grid) {
+void FiniteVolume<T>::apply_pre_viscous_grad_bc(
+    FlowStates<T>& fs, const GridBlock<T>& grid, const IdealGas<T>& gas_model,
+    const TransportProperties<T>& trans_prop) {
     for (size_t i = 0; i < bcs_.size(); i++) {
         std::shared_ptr<BoundaryCondition<T>> bc = bcs_[i];
         Field<size_t> bc_faces = bc_interfaces_[i];
-        bc->apply_pre_viscous_grad(fs, grid, bc_faces);
+        bc->apply_pre_viscous_grad(fs, grid, bc_faces, gas_model, trans_prop);
     }
 }
 
@@ -196,16 +199,19 @@ size_t FiniteVolume<T>::count_bad_cells(const FlowStates<T>& fs, const size_t nu
 
 template <typename T>
 void FiniteVolume<T>::compute_viscous_gradient(FlowStates<T>& fs,
-                                               const GridBlock<T>& grid) {
-    apply_pre_reconstruction_bc(fs, grid);
-    apply_pre_viscous_grad_bc(fs, grid);
+                                               const GridBlock<T>& grid,
+                                               const IdealGas<T>& gas_model,
+                                               const TransportProperties<T>& trans_prop) {
+    apply_pre_reconstruction_bc(fs, grid, gas_model, trans_prop);
+    apply_pre_viscous_grad_bc(fs, grid, gas_model, trans_prop);
     viscous_flux_.compute_viscous_gradient(fs, grid, cell_grad_, grad_calc_);
 }
 
 template <typename T>
-void FiniteVolume<T>::compute_convective_gradient(FlowStates<T>& fs,
-                                                  const GridBlock<T>& grid) {
-    apply_pre_reconstruction_bc(fs, grid);
+void FiniteVolume<T>::compute_convective_gradient(
+    FlowStates<T>& fs, const GridBlock<T>& grid, const IdealGas<T>& gas_model,
+    const TransportProperties<T>& trans_prop) {
+    apply_pre_reconstruction_bc(fs, grid, gas_model, trans_prop);
     convective_flux_.compute_convective_gradient(fs, grid, cell_grad_, grad_calc_);
 }
 

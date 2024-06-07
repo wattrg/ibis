@@ -1,6 +1,8 @@
 #ifndef GAS_H
 #define GAS_H
 
+#include <util/types.h>
+
 #include <Kokkos_Core.hpp>
 
 #include "Kokkos_Macros.hpp"
@@ -20,7 +22,8 @@ template <typename T, class Layout = Kokkos::DefaultExecutionSpace::array_layout
           class Space = Kokkos::DefaultExecutionSpace::memory_space>
 class GasStates {
 private:
-    using view_type = Kokkos::View<T**, Layout, Space>;
+    // using view_type = Kokkos::View<T**, Layout, Space>;
+    using view_type = Ibis::Array2D<T, Layout, Space>;
 
 public:
     using array_layout = Layout;
@@ -85,6 +88,12 @@ public:
 
     KOKKOS_INLINE_FUNCTION
     T& energy(const size_t cell_i) { return data_(cell_i, energy_idx_); }
+
+    KOKKOS_INLINE_FUNCTION
+    auto energy() { return Kokkos::subview(data_, Kokkos::ALL, energy_idx_); }
+
+    KOKKOS_INLINE_FUNCTION
+    auto energy() const { return Kokkos::subview(data_, Kokkos::ALL, energy_idx_); }
 
     KOKKOS_INLINE_FUNCTION
     void copy_gas_state(const GasState<T>& gs, const size_t i) {

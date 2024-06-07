@@ -10,10 +10,13 @@
 #include <nlohmann/json.hpp>
 
 #include "finite_volume/finite_volume.h"
+#include "gas/transport_properties.h"
 
 using json = nlohmann::json;
 
-enum class FlowFormat { Native, Vtk };
+enum class FlowFormat { NativeText, NativeBinary, VtkText, VtkBinary };
+
+FlowFormat string_to_flow_format(std::string format);
 
 template <typename T>
 class FVInput {
@@ -21,7 +24,9 @@ public:
     virtual ~FVInput() {}
 
     virtual int read(typename FlowStates<T>::mirror_type& fs, const GridBlock<T>& grid,
-                     const IdealGas<T>& gas_model, std::string dir, json& meta_data) = 0;
+                     const IdealGas<T>& gas_model,
+                     const TransportProperties<T>& trans_prop, std::string dir,
+                     json& meta_data) = 0;
 };
 
 template <typename T>
@@ -31,7 +36,8 @@ public:
 
     virtual int write(const typename FlowStates<T>::mirror_type& fs, FiniteVolume<T>& fv,
                       const GridBlock<T>& grid, const IdealGas<T>& gas_model,
-                      std::string plot_dir, std::string time_dir, double time) = 0;
+                      const TransportProperties<T>& trans_prop, std::string plot_dir,
+                      std::string time_dir, double time) = 0;
 
     void add_variable(std::string name);
 
@@ -54,17 +60,20 @@ public:
     FVIO(FlowFormat input, FlowFormat output, std::string input_dir,
          std::string output_dir);
 
+    FVIO(FlowFormat input, FlowFormat output, int time_index);
+
     FVIO(int time_index);
 
     FVIO();
 
     // read a flow state
     int read(FlowStates<T>& fs, const GridBlock<T>& grid, const IdealGas<T>& gas_model,
-             json& meta_data, int time_idx);
+             const TransportProperties<T>& trans_prop, json& meta_data, int time_idx);
 
     // write a flow state
     int write(const FlowStates<T>& flow_state, FiniteVolume<T>& fv,
-              const GridBlock<T>& grid, const IdealGas<T>& gas_model, double time);
+              const GridBlock<T>& grid, const IdealGas<T>& gas_model,
+              const TransportProperties<T>& trans_prop, double time);
 
     void add_output_variable(std::string name) { output_->add_variable(name); }
 

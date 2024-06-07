@@ -3,6 +3,8 @@
 
 #include <Kokkos_Core.hpp>
 
+#include "gas/transport_properties.h"
+
 template <typename T>
 FlowStateCopy<T>::FlowStateCopy(json flow_state) {
     T temp = flow_state.at("T");
@@ -25,7 +27,12 @@ FlowStateCopy<T>::FlowStateCopy(json flow_state) {
 
 template <typename T>
 void FlowStateCopy<T>::apply(FlowStates<T>& fs, const GridBlock<T>& grid,
-                             const Field<size_t>& boundary_faces) {
+                             const Field<size_t>& boundary_faces,
+                             const IdealGas<T>& gas_model,
+                             const TransportProperties<T>& trans_prop) {
+    (void)gas_model;
+    (void)trans_prop;
+
     size_t size = boundary_faces.size();
     auto this_fs = fs_;
     auto interfaces = grid.interfaces();
@@ -54,8 +61,61 @@ void FlowStateCopy<T>::apply(FlowStates<T>& fs, const GridBlock<T>& grid,
 template class FlowStateCopy<double>;
 
 template <typename T>
+BoundaryLayerProfile<T>::BoundaryLayerProfile(json config) {
+    std::vector<double> x = config.at("height");
+    std::vector<double> v = config.at("v");
+    std::vector<double> temp = config.at("T");
+    v_ = CubicSpline(x, v);
+    T_ = CubicSpline(x, temp);
+    p_ = config.at("p");
+}
+
+template <typename T>
+void BoundaryLayerProfile<T>::apply(FlowStates<T>& fs, const GridBlock<T>& grid,
+                                    const Field<size_t>& boundary_faces,
+                                    const IdealGas<T>& gas_model,
+                                    const TransportProperties<T>& trans_prop) {
+    (void)trans_prop;
+
+    size_t size = boundary_faces.size();
+    auto interfaces = grid.interfaces();
+    auto cells = grid.cells();
+    size_t num_valid_cells = grid.num_cells();
+    T p = p_;
+    CubicSpline temp = T_;
+    CubicSpline v = v_;
+    Kokkos::parallel_for(
+        "FlowStateCopy::apply", size, KOKKOS_LAMBDA(const size_t i) {
+            size_t face_id = boundary_faces(i);
+            size_t left_cell = interfaces.left_cell(face_id);
+            size_t right_cell = interfaces.right_cell(face_id);
+            size_t ghost_cell;
+            if (left_cell < num_valid_cells) {
+                ghost_cell = right_cell;
+            } else {
+                ghost_cell = left_cell;
+            }
+
+            T pos = cells.centroids().y(ghost_cell);
+            fs.gas.pressure(ghost_cell) = p;
+            fs.gas.temp(ghost_cell) = temp.eval(pos);
+            gas_model.update_thermo_from_pT(fs.gas, ghost_cell);
+
+            fs.vel.x(ghost_cell) = v.eval(pos);
+            fs.vel.y(ghost_cell) = 0.0;
+            fs.vel.z(ghost_cell) = 0.0;
+        });
+}
+template class BoundaryLayerProfile<double>;
+
+template <typename T>
 void InternalCopy<T>::apply(FlowStates<T>& fs, const GridBlock<T>& grid,
-                            const Field<size_t>& boundary_faces) {
+                            const Field<size_t>& boundary_faces,
+                            const IdealGas<T>& gas_model,
+                            const TransportProperties<T>& trans_prop) {
+    (void)gas_model;
+    (void)trans_prop;
+
     size_t size = boundary_faces.size();
     auto interfaces = grid.interfaces();
     size_t num_valid_cells = grid.num_cells();
@@ -91,7 +151,12 @@ template class InternalCopy<double>;
 
 template <typename T>
 void InternalCopyReflectNormal<T>::apply(FlowStates<T>& fs, const GridBlock<T>& grid,
-                                         const Field<size_t>& boundary_faces) {
+                                         const Field<size_t>& boundary_faces,
+                                         const IdealGas<T>& gas_model,
+                                         const TransportProperties<T>& trans_prop) {
+    (void)gas_model;
+    (void)trans_prop;
+
     size_t size = boundary_faces.size();
     auto interfaces = grid.interfaces();
     size_t num_valid_cells = grid.num_cells();
@@ -153,7 +218,12 @@ void InternalCopyReflectNormal<T>::apply(FlowStates<T>& fs, const GridBlock<T>& 
 
 template <typename T>
 void InternalVelCopyReflect<T>::apply(FlowStates<T>& fs, const GridBlock<T>& grid,
-                                      const Field<size_t>& boundary_faces) {
+                                      const Field<size_t>& boundary_faces,
+                                      const IdealGas<T>& gas_model,
+                                      const TransportProperties<T>& trans_prop) {
+    (void)gas_model;
+    (void)trans_prop;
+
     size_t size = boundary_faces.size();
     auto interfaces = grid.interfaces();
     size_t num_valid_cells = grid.num_cells();
@@ -183,7 +253,12 @@ void InternalVelCopyReflect<T>::apply(FlowStates<T>& fs, const GridBlock<T>& gri
 
 template <typename T>
 void FixTemperature<T>::apply(FlowStates<T>& fs, const GridBlock<T>& grid,
-                              const Field<size_t>& boundary_faces) {
+                              const Field<size_t>& boundary_faces,
+                              const IdealGas<T>& gas_model,
+                              const TransportProperties<T>& trans_prop) {
+    (void)gas_model;
+    (void)trans_prop;
+
     size_t size = boundary_faces.size();
     auto interfaces = grid.interfaces();
     size_t num_valid_cells = grid.num_cells();
@@ -219,6 +294,9 @@ std::shared_ptr<BoundaryAction<T>> build_boundary_action(json config) {
     if (type == "flow_state_copy") {
         json flow_state = config.at("flow_state");
         action = std::shared_ptr<BoundaryAction<T>>(new FlowStateCopy<T>(flow_state));
+    } else if (type == "boundary_layer_profile") {
+        json profile = config.at("profile");
+        action = std::shared_ptr<BoundaryAction<T>>(new BoundaryLayerProfile<T>(profile));
     } else if (type == "internal_copy") {
         action = std::shared_ptr<BoundaryAction<T>>(new InternalCopy<T>());
     } else if (type == "internal_copy_reflect_normal") {
@@ -252,20 +330,20 @@ BoundaryCondition<T>::BoundaryCondition(json config) {
 }
 
 template <typename T>
-void BoundaryCondition<T>::apply_pre_reconstruction(FlowStates<T>& fs,
-                                                    const GridBlock<T>& grid,
-                                                    const Field<size_t>& boundary_faces) {
+void BoundaryCondition<T>::apply_pre_reconstruction(
+    FlowStates<T>& fs, const GridBlock<T>& grid, const Field<size_t>& boundary_faces,
+    const IdealGas<T>& gas_model, const TransportProperties<T>& trans_prop) {
     for (size_t i = 0; i < pre_reconstruction_.size(); i++) {
-        pre_reconstruction_[i]->apply(fs, grid, boundary_faces);
+        pre_reconstruction_[i]->apply(fs, grid, boundary_faces, gas_model, trans_prop);
     }
 }
 
 template <typename T>
-void BoundaryCondition<T>::apply_pre_viscous_grad(FlowStates<T>& fs,
-                                                  const GridBlock<T>& grid,
-                                                  const Field<size_t>& boundary_faces) {
+void BoundaryCondition<T>::apply_pre_viscous_grad(
+    FlowStates<T>& fs, const GridBlock<T>& grid, const Field<size_t>& boundary_faces,
+    const IdealGas<T>& gas_model, const TransportProperties<T>& trans_prop) {
     for (size_t i = 0; i < pre_viscous_grad_.size(); i++) {
-        pre_viscous_grad_[i]->apply(fs, grid, boundary_faces);
+        pre_viscous_grad_[i]->apply(fs, grid, boundary_faces, gas_model, trans_prop);
     }
 }
 template class BoundaryCondition<double>;

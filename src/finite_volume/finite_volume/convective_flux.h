@@ -12,6 +12,22 @@
 
 using json = nlohmann::json;
 
+enum class ThermoReconstructionVars {
+    rho_p,
+    rho_T,
+    rho_u,
+    p_T,
+};
+
+struct RequiredGradients {
+    RequiredGradients() {}
+
+    bool pressure = false;
+    bool temp = false;
+    bool u = false;
+    bool rho = false;
+};
+
 template <typename T>
 class ConvectiveFlux {
 public:
@@ -45,6 +61,10 @@ public:
 
     size_t reconstruction_order() const { return reconstruction_order_; }
 
+    ThermoReconstructionVars thermo_interp() const { return reconstruction_vars_; }
+
+    const RequiredGradients required_gradients() const;
+
 private:
     // The flow states to the left of the interface
     FlowStates<T> left_;
@@ -58,8 +78,10 @@ private:
     // reconstruction order
     size_t reconstruction_order_;
 
+    ThermoReconstructionVars reconstruction_vars_;
+
     // The limiter
-    Limiter<T> limiter_;
+    std::unique_ptr<Limiter<T>> limiter_;
 
     // Storage for the limiter values
     LimiterValues<T> limiters_;

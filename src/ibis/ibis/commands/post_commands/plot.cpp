@@ -19,9 +19,11 @@
 int plot(FlowFormat format, std::vector<std::string> extras, int argc, char* argv[]) {
     Kokkos::initialize(argc, argv);
     json directories = read_directories();
-    if (format == FlowFormat::Vtk) {
-        plot_vtk<double>(directories, extras);
-    } else if (format == FlowFormat::Native) {
+    if (format == FlowFormat::VtkBinary) {
+        plot_vtk<double, true>(directories, extras);
+    } else if (format == FlowFormat::VtkText) {
+        plot_vtk<double, false>(directories, extras);
+    } else if (format == FlowFormat::NativeText || format == FlowFormat::NativeBinary) {
         spdlog::error("Unable to plot in Native format");
         throw std::runtime_error("Unable to plot in Native format");
     }
@@ -30,7 +32,7 @@ int plot(FlowFormat format, std::vector<std::string> extras, int argc, char* arg
     return 0;
 }
 
-template <typename T>
+template <typename T, bool binary>
 void plot_vtk(json directories, std::vector<std::string> extra_vars) {
     std::string flow_dir = directories.at("flow_dir");
     std::string grid_dir = directories.at("grid_dir");
@@ -45,8 +47,14 @@ void plot_vtk(json directories, std::vector<std::string> extra_vars) {
     }
     json config = read_config(directories);
     IdealGas<double> gas_model{config.at("gas_model")};
+    TransportProperties<double> trans_prop{config.at("transport_properties")};
 
-    FVIO<T> io(FlowFormat::Native, FlowFormat::Vtk, flow_dir, plot_dir);
+    // get the input and output flow formats
+    FlowFormat flow_format = string_to_flow_format(config.at("io").at("flow_format"));
+    constexpr FlowFormat plot_format =
+        (binary) ? FlowFormat::VtkBinary : FlowFormat::VtkText;
+    FVIO<T> io(flow_format, plot_format, flow_dir, plot_dir);
+
     for (auto& extra_var : extra_vars) {
         io.add_output_variable(extra_var);
     }
@@ -56,10 +64,11 @@ void plot_vtk(json directories, std::vector<std::string> extra_vars) {
     FlowStates<T> fs(grid.num_total_cells());
     for (unsigned int time_idx = 0; time_idx < dirs.size(); time_idx++) {
         json meta_data;
-        io.read(fs, grid, gas_model, meta_data, time_idx);
-        io.write(fs, fv, grid, gas_model, meta_data.at("time"));
+        io.read(fs, grid, gas_model, trans_prop, meta_data, time_idx);
+        io.write(fs, fv, grid, gas_model, trans_prop, meta_data.at("time"));
         spdlog::info("Written VTK file at time index {}", time_idx);
     }
     io.write_coordinating_file();
 }
-template void plot_vtk<double>(json, std::vector<std::string>);
+template void plot_vtk<double, false>(json, std::vector<std::string>);
+template void plot_vtk<double, true>(json, std::vector<std::string>);

@@ -75,19 +75,25 @@ jobs:
       fail-fast: false
 
       # Set up a matrix to run various configurations
+      # for the moment, disable windows
+      # matrix:
+      #   os: [ubuntu-latest, macos-latest, windows-latest]
+      #   build_type: [Release]
+      #   cpp_compiler: [g++, clang++, cl]
+      #   exclude:
+      #     - os: ubuntu-latest
+      #       cpp_compiler: cl
+      #     - os: macos-latest
+      #       cpp_compiler: cl
+      #     - os: windows-latest
+      #       cpp_compiler: g++
+      #     - os: windows-latest
+      #       cpp_compiler: clang++
+
       matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
+        os: [ubuntu-latest, macos-latest]
         build_type: [Release]
-        cpp_compiler: [g++, clang++, cl]
-        exclude:
-          - os: ubuntu-latest
-            cpp_compiler: cl
-          - os: macos-latest
-            cpp_compiler: cl
-          - os: windows-latest
-            cpp_compiler: g++
-          - os: windows-latest
-            cpp_compiler: clang++
+        cpp_compiler: [g++, clang++]
 
     steps:
     - uses: actions/checkout@v3

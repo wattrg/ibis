@@ -38,10 +38,13 @@ int cli(int argc, char* argv[]) {
 
     CLI::App* plot_command = post_command->add_subcommand(
         "plot", "write simulatioin files to visualisation format");
-    std::map<std::string, FlowFormat> format_map{{"vtk", FlowFormat::Vtk}};
-    FlowFormat format = FlowFormat::Vtk;
+    std::map<std::string, FlowFormat> format_map{
+        {"vtk-binary", FlowFormat::VtkBinary},
+        {"vtk-text", FlowFormat::VtkText},
+    };
+    FlowFormat format = FlowFormat::VtkBinary;
     plot_command->add_option("-f,--format", format, "File format")
-        ->option_text("format (default: vtk)")
+        ->option_text("format (default: vtk-binary)")
         ->transform(CLI::CheckedTransformer(format_map, CLI::ignore_case));
 
     std::vector<std::string> extra_vars;

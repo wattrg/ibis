@@ -1,6 +1,7 @@
 #include <io/accessor.h>
 
 #include "finite_volume/gradient.h"
+#include "gas/transport_properties.h"
 
 template <typename T>
 T PressureAccess<T>::access(const FlowStates<T, array_layout, host_mem_space>& fs,
@@ -81,11 +82,12 @@ template class VelocityAccess<double>;
 template <typename T>
 void ViscousGradVxAccess<T>::init(const FlowStates<T, array_layout, host_mem_space>& fs,
                                   FiniteVolume<T>& fv, const GridBlock<T>& grid,
-                                  const IdealGas<T>& gas_model) {
+                                  const IdealGas<T>& gas_model,
+                                  const TransportProperties<T>& trans_prop) {
     (void)gas_model;
     FlowStates<T> fs_dev = FlowStates<T>(fs.number_flow_states());
     fs_dev.deep_copy(fs);
-    fv.compute_viscous_gradient(fs_dev, grid);
+    fv.compute_viscous_gradient(fs_dev, grid, gas_model, trans_prop);
     grad_vx_ = fv.cell_gradients().vx.host_mirror();
     grad_vx_.deep_copy(fv.cell_gradients().vx);
 }
@@ -107,11 +109,12 @@ template class ViscousGradVxAccess<double>;
 template <typename T>
 void ViscousGradVyAccess<T>::init(const FlowStates<T, array_layout, host_mem_space>& fs,
                                   FiniteVolume<T>& fv, const GridBlock<T>& grid,
-                                  const IdealGas<T>& gas_model) {
+                                  const IdealGas<T>& gas_model,
+                                  const TransportProperties<T>& trans_prop) {
     (void)gas_model;
     FlowStates<T> fs_dev = FlowStates<T>(fs.number_flow_states());
     fs_dev.deep_copy(fs);
-    fv.compute_viscous_gradient(fs_dev, grid);
+    fv.compute_viscous_gradient(fs_dev, grid, gas_model, trans_prop);
     grad_vy_ = fv.cell_gradients().vy.host_mirror();
     grad_vy_.deep_copy(fv.cell_gradients().vy);
 }
@@ -133,11 +136,12 @@ template class ViscousGradVyAccess<double>;
 template <typename T>
 void ViscousGradVzAccess<T>::init(const FlowStates<T, array_layout, host_mem_space>& fs,
                                   FiniteVolume<T>& fv, const GridBlock<T>& grid,
-                                  const IdealGas<T>& gas_model) {
+                                  const IdealGas<T>& gas_model,
+                                  const TransportProperties<T>& trans_prop) {
     (void)gas_model;
     FlowStates<T> fs_dev = FlowStates<T>(fs.number_flow_states());
     fs_dev.deep_copy(fs);
-    fv.compute_viscous_gradient(fs_dev, grid);
+    fv.compute_viscous_gradient(fs_dev, grid, gas_model, trans_prop);
     grad_vz_ = fv.cell_gradients().vz.host_mirror();
     grad_vz_.deep_copy(fv.cell_gradients().vz);
 }
@@ -159,11 +163,12 @@ template class ViscousGradVzAccess<double>;
 template <typename T>
 void ConvectiveGradVxAccess<T>::init(
     const FlowStates<T, array_layout, host_mem_space>& fs, FiniteVolume<T>& fv,
-    const GridBlock<T>& grid, const IdealGas<T>& gas_model) {
+    const GridBlock<T>& grid, const IdealGas<T>& gas_model,
+    const TransportProperties<T>& trans_prop) {
     (void)gas_model;
     FlowStates<T> fs_dev = FlowStates<T>(fs.number_flow_states());
     fs_dev.deep_copy(fs);
-    fv.compute_convective_gradient(fs_dev, grid);
+    fv.compute_convective_gradient(fs_dev, grid, gas_model, trans_prop);
     grad_vx_ = fv.cell_gradients().vx.host_mirror();
     grad_vx_.deep_copy(fv.cell_gradients().vx);
 }
@@ -185,11 +190,12 @@ template class ConvectiveGradVxAccess<double>;
 template <typename T>
 void ConvectiveGradVyAccess<T>::init(
     const FlowStates<T, array_layout, host_mem_space>& fs, FiniteVolume<T>& fv,
-    const GridBlock<T>& grid, const IdealGas<T>& gas_model) {
+    const GridBlock<T>& grid, const IdealGas<T>& gas_model,
+    const TransportProperties<T>& trans_prop) {
     (void)gas_model;
     FlowStates<T> fs_dev = FlowStates<T>(fs.number_flow_states());
     fs_dev.deep_copy(fs);
-    fv.compute_convective_gradient(fs_dev, grid);
+    fv.compute_convective_gradient(fs_dev, grid, gas_model, trans_prop);
     grad_vy_ = fv.cell_gradients().vy.host_mirror();
     grad_vy_.deep_copy(fv.cell_gradients().vy);
 }
@@ -211,11 +217,12 @@ template class ConvectiveGradVyAccess<double>;
 template <typename T>
 void ConvectiveGradVzAccess<T>::init(
     const FlowStates<T, array_layout, host_mem_space>& fs, FiniteVolume<T>& fv,
-    const GridBlock<T>& grid, const IdealGas<T>& gas_model) {
+    const GridBlock<T>& grid, const IdealGas<T>& gas_model,
+    const TransportProperties<T>& trans_prop) {
     (void)gas_model;
     FlowStates<T> fs_dev = FlowStates<T>(fs.number_flow_states());
     fs_dev.deep_copy(fs);
-    fv.compute_convective_gradient(fs_dev, grid);
+    fv.compute_convective_gradient(fs_dev, grid, gas_model, trans_prop);
     grad_vz_ = fv.cell_gradients().vz.host_mirror();
     grad_vz_.deep_copy(fv.cell_gradients().vz);
 }
