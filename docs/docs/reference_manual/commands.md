@@ -58,7 +58,7 @@ Subcommands:
 ```
 
 ### plot
-`ibis post plot` writes the flow solutions written during the simulation to a visualisation format (the default is vtk).
+`ibis post plot` writes the flow solutions written during the simulation to a visualisation format.
 
 ```
 write simulatioin files to visualisation format
@@ -66,10 +66,14 @@ Usage: ibis post plot [OPTIONS]
 
 Options:
   -h,--help                   Print this help message and exit
-  -f,--format format (default: vtk)
+  -f,--format format (default: vtk-binary)
                               File format
   --add str ...               Extra variables to add to plot
 ```
+
+The available file formats are:
+  + `vtk-binary` (default)
+  + `vtk-text`
 
 ## clean
 `ibis clean` cleans out the automatically generated files.

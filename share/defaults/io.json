@@ -1,4 +1,3 @@
 {
-    "flow_format": "native_binary",
-    "plot_format": "vtk_binary"
+    "flow_format": "native_binary"
 }

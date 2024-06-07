@@ -14,6 +14,21 @@
 
 #include "gas/transport_properties.h"
 
+FlowFormat string_to_flow_format(std::string format) {
+    if (format == "native_text") {
+        return FlowFormat::NativeText;
+    } else if (format == "native_binary") {
+        return FlowFormat::NativeBinary;
+    } else if (format == "vtk_text") {
+        return FlowFormat::VtkText;
+    } else if (format == "vtk_binary") {
+        return FlowFormat::VtkBinary;
+    } else {
+        spdlog::error("Unknown flow format {}", format);
+        throw std::runtime_error("Unknown flow format");
+    }
+}
+
 std::string pad_time_index(int time_idx, unsigned long len) {
     std::string time_index = std::to_string(time_idx);
     unsigned long extra_chars = len - std::min<unsigned long>(len, time_index.length());
@@ -28,7 +43,8 @@ std::unique_ptr<FVInput<T>> make_fv_input(FlowFormat format) {
             return std::unique_ptr<FVInput<T>>(new NativeTextInput<T>());
         case FlowFormat::NativeBinary:
             return std::unique_ptr<FVInput<T>>(new NativeBinaryInput<T>());
-        case FlowFormat::Vtk:
+        case FlowFormat::VtkText:
+        case FlowFormat::VtkBinary:
             spdlog::error("Reading VTK files not supported");
             throw std::runtime_error("Reading VTK files not supported");
         default:
@@ -43,8 +59,10 @@ std::unique_ptr<FVOutput<T>> make_fv_output(FlowFormat format) {
             return std::unique_ptr<FVOutput<T>>(new NativeTextOutput<T>());
         case FlowFormat::NativeBinary:
             return std::unique_ptr<FVOutput<T>>(new NativeBinaryOutput<T>());
-        case FlowFormat::Vtk:
-            return std::unique_ptr<FVOutput<T>>(new VtkOutput<T>());
+        case FlowFormat::VtkText:
+            return std::unique_ptr<FVOutput<T>>(new VtkTextOutput<T>());
+        case FlowFormat::VtkBinary:
+            return std::unique_ptr<FVOutput<T>>(new VtkBinaryOutput<T>());
         default:
             throw std::runtime_error("Unreachable");
     }
@@ -76,6 +94,10 @@ template <typename T>
 FVIO<T>::FVIO(int time_index)
     : FVIO(FlowFormat::NativeBinary, FlowFormat::NativeBinary, "flow", "flow",
            time_index) {}
+
+template <typename T>
+FVIO<T>::FVIO(FlowFormat input, FlowFormat output, int time_index)
+    : FVIO(input, output, "flow", "flow", time_index) {}
 
 template <typename T>
 int FVIO<T>::write(const FlowStates<T>& fs, FiniteVolume<T>& fv, const GridBlock<T>& grid,

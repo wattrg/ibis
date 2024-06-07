@@ -8,6 +8,7 @@
 
 #include "finite_volume/conserved_quantities.h"
 #include "gas/transport_properties.h"
+#include "io/io.h"
 #include "solvers/cfl.h"
 
 // Implementation of Butcher tableau
@@ -55,7 +56,8 @@ RungeKutta::RungeKutta(json config, GridBlock<double>& grid, std::string grid_di
     t_ = 0.0;
 
     // input/output
-    io_ = FVIO<double>(1);
+    FlowFormat flow_format = string_to_flow_format((config.at("io").at("flow_format")));
+    io_ = FVIO<double>(flow_format, flow_format, 1);
 }
 
 int RungeKutta::initialise() {

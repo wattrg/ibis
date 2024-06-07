@@ -34,16 +34,16 @@ The slope reconstruction order for higher order accuracy.
 
 > Type: `int`\
 > Default: `2`\
->  Options: `1` or `2`
+> Options: `1` or `2`
 
 ### limiter
 The slope limiter the simulation will use, if `reconstruction_order = 2`
 
->  Type: `Limiter`\
->  Default: `BarthJespersen()`\
+> Type: `Limiter`\
+> Default: `BarthJespersen()`\
 > Options:
 >  + `BarthJespersen(epsilon=1e-25)`: A very strict slope limiter
->     `epsilon` is a small number to avoid division by zero, and can control the amount of limiting done. The default is 1e-25.
+>    + `epsilon` is a small number to avoid division by zero, and can control the amount of limiting done. The default is 1e-25.
 >  + `Unlimited()`: Disable slope limiting
 
 ### thermo_interpolator
