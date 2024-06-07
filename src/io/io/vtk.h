@@ -57,6 +57,17 @@ private:
                                    const IdealGas<T>& gas_model, std::string name,
                                    std::string type, size_t num_values);
 
+    void write_int_view_binary(
+        std::ofstream& f, const Kokkos::View<size_t*, array_layout, host_mem_space>& view,
+        std::string name, std::string type, bool skip_first = false);
+
+    void write_elem_type_binary(
+        std::ofstream& f, const Field<ElemType, array_layout, host_mem_space>& types);
+
+    void write_vector3s_binary(std::ofstream& f,
+                               const Vector3s<T, array_layout, host_mem_space>& vec,
+                               std::string name, std::string type, size_t num_values);
+
     void write_appended_data(std::ofstream& f);
 };
 
