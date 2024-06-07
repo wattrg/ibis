@@ -46,3 +46,17 @@ Constructed by:
 ```
 supersonic_outflow()
 ```
+
+### boundary_layer_inflow
+An inflow boundary condition with a specified 1D profile, meant to start the domain part way along a boundary layer
+```
+boundary_layer_inflow(pressure, height, temperature_profile, velocity_profile)
+```
+
+Arguments:\
+`pressure`: (double) The pressure of the flow (constant across the boundary layer)\
+`height`: (list[double]) The heights the temperature and velocity are sampled at in metres\
+`temperature_profile`: (list[double]) The temperatures (in Kelvin) of the flow at distances from the wall corresponding to the `heights`\
+`velocity_profile`: (list[double]) The x component of the velocity (in m/s) of the flow at distance from the wall corresponding to the `heights`
+
+The distance from the wall is computed as just the y component of the cell centre in the global reference frame, so the wall must lie on the x-z plane.
