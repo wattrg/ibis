@@ -7,22 +7,23 @@
 
 template <typename T>
 FlowStateCopy<T>::FlowStateCopy(json flow_state) {
-    T temp = flow_state.at("T");
-    T pressure = flow_state.at("p");
-    T rho = flow_state.at("rho");
-    T energy = flow_state.at("energy");
+    fs_ = FlowState<T>(flow_state);
+    // T temp = flow_state.at("T");
+    // T pressure = flow_state.at("p");
+    // T rho = flow_state.at("rho");
+    // T energy = flow_state.at("energy");
 
-    GasState<T> gs;
-    gs.temp = temp;
-    gs.pressure = pressure;
-    gs.rho = rho;
-    gs.energy = energy;
+    // GasState<T> gs;
+    // gs.temp = temp;
+    // gs.pressure = pressure;
+    // gs.rho = rho;
+    // gs.energy = energy;
 
-    T vx = flow_state.at("vx");
-    T vy = flow_state.at("vy");
-    T vz = flow_state.at("vz");
-    Vector3<T> vel{vx, vy, vz};
-    fs_ = FlowState<T>(gs, vel);
+    // T vx = flow_state.at("vx");
+    // T vy = flow_state.at("vy");
+    // T vz = flow_state.at("vz");
+    // Vector3<T> vel{vx, vy, vz};
+    // fs_ = FlowState<T>(gs, vel);
 }
 
 template <typename T>
@@ -287,6 +288,79 @@ void FixTemperature<T>::apply(FlowStates<T>& fs, const GridBlock<T>& grid,
         });
 }
 
+
+template <typename T>
+SubsonicInflow<T>::SubsonicInflow(json flow_state) {
+    inflow_state_ = FlowState<T>(flow_state);
+    // T temp = flow_state.at("T");
+    // T pressure = flow_state.at("p");
+    // T rho = flow_state.at("rho");
+    
+}
+
+// the implementation for the subsonic inflow is from Blazek's book
+template <typename T>
+void SubsonicInflow<T>::apply(FlowStates<T>& fs, const GridBlock<T>& grid,
+                              const Field<size_t>& boundary_faces,
+                              const IdealGas<T>& gas_model,
+                              const TransportProperties<T>& trans_prop){
+    (void) trans_prop;
+
+    size_t size = boundary_faces.size();
+    auto interfaces = grid.interfaces();
+    size_t num_valid_cells = grid.num_cells();
+    FlowState<T> inflow = inflow_state_;
+    Kokkos::parallel_for(
+        "SubsonicInflow", size, KOKKOS_LAMBDA(const size_t i) {
+            // determine the valid and ghost cells
+            size_t face_id = boundary_faces(i);
+            size_t left_cell = interfaces.left_cell(face_id);
+            size_t right_cell = interfaces.right_cell(face_id);
+            size_t ghost_cell;
+            size_t valid_cell;
+            if (left_cell < num_valid_cells) {
+                ghost_cell = right_cell;
+                valid_cell = left_cell;
+            } else {
+                ghost_cell = left_cell;
+                valid_cell = right_cell;
+            }
+
+            // determine the properties at the interface
+            T nx = interfaces.norm().x(face_id);
+            T ny = interfaces.norm().y(face_id);
+            T nz = interfaces.norm().z(face_id);
+            T vel_correct = nx * (inflow.velocity.x - fs.vel.x(valid_cell)) +
+                            ny * (inflow.velocity.y - fs.vel.y(valid_cell)) +
+                            nz * (inflow.velocity.z - fs.vel.z(valid_cell));
+            T speed_of_sound = gas_model.speed_of_sound(fs.gas, valid_cell);
+            T rho_ref = fs.gas.rho(valid_cell);
+
+            T p_inflow = inflow.gas_state.pressure;
+            T p_face = 0.5 * (p_inflow + fs.gas.pressure(valid_cell)
+                         - rho_ref * speed_of_sound * vel_correct);
+            T rho_face = 
+                inflow.gas_state.rho + (p_face - p_inflow) / speed_of_sound / speed_of_sound;
+            T vx_face = 
+                inflow.velocity.x - nx * (p_inflow - p_face) / (rho_ref * speed_of_sound);
+            T vy_face = 
+                inflow.velocity.y - ny * (p_inflow - p_face) / (rho_ref * speed_of_sound);
+            T vz_face = 
+                inflow.velocity.z - nz * (p_inflow - p_face) / (rho_ref * speed_of_sound);
+
+            // extrapolate properties at the interface to the ghost cell
+            fs.gas.pressure(ghost_cell) = 2 * p_face - fs.gas.pressure(valid_cell);
+            fs.gas.rho(ghost_cell) = 2 * rho_face - fs.gas.rho(valid_cell);
+            gas_model.update_thermo_from_rhop(fs.gas, ghost_cell);
+
+            fs.vel.x(ghost_cell) = 2 * vx_face - fs.vel.x(valid_cell);
+            fs.vel.y(ghost_cell) = 2 * vy_face - fs.vel.y(valid_cell);
+            fs.vel.z(ghost_cell) = 2 * vz_face - fs.vel.z(valid_cell);
+    });
+}
+template class SubsonicInflow<double>;
+
+
 template <typename T>
 std::shared_ptr<BoundaryAction<T>> build_boundary_action(json config) {
     std::string type = config.at("type");
@@ -306,6 +380,9 @@ std::shared_ptr<BoundaryAction<T>> build_boundary_action(json config) {
     } else if (type == "fix_temperature") {
         double temperature = config.at("temperature");
         action = std::shared_ptr<BoundaryAction<T>>(new FixTemperature<T>(temperature));
+    } else if (type == "subsonic_inflow") {
+        json flow_state = config.at("flow_state");
+        action = std::shared_ptr<BoundaryAction<T>>(new SubsonicInflow<T>(flow_state));
     } else {
         spdlog::error("Unknown boundary action {}", type);
         throw std::runtime_error("Unknown boundary action");

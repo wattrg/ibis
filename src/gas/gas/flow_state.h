@@ -7,10 +7,25 @@
 
 #include <Kokkos_Core.hpp>
 
+#include <nlohmann/json.hpp>
+
+using json = nlohmann::json;
+
 template <typename T>
 struct FlowState {
 public:
     FlowState() {}
+
+    FlowState(json flow_state) {
+        gas_state.temp = flow_state.at("T");
+        gas_state.pressure = flow_state.at("p");
+        gas_state.rho = flow_state.at("rho");
+        gas_state.energy = flow_state.at("energy");
+
+        velocity.x = flow_state.at("vx");
+        velocity.y = flow_state.at("vy");
+        velocity.z = flow_state.at("vz");
+    }
 
     FlowState(GasState<T> gs, Vector3<T> vel) : gas_state(gs), velocity(vel) {}
 
