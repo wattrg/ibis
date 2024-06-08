@@ -87,27 +87,26 @@ class FixTemperature : public BoundaryAction<T> {
 public:
     ~FixTemperature() {}
 
-    FixTemperature(double temperature) : Twall_(temperature) {}
+    FixTemperature(T temperature) : Twall_(temperature) {}
 
     void apply(FlowStates<T>& gs, const GridBlock<T>& grid,
                const Field<size_t>& boundary_faces, const IdealGas<T>& gas_model,
                const TransportProperties<T>& trans_prop);
 
 private:
-    double Twall_;
+    T Twall_;
 };
-
 
 template <typename T>
 class SubsonicInflow : public BoundaryAction<T> {
 public:
     ~SubsonicInflow() {}
 
-    SubsonicInflow(const FlowState<T> flow_state) : inflow_state_ (flow_state) {}
+    SubsonicInflow(const FlowState<T> flow_state) : inflow_state_(flow_state) {}
 
     SubsonicInflow(json flow_state);
 
-    void apply(FlowStates<T>& gs, const GridBlock<T>& grid,
+    void apply(FlowStates<T>& fs, const GridBlock<T>& grid,
                const Field<size_t>& boundary_faces, const IdealGas<T>& gas_model,
                const TransportProperties<T>& trans_prop);
 
@@ -115,6 +114,20 @@ private:
     FlowState<T> inflow_state_;
 };
 
+template <typename T>
+class SubsonicOutflow : public BoundaryAction<T> {
+public:
+    ~SubsonicOutflow() {}
+
+    SubsonicOutflow(T pressure) : pressure_(pressure) {}
+
+    void apply(FlowStates<T>& fs, const GridBlock<T>& grid,
+               const Field<size_t>& boundary_faces, const IdealGas<T>& gas_model,
+               const TransportProperties<T>& trans_prop);
+
+private:
+    T pressure_;
+};
 
 template <typename T>
 class BoundaryCondition {
