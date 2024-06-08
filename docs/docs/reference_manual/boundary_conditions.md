@@ -39,6 +39,17 @@ supersonic_inflow(flow_state)
 Arguments:\
 `inflow`: [FlowState](gas_model#flowstate) object with the desired supersonic flow state
 
+### subsonic_inflow
+A subsonic inflow boundary condition.
+This boundary condition allows for some information to travel out of the domain.
+A full flow state is provided, which should be the free-stream flow state.
+```
+subsonic_inflow(flow_state)
+```
+
+Arguments:\
+`inflow`: [FlowState](gas_model#flowstate) object with the desired inflow flow state
+
 ### supersonic_outflow
 A supersonic outflow boundary condition. 
 This boundary condition assumes no information travels into the domain.
@@ -46,6 +57,16 @@ Constructed by:
 ```
 supersonic_outflow()
 ```
+
+### subsonic_outflow
+A subsonic outflow boundary condition
+This boundary condition allows for some information to travel back into the domain, assuming a specified pressure on the boundary.
+```
+subsonic_outflow(pressure)
+```
+
+Arguments:\
+`pressure`: (`double`) The pressure on the boundary
 
 ### boundary_layer_inflow
 An inflow boundary condition with a specified 1D profile, meant to start the domain part way along a boundary layer
