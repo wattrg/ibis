@@ -422,6 +422,17 @@ class _FixTemperature:
         }
 
 
+class _SubsonicInflow:
+    def __init__(self, flow_state):
+        self._flow_state = flow_state
+
+    def as_dict(self):
+        return {
+            "type": "subsonic_inflow",
+            "flow_state": self._flow_state.as_dict()
+        }
+
+
 def supersonic_inflow(inflow):
     return BoundaryCondition(
         pre_reconstruction=[_FlowStateCopy(inflow)],
@@ -465,6 +476,13 @@ def fixed_temperature_no_slip_wall(temperature):
         pre_reconstruction=[_InternalCopyReflectNormal()],
         pre_viscous_grad=[_InternalVelCopyReflect(),
                           _FixTemperature(temperature)]
+    )
+
+
+def subsonic_inflow(flow_state):
+    return BoundaryCondition(
+        pre_reconstruction=[_SubsonicInflow(flow_state)],
+        pre_viscous_grad=[]
     )
 
 
@@ -820,6 +838,7 @@ def main(file_name, res_dir):
         "slip_wall": slip_wall,
         "adiabatic_no_slip_wall": adiabatic_no_slip_wall,
         "fixed_temperature_no_slip_wall": fixed_temperature_no_slip_wall,
+        "subsonic_inflow": subsonic_inflow,
         "BarthJespersen": BarthJespersen,
         "Unlimited": Unlimited,
         "ThermoInterp": ThermoInterp,
