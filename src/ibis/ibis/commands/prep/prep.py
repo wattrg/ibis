@@ -433,6 +433,17 @@ class _SubsonicInflow:
         }
 
 
+class _SubsonicOutflow:
+    def __init__(self, pressure):
+        self._pressure = pressure
+
+    def as_dict(self):
+        return {
+            "type": "subsonic_outflow",
+            "pressure": self._pressure
+        }
+
+
 def supersonic_inflow(inflow):
     return BoundaryCondition(
         pre_reconstruction=[_FlowStateCopy(inflow)],
@@ -482,6 +493,13 @@ def fixed_temperature_no_slip_wall(temperature):
 def subsonic_inflow(flow_state):
     return BoundaryCondition(
         pre_reconstruction=[_SubsonicInflow(flow_state)],
+        pre_viscous_grad=[]
+    )
+
+
+def subsonic_outflow(pressure):
+    return BoundaryCondition(
+        pre_reconstruction=[_SubsonicOutflow(pressure)],
         pre_viscous_grad=[]
     )
 
@@ -839,6 +857,7 @@ def main(file_name, res_dir):
         "adiabatic_no_slip_wall": adiabatic_no_slip_wall,
         "fixed_temperature_no_slip_wall": fixed_temperature_no_slip_wall,
         "subsonic_inflow": subsonic_inflow,
+        "subsonic_outflow": subsonic_outflow,
         "BarthJespersen": BarthJespersen,
         "Unlimited": Unlimited,
         "ThermoInterp": ThermoInterp,

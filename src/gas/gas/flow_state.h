@@ -6,7 +6,6 @@
 #include <util/vector3.h>
 
 #include <Kokkos_Core.hpp>
-
 #include <nlohmann/json.hpp>
 
 using json = nlohmann::json;
