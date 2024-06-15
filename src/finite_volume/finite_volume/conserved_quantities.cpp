@@ -1,6 +1,12 @@
 #include <finite_volume/conserved_quantities.h>
 
 template <typename T>
+void ConservedQuantitiesNorm<T>::write_to_file(std::ofstream& f, double time, unsigned int step) {
+    f << time << " " << step << " " << mass() << " " << momentum_x() << " " << momentum_y() << " " << momentum_z() << " " << energy() << std::endl;
+}
+template class ConservedQuantitiesNorm<double>;
+
+template <typename T>
 ConservedQuantities<T>::ConservedQuantities(unsigned int n, unsigned int dim)
     : cq_(Kokkos::View<T**>("ConservedQuantities", n, dim + 2)),
       num_values_(n),

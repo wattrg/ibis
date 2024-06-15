@@ -5,6 +5,7 @@
 #include <util/types.h>
 
 #include <Kokkos_Core.hpp>
+#include <fstream>
 
 template <typename T>
 class ConservedQuantitiesNorm {
@@ -61,6 +62,8 @@ public:
 
     KOKKOS_INLINE_FUNCTION
     T& energy() { return energy_; }
+
+    void write_to_file(std::ofstream& f, double time, unsigned int step);
 
 private:
     T mass_;
