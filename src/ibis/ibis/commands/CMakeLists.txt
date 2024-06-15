@@ -42,6 +42,7 @@ add_library(
         STATIC
         post_commands/post.cpp 
         post_commands/plot.cpp
+        post_commands/plot_residuals.cpp
         ../config.cpp
 )
 
@@ -73,9 +74,17 @@ add_custom_command(
         ${CMAKE_SOURCE_DIR}/src/ibis/ibis/commands/clean/clean.py $<TARGET_FILE_DIR:ibis_clean>
 )
 
+add_custom_command(
+	TARGET post POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy
+        ${CMAKE_SOURCE_DIR}/src/ibis/ibis/commands/post_commands/plot_residuals.py $<TARGET_FILE_DIR:post>
+)
+
 install(FILES prep/prep.py 
         DESTINATION ${CMAKE_INSTALL_LIBDIR})
 install(FILES ibis_py_utils.py 
         DESTINATION ${CMAKE_INSTALL_LIBDIR})
 install(FILES clean/clean.py
+        DESTINATION ${CMAKE_INSTALL_LIBDIR})
+install(FILES post_commands/plot_residuals.py
         DESTINATION ${CMAKE_INSTALL_LIBDIR})

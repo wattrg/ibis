@@ -5,12 +5,13 @@
 #include <string>
 #include <vector>
 
-#include "ibis/commands/post_commands/plot.h"
 
 #define DOCTEST_CONFIG_IMPLEMENT
 #include <doctest/doctest.h>
 #include <ibis/commands/clean/clean.h>
 #include <ibis/commands/post_commands/post.h>
+#include <ibis/commands/post_commands/plot.h>
+#include <ibis/commands/post_commands/plot_residuals.h>
 #include <ibis/commands/prep/prep.h>
 #include <ibis/commands/run/run.h>
 #include <io/io.h>
@@ -52,6 +53,10 @@ int cli(int argc, char* argv[]) {
         ->delimiter(',')
         ->type_name("str");
 
+    CLI::App* plot_residuals_command = post_command->add_subcommand(
+        "plot_residuals", "plot simulation residuals"
+    );
+
     // parse the command line
     CLI11_PARSE(ibis, argc, argv);
 
@@ -69,6 +74,9 @@ int cli(int argc, char* argv[]) {
     } else if (ibis.got_subcommand("post")) {
         if (post_command->got_subcommand(plot_command)) {
             return plot(format, extra_vars, argc, argv);
+        }
+        else if (post_command->got_subcommand(plot_residuals_command)) {
+            return plot_residuals();
         }
     } else {
         spdlog::error("Nothing to do. Try `ibis --help`");
