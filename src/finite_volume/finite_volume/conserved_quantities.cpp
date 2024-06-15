@@ -25,6 +25,29 @@ void ConservedQuantities<T>::apply_time_derivative(const ConservedQuantities<T>&
         });
 }
 
+template <typename T>
+ConservedQuantitiesNorm<double> ConservedQuantities<T>::L2_norms() const {
+    ConservedQuantitiesNorm<double> norms {};
+    Kokkos::parallel_reduce(
+            "L2_norm", num_values_, 
+            KOKKOS_CLASS_LAMBDA(const int i, ConservedQuantitiesNorm<double>&tl_cq) {
+        tl_cq.mass() += mass(i) * mass(i);
+        tl_cq.momentum_x() += momentum_x(i) * momentum_x(i);
+        tl_cq.momentum_y() += momentum_y(i) * momentum_y(i);
+        if (dim_ == 3) {
+            tl_cq.momentum_z() += momentum_z(i) * momentum_z(i);
+        }
+        tl_cq.energy() += energy(i) * energy(i);
+    }, Kokkos::Sum<ConservedQuantitiesNorm<double>>(norms));
+
+    norms.mass() = Kokkos::sqrt(norms.mass());
+    norms.momentum_x() = Kokkos::sqrt(norms.momentum_x());
+    norms.momentum_y() = Kokkos::sqrt(norms.momentum_y());
+    norms.momentum_z() = Kokkos::sqrt(norms.momentum_z());
+    norms.energy() = Kokkos::sqrt(norms.energy());
+    return norms;
+}
+
 template class ConservedQuantities<double>;
 
 template <typename T>

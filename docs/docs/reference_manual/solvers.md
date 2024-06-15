@@ -14,7 +14,9 @@ config.solver = RungeKutta(
     max_time = 1e-3,
     plot_every_n_steps = -1,
     plot_frequency = 1e-4,
-    print_frequency = 500
+    print_frequency = 500,
+    residual_frequency = 1e-5,
+    residuals_every_n_steps = 20,
 )
 ```
 
@@ -65,8 +67,22 @@ This can be helps stop a job from spinning its wheels going nowhere.
 ### print_frequency
 The number of steps between printing the progress of the simulation to the terminal
 
+> Type: `float`\
+> Default: `1e-5`
+
+### residuals_every_n_steps
+The number of steps between writing norms of the residuals.
+Setting to -1 disables this.
+
 > Type: `int`\
 > Default: `20`
+
+### residual_frequency
+The time interval between writing norms of residuals to file
+Setting to -1 disables this.
+
+> Type: `float`\
+> Default: `1e-5`
 
 ### max_time
 The maximum time to simulate.

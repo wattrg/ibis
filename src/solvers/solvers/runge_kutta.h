@@ -51,6 +51,8 @@ private:
     unsigned int max_step_;
     unsigned int print_frequency_;
     double plot_frequency_;
+    double residual_frequency_;
+    int residuals_every_n_steps_;
     int plot_every_n_steps_;
     std::unique_ptr<CflSchedule> cfl_;
     double dt_init_;
@@ -58,6 +60,7 @@ private:
 private:
     // progress
     double time_since_last_plot_;
+    double time_since_last_residual_;
     double t_;
     double dt_;
     double stable_dt_;
@@ -80,6 +83,14 @@ private:
     bool stop_now(unsigned int step);
     int max_step() const { return max_step_; }
     int count_bad_cells() { return fv_.count_bad_cells(flow_, grid_.num_cells()); }
+
+    // this computes the L2 norms of the time derivates evaluated
+    // at the beginning of the previous step (essential whatever is in k_[0]).
+    // It should be called after taking a step, so the 
+    ConservedQuantitiesNorm<double> L2_norms();
+
+    bool residuals_this_step(unsigned int step);
+    bool write_residuals(unsigned int step);
 
 private:
     // memory

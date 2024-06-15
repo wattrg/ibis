@@ -8,6 +8,8 @@
 #include <fstream>
 #include <iostream>
 #include <nlohmann/json.hpp>
+#include "finite_volume/conserved_quantities.h"
+#include "util/types.h"
 
 using json = nlohmann::json;
 
@@ -19,19 +21,27 @@ public:
 
 protected:
     int write_solution();
+
+    // the main parts of the solver
     virtual int initialise() = 0;
     virtual int finalise() = 0;
     virtual int take_step() = 0;
+
+    // some io utilities
     virtual bool print_this_step(unsigned int step) = 0;
     virtual bool plot_this_step(unsigned int step) = 0;
+    virtual bool residuals_this_step(unsigned int step) = 0;
+    virtual bool write_residuals(unsigned int step) = 0;
     virtual int plot_solution(unsigned int step) = 0;
     virtual void print_progress(unsigned int step, double wc) = 0;
     virtual bool stop_now(unsigned int step) = 0;
     virtual std::string stop_reason(unsigned step) = 0;
     virtual int max_step() const = 0;
 
+    // error checking
     virtual int count_bad_cells() = 0;
 
+    // book keeping
     unsigned int max_step_ = 0;
     std::string grid_dir_;
     std::string flow_dir_;

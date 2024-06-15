@@ -46,6 +46,10 @@ int Solver::solve() {
             print_progress(step, sw.elapsed().count());
         }
 
+        if (residuals_this_step(step)) {
+            write_residuals(step);
+        }
+
         if (plot_this_step(step)) {
             plot_solution(step);
         }

@@ -4,6 +4,83 @@
 #include <gas/flow_state.h>
 
 #include <Kokkos_Core.hpp>
+#include <util/types.h>
+
+template <typename T>
+class ConservedQuantitiesNorm {
+public:
+    KOKKOS_INLINE_FUNCTION
+    ConservedQuantitiesNorm() {
+        mass_ = 0.0;
+        momentum_x_ = 0.0;
+        momentum_y_ = 0.0;
+        momentum_z_ = 0.0;
+        energy_ = 0.0;
+    }
+
+    KOKKOS_INLINE_FUNCTION
+    ConservedQuantitiesNorm(const ConservedQuantitiesNorm<T>& rhs) {
+        mass_ = rhs.mass_;
+        momentum_x_ = rhs.momentum_x_;
+        momentum_y_ = rhs.momentum_y_;
+        momentum_z_ = rhs.momentum_z_;
+        energy_ = rhs.energy_;
+    }
+
+    KOKKOS_INLINE_FUNCTION
+    ConservedQuantitiesNorm& operator = (const ConservedQuantitiesNorm<T>& rhs) {
+        mass_ = rhs.mass_;
+        momentum_x_ = rhs.momentum_x_;
+        momentum_y_ = rhs.momentum_y_;
+        momentum_z_ = rhs.momentum_z_;
+        energy_ = rhs.energy_;
+        return *this;
+    }
+
+    KOKKOS_INLINE_FUNCTION
+    ConservedQuantitiesNorm& operator += (const ConservedQuantitiesNorm<T>& rhs) {
+        mass_ += rhs.mass_;
+        momentum_x_ += rhs.momentum_x_;
+        momentum_y_ += rhs.momentum_y_;
+        momentum_z_ += rhs.momentum_z_;
+        energy_ += rhs.energy_;
+        return *this;
+    }
+
+    KOKKOS_INLINE_FUNCTION
+    T& mass() { return mass_; }
+
+    KOKKOS_INLINE_FUNCTION
+    T& momentum_x() { return momentum_x_; }
+
+    KOKKOS_INLINE_FUNCTION
+    T& momentum_y() { return momentum_y_; }
+
+    KOKKOS_INLINE_FUNCTION
+    T& momentum_z() { return momentum_z_; }
+
+    KOKKOS_INLINE_FUNCTION
+    T& energy() { return energy_; }
+
+private:
+    T mass_;
+    T momentum_x_;
+    T momentum_y_;
+    T momentum_z_;
+    T energy_;
+};
+
+// this allows ConservedQuantity to be used as a custom scalar type
+// for Kokkos reductions
+namespace Kokkos {
+    template <>
+    struct reduction_identity< ConservedQuantitiesNorm<double> > {
+        KOKKOS_FORCEINLINE_FUNCTION
+        static ConservedQuantitiesNorm<double> sum() {
+            return ConservedQuantitiesNorm<double>();
+        }  
+    };
+}
 
 template <typename T>
 class ConservedQuantities {
@@ -22,6 +99,10 @@ public:
     int dim() const { return dim_; }
 
     void apply_time_derivative(const ConservedQuantities<T>& dudt, double dt);
+
+    ConservedQuantitiesNorm<double> L2_norms() const;
+
+    // ConservedQuantitiesNorm<double> Linf_norms() const;
 
     KOKKOS_INLINE_FUNCTION
     T& mass(int cell_i) const { return cq_(cell_i, mass_idx_); }
