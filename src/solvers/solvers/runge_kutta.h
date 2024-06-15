@@ -86,7 +86,7 @@ private:
 
     // this computes the L2 norms of the time derivates evaluated
     // at the beginning of the previous step (essential whatever is in k_[0]).
-    // It should be called after taking a step, so the 
+    // It should be called after taking a step, so the
     ConservedQuantitiesNorm<double> L2_norms();
 
     bool residuals_this_step(unsigned int step);
