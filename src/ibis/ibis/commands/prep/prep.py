@@ -588,7 +588,8 @@ def butcher_tableau(method):
 class RungeKutta:
     _json_values = ["cfl", "max_time", "max_step", "print_frequency",
                     "plot_frequency", "plot_every_n_steps", "dt_init",
-                    "method", "butcher_tableau"]
+                    "method", "butcher_tableau",
+                    "residual_frequency", "residuals_every_n_steps"]
     _defaults_file = "runge_kutta.json"
     _name = Solver.RungeKutta.value
     __slots__ = _json_values

@@ -6,10 +6,10 @@
 
 #include <limits>
 
-#include "finite_volume/conserved_quantities.h"
-#include "gas/transport_properties.h"
-#include "io/io.h"
-#include "solvers/cfl.h"
+#include <finite_volume/conserved_quantities.h>
+#include <gas/transport_properties.h>
+#include <io/io.h>
+#include <solvers/cfl.h>
 
 // Implementation of Butcher tableau
 double ButcherTableau::a(size_t i, size_t j) { return a_[i - 1][j]; }
@@ -26,6 +26,8 @@ RungeKutta::RungeKutta(json config, GridBlock<double>& grid, std::string grid_di
     max_step_ = solver_config.at("max_step");
     print_frequency_ = solver_config.at("print_frequency");
     plot_frequency_ = solver_config.at("plot_frequency");
+    residual_frequency_ = solver_config.at("residual_frequency");
+    residuals_every_n_steps_ = solver_config.at("residuals_every_n_steps");
     plot_every_n_steps_ = solver_config.at("plot_every_n_steps");
     cfl_ = make_cfl_schedule(solver_config.at("cfl"));
     dt_init_ = solver_config.at("dt_init");
@@ -61,11 +63,24 @@ RungeKutta::RungeKutta(json config, GridBlock<double>& grid, std::string grid_di
 }
 
 int RungeKutta::initialise() {
+    // read the initial condition
     json meta_data;
     int ic_result = io_.read(flow_, grid_, gas_model_, trans_prop_, meta_data, 0);
     int conversion_result =
         primatives_to_conserved(conserved_quantities_, flow_, gas_model_);
     dt_ = (dt_init_ > 0) ? dt_init_ : std::numeric_limits<double>::max();
+
+    // compute the initial residuals, and begin the residuals file
+    if (residuals_every_n_steps_ > 0 || residual_frequency_ > 0) {
+        fv_.compute_dudt(flow_, grid_, k_[0], gas_model_, trans_prop_);
+        {
+            std::ofstream residual_file("log/residuals.dat", std::ios_base::out);
+            residual_file << "time step mass momentum_x momentum_y momentum_z energy\n";
+        }
+        write_residuals(0);
+
+    }
+    
     return ic_result + conversion_result;
 }
 
@@ -128,12 +143,36 @@ int RungeKutta::take_step() {
     // book keeping
     t_ += dt_;
     time_since_last_plot_ += dt_;
+    time_since_last_residual_ += dt_;
     return 0;
 }
 
 bool RungeKutta::print_this_step(unsigned int step) {
     if (step != 0 && step % print_frequency_ == 0) return true;
     return false;
+}
+
+bool RungeKutta::residuals_this_step(unsigned int step) {
+    if ((residuals_every_n_steps_ > 0) && (step != 0 || (step % residuals_every_n_steps_ == 0)))
+        return true;
+    if (residual_frequency_ > 0 && (time_since_last_residual_ >= residual_frequency_ - 1e-15))
+        return true;
+    return false;
+}
+
+bool RungeKutta::write_residuals(unsigned int step) {
+    spdlog::debug("Writing residuals at step {}", step);
+    ConservedQuantitiesNorm<double> norms = L2_norms();
+    std::ofstream residual_file("log/residuals.dat", std::ios_base::app);
+    residual_file << t_ << " " 
+                 << step << " " 
+                 << norms.mass() << " " 
+                 << norms.momentum_x() << " "
+                 << norms.momentum_y() << " "
+                 << norms.momentum_z() << " "
+                 << norms.energy() << std::endl;
+    time_since_last_residual_ = 0;
+    return true;
 }
 
 bool RungeKutta::plot_this_step(unsigned int step) {
@@ -170,3 +209,8 @@ bool RungeKutta::stop_now(unsigned int step) {
     if (t_ >= max_time_) return true;
     return false;
 }
+
+ConservedQuantitiesNorm<double> RungeKutta::L2_norms() {
+    return k_[0].L2_norms();
+}
+
