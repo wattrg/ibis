@@ -1,15 +1,14 @@
 
+#include <finite_volume/conserved_quantities.h>
 #include <finite_volume/primative_conserved_conversion.h>
+#include <gas/transport_properties.h>
+#include <io/io.h>
+#include <solvers/cfl.h>
 #include <solvers/runge_kutta.h>
 #include <solvers/solver.h>
 #include <spdlog/spdlog.h>
 
 #include <limits>
-
-#include <finite_volume/conserved_quantities.h>
-#include <gas/transport_properties.h>
-#include <io/io.h>
-#include <solvers/cfl.h>
 
 // Implementation of Butcher tableau
 double ButcherTableau::a(size_t i, size_t j) { return a_[i - 1][j]; }
@@ -78,9 +77,8 @@ int RungeKutta::initialise() {
             residual_file << "time step mass momentum_x momentum_y momentum_z energy\n";
         }
         write_residuals(0);
-
     }
-    
+
     return ic_result + conversion_result;
 }
 
@@ -153,9 +151,11 @@ bool RungeKutta::print_this_step(unsigned int step) {
 }
 
 bool RungeKutta::residuals_this_step(unsigned int step) {
-    if ((residuals_every_n_steps_ > 0) && (step != 0 || (step % residuals_every_n_steps_ == 0)))
+    if ((residuals_every_n_steps_ > 0) &&
+        (step != 0 || (step % residuals_every_n_steps_ == 0)))
         return true;
-    if (residual_frequency_ > 0 && (time_since_last_residual_ >= residual_frequency_ - 1e-15))
+    if (residual_frequency_ > 0 &&
+        (time_since_last_residual_ >= residual_frequency_ - 1e-15))
         return true;
     return false;
 }
@@ -164,13 +164,9 @@ bool RungeKutta::write_residuals(unsigned int step) {
     spdlog::debug("Writing residuals at step {}", step);
     ConservedQuantitiesNorm<double> norms = L2_norms();
     std::ofstream residual_file("log/residuals.dat", std::ios_base::app);
-    residual_file << t_ << " " 
-                 << step << " " 
-                 << norms.mass() << " " 
-                 << norms.momentum_x() << " "
-                 << norms.momentum_y() << " "
-                 << norms.momentum_z() << " "
-                 << norms.energy() << std::endl;
+    residual_file << t_ << " " << step << " " << norms.mass() << " " << norms.momentum_x()
+                  << " " << norms.momentum_y() << " " << norms.momentum_z() << " "
+                  << norms.energy() << std::endl;
     time_since_last_residual_ = 0;
     return true;
 }
@@ -210,7 +206,4 @@ bool RungeKutta::stop_now(unsigned int step) {
     return false;
 }
 
-ConservedQuantitiesNorm<double> RungeKutta::L2_norms() {
-    return k_[0].L2_norms();
-}
-
+ConservedQuantitiesNorm<double> RungeKutta::L2_norms() { return k_[0].L2_norms(); }

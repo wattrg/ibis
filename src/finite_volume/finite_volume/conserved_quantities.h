@@ -2,9 +2,9 @@
 #define CONSERVED_QUANTITIES_H
 
 #include <gas/flow_state.h>
+#include <util/types.h>
 
 #include <Kokkos_Core.hpp>
-#include <util/types.h>
 
 template <typename T>
 class ConservedQuantitiesNorm {
@@ -28,7 +28,7 @@ public:
     }
 
     KOKKOS_INLINE_FUNCTION
-    ConservedQuantitiesNorm& operator = (const ConservedQuantitiesNorm<T>& rhs) {
+    ConservedQuantitiesNorm& operator=(const ConservedQuantitiesNorm<T>& rhs) {
         mass_ = rhs.mass_;
         momentum_x_ = rhs.momentum_x_;
         momentum_y_ = rhs.momentum_y_;
@@ -38,7 +38,7 @@ public:
     }
 
     KOKKOS_INLINE_FUNCTION
-    ConservedQuantitiesNorm& operator += (const ConservedQuantitiesNorm<T>& rhs) {
+    ConservedQuantitiesNorm& operator+=(const ConservedQuantitiesNorm<T>& rhs) {
         mass_ += rhs.mass_;
         momentum_x_ += rhs.momentum_x_;
         momentum_y_ += rhs.momentum_y_;
@@ -73,14 +73,14 @@ private:
 // this allows ConservedQuantity to be used as a custom scalar type
 // for Kokkos reductions
 namespace Kokkos {
-    template <>
-    struct reduction_identity< ConservedQuantitiesNorm<double> > {
-        KOKKOS_FORCEINLINE_FUNCTION
-        static ConservedQuantitiesNorm<double> sum() {
-            return ConservedQuantitiesNorm<double>();
-        }  
-    };
-}
+template <>
+struct reduction_identity<ConservedQuantitiesNorm<double> > {
+    KOKKOS_FORCEINLINE_FUNCTION
+    static ConservedQuantitiesNorm<double> sum() {
+        return ConservedQuantitiesNorm<double>();
+    }
+};
+}  // namespace Kokkos
 
 template <typename T>
 class ConservedQuantities {
