@@ -19,12 +19,22 @@ After preparing a simulation, a number of files will be generated, and the direc
 |-- job_directory
     |-- job.py
     |-- config/
+      |-- config.json
     |-- grid/
+      |-- ...
     |-- flow/
+      |-- ...
+    |-- log/
+      |-- log
+      |-- residuals.dat
 ```
 
 When `ibis` begins a simulation, it no longer looks at `job.py`, only the generated config files.
 So if you wish to change a setting, make sure to run `ibis prep` again.
+
+The `log` directory stores log files to monitor a simulation, or diagnosing problems.
+The `log` file contains information that was printed to the screen during execution, as well as some other potentially useful information.
+`residuals.dat` contains the norms of the residuals as the simulation progresses
 
 ## Typical Workflow
   1. Build the grid. Any grid generation software that can export su2 files will work. Currently, the grid must be a single block. The dimensionality of the grid sets the dimensionality of the simulation
