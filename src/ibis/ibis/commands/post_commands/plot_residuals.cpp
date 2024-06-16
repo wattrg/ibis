@@ -1,8 +1,7 @@
 #include <Python.h>
-#include <spdlog/spdlog.h>
 #include <ibis/commands/post_commands/plot_residuals.h>
 #include <runtime_dirs.h>
-
+#include <spdlog/spdlog.h>
 
 int plot_residuals() {
     Py_Initialize();
@@ -32,7 +31,8 @@ int plot_residuals() {
         return 1;
     }
 
-    PyObject* py_plot_residuals_main = PyObject_GetAttrString(plot_residuals_module, "main");
+    PyObject* py_plot_residuals_main =
+        PyObject_GetAttrString(plot_residuals_module, "main");
     if (py_plot_residuals_main == NULL) {
         PyErr_Print();
         Py_DECREF(plot_residuals_module);
