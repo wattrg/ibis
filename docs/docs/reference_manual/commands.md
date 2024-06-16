@@ -75,6 +75,18 @@ The available file formats are:
   + `vtk-binary` (default)
   + `vtk-text`
 
+### plot_residuals
+`ibis post plot_residuals` creates a plot of the residuals for the current simulation.
+This requires numpy and matplotlib be installed.
+Note that the active version of python when the code is compiled is used, so installing numpy and matplotlib in a virtual environment may not work.
+```
+plot simulation residuals
+Usage: ibis post plot_residuals [OPTIONS]
+
+Options:
+  -h,--help                   Print this help message and exit
+```
+
 ## clean
 `ibis clean` cleans out the automatically generated files.
 ```

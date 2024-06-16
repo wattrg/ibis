@@ -164,9 +164,7 @@ bool RungeKutta::write_residuals(unsigned int step) {
     spdlog::debug("Writing residuals at step {}", step);
     ConservedQuantitiesNorm<double> norms = L2_norms();
     std::ofstream residual_file("log/residuals.dat", std::ios_base::app);
-    residual_file << t_ << " " << step << " " << norms.mass() << " " << norms.momentum_x()
-                  << " " << norms.momentum_y() << " " << norms.momentum_z() << " "
-                  << norms.energy() << std::endl;
+    norms.write_to_file(residual_file, t_, step);
     time_since_last_residual_ = 0;
     return true;
 }

@@ -12,6 +12,12 @@ To build `ibis`, you will need to have:
   4. Python
   5. Native compilers for the target architecture (e.g. cuda, hip)
 
+For all functionality, it is recommended to also have installed:
+  1. numpy
+  2. matplotlib
+
+Without these optional dependancies, some features may not work properly.
+
 ## Download
 To download the code:
 ```
