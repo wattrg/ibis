@@ -58,8 +58,7 @@ public:
     virtual Vector3<T> access(const FlowStates<T, array_layout, host_mem_space>& fs,
                               FiniteVolume<T>& fv,
                               const GridBlock<T, host_exec_space, array_layout>& grid,
-                              const IdealGas<T>& gas_model,
-                              const int i) = 0;
+                              const IdealGas<T>& gas_model, const int i) = 0;
 };
 
 template <typename T>
@@ -123,8 +122,7 @@ public:
     Vector3<T> access(const FlowStates<T, array_layout, host_mem_space>& fs,
                       FiniteVolume<T>& fv,
                       const GridBlock<T, host_exec_space, array_layout>& grid,
-                      const IdealGas<T>& gas_model,
-                      const int i) override;
+                      const IdealGas<T>& gas_model, const int i) override;
 
 private:
     Vector3s<T, array_layout, host_mem_space> grad_vx_;
@@ -140,8 +138,7 @@ public:
     Vector3<T> access(const FlowStates<T, array_layout, host_mem_space>& fs,
                       FiniteVolume<T>& fv,
                       const GridBlock<T, host_exec_space, array_layout>& grid,
-                      const IdealGas<T>& gas_model,
-                      const int i) override;
+                      const IdealGas<T>& gas_model, const int i) override;
 
 private:
     Vector3s<T, array_layout, host_mem_space> grad_vy_;
@@ -157,8 +154,7 @@ public:
     Vector3<T> access(const FlowStates<T, array_layout, host_mem_space>& fs,
                       FiniteVolume<T>& fv,
                       const GridBlock<T, host_exec_space, array_layout>& grid,
-                      const IdealGas<T>& gas_model,
-                      const int i) override;
+                      const IdealGas<T>& gas_model, const int i) override;
 
 private:
     Vector3s<T, array_layout, host_mem_space> grad_vz_;
@@ -175,8 +171,7 @@ public:
     Vector3<T> access(const FlowStates<T, array_layout, host_mem_space>& fs,
                       FiniteVolume<T>& fv,
                       const GridBlock<T, host_exec_space, array_layout>& grid,
-                      const IdealGas<T>& gas_model,
-                      const int i) override;
+                      const IdealGas<T>& gas_model, const int i) override;
 
 private:
     Vector3s<T, array_layout, host_mem_space> grad_vx_;
@@ -192,8 +187,7 @@ public:
     Vector3<T> access(const FlowStates<T, array_layout, host_mem_space>& fs,
                       FiniteVolume<T>& fv,
                       const GridBlock<T, host_exec_space, array_layout>& grid,
-                      const IdealGas<T>& gas_model,
-                      const int i) override;
+                      const IdealGas<T>& gas_model, const int i) override;
 
 private:
     Vector3s<T, array_layout, host_mem_space> grad_vy_;
@@ -209,8 +203,7 @@ public:
     Vector3<T> access(const FlowStates<T, array_layout, host_mem_space>& fs,
                       FiniteVolume<T>& fv,
                       const GridBlock<T, host_exec_space, array_layout>& grid,
-                      const IdealGas<T>& gas_model,
-                      const int i) override;
+                      const IdealGas<T>& gas_model, const int i) override;
 
 private:
     Vector3s<T, array_layout, host_mem_space> grad_vz_;
@@ -222,8 +215,7 @@ public:
     Vector3<T> access(const FlowStates<T, array_layout, host_mem_space>& fs,
                       FiniteVolume<T>& fv,
                       const GridBlock<T, host_exec_space, array_layout>& grid,
-                      const IdealGas<T>& gas_model,
-                      const int i) override;
+                      const IdealGas<T>& gas_model, const int i) override;
 };
 
 template <typename T>

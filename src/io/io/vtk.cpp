@@ -168,16 +168,16 @@ int VtkTextOutput<T>::write(const typename FlowStates<T>::mirror_type& fs,
         std::string name = key_value.first;
         std::shared_ptr<ScalarAccessor<T>> accessor = key_value.second;
         accessor->init(fs, fv, grid, gas_model, trans_prop);
-        write_scalar_field_ascii<T>(f, fs, fv, grid_host, accessor, gas_model, name, "Float64",
-                                    grid.num_cells());
+        write_scalar_field_ascii<T>(f, fs, fv, grid_host, accessor, gas_model, name,
+                                    "Float64", grid.num_cells());
     }
 
     for (auto& key_value : this->m_vector_accessors) {
         std::string name = key_value.first;
         std::shared_ptr<VectorAccessor<T>> accessor = key_value.second;
         accessor->init(fs, fv, grid, gas_model, trans_prop);
-        write_vector_field_ascii<T>(f, fs, fv, grid_host, accessor, gas_model, name, "Float64",
-                                    grid.num_cells());
+        write_vector_field_ascii<T>(f, fs, fv, grid_host, accessor, gas_model, name,
+                                    "Float64", grid.num_cells());
     }
     f << "</CellData>" << std::endl;
 
@@ -212,8 +212,8 @@ template <typename T>
 void VtkBinaryOutput<T>::write_scalar_field_binary(
     std::ofstream& f, const FlowStates<T, array_layout, host_mem_space> fs,
     FiniteVolume<T>& fv, const GridBlock<T, host_exec_space, array_layout>& grid,
-    std::shared_ptr<ScalarAccessor<T>> accessor,
-    const IdealGas<T>& gas_model, std::string name, std::string type, size_t num_values) {
+    std::shared_ptr<ScalarAccessor<T>> accessor, const IdealGas<T>& gas_model,
+    std::string name, std::string type, size_t num_values) {
     f << "<DataArray type='" << type << "' "
       << "NumberOfComponents='1' "
       << "Name='" << name << "' "
@@ -247,8 +247,8 @@ template <typename T>
 void VtkBinaryOutput<T>::write_vector_field_binary(
     std::ofstream& f, const FlowStates<T, array_layout, host_mem_space> fs,
     FiniteVolume<T>& fv, const GridBlock<T, host_exec_space, array_layout>& grid,
-    std::shared_ptr<VectorAccessor<T>> accessor,
-    const IdealGas<T>& gas_model, std::string name, std::string type, size_t num_values) {
+    std::shared_ptr<VectorAccessor<T>> accessor, const IdealGas<T>& gas_model,
+    std::string name, std::string type, size_t num_values) {
     f << "<DataArray type='" << type << "' "
       << "NumberOfComponents='3' "
       << "Name='" << name << "' "
@@ -413,16 +413,16 @@ int VtkBinaryOutput<T>::write(const typename FlowStates<T>::mirror_type& fs,
         std::string name = key_value.first;
         std::shared_ptr<ScalarAccessor<T>> accessor = key_value.second;
         accessor->init(fs, fv, grid, gas_model, trans_prop);
-        write_scalar_field_binary(f, fs, fv, grid_host, accessor, gas_model, name, "Float64",
-                                  grid.num_cells());
+        write_scalar_field_binary(f, fs, fv, grid_host, accessor, gas_model, name,
+                                  "Float64", grid.num_cells());
     }
 
     for (auto& key_value : this->m_vector_accessors) {
         std::string name = key_value.first;
         std::shared_ptr<VectorAccessor<T>> accessor = key_value.second;
         accessor->init(fs, fv, grid, gas_model, trans_prop);
-        write_vector_field_binary(f, fs, fv, grid_host, accessor, gas_model, name, "Float64",
-                                  grid.num_cells());
+        write_vector_field_binary(f, fs, fv, grid_host, accessor, gas_model, name,
+                                  "Float64", grid.num_cells());
     }
     f << "</CellData>" << std::endl;
 
