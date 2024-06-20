@@ -36,7 +36,7 @@ cl = gmsh.model.geo.addCurveLoop([ab, bc, cd, de, ef, fa])
 surface = gmsh.model.geo.addPlaneSurface([cl])
 
 # transfinite entities
-cell_size = 0.01  # m
+cell_size = 0.005  # m
 n_inflow = math.ceil(inflow_length / cell_size)
 nx = math.ceil(length / cell_size)
 ny = math.ceil(height / cell_size)
@@ -62,9 +62,9 @@ gmsh.model.geo.synchronize()
 gmsh.model.mesh.generate(2)
 
 # write the mesh
-# gmsh.write("grid.su2")
+gmsh.write("grid.su2")
 
 # open gmsh GUI to check the mesh
-gmsh.fltk.run()
+# gmsh.fltk.run()
 
 gmsh.finalize()

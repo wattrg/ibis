@@ -14,8 +14,8 @@ vx = mach * gas_model.speed_of_sound(gas_state)
 flow_state = FlowState(gas=gas_state, vx=vx)
 
 config.convective_flux = ConvectiveFlux(
-    flux_calculator = Ausmdv(),
-    reconstruction_order = 2,
+    flux_calculator = Hanel(),
+    reconstruction_order = 1,
     limiter = BarthJespersen()
 )
 
@@ -28,7 +28,8 @@ config.solver = RungeKutta(
     max_time = n_flows * length / vx,
     plot_every_n_steps = -1,
     plot_frequency = n_flows / n_plots * length / vx,
-    print_frequency = 500
+    print_frequency = 500,
+    dt_init = 1e-9
 )
 
 config.grid = Block(

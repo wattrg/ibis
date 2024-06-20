@@ -1,6 +1,6 @@
 .PHONY: grid
 grid:
-	python grid.py
+	python other_grid.py
 
 .PHONY: job
 job: grid
