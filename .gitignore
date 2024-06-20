@@ -13,6 +13,7 @@ tests/**/grid
 tests/**/config
 tests/**/log
 tests/**/plot
+tests/**/*.su2
 Gemfile.lock
 _site
 *.DS_store
