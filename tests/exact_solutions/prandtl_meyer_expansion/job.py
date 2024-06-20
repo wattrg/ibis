@@ -16,7 +16,7 @@ flow_state = FlowState(gas=gas_state, vx=vx)
 config.convective_flux = ConvectiveFlux(
     flux_calculator = Ausmdv(),
     reconstruction_order = 2,
-    limiter = "none"
+    limiter = BarthJespersen()
 )
 
 config.gas_model = gas_model
