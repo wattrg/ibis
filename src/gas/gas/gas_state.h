@@ -96,7 +96,7 @@ public:
     auto energy() const { return Kokkos::subview(data_, Kokkos::ALL, energy_idx_); }
 
     KOKKOS_INLINE_FUNCTION
-    void copy_gas_state(const GasState<T>& gs, const size_t i) {
+    void set_gas_state(const GasState<T>& gs, const size_t i) {
         rho(i) = gs.rho;
         pressure(i) = gs.pressure;
         temp(i) = gs.temp;

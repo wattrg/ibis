@@ -65,6 +65,12 @@ public:
         vel.deep_copy(other.vel);
     }
 
+    KOKKOS_INLINE_FUNCTION
+    void set_flow_state(const FlowState<T>& other, const size_t i) {
+        gas.set_gas_state(other.gas_state, i);
+        vel.set_vector(other.velocity, i);
+    }
+
     GasStates<T, Layout, Space> gas;
     Vector3s<T, Layout, Space> vel;
 };

@@ -30,10 +30,10 @@ public:
                               Gradients<T>& cell_grad, WLSGradient<T>& grad_calc,
                               ConservedQuantities<T>& flux);
 
-    void compute_viscous_properties_at_faces(const FlowStates<T>& flow_states,
-                                             const GridBlock<T>& grid,
-                                             const IdealGas<T>& gas_model,
-                                             Gradients<T>& cell_grad);
+    // void compute_viscous_properties_at_faces(const FlowStates<T>& flow_states,
+    //                                          const GridBlock<T>& grid,
+    //                                          const IdealGas<T>& gas_model,
+    //                                          Gradients<T>& cell_grad);
 
     const FlowStates<T>& face_fs() const { return face_fs_; }
 
@@ -44,7 +44,7 @@ private:
 
     FlowStates<T> face_fs_;
 
-    Gradients<T> face_grad_;
+    // Gradients<T> face_grad_;
 
     double signal_factor_;
 };

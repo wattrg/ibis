@@ -10,9 +10,16 @@
 // A single vector with 3 components
 template <typename T>
 struct Vector3 {
+    KOKKOS_FUNCTION
     Vector3() : x(0.0), y(0.0), z(0.0) {}
+
+    KOKKOS_FUNCTION
     Vector3(T x) : x(x), y(0.0), z(0.0) {}
+
+    KOKKOS_FUNCTION
     Vector3(T x, T y) : x(x), y(y), z(0.0) {}
+
+    KOKKOS_FUNCTION
     Vector3(T x, T y, T z) : x(x), y(y), z(z) {}
 
     T x, y, z;
@@ -89,7 +96,7 @@ public:
     auto z() const { return Kokkos::subview(view_, Kokkos::ALL, 2); }
 
     KOKKOS_INLINE_FUNCTION
-    void copy_vector(const Vector3<T>& vector, const size_t i) {
+    void set_vector(const Vector3<T>& vector, const size_t i) {
         x(i) = vector.x;
         y(i) = vector.y;
         z(i) = vector.z;
