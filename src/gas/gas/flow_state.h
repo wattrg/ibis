@@ -13,6 +13,7 @@ using json = nlohmann::json;
 template <typename T>
 struct FlowState {
 public:
+    KOKKOS_INLINE_FUNCTION
     FlowState() {}
 
     FlowState(json flow_state) {
@@ -26,6 +27,7 @@ public:
         velocity.z = flow_state.at("vz");
     }
 
+    KOKKOS_INLINE_FUNCTION
     FlowState(GasState<T> gs, Vector3<T> vel) : gas_state(gs), velocity(vel) {}
 
     GasState<T> gas_state;
@@ -66,7 +68,7 @@ public:
     }
 
     KOKKOS_INLINE_FUNCTION
-    void set_flow_state(const FlowState<T>& other, const size_t i) {
+    void set_flow_state(const FlowState<T>& other, const size_t i) const {
         gas.set_gas_state(other.gas_state, i);
         vel.set_vector(other.velocity, i);
     }

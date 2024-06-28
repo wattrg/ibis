@@ -10,6 +10,7 @@
 template <typename T>
 struct GasState {
 public:
+    KOKKOS_INLINE_FUNCTION
     GasState() {}
 
     T rho;
@@ -96,7 +97,7 @@ public:
     auto energy() const { return Kokkos::subview(data_, Kokkos::ALL, energy_idx_); }
 
     KOKKOS_INLINE_FUNCTION
-    void set_gas_state(const GasState<T>& gs, const size_t i) {
+    void set_gas_state(const GasState<T>& gs, const size_t i) const {
         rho(i) = gs.rho;
         pressure(i) = gs.pressure;
         temp(i) = gs.temp;
