@@ -10,9 +10,16 @@
 // A single vector with 3 components
 template <typename T>
 struct Vector3 {
+    KOKKOS_INLINE_FUNCTION
     Vector3() : x(0.0), y(0.0), z(0.0) {}
+
+    KOKKOS_INLINE_FUNCTION
     Vector3(T x) : x(x), y(0.0), z(0.0) {}
+
+    KOKKOS_INLINE_FUNCTION
     Vector3(T x, T y) : x(x), y(y), z(0.0) {}
+
+    KOKKOS_INLINE_FUNCTION
     Vector3(T x, T y, T z) : x(x), y(y), z(z) {}
 
     T x, y, z;
@@ -89,10 +96,19 @@ public:
     auto z() const { return Kokkos::subview(view_, Kokkos::ALL, 2); }
 
     KOKKOS_INLINE_FUNCTION
-    void copy_vector(const Vector3<T>& vector, const size_t i) {
+    void set_vector(const Vector3<T>& vector, const size_t i) const {
         x(i) = vector.x;
         y(i) = vector.y;
         z(i) = vector.z;
+    }
+
+    KOKKOS_INLINE_FUNCTION
+    Vector3<T> average_vectors(const size_t a, const size_t b) const {
+        T x_avg = 0.5 * (x(a) + x(b));
+        T y_avg = 0.5 * (y(a) + y(b));
+        T z_avg = 0.5 * (z(a) + z(b));
+
+        return Vector3<T>{x_avg, y_avg, z_avg};
     }
 
     KOKKOS_INLINE_FUNCTION
