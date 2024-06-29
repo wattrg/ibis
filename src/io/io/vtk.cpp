@@ -121,7 +121,7 @@ void write_elem_type_ascii(std::ofstream& f,
       << std::endl;
 
     for (size_t i = 0; i < types.size(); i++) {
-        auto vtk_type = vtk_type_from_elem_type(types(i));
+        size_t vtk_type = vtk_type_from_elem_type(types(i));
         f << vtk_type << std::endl;
     }
     f << "</DataArray>" << std::endl;
