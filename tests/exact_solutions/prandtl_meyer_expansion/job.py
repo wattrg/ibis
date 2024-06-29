@@ -28,7 +28,8 @@ config.solver = RungeKutta(
     max_time = n_flows * length / vx,
     plot_every_n_steps = -1,
     plot_frequency = n_flows / n_plots * length / vx,
-    print_frequency = 500
+    print_frequency = 500,
+    dt_init = 1e-9
 )
 
 config.grid = Block(
