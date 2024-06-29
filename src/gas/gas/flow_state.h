@@ -73,6 +73,11 @@ public:
         vel.set_vector(other.velocity, i);
     }
 
+    KOKKOS_INLINE_FUNCTION
+    FlowState<T> average_flow_states_pT(const size_t a, const size_t b) const {
+        return FlowState<T> {gas.average_pT(a, b), vel.average_vectors(a, b)};
+    }
+
     GasStates<T, Layout, Space> gas;
     Vector3s<T, Layout, Space> vel;
 };

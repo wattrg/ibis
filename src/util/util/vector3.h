@@ -103,6 +103,15 @@ public:
     }
 
     KOKKOS_INLINE_FUNCTION
+    Vector3<T> average_vectors(const size_t a, const size_t b) const {
+        T x_avg = 0.5 * (x(a) + x(b));
+        T y_avg = 0.5 * (y(a) + y(b));
+        T z_avg = 0.5 * (z(a) + z(b));
+        
+        return Vector3<T> {x_avg, y_avg, z_avg};
+    }
+
+    KOKKOS_INLINE_FUNCTION
     size_t size() const { return view_.extent(0); }
 
     KOKKOS_INLINE_FUNCTION

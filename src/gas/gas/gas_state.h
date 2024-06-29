@@ -104,6 +104,14 @@ public:
         energy(i) = gs.energy;
     }
 
+    KOKKOS_INLINE_FUNCTION
+    GasState<T> average_pT(const size_t a, const size_t b) const {
+        GasState<T> avg{};
+        avg.pressure = 0.5 * (pressure(a) + pressure(b));
+        avg.temp = 0.5 * (temp(a) + temp(b));
+        return avg;
+    }
+
     mirror_type host_mirror() const {
         mirror_view_type data = Kokkos::create_mirror_view(data_);
         return mirror_type(data);
