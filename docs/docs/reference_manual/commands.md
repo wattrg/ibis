@@ -75,6 +75,18 @@ The available file formats are:
   + `vtk-binary` (default)
   + `vtk-text`
 
+By default, the pressure, temperature, speed of sound, Mach number, velocity, and energy are plotted.
+Additional variables which may be added (via `--add`) are:
+  + `viscous_grad_vx`
+  + `viscous_grad_vy`
+  + `viscous_grad_vz`
+  + `viscous_grad_v` (add the gradient of all 3 velocity components)
+  + `convective_grad_vx`
+  + `convective_grad_vy`
+  + `convective_grad_vz`
+  + `convective_grad_v` (add the gradient of all 3 velocity components)
+  + `cell_centre`
+
 ### plot_residuals
 `ibis post plot_residuals` creates a plot of the residuals for the current simulation.
 This requires numpy and matplotlib be installed.
