@@ -75,7 +75,7 @@ public:
 
     KOKKOS_INLINE_FUNCTION
     FlowState<T> average_flow_states_pT(const size_t a, const size_t b) const {
-        return FlowState<T> {gas.average_pT(a, b), vel.average_vectors(a, b)};
+        return FlowState<T>{gas.average_pT(a, b), vel.average_vectors(a, b)};
     }
 
     GasStates<T, Layout, Space> gas;

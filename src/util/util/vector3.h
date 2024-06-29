@@ -107,8 +107,8 @@ public:
         T x_avg = 0.5 * (x(a) + x(b));
         T y_avg = 0.5 * (y(a) + y(b));
         T z_avg = 0.5 * (z(a) + z(b));
-        
-        return Vector3<T> {x_avg, y_avg, z_avg};
+
+        return Vector3<T>{x_avg, y_avg, z_avg};
     }
 
     KOKKOS_INLINE_FUNCTION

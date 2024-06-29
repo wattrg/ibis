@@ -4,7 +4,6 @@
 #include "finite_volume/gradient.h"
 #include "gas/transport_properties.h"
 
-
 template <typename T>
 struct ViscousProperties {
     FlowState<T> flow;
@@ -15,10 +14,9 @@ struct ViscousProperties {
 };
 
 template <typename T>
-KOKKOS_INLINE_FUNCTION
-void copy_gradients_to_face(ViscousProperties<T>& props,
-                            const Gradients<T>& cell_grad,
-                            const size_t interior_cell) {
+KOKKOS_INLINE_FUNCTION void copy_gradients_to_face(ViscousProperties<T>& props,
+                                                   const Gradients<T>& cell_grad,
+                                                   const size_t interior_cell) {
     props.grad_temp.x = cell_grad.temp.x(interior_cell);
     props.grad_temp.y = cell_grad.temp.y(interior_cell);
     props.grad_temp.z = cell_grad.temp.z(interior_cell);
@@ -37,32 +35,26 @@ void copy_gradients_to_face(ViscousProperties<T>& props,
 }
 
 template <typename T>
-KOKKOS_INLINE_FUNCTION
-Vector3<T> hasselbacher_average_(const Vector3s<T>& grad,
-                                 const T value_left, const T value_right, 
-                                 const size_t left, const size_t right,
-                                 const Vector3<T>& ehat, const Vector3<T>& n,
-                                 const T& len_e, const T& ehat_dot_n) {
+KOKKOS_INLINE_FUNCTION Vector3<T> hasselbacher_average_(
+    const Vector3s<T>& grad, const T value_left, const T value_right, const size_t left,
+    const size_t right, const Vector3<T>& ehat, const Vector3<T>& n, const T& len_e,
+    const T& ehat_dot_n) {
     T avg_grad_x = 0.5 * (grad.x(left) + grad.x(right));
     T avg_grad_y = 0.5 * (grad.y(left) + grad.y(right));
     T avg_grad_z = 0.5 * (grad.z(left) + grad.z(right));
     T avg_dot_ehat = avg_grad_x * ehat.x + avg_grad_y * ehat.y + avg_grad_z * ehat.z;
     T correction = avg_dot_ehat - (value_right - value_left) / len_e;
 
-    return Vector3<T> {
-        avg_grad_x - correction * n.x / ehat_dot_n,
-        avg_grad_y - correction * n.y / ehat_dot_n,
-        avg_grad_z - correction * n.z / ehat_dot_n
-    };
+    return Vector3<T>{avg_grad_x - correction * n.x / ehat_dot_n,
+                      avg_grad_y - correction * n.y / ehat_dot_n,
+                      avg_grad_z - correction * n.z / ehat_dot_n};
 }
 
 template <typename T>
-KOKKOS_INLINE_FUNCTION
-void hasselbacher_average(ViscousProperties<T>& props, const Gradients<T>& cell_grad,
-                          const Cells<T>& cells, const FlowStates<T>& fs,
-                          const Interfaces<T>& faces,
-                          const size_t left_cell, const size_t right_cell,
-                          const size_t face) {
+KOKKOS_INLINE_FUNCTION void hasselbacher_average(
+    ViscousProperties<T>& props, const Gradients<T>& cell_grad, const Cells<T>& cells,
+    const FlowStates<T>& fs, const Interfaces<T>& faces, const size_t left_cell,
+    const size_t right_cell, const size_t face) {
     // Vector from right cell centre to left cell centre
     T ex = cells.centroids().x(right_cell) - cells.centroids().x(left_cell);
     T ey = cells.centroids().y(right_cell) - cells.centroids().y(left_cell);
@@ -70,26 +62,22 @@ void hasselbacher_average(ViscousProperties<T>& props, const Gradients<T>& cell_
 
     // Some properties of the grid used by Hasselbacher averaging
     T len_e = Kokkos::sqrt(ex * ex + ey * ey + ez * ez);
-    Vector3<T> ehat {ex / len_e, ey / len_e, ez / len_e};
-    Vector3<T> n {faces.norm().x(face), faces.norm().y(face), faces.norm().z(face)};
+    Vector3<T> ehat{ex / len_e, ey / len_e, ez / len_e};
+    Vector3<T> n{faces.norm().x(face), faces.norm().y(face), faces.norm().z(face)};
     T ehat_dot_n = ehat.x * n.x + ehat.y * n.y + ehat.z * n.z;
 
-    props.grad_vx = hasselbacher_average_(cell_grad.vx, fs.vel.x(left_cell), 
-                                          fs.vel.x(right_cell),
-                                          left_cell, right_cell, ehat, n, len_e,
-                                          ehat_dot_n);
-    props.grad_vy = hasselbacher_average_(cell_grad.vy, fs.vel.y(left_cell), 
-                                          fs.vel.y(right_cell),
-                                          left_cell, right_cell, ehat, n, len_e,
-                                          ehat_dot_n);
-    props.grad_vz = hasselbacher_average_(cell_grad.vz, fs.vel.z(left_cell), 
-                                          fs.vel.z(right_cell),
-                                          left_cell, right_cell, ehat, n, len_e,
-                                          ehat_dot_n);
-    props.grad_temp = hasselbacher_average_(cell_grad.temp, fs.gas.temp(left_cell), 
-                                            fs.gas.temp(right_cell),
-                                            left_cell, right_cell, ehat, n, len_e,
-                                            ehat_dot_n);
+    props.grad_vx =
+        hasselbacher_average_(cell_grad.vx, fs.vel.x(left_cell), fs.vel.x(right_cell),
+                              left_cell, right_cell, ehat, n, len_e, ehat_dot_n);
+    props.grad_vy =
+        hasselbacher_average_(cell_grad.vy, fs.vel.y(left_cell), fs.vel.y(right_cell),
+                              left_cell, right_cell, ehat, n, len_e, ehat_dot_n);
+    props.grad_vz =
+        hasselbacher_average_(cell_grad.vz, fs.vel.z(left_cell), fs.vel.z(right_cell),
+                              left_cell, right_cell, ehat, n, len_e, ehat_dot_n);
+    props.grad_temp = hasselbacher_average_(cell_grad.temp, fs.gas.temp(left_cell),
+                                            fs.gas.temp(right_cell), left_cell,
+                                            right_cell, ehat, n, len_e, ehat_dot_n);
 }
 
 template <typename T>
@@ -97,7 +85,6 @@ KOKKOS_FUNCTION ViscousProperties<T> compute_viscous_properties_at_faces(
     const FlowStates<T>& flow_states, const Interfaces<T>& faces, const Cells<T>& cells,
     const IdealGas<T>& gas_model, const Gradients<T>& cell_grad, const size_t num_cells,
     const size_t face_i) {
-
     ViscousProperties<T> props;
     size_t left_cell = faces.left_cell(face_i);
     size_t right_cell = faces.right_cell(face_i);
@@ -109,8 +96,8 @@ KOKKOS_FUNCTION ViscousProperties<T> compute_viscous_properties_at_faces(
         size_t interior_cell = (left_valid) ? left_cell : right_cell;
         copy_gradients_to_face(props, cell_grad, interior_cell);
     } else {
-        hasselbacher_average(props, cell_grad, cells, flow_states,
-                             faces, left_cell, right_cell, face_i);
+        hasselbacher_average(props, cell_grad, cells, flow_states, faces, left_cell,
+                             right_cell, face_i);
     }
 
     // get the flow state at faces
