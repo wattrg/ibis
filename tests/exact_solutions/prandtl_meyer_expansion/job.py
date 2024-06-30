@@ -1,6 +1,7 @@
 import math
+from parameters import mach_1
 
-mach = 3.0
+mach = mach_1
 T = 300
 n_flows = 3
 n_plots = 10
@@ -33,7 +34,7 @@ config.solver = RungeKutta(
 )
 
 config.grid = Block(
-    file_name="grid.su2", 
+    file_name="grid.su2",
     initial_condition=flow_state,
     boundaries = {
         "inflow": supersonic_inflow(flow_state),

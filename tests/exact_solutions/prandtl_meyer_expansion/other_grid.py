@@ -1,5 +1,6 @@
 import gmsh
 import math
+from parameters import angle, cell_size
 
 gmsh.initialize()
 
@@ -12,11 +13,10 @@ gmsh.option.setNumber("Mesh.SaveAll", 1)
 # points
 inflow_length = 0.05
 length = 0.9
-angle = math.radians(15.0)
+angle = math.radians(angle)
 height = 0.6
 dy = (length-inflow_length)*math.sin(angle)
 
-cell_size = 0.01
 gmsh.model.geo.addPoint(0.0, 0.0, 0.0, cell_size) # 1 
 gmsh.model.geo.addPoint(inflow_length, 0.0, 0.0, cell_size) # 2
 gmsh.model.geo.addPoint(length, -dy, 0.0, cell_size) # 3

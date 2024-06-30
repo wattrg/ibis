@@ -17,7 +17,7 @@ run:
 .PHONY: post
 post:
 	# ibis post plot
-	ibis post plot --format=vtk-text
+	ibis post plot --format=vtk-text --add=cell_centre
 
 .PHONY: clean
 clean:
