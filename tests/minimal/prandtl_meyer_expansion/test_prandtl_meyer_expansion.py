@@ -21,8 +21,5 @@ def test_mach():
     mach_2_analytic = analytic_solution.mach_2(mach_1, angle, 1.4)
 
     mesh = pv.read("plot/0001/block_0.vtu")
-    a = [0.74999, -0.10365, 0]
-    cell_id = mesh.find_containing_cell(a)
-    cell = mesh.extract_cells(cell_id)
-    mach_2_numerical, = cell.cell_data["Mach"]
+    mach_2_numerical = np.max(mesh.cell_data["Mach"])
     assert pytest.approx(mach_2_analytic, 0.01) == mach_2_numerical
