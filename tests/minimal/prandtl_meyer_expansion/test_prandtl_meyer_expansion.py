@@ -13,7 +13,10 @@ def change_test_dir(request, monkeypatch):
 
 def run_simulation():
     command = "make all"
-    subprocess.run(command.split())
+    subprocess.run(
+        command.split(),
+        env={"OMP_PLACES": "threads", "OMP_PROC_BIND": "spread"}
+    )
 
 
 def test_mach():
