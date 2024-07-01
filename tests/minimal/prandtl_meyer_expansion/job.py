@@ -3,8 +3,8 @@ from parameters import mach_1
 
 mach = mach_1
 T = 300
-n_flows = 3
-n_plots = 10
+max_time = 0.002
+n_plots = 1
 length = 1.0
 gas_model = IdealGas(R=287)
 gas_state = GasState()
@@ -26,9 +26,9 @@ config.solver = RungeKutta(
     method="ssp-rk3",
     cfl = 2.0,
     max_step = 100000,
-    max_time = n_flows * length / vx,
+    max_time = max_time,
     plot_every_n_steps = -1,
-    plot_frequency = n_flows / n_plots * length / vx,
+    plot_frequency = max_time / n_plots,
     print_frequency = 500,
     dt_init = 1e-9
 )

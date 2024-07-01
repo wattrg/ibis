@@ -31,9 +31,9 @@ def mach_2(mach_1, theta, gamma):
     # theta = nu(Mach2) - nu(Mach1)
 
     nu1 = nu(mach_1, gamma)
-    nu2 = theta + nu1
+    nu2 = np.radians(theta) + nu1
 
     def f(mach):
         return nu(mach, gamma) - nu2
 
-    return fsolve(f, mach_1)
+    return fsolve(f, 3)[0]

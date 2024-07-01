@@ -1,7 +1,6 @@
 .PHONY: grid
 grid:
-	# python grid.py
-	python other_grid.py
+	python grid.py
 
 .PHONY: job
 job: grid
@@ -16,8 +15,10 @@ run:
 
 .PHONY: post
 post:
-	# ibis post plot
-	ibis post plot --format=vtk-text --add=cell_centre
+	ibis post plot
+
+.PHONY: all
+all: clean prep run post
 
 .PHONY: clean
 clean:
