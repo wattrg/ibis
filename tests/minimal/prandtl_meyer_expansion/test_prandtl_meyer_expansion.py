@@ -3,6 +3,7 @@ import numpy as np
 import analytic_solution
 import pytest
 import subprocess
+import os
 from parameters import angle, mach_1
 
 
@@ -13,10 +14,9 @@ def change_test_dir(request, monkeypatch):
 
 def run_simulation():
     command = "make all"
-    subprocess.run(
-        command.split(),
-        env={"OMP_PLACES": "threads", "OMP_PROC_BIND": "spread"}
-    )
+    omp_vars = {"OMP_PLACES": "threads", "OMP_PROC_BIND": "spread"}
+    env=dict(os.environ, **omp_vars)
+    result = subprocess.run(command.split(), env=env)
 
 
 def test_mach():

@@ -30,6 +30,7 @@ int prep(int argc, char* argv[]) {
     PyRun_SimpleString("import sys");
     std::string import_string = "sys.path.append('" + Ibis::LIB_DIR + "')";
     PyRun_SimpleString(import_string.c_str());
+    PyRun_SimpleString("if '' not in sys.path: sys.path.append('')");
 
     PyObject* prep_module = PyImport_ImportModule("prep");
     if (prep_module == NULL) {
