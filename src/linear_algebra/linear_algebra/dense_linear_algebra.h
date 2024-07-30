@@ -32,12 +32,37 @@ public:
 
     Vector<T, ExecSpace, Kokkos::LayoutStride, MemSpace> sub_vector(const size_t start,
                                                                     const size_t end) {
+        assert(end <= size() + 1);
+        
         return Vector<T, ExecSpace, Kokkos::LayoutStride, MemSpace>(
             Kokkos::subview(data_, Kokkos::make_pair(start, end)));
     }
 
+    // this deep_copy overload copies a vector from one memory space to another
+    // as long as they have the same array layout
+    template <class OtherExecSpace, class OtherMemSpace>
+    void deep_copy_space(Vector<T, OtherExecSpace, Layout, OtherMemSpace>& other) {
+        Kokkos::deep_copy(data_, other.data());
+    }
+
+    // this deep_copy overload copies a vector from one layout to another layout
+    // as long as they are in the same memory space
+    template <class OtherLayout>
+    void deep_copy_layout(Vector<T, ExecSpace, OtherLayout, MemSpace>& other) {
+        assert(size() == other.size());
+        // For the moment we'll make this general. If Layout1 and Layout2 are different
+        // we cannot use Kokkos::deep_copy. This is the intended use of this function.
+        // We could detect if Layout1 and Layout2 are the same, but meh...
+        auto data = data_;
+        Kokkos::parallel_for(
+            "Ibis::deep_copy_vector", Kokkos::RangePolicy<ExecSpace>(0, other.size()),
+            KOKKOS_LAMBDA(const size_t i) { data(i) = other(i); });
+    }
+
     KOKKOS_INLINE_FUNCTION
     size_t size() const { return data_.extent(0); }
+
+    Array1D<T, Layout, MemSpace> data() { return data_; }
 
 private:
     Array1D<T, Layout, MemSpace> data_;
@@ -76,9 +101,19 @@ public:
     Matrix<T, ExecSpace, Kokkos::LayoutStride, MemSpace> sub_matrix(
         const size_t start_row, const size_t end_row, const size_t start_col,
         const size_t end_col) {
+        assert(end_row <= n_rows() + 1);
+        assert(end_col <= n_cols() + 1);
+        
         return Matrix<T, ExecSpace, Kokkos::LayoutStride, MemSpace>(
             Kokkos::subview(data_, Kokkos::make_pair(start_row, end_row),
                             Kokkos::make_pair(start_col, end_col)));
+    }
+
+    // Return a sub-matrix containing the columns i->j
+    Matrix<T, ExecSpace, Kokkos::LayoutStride, MemSpace> columns(const size_t start_col,
+                                                                 const size_t end_col) {
+        return Matrix<T, ExecSpace, Kokkos::LayoutStride, MemSpace>(
+            Kokkos::subview(data_, Kokkos::ALL, Kokkos::make_pair(start_col, end_col)));
     }
 
     // The row vector at a given row in the matrix
@@ -105,10 +140,11 @@ public:
         size_t n_rows = this->n_rows();
         size_t n_cols = this->n_cols();
 
+        auto data = data_;
         Kokkos::parallel_for(
             "Matrix::deep_copy", n_rows, KOKKOS_LAMBDA(const size_t row) {
                 for (size_t col = 0; col < n_cols; col++) {
-                    (*this)(row, col) = other(row, col);
+                    data(row, col) = other(row, col);
                 }
             });
     }
@@ -167,17 +203,10 @@ void add_scaled_vector(Vector<T, ExecSpace, Layout1, MemSpace>& vec1,
         KOKKOS_LAMBDA(const size_t i) { vec1(i) += vec2(i) * scale; });
 }
 
-template <typename T, class ExecSpace, class Layout1, class Layout2, class MemSpace>
-void deep_copy_vector(Vector<T, ExecSpace, Layout1, MemSpace> dest,
-                      const Vector<T, ExecSpace, Layout2, MemSpace>& src) {
-    assert(dest.size() == src.size());
-    // For the moment we'll make this general. If Layout1 and Layout2 are different
-    // we cannot use Kokkos::deep_copy. This is the intended use of this function.
-    // We could detect if Layout1 and Layout2 are the same, but meh...
-    Kokkos::parallel_for(
-        "Ibis::deep_copy_vector", Kokkos::RangePolicy<ExecSpace>(0, dest.size()),
-        KOKKOS_LAMBDA(const size_t i) { dest(i) = src(i); });
-}
+// template <typename T, class ExecSpace, class Layout1, class Layout2, class MemSpace>
+// void deep_copy_vector(Vector<T, ExecSpace, Layout1, MemSpace> dest,
+//                       const Vector<T, ExecSpace, Layout2, MemSpace>& src) {
+// }
 
 template <typename T, class ExecSpace, class MatrixLayout, class VecLayout,
           class ResLayout, class MemSpace>
@@ -188,7 +217,7 @@ void gemv(const Matrix<T, ExecSpace, MatrixLayout, MemSpace>& matrix,
     size_t n_cols = matrix.n_cols();
 
     assert(vec.size() == n_cols);
-    assert(res.size() == n_cols);
+    assert(res.size() == n_rows);
 
     Kokkos::parallel_for(
         "Ibis::gemv", Kokkos::RangePolicy<ExecSpace>(0, n_rows),
@@ -224,9 +253,30 @@ void gemm(const Matrix<T, ExecSpace, LhsLayout, MemSpace> lhs,
         });
 }
 
-template <typename T, class ExecSpace, class Layout, class MemSpace>
-T dot(const Vector<T, ExecSpace, Layout, MemSpace>& vec1,
-      const Vector<T, ExecSpace, Layout, MemSpace>& vec2) {
+template <typename T, class ExecSpace, class MatrixLayout, class SolLayout,
+          class RhsLayout, class MemSpace>
+void upper_triangular_solve(const Matrix<T, ExecSpace, MatrixLayout, MemSpace> A,
+                            Vector<T, ExecSpace, SolLayout, MemSpace> sol,
+                            Vector<T, ExecSpace, RhsLayout, MemSpace> rhs) {
+    assert(A.n_rows() == A.n_cols());
+    assert(A.n_rows() == sol.size());
+    assert(A.n_rows() == rhs.size());
+
+    int n = A.n_rows();
+
+    sol(n - 1) = rhs(n - 1) / A(n - 1, n - 1);
+    for (int i = n - 2; i >= 0; i--) {
+        T sum = rhs(i);
+        for (int j = i + 1; j < n; j++) {
+            sum -= A(i, j) * sol(j);
+        }
+        sol(i) = sum / A(i, i);
+    }
+}
+
+template <typename T, class ExecSpace, class Layout1, class Layout2, class MemSpace>
+T dot(const Vector<T, ExecSpace, Layout1, MemSpace>& vec1,
+      const Vector<T, ExecSpace, Layout2, MemSpace>& vec2) {
     assert(vec1.size() == vec2.size());
     T dot_product;
     Kokkos::parallel_reduce(
