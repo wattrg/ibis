@@ -7,7 +7,7 @@ GmresResult::GmresResult(bool success_, size_t n_iters_, Ibis::real tol_,
                          Ibis::real residual_)
     : success(success_), n_iters(n_iters_), tol(tol_), residual(residual_) {}
 
-Gmres::Gmres(const std::shared_ptr<LinearSystem> system, const size_t max_iters,
+Gmres::Gmres(std::shared_ptr<LinearSystem> system, const size_t max_iters,
              Ibis::real tol) {
     tol_ = tol;
     max_iters_ = max_iters;
@@ -18,10 +18,10 @@ Gmres::Gmres(const std::shared_ptr<LinearSystem> system, const size_t max_iters,
         Ibis::Matrix<Ibis::real, HostExecSpace>("Gmres::H0", max_iters_ + 1, max_iters_);
     H1_ =
         Ibis::Matrix<Ibis::real, HostExecSpace>("Gmres::H1", max_iters_ + 1, max_iters_);
-    Q0_ =
-        Ibis::Matrix<Ibis::real, HostExecSpace>("Gmres::Q0", max_iters_ + 1, max_iters_ + 1);
-    Q1_ =
-        Ibis::Matrix<Ibis::real, HostExecSpace>("Gmres::Q1", max_iters_ + 1, max_iters_ + 1);
+    Q0_ = Ibis::Matrix<Ibis::real, HostExecSpace>("Gmres::Q0", max_iters_ + 1,
+                                                  max_iters_ + 1);
+    Q1_ = Ibis::Matrix<Ibis::real, HostExecSpace>("Gmres::Q1", max_iters_ + 1,
+                                                  max_iters_ + 1);
     Omega_ = Ibis::Matrix<Ibis::real, HostExecSpace>("Gmres::Gamma", max_iters_ + 1,
                                                      max_iters_ + 1);
     g0_ = Ibis::Vector<Ibis::real, HostExecSpace>("Gmres::g0", max_iters_ + 1);
@@ -39,7 +39,7 @@ Gmres::Gmres(const std::shared_ptr<LinearSystem> system, const size_t max_iters,
     v_ = Ibis::Vector<Ibis::real>("Gmres::v", num_vars_);
 }
 
-Gmres::Gmres(const std::shared_ptr<LinearSystem> system, json config)
+Gmres::Gmres(std::shared_ptr<LinearSystem> system, json config)
     : Gmres(system, config.at("max_iters"), config.at("tolerance")) {}
 
 GmresResult Gmres::solve(std::shared_ptr<LinearSystem> system,
