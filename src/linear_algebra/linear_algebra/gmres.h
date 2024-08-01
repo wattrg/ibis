@@ -30,10 +30,11 @@ public:
     using HostExecSpace = Ibis::DefaultHostExecSpace;
 
 public:
-    Gmres(const std::shared_ptr<LinearSystem> system, const size_t max_iters,
-          Ibis::real tol);
+    Gmres(){};
 
-    Gmres(const std::shared_ptr<LinearSystem> system, json config);
+    Gmres(std::shared_ptr<LinearSystem> system, const size_t max_iters, Ibis::real tol);
+
+    Gmres(std::shared_ptr<LinearSystem> system, json config);
 
     GmresResult solve(std::shared_ptr<LinearSystem> system, Ibis::Vector<Ibis::real>& x0);
 
