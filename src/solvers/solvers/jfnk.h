@@ -25,8 +25,8 @@ public:
 
     int initialise();
 
-    void step(std::shared_ptr<Sim<Ibis::dual>>& sim, ConservedQuantities<Ibis::dual>& cq,
-              FlowStates<Ibis::dual>& fs);
+    GmresResult step(std::shared_ptr<Sim<Ibis::dual>>& sim,
+                     ConservedQuantities<Ibis::dual>& cq, FlowStates<Ibis::dual>& fs);
 
     void solve(std::shared_ptr<Sim<Ibis::dual>>& sim);
 
@@ -34,9 +34,9 @@ public:
 
     Ibis::real pseudo_time_step_size() const { return stable_dt_; };
 
-    Ibis::real global_residual() const { return -1.0; };
+    Ibis::real global_residual() const { return std::numeric_limits<Ibis::real>::max(); };
 
-    Ibis::real target_residual() const { return -1.0; };
+    Ibis::real target_residual() const { return tolerance_; };
 
 private:
     std::shared_ptr<PseudoTransientLinearSystem> system_;
