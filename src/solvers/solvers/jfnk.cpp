@@ -22,15 +22,17 @@ void Jfnk::step(std::shared_ptr<Sim<Ibis::dual>>& sim,
     Ibis::real cfl = cfl_->eval(0.0);
     stable_dt_ = sim->fv.estimate_dt(fs, sim->grid, sim->gas_model, sim->trans_prop);
     system_->set_pseudo_time_step(cfl * stable_dt_);
-    gmres_.solve(system_, dU_);
+    system_->eval_rhs();
+    GmresResult result = gmres_.solve(system_, dU_);
     apply_update_(sim, cq, fs);
+    return result;
 }
 
 void Jfnk::apply_update_(std::shared_ptr<Sim<Ibis::dual>>& sim,
                          ConservedQuantities<Ibis::dual>& cq,
                          FlowStates<Ibis::dual>& fs) {
     auto dU = dU_;
-    size_t n_cells = cq.size();
+    size_t n_cells = sim->grid.num_cells();
     size_t n_cons = cq.n_conserved();
     Kokkos::parallel_for(
         "Jfnk::apply_update", n_cells, KOKKOS_LAMBDA(const size_t cell_i) {
