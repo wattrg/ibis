@@ -129,4 +129,8 @@ public:  // this has to be public to access from inside kernels
     Ibis::Vector<Ibis::real, HostExecSpace> h_rotated_;
 };
 
+std::unique_ptr<IterativeLinearSolver> make_linear_solver(
+    std::shared_ptr<LinearSystem> sysmtem, std::shared_ptr<LinearSystem> preconditioner,
+    json config);
+
 #endif
