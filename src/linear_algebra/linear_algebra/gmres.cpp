@@ -2,6 +2,7 @@
 #include <linear_algebra/dense_linear_algebra.h>
 #include <linear_algebra/gmres.h>
 #include <linear_algebra/linear_system.h>
+#include <spdlog/spdlog.h>
 
 #include "util/types.h"
 
@@ -226,8 +227,9 @@ FGmres::FGmres(std::shared_ptr<LinearSystem> system, const size_t max_iters,
 
 FGmres::FGmres(std::shared_ptr<LinearSystem> system,
                std::shared_ptr<LinearSystem> preconditioner, json config)
-    : FGmres(system, config.at("max_iters"), config.at("tol"), preconditioner,
-             config.at("max_precondition_iters"), config.at("precondition_tol")) {}
+    : FGmres(system, config.at("max_iters"), config.at("tolerance"), preconditioner,
+             config.at("max_preconditioner_iters"),
+             config.at("preconditioner_tolerance")) {}
 
 LinearSolveResult FGmres::solve(Ibis::Vector<Ibis::real>& x) {
     // zero out (or set to identity matrix) memory
@@ -299,6 +301,21 @@ LinearSolveResult FGmres::solve(Ibis::Vector<Ibis::real>& x) {
     return result;
 }
 
+std::unique_ptr<IterativeLinearSolver> make_linear_solver(
+    std::shared_ptr<LinearSystem> system, std::shared_ptr<LinearSystem> preconditioner,
+    json config) {
+    std::string solver_type = config.at("type");
+    if (solver_type == "gmres") {
+        return std::unique_ptr<IterativeLinearSolver>(new Gmres(system, config));
+    } else if (solver_type == "fgmres") {
+        return std::unique_ptr<IterativeLinearSolver>(
+            new FGmres(system, preconditioner, config));
+    } else {
+        spdlog::error("Unknown linear solver {}", solver_type);
+        throw new std::runtime_error("Unknown linear solver");
+    }
+}
+
 TEST_CASE("GMRES") {
     class TestLinearSystem : public LinearSystem {
     public:
@@ -343,6 +360,10 @@ TEST_CASE("GMRES") {
         void matrix_vector_product(Ibis::Vector<Ibis::real>& vec,
                                    Ibis::Vector<Ibis::real>& res) {
             Ibis::gemv(matrix_, vec, res);
+        }
+
+        std::unique_ptr<LinearSystem> preconditioner() {
+            throw new std::runtime_error("");
         }
 
         KOKKOS_INLINE_FUNCTION
@@ -407,6 +428,10 @@ TEST_CASE("FGMRES") {
         void matrix_vector_product(Ibis::Vector<Ibis::real>& vec,
                                    Ibis::Vector<Ibis::real>& res) {
             Ibis::gemv(matrix_, vec, res);
+        }
+
+        std::unique_ptr<LinearSystem> preconditioner() {
+            throw new std::runtime_error("");
         }
 
         KOKKOS_INLINE_FUNCTION
