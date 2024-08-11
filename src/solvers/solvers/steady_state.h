@@ -17,13 +17,16 @@ public:
     SteadyStateLinearisation(std::shared_ptr<Sim<Ibis::dual>> sim,
                              std::shared_ptr<ConservedQuantities<Ibis::dual>> residuals,
                              std::shared_ptr<ConservedQuantities<Ibis::dual>> cq,
-                             std::shared_ptr<FlowStates<Ibis::dual>> fs);
+                             std::shared_ptr<FlowStates<Ibis::dual>> fs,
+                             bool allow_reconstruction = true);
 
     ~SteadyStateLinearisation() {}
 
     // SystemLinearisation interface
     void matrix_vector_product(Ibis::Vector<Ibis::real>& vec,
                                Ibis::Vector<Ibis::real>& result);
+
+    std::unique_ptr<LinearSystem> preconditioner();
 
     void eval_rhs();
 
@@ -47,6 +50,7 @@ public:
 
 private:
     Ibis::real dt_star_;
+    bool allow_reconstruction_;
 
     // memory
     size_t n_cells_;        // excluding ghost cells
@@ -63,8 +67,7 @@ private:
     std::shared_ptr<ConservedQuantities<Ibis::dual>> residuals_;
 
     // memory owned by this class
-    Ibis::Vector<Ibis::real> rhs_;  // the rhs of the system of equations
-    Ibis::Vector<Ibis::real> precondition_rhs_;
+    Ibis::Vector<Ibis::real> rhs_;   // the rhs of the system of equations
     FlowStates<Ibis::dual> fs_tmp_;  // temporary storage for perturbed flow states
     ConservedQuantities<Ibis::dual> cq_tmp_;  // storage for perturbed cq
 
