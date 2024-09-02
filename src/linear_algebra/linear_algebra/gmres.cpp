@@ -354,9 +354,7 @@ TEST_CASE("GMRES") {
 
         void eval_rhs() {}
 
-        void set_rhs(Ibis::Vector<Ibis::real>& rhs) {
-            rhs_ = rhs;
-        }
+        void set_rhs(Ibis::Vector<Ibis::real>& rhs) { rhs_ = rhs; }
 
         void matrix_vector_product(Ibis::Vector<Ibis::real>& vec,
                                    Ibis::Vector<Ibis::real>& res) {
@@ -423,7 +421,7 @@ TEST_CASE("FGMRES") {
 
         void eval_rhs() {}
 
-        void set_rhs(Ibis::Vector<Ibis::real>& rhs) { 
+        void set_rhs(Ibis::Vector<Ibis::real>& rhs) {
             // rhs_.deep_copy_space(rhs);
             rhs_ = rhs;
         }

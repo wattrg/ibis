@@ -36,12 +36,11 @@ public:
 
     Ibis::real pseudo_time_step_size() const { return stable_dt_; }
 
-    Ibis::real calculate_cfl(size_t step) const { 
+    Ibis::real calculate_cfl(size_t step) const {
         Ibis::real cfl;
         if (residual_based_cfl_) {
             cfl = cfl_->eval(Ibis::real_part(relative_residual_norms().global()));
-        }
-        else {
+        } else {
             cfl = cfl_->eval((Ibis::real)step);
         }
         return cfl;

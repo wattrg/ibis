@@ -48,8 +48,8 @@ class ResidualBasedCfl : public CflSchedule {
 public:
     ResidualBasedCfl() {}
 
-    ResidualBasedCfl(Ibis::real threshold, Ibis::real power,
-                     Ibis::real start_cfl, Ibis::real max_cfl);
+    ResidualBasedCfl(Ibis::real threshold, Ibis::real power, Ibis::real start_cfl,
+                     Ibis::real max_cfl);
 
     ResidualBasedCfl(json config);
 
