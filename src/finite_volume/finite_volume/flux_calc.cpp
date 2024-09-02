@@ -14,6 +14,8 @@ std::unique_ptr<FluxCalculator<T>> make_flux_calculator(json config) {
         return std::unique_ptr<FluxCalculator<T>>(new Ausmdv<T>());
     } else if (type == "ldfss2") {
         return std::unique_ptr<FluxCalculator<T>>(new Ldfss2<T>(config));
+    } else if (type == "rusanov") {
+        return std::unique_ptr<FluxCalculator<T>>(new Rusanov<T>());
     } else {
         spdlog::error("Unknown flux calculator {}", type);
         throw std::runtime_error("Unknown flux calculator");
