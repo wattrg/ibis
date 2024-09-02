@@ -146,13 +146,13 @@ int SteadyState::initialise() {
     if (diagnostics_frequency_ > 0) {
         // absolute residuals
         std::ofstream abs_residual_file("log/absolute_residuals.dat", std::ios_base::out);
-        abs_residual_file
-            << "step step wall_clock global mass momentum_x momentum_y momentum_z energy\n";
+        abs_residual_file << "step step wall_clock global mass momentum_x momentum_y "
+                             "momentum_z energy\n";
 
         // relative residuals
         std::ofstream rel_residual_file("log/relative_residuals.dat", std::ios_base::out);
-        rel_residual_file
-            << "step step wall_clock global mass momentum_x momentum_y momentum_z energy\n";
+        rel_residual_file << "step step wall_clock global mass momentum_x momentum_y "
+                             "momentum_z energy\n";
 
         write_residuals(0, 0.0);
 
