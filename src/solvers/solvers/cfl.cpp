@@ -43,15 +43,19 @@ Ibis::real LinearSchedule::eval(Ibis::real t) {
 
 ResidualBasedCfl::ResidualBasedCfl(Ibis::real threshold, Ibis::real power,
                                    Ibis::real start_cfl, Ibis::real max_cfl)
-    : threshold_(threshold), power_(power), start_cfl_(start_cfl), max_cfl_(max_cfl),
-      previous_cfl_(start_cfl), previous_residual_(1.0) {}
+    : threshold_(threshold),
+      power_(power),
+      start_cfl_(start_cfl),
+      max_cfl_(max_cfl),
+      previous_cfl_(start_cfl),
+      previous_residual_(1.0) {}
 
-ResidualBasedCfl::ResidualBasedCfl(json config) 
+ResidualBasedCfl::ResidualBasedCfl(json config)
     : ResidualBasedCfl(config.at("growth_threshold"), config.at("power"),
                        config.at("start_cfl"), config.at("max_cfl")) {}
 
 Ibis::real ResidualBasedCfl::eval(Ibis::real t) {
-    if (t > threshold_) { 
+    if (t > threshold_) {
         previous_residual_ = t;
         return previous_cfl_;
     }
@@ -64,7 +68,6 @@ Ibis::real ResidualBasedCfl::eval(Ibis::real t) {
     previous_cfl_ = new_cfl;
     return new_cfl;
 }
-
 
 std::unique_ptr<CflSchedule> make_cfl_schedule(json config) {
     std::string type = config.at("type");
