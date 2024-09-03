@@ -17,6 +17,7 @@ from python_api import (
     PyAusmdv,
     PyHanel,
     PyLdfss2,
+    PyRusanov,
     GasState,
     PyIdealGas
 )
@@ -116,6 +117,13 @@ class Ausmdv(FluxCalculator):
 
     def as_dict(self):
         self._read_defaults()
+        return {"type": self._flux_calc.name()}
+
+class Rusanov(FluxCalculator):
+    def __init__(self):
+        self._flux_calc = PyRusanov()
+
+    def as_dict(self):
         return {"type": self._flux_calc.name()}
 
 
@@ -948,6 +956,7 @@ def main(file_name, res_dir):
         "Ausmdv": Ausmdv,
         "Hanel": Hanel,
         "Ldfss2": Ldfss2,
+        "Rusanov": Rusanov,
         "Block": Block,
         "Solver": Solver,
         "FlowState": FlowState,

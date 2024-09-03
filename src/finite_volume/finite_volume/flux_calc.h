@@ -69,6 +69,15 @@ private:
 };
 
 template <typename T>
+class Rusanov : public FluxCalculator<T> {
+public:
+    Rusanov() : FluxCalculator<T>("rusanov") {}
+
+    void compute_flux(const FlowStates<T>& left, const FlowStates<T>& right,
+                      ConservedQuantities<T>& flux, IdealGas<T>& gm, bool three_d);
+};
+
+template <typename T>
 std::unique_ptr<FluxCalculator<T>> make_flux_calculator(json config);
 
 #endif

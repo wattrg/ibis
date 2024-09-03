@@ -63,4 +63,8 @@ PYBIND11_MODULE(python_api, m) {
     pybind11::class_<Ldfss2<Ibis::real>>(m, "PyLdfss2")
         .def(pybind11::init<>())
         .def("name", &Ldfss2<Ibis::real>::name);
+
+    pybind11::class_<Rusanov<Ibis::real>>(m, "PyRusanov")
+        .def(pybind11::init<>())
+        .def("name", &Rusanov<Ibis::real>::name);
 }
