@@ -103,3 +103,65 @@ Write a snapshot at fixed intervals of simulation time.
 
 > Type: `float`\
 > Default: `1e-3`
+
+## Steady State
+The steady-state solver uses the Jacobian-Free Newton-Krylov method to accelerate convergence to steady-state.
+It is configured by setting `config.solver` in `job.py` to an instance of `SteadyState`.
+For example:
+```
+config.solver = SteadyState(
+  cfl=ResidualBasedCfl(growth_threshold=0.9, power=0.85, start_cfl=0.5),
+  max_steps=1000,
+  print_frequency=20,
+  plot_frequency=100,
+  diagnostics_frequency=1,
+  tolerance=1e-10,
+  linear_solver=Gmres(tol=1e-4, max_iters=50)
+)
+```
+
+Each option is optional, default values will be used if they are not provided.
+
+Each option is described below.
+
+### cfl
+The cfl to use for the simulation.
+
+> Type: `float` | [`CflSchedule`](cfl_schedules)
+> Default: 0.5
+
+### max_steps
+The maximum number of steps to take
+
+> Type: `int`\
+> Default 1000
+
+### print_frequency
+The number of steps between printing progress to the screen
+
+> Type: `int`\
+> Default: 10
+
+### plot_frequency
+The number of steps between writing the flow solution to disk
+
+> Type: `int`\
+> Default: 10
+
+### diagnostics_frequency
+The number of steps between writing diagnostics.
+Diagnostics are written in the `log` folder.
+
+> Type: `int`\
+> Default: 1
+
+### tolerance
+The drop in the relative global residual required for convergence
+
+> Type: `float`\
+> Default: 1e-5
+
+### linear_solver
+The linear to use for each non-linear step
+
+> Type: [`LinearSolver`](linear_solvers)
