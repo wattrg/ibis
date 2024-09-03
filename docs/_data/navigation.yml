@@ -29,6 +29,10 @@ docs:
         url: /docs/reference_manual/grid
       - title: Solvers
         url: /docs/reference_manual/solvers
+      - title: Cfl Schedules
+        url: /docs/reference_manual/cfl_schedules
+      - title: Linear Solvers
+        url: /docs/reference_manual/linear_solvers
   - title: Developer Docs
     children:
       - title: Structure
