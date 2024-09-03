@@ -75,7 +75,6 @@ public:
 
     void compute_flux(const FlowStates<T>& left, const FlowStates<T>& right,
                       ConservedQuantities<T>& flux, IdealGas<T>& gm, bool three_d);
-
 };
 
 template <typename T>
