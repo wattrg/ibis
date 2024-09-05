@@ -1,6 +1,6 @@
 #include <finite_volume/conserved_quantities.h>
 #include <finite_volume/finite_volume.h>
-#include <finite_volume/primative_conserved_conversion.h>
+#include <finite_volume/primitive_conserved_conversion.h>
 #include <gas/flow_state.h>
 #include <gas/transport_properties.h>
 #include <simulation/simulation.h>
@@ -52,8 +52,8 @@ void SteadyStateLinearisation::matrix_vector_product(Ibis::Vector<Ibis::real>& v
             }
         });
 
-    // convert the conserved quantities to primatives, ready to evaluate the residuals
-    conserved_to_primatives(cq_tmp_, fs_tmp_, sim_->gas_model);
+    // convert the conserved quantities to primitives, ready to evaluate the residuals
+    conserved_to_primitives(cq_tmp_, fs_tmp_, sim_->gas_model);
 
     // evaluate the residuals
     sim_->fv.compute_dudt(fs_tmp_, sim_->grid, residuals, sim_->gas_model,
@@ -137,7 +137,7 @@ int SteadyState::initialise() {
     json meta_data{};
     int ic_result =
         io_.read(*fs_, sim_->grid, sim_->gas_model, sim_->trans_prop, meta_data, 0);
-    int conversion_result = primatives_to_conserved(*cq_, *fs_, sim_->gas_model);
+    int conversion_result = primitives_to_conserved(*cq_, *fs_, sim_->gas_model);
 
     // initialise the JFNK solver
     int jfnk_init = jfnk_.initialise();

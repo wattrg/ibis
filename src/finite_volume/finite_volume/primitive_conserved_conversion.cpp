@@ -1,8 +1,8 @@
 #include <finite_volume/conserved_quantities.h>
-#include <finite_volume/primative_conserved_conversion.h>
+#include <finite_volume/primitive_conserved_conversion.h>
 
 template <typename T>
-int conserved_to_primatives(ConservedQuantities<T>& cq, FlowStates<T>& fs,
+int conserved_to_primitives(ConservedQuantities<T>& cq, FlowStates<T>& fs,
                             const IdealGas<T>& gm) {
     Kokkos::parallel_for(
         "FS::from_conserved_quantities", fs.gas.size(), KOKKOS_LAMBDA(const int i) {
@@ -21,15 +21,15 @@ int conserved_to_primatives(ConservedQuantities<T>& cq, FlowStates<T>& fs,
         });
     return 0;
 }
-template int conserved_to_primatives(ConservedQuantities<Ibis::real>& cq,
+template int conserved_to_primitives(ConservedQuantities<Ibis::real>& cq,
                                      FlowStates<Ibis::real>& fs,
                                      const IdealGas<Ibis::real>& gm);
-template int conserved_to_primatives(ConservedQuantities<Ibis::dual>& cq,
+template int conserved_to_primitives(ConservedQuantities<Ibis::dual>& cq,
                                      FlowStates<Ibis::dual>& fs,
                                      const IdealGas<Ibis::dual>& gm);
 
 template <typename T>
-int primatives_to_conserved(ConservedQuantities<T>& cq, FlowStates<T>& fs,
+int primitives_to_conserved(ConservedQuantities<T>& cq, FlowStates<T>& fs,
                             const IdealGas<T>& gm) {
     (void)gm;
     Kokkos::parallel_for(
@@ -49,9 +49,9 @@ int primatives_to_conserved(ConservedQuantities<T>& cq, FlowStates<T>& fs,
         });
     return 0;
 }
-template int primatives_to_conserved(ConservedQuantities<Ibis::real>& cq,
+template int primitives_to_conserved(ConservedQuantities<Ibis::real>& cq,
                                      FlowStates<Ibis::real>& fs,
                                      const IdealGas<Ibis::real>& gm);
-template int primatives_to_conserved(ConservedQuantities<Ibis::dual>& cq,
+template int primitives_to_conserved(ConservedQuantities<Ibis::dual>& cq,
                                      FlowStates<Ibis::dual>& fs,
                                      const IdealGas<Ibis::dual>& gm);

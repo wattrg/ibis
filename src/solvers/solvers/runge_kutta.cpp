@@ -1,6 +1,6 @@
 
 #include <finite_volume/conserved_quantities.h>
-#include <finite_volume/primative_conserved_conversion.h>
+#include <finite_volume/primitive_conserved_conversion.h>
 #include <gas/transport_properties.h>
 #include <io/io.h>
 #include <solvers/cfl.h>
@@ -67,7 +67,7 @@ int RungeKutta::initialise() {
     json meta_data;
     int ic_result = io_.read(flow_, grid_, gas_model_, trans_prop_, meta_data, 0);
     int conversion_result =
-        primatives_to_conserved(conserved_quantities_, flow_, gas_model_);
+        primitives_to_conserved(conserved_quantities_, flow_, gas_model_);
     dt_ = (dt_init_ > 0) ? dt_init_ : std::numeric_limits<Ibis::real>::max();
 
     // compute the initial residuals, and begin the residuals file
@@ -130,7 +130,7 @@ int RungeKutta::take_step(size_t step) {
         }
 
         // The function evaluation
-        conserved_to_primatives(k_tmp_, flow_tmp_, gas_model_);
+        conserved_to_primitives(k_tmp_, flow_tmp_, gas_model_);
         fv_.compute_dudt(flow_tmp_, grid_, k_[i], gas_model_, trans_prop_);
     }
 
@@ -139,7 +139,7 @@ int RungeKutta::take_step(size_t step) {
         conserved_quantities_.apply_time_derivative(k_[i], tableau_.b(i) * dt_);
     }
 
-    conserved_to_primatives(conserved_quantities_, flow_, gas_model_);
+    conserved_to_primitives(conserved_quantities_, flow_, gas_model_);
 
     // book keeping
     t_ += dt_;

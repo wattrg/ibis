@@ -5,11 +5,11 @@
 #include <gas/gas_model.h>
 
 template <typename T>
-int conserved_to_primatives(ConservedQuantities<T>& cq, FlowStates<T>& fs,
+int conserved_to_primitives(ConservedQuantities<T>& cq, FlowStates<T>& fs,
                             const IdealGas<T>& gm);
 
 template <typename T>
-int primatives_to_conserved(ConservedQuantities<T>& cq, FlowStates<T>& fs,
+int primitives_to_conserved(ConservedQuantities<T>& cq, FlowStates<T>& fs,
                             const IdealGas<T>& gm);
 
 #endif

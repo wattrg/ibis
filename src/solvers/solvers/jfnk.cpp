@@ -1,5 +1,5 @@
 #include <finite_volume/conserved_quantities.h>
-#include <finite_volume/primative_conserved_conversion.h>
+#include <finite_volume/primitive_conserved_conversion.h>
 #include <solvers/jfnk.h>
 
 #include "linear_algebra/gmres.h"
@@ -74,5 +74,5 @@ void Jfnk::apply_update_(std::shared_ptr<Sim<Ibis::dual>>& sim,
                 cq(cell_i, cons_i).dual() = 0.0;
             }
         });
-    conserved_to_primatives(cq, fs, sim->gas_model);
+    conserved_to_primitives(cq, fs, sim->gas_model);
 }
