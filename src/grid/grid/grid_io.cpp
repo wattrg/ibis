@@ -130,33 +130,41 @@ ElemIO read_su2_element(std::string line) {
     ElemType type = elem_type_from_vtk_type(type_int);
     size_t n_vertices = number_vertices_from_elem_type(type);
     line = line.substr(pos + 1, std::string::npos);
+    trim_whitespace(line);
     std::vector<size_t> vertex_ids{};
     for (size_t i = 0; i < n_vertices; i++) {
         pos = line.find(" ");
         size_t vertex = std::stoi(line.substr(0, pos));
         line = line.substr(pos + 1, std::string::npos);
+        trim_whitespace(line);
         vertex_ids.push_back(vertex);
     }
     return ElemIO(vertex_ids, type, FaceOrder::Vtk);
 }
 
 Vector3<Ibis::real> read_vertex(std::string line, size_t dim) {
+    trim_whitespace(line);
+    std::string value;
+    size_t sep = line.find(" ");
+    value = line.substr(0, sep);
+    Ibis::real x = std::stod(value);
+    line = line.substr(sep + 1, std::string::npos);
+    trim_whitespace(line);
+
+    sep = line.find(" ");
+    value = line.substr(0, sep);
+    trim_whitespace(value);
+    Ibis::real y = std::stod(value);
+
     if (dim == 2) {
-        size_t sep = line.find(" ");
-        Ibis::real x = std::stod(line.substr(0, sep));
-        Ibis::real y = std::stod(line.substr(sep));
         return Vector3(x, y, 0.0);
     } else if (dim == 3) {
-        size_t sep = line.find(" ");
-        Ibis::real x = std::stod(line.substr(0, sep));
         line = line.substr(sep + 1, std::string::npos);
-
+        trim_whitespace(line);
         sep = line.find(" ");
-        Ibis::real y = std::stod(line.substr(0, sep));
-        line = line.substr(sep + 1, std::string::npos);
-
-        sep = line.find(" ");
-        Ibis::real z = std::stod(line.substr(0, sep));
+        value = line.substr(0, sep);
+        trim_whitespace(value);
+        Ibis::real z = std::stod(value);
         return Vector3(x, y, z);
     } else {
         std::cerr << "Invalid number of dimensions in su2 file: " << dim << std::endl;
@@ -371,8 +379,11 @@ TEST_CASE("read_su2_element") {
     line = "3 3 34";
     CHECK(read_su2_element(line) == ElemIO({3, 34}, ElemType::Line, FaceOrder::Vtk));
 
-    line = "5 1 39 23";
+    line = "5 1  39 23";
     CHECK(read_su2_element(line) == ElemIO({1, 39, 23}, ElemType::Tri, FaceOrder::Vtk));
+
+    // line = "12 1 14  15 13 19 20";
+    // CHECK(read_su2_element(line) == ElemIO({1, 14, 15, 13, 19, 20}, ElemType::Hex, FaceOrder::Vtk));
 }
 
 TEST_CASE("read_vetex") {
