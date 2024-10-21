@@ -180,6 +180,9 @@ void FVOutput<T>::add_variable(std::string name) {
         this->m_vector_accessors.insert(
             {"cell_centre",
              std::shared_ptr<CellCentreAccess<T>>(new CellCentreAccess<T>())});
+    } else if (name == "volume") {
+        this->m_scalar_accessors.insert(
+            {"volume", std::shared_ptr<VolumeAccess<T>>(new VolumeAccess<T>())});
     } else {
         spdlog::error("Unknown post-processing variable {}", name);
         throw std::runtime_error("Unknown post-process variable");

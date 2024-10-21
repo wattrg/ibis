@@ -104,6 +104,13 @@ class MachNumberAccess : public ScalarAccessor<T> {
 };
 
 template <typename T>
+class VolumeAccess : public ScalarAccessor<T> {
+    T access(const FlowStates<T, array_layout, host_mem_space>& fs, FiniteVolume<T>& fv,
+             const GridBlock<T, host_exec_space, array_layout>& grid,
+             const IdealGas<T>& gas_model, const int i);
+};
+
+template <typename T>
 class VelocityAccess : public VectorAccessor<T> {
     Vector3<T> access(const FlowStates<T, array_layout, host_mem_space>& fs,
                       FiniteVolume<T>& fv,

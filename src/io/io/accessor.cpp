@@ -84,6 +84,19 @@ template class MachNumberAccess<Ibis::real>;
 template class MachNumberAccess<Ibis::dual>;
 
 template <typename T>
+T VolumeAccess<T>::access(const FlowStates<T, array_layout, host_mem_space>& fs,
+                          FiniteVolume<T>& fv,
+                          const GridBlock<T, host_exec_space, array_layout>& grid,
+                          const IdealGas<T>& gas_model, const int i) {
+    (void)fv;
+    (void)fs;
+    (void)gas_model;
+    return grid.cells().volume(i);
+}
+template class VolumeAccess<Ibis::real>;
+template class VolumeAccess<Ibis::dual>;
+
+template <typename T>
 Vector3<T> VelocityAccess<T>::access(
     const FlowStates<T, array_layout, host_mem_space>& fs, FiniteVolume<T>& fv,
     const GridBlock<T, host_exec_space, array_layout>& grid, const IdealGas<T>& gas_model,
