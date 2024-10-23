@@ -123,6 +123,7 @@ public:
 
         std::map<size_t, size_t> ghost_cell_map =
             setup_boundaries(grid_io, boundaries, cell_vertices, interfaces, cell_shapes);
+        setup_face_markers(grid_io, interfaces);
 
         interfaces_ = Interfaces<T, execution_space, array_layout>(interface_vertices,
                                                                    interface_shapes);
@@ -278,6 +279,11 @@ public:
     KOKKOS_INLINE_FUNCTION
     bool is_ghost(const size_t i) const { return i >= num_valid_cells_; }
 
+    const Field<size_t, array_layout, memory_space>& marked_faces(
+        std::string marker) const {
+        return marker_.at(marker);
+    }
+
     const Field<size_t, array_layout, memory_space>& boundary_faces(
         std::string boundary_tag) const {
         return boundary_faces_.at(boundary_tag);
@@ -399,6 +405,28 @@ public:
         return ghost_cell_map;
     }
 
+    void setup_face_markers(const GridIO& grid_io, InterfaceLookup& interfaces) {
+        // setup_face_markers should be called after setup_boundaries,
+        // since it checks if markers have already been assigned to boundaries
+        for (auto& [marker_label, marker] : grid_io.markers()) {
+            if (boundary_faces_.find(marker_label) == boundary_faces_.end()) {
+                // this marker is not a boundary, so we'll allocate
+                // some memory for these faces
+                std::vector<size_t> marker_faces(marker.size());
+                for (size_t face_i = 0; face_i < marker.size(); face_i++) {
+                    size_t face_id = interfaces.id(marker[face_i].vertex_ids());
+                    marker_faces.push_back(face_id);
+                }
+                markers_.insert({marker_label, Field<size_t, array_layout, memory_space>(
+                                                   "marker_faces", marker_faces)});
+            } else {
+                // this marker is a boundary, so we'll point to the
+                // faces on the boundary
+                markers_.insert({marker_label, boundary_faces_[marker_label]});
+            }
+        }
+    }
+
     GridIO to_grid_io() const {
         auto host_grid = host_mirror();
 
@@ -444,15 +472,26 @@ public:
     }
 
 public:
+    // The primary grid data structures
     Vertices<T, execution_space, array_layout> vertices_;
     Interfaces<T, execution_space, array_layout> interfaces_;
     Cells<T, execution_space, array_layout> cells_;
+
+    // Some information about the grid
     size_t dim_;
     size_t num_valid_cells_;
     size_t num_ghost_cells_;
+
+    // information about which faces are on boundaries, and which ghost
+    // cells belong to which boundary
     std::map<std::string, Field<size_t, array_layout, memory_space>> ghost_cells_;
     std::map<std::string, Field<size_t, array_layout, memory_space>> boundary_faces_;
     std::vector<std::string> boundary_tags_;
+
+    // this contains all marked interfaces. This includes faces on the boundary,
+    // and other faces that have been marked for one reason or another (e.g.
+    // shock fitting)
+    std::map<std::string, Field<size_t, array_layout, memory_space>> markers_;
 };
 
 #endif
