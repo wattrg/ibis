@@ -281,7 +281,7 @@ public:
 
     const Field<size_t, array_layout, memory_space>& marked_faces(
         std::string marker) const {
-        return marker_.at(marker);
+        return markers_.at(marker);
     }
 
     const Field<size_t, array_layout, memory_space>& boundary_faces(
