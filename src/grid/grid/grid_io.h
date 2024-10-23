@@ -29,6 +29,8 @@ enum class FaceOrder {
 };
 
 struct ElemIO {
+    ElemIO () {}
+    
     ElemIO(std::vector<size_t> ids, ElemType type, FaceOrder face_order)
         : vertex_ids_(ids), cell_type_(type), face_order_(face_order) {}
 

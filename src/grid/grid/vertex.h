@@ -6,7 +6,10 @@
 template <typename T>
 struct Vertex {
 public:
+    Vertex() {}
+    
     Vertex(Vector3<T> pos) : _pos(pos) {}
+
     Vector3<T> &pos() { return _pos; }
 
     bool operator==(const Vertex<T> &other) const { return _pos == other._pos; }
@@ -43,6 +46,10 @@ public:
     KOKKOS_INLINE_FUNCTION
     const Vector3s<T, array_layout, memory_space> &positions() const {
         return _positions;
+    }
+
+    Vector3<T> position(size_t i) const {
+        return Vector3<T>(_positions.x(i), _positions.y(i), _positions.z(i));
     }
 
     bool operator==(const Vertices &other) const {
