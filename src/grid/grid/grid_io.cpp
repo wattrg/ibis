@@ -47,7 +47,7 @@ ElemType elem_type_from_vtk_type(size_t su2_type) {
     }
 }
 
-size_t vtk_type_from_elem_type(const ElemType& elem_type) {
+size_t vtk_type_from_elem_type(const ElemType &elem_type) {
     switch (elem_type) {
         case ElemType::Line:
             return 3;
@@ -90,9 +90,9 @@ size_t number_vertices_from_elem_type(ElemType type) {
     }
 }
 
-std::ostream& operator << (std::ostream& file, const ElemIO& elem_io) {
+std::ostream &operator<<(std::ostream &file, const ElemIO &elem_io) {
     file << vtk_type_from_elem_type(elem_io.cell_type_);
-    for (auto& vertex_id : elem_io.vertex_ids_) {
+    for (auto &vertex_id : elem_io.vertex_ids_) {
         file << " " << vertex_id;
     }
     return file;
@@ -286,10 +286,10 @@ void GridIO::write_su2_grid(std::ostream &grid_file) {
     }
 
     grid_file << "NMARK= " << bcs_.size() << "\n";
-    for (const auto& [tag, bc_faces] : bcs_) {
+    for (const auto &[tag, bc_faces] : bcs_) {
         grid_file << "MARKER_TAG= " << tag << "\n";
         grid_file << "MARKER_ELEMS= " << bc_faces.size() << "\n";
-        for (const ElemIO& bc_face : bc_faces) {
+        for (const ElemIO &bc_face : bc_faces) {
             grid_file << bc_face << "\n";
         }
     }
@@ -441,7 +441,8 @@ TEST_CASE("read_su2_element") {
     CHECK(read_su2_element(line) == ElemIO({1, 39, 23}, ElemType::Tri, FaceOrder::Vtk));
 
     // line = "12 1 14  15 13 19 20";
-    // CHECK(read_su2_element(line) == ElemIO({1, 14, 15, 13, 19, 20}, ElemType::Hex, FaceOrder::Vtk));
+    // CHECK(read_su2_element(line) == ElemIO({1, 14, 15, 13, 19, 20}, ElemType::Hex,
+    // FaceOrder::Vtk));
 }
 
 TEST_CASE("read_vetex") {

@@ -29,8 +29,8 @@ enum class FaceOrder {
 };
 
 struct ElemIO {
-    ElemIO () {}
-    
+    ElemIO() {}
+
     ElemIO(std::vector<size_t> ids, ElemType type, FaceOrder face_order)
         : vertex_ids_(ids), cell_type_(type), face_order_(face_order) {}
 
@@ -44,7 +44,7 @@ struct ElemIO {
 
     std::vector<ElemIO> interfaces() const;
 
-    friend std::ostream& operator << (std::ostream &file, const ElemIO& elem_io);
+    friend std::ostream &operator<<(std::ostream &file, const ElemIO &elem_io);
 
 private:
     std::vector<size_t> vertex_ids_{};
@@ -83,7 +83,6 @@ private:
     std::vector<ElemIO> cells_{};
     std::unordered_map<std::string, std::vector<ElemIO>> bcs_;
     size_t dim_;
-
 };
 
 #endif

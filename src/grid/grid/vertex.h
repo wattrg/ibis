@@ -7,7 +7,7 @@ template <typename T>
 struct Vertex {
 public:
     Vertex() {}
-    
+
     Vertex(Vector3<T> pos) : _pos(pos) {}
 
     Vector3<T> &pos() { return _pos; }
