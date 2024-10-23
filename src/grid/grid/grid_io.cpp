@@ -202,8 +202,8 @@ Vector3<Ibis::real> read_vertex(std::string line, size_t dim) {
     }
 }
 
-std::pair<std::string, std::vector<ElemIO>> read_su2_boundary_marker(
-    std::istream &grid_file, std::string &line) {
+std::pair<std::string, std::vector<ElemIO>> read_su2_marker(std::istream &grid_file,
+                                                            std::string &line) {
     std::string tag = read_string(line);
     get_next_line(grid_file, line);
     size_t n_elems = read_int(line);
@@ -249,18 +249,18 @@ void GridIO::read_su2_grid(std::istream &grid_file) {
             for (size_t mark_i = 0; mark_i < n_mark; mark_i++) {
                 get_next_line(grid_file, line);
 
-                auto boundary = read_su2_boundary_marker(grid_file, line);
+                auto marker = read_su2_marker(grid_file, line);
 
-                if (bcs_.find(boundary.first) == bcs_.end()) {
+                if (markers_.find(marker.first) == markers_.end()) {
                     // we haven't seen a boundary with this tag before
-                    bcs_.insert(boundary);
+                    markers_.insert(marker);
                 } else {
                     // we have seen a boundary with this tag before,
                     // so we append the ElemIO's that we just read
                     // to the existing ones
-                    bcs_[boundary.first].insert(bcs_[boundary.first].end(),
-                                                boundary.second.begin(),
-                                                boundary.second.end());
+                    markers_[marker.first].insert(markers_[marker.first].end(),
+                                                  marker.second.begin(),
+                                                  marker.second.end());
                 }
             }
         }
@@ -285,12 +285,12 @@ void GridIO::write_su2_grid(std::ostream &grid_file) {
         grid_file << vertex_i << "\n";
     }
 
-    grid_file << "NMARK= " << bcs_.size() << "\n";
-    for (const auto &[tag, bc_faces] : bcs_) {
+    grid_file << "NMARK= " << markers_.size() << "\n";
+    for (const auto &[tag, elements] : markers_) {
         grid_file << "MARKER_TAG= " << tag << "\n";
-        grid_file << "MARKER_ELEMS= " << bc_faces.size() << "\n";
-        for (const ElemIO &bc_face : bc_faces) {
-            grid_file << bc_face << "\n";
+        grid_file << "MARKER_ELEMS= " << elements.size() << "\n";
+        for (const ElemIO &element : elements) {
+            grid_file << element << "\n";
         }
     }
 }
@@ -453,7 +453,7 @@ TEST_CASE("read_vetex") {
     CHECK(read_vertex(line, 3) == Vector3(12.0, 0.5, 3.4));
 }
 
-TEST_CASE("read_su2_boundary_marker") {
+TEST_CASE("read_su2_marker") {
     std::string line;
     std::ifstream file("../../../src/grid/test/boundary_test.txt");
     get_next_line(file, line);
@@ -464,7 +464,7 @@ TEST_CASE("read_su2_boundary_marker") {
          ElemIO({13, 14, 16}, ElemType::Tri, FaceOrder::Vtk),
          ElemIO({14, 15, 16, 1}, ElemType::Quad, FaceOrder::Vtk)}};
 
-    CHECK(read_su2_boundary_marker(file, line) == result);
+    CHECK(read_su2_marker(file, line) == result);
     file.close();
 }
 

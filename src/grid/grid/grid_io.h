@@ -55,8 +55,8 @@ private:
 struct GridIO {
 public:
     GridIO(std::vector<Vertex<Ibis::real>> vertices, std::vector<ElemIO> cells,
-           std::unordered_map<std::string, std::vector<ElemIO>> bcs)
-        : vertices_(vertices), cells_(cells), bcs_(bcs) {}
+           std::unordered_map<std::string, std::vector<ElemIO>> markers)
+        : vertices_(vertices), cells_(cells), markers_(markers) {}
 
     GridIO(std::string file_name);
 
@@ -64,14 +64,16 @@ public:
 
     bool operator==(const GridIO &other) const {
         return (vertices_ == other.vertices_) && (cells_ == other.cells_) &&
-               (bcs_ == other.bcs_);
+               (markers_ == other.markers_);
     }
 
     std::vector<Vertex<Ibis::real>> vertices() const { return vertices_; }
 
     std::vector<ElemIO> cells() const { return cells_; }
 
-    std::unordered_map<std::string, std::vector<ElemIO>> bcs() const { return bcs_; }
+    std::unordered_map<std::string, std::vector<ElemIO>> markers() const {
+        return markers_;
+    }
 
     size_t dim() const { return dim_; }
 
@@ -81,7 +83,7 @@ public:
 private:
     std::vector<Vertex<Ibis::real>> vertices_{};
     std::vector<ElemIO> cells_{};
-    std::unordered_map<std::string, std::vector<ElemIO>> bcs_;
+    std::unordered_map<std::string, std::vector<ElemIO>> markers_;
     size_t dim_;
 };
 

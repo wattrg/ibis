@@ -370,7 +370,7 @@ public:
         std::map<size_t, size_t> ghost_cell_map;  // face_id -> ghost_cell_id
         for (auto& [bc_label, boundary_config] : boundaries.items()) {
             boundary_tags_.push_back(bc_label);
-            std::vector<ElemIO> bc_faces = grid_io.bcs()[bc_label];
+            std::vector<ElemIO> bc_faces = grid_io.markers()[bc_label];
 
             // loop over all the boundary faces for this boundary, keeping
             // track of which cells and faces belong to this boundary
