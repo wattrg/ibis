@@ -106,7 +106,7 @@ private:
 
     // grid movement
     bool moving_grid_;
-    std::shared_ptr<GridMotion<Ibis::real>> grid_motion_;
+    std::shared_ptr<GridMotionDriver<Ibis::real>> grid_motion_;
     std::vector<Vector3s<Ibis::real>> vertex_vel_;
     Vector3s<Ibis::real> vertex_pos_tmp_;
     Vector3s<Ibis::real> vertex_pos_save_;

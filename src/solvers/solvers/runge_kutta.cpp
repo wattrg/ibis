@@ -54,7 +54,7 @@ RungeKutta::RungeKutta(json config, GridBlock<Ibis::real> grid, std::string grid
     fv_ = FiniteVolume<Ibis::real>(grid_, config);
 
     // grid movement
-    moving_grid_ = config.at("grid_movement").at("enabled");
+    moving_grid_ = config.at("grid").at("grid_motion").at("enabled");
     if (moving_grid_) {
         vertex_vel_ = std::vector<Vector3s<Ibis::real>>(
             tableau_.num_stages(), Vector3s<Ibis::real>(grid.num_vertices()));

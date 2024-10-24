@@ -260,6 +260,14 @@ class ViscousFlux:
         return dictionary
 
 
+class StaticGrid:
+    def as_dict(self):
+        return {"enabled": False}
+
+    def validate(self):
+        return
+
+
 class Block:
     def __init__(self, file_name, initial_condition, boundaries):
         self._initial_condition = initial_condition
@@ -267,6 +275,7 @@ class Block:
         self.number_cells = 0
         self.number_vertices = 0
         self.boundaries = boundaries
+        self.grid_motion = StaticGrid()
         self._read_file(file_name)
 
     def _read_file(self, file_name):
@@ -886,17 +895,10 @@ class IO:
         return {"flow_format": self.flow_format.value}
 
 
-class StaticGrid:
-    def as_dict(self):
-        return {"enabled": False}
-
-    def validate(self):
-        return
-
 
 class Config:
     _json_values = ["convective_flux", "viscous_flux", "solver", "grid",
-                    "gas_model", "transport_properties", "io", "grid_movement"]
+                    "gas_model", "transport_properties", "io"]
     __slots__ = _json_values
 
     def __init__(self):
