@@ -2,6 +2,7 @@
 #define RUNGE_KUTTA_H
 
 #include <finite_volume/conserved_quantities.h>
+#include <finite_volume/grid_motion.h>
 #include <gas/flow_state.h>
 #include <gas/transport_properties.h>
 #include <grid/grid.h>
@@ -9,7 +10,6 @@
 #include <solvers/cfl.h>
 #include <solvers/solver.h>
 #include <util/numeric_types.h>
-#include <finite_volume/grid_motion.h>
 
 #include <memory>
 

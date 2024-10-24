@@ -109,7 +109,6 @@ void RungeKutta::estimate_dt() {
 
 void RungeKutta::function_eval_(size_t index) {
     if (moving_grid_) {
-                
     }
 
     fv_.compute_dudt(flow_, grid_, k_[index], gas_model_, trans_prop_);
