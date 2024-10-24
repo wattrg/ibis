@@ -108,13 +108,14 @@ KOKKOS_FUNCTION ViscousProperties<T> compute_viscous_properties_at_faces(
 }
 
 template <typename T>
-ViscousFlux<T>::ViscousFlux(const GridBlock<T>& grid, json config) {
+ViscousFlux<T>::ViscousFlux(const GridBlock<T>& grid, FlowStates<T> face_fs,
+                            json config) {
     enabled_ = config.at("enabled");
     signal_factor_ = config.at("signal_factor");
     (void)grid;
 
     if (enabled_) {
-        face_fs_ = FlowStates<T>(grid.num_interfaces());
+        face_fs_ = face_fs;
     }
 }
 

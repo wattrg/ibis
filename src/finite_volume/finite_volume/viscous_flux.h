@@ -16,7 +16,7 @@ class ViscousFlux {
 public:
     ViscousFlux() {}
 
-    ViscousFlux(const GridBlock<T>& grid, json config);
+    ViscousFlux(const GridBlock<T>& grid, FlowStates<T> fs, json config);
 
     bool enabled() const { return enabled_; }
 

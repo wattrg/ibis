@@ -53,6 +53,14 @@ RungeKutta::RungeKutta(json config, GridBlock<Ibis::real> grid, std::string grid
     }
     fv_ = FiniteVolume<Ibis::real>(grid_, config);
 
+    // grid movement
+    moving_grid_ = config.at("grid_movement").at("enabled");
+    if (moving_grid_) {
+        vertex_vel_ = std::vector<Vector3s<Ibis::real>>(
+            tableau_.num_stages(), Vector3s<Ibis::real>(grid.num_vertices()));
+        vertex_pos_tmp_ = Vector3s<Ibis::real>(grid.num_vertices());
+    }
+
     // progress
     time_since_last_plot_ = 0.0;
     t_ = 0.0;
@@ -71,8 +79,8 @@ int RungeKutta::initialise() {
     dt_ = (dt_init_ > 0) ? dt_init_ : std::numeric_limits<Ibis::real>::max();
 
     // compute the initial residuals, and begin the residuals file
+    function_eval_(0);
     if (residuals_every_n_steps_ > 0 || residual_frequency_ > 0) {
-        fv_.compute_dudt(flow_, grid_, k_[0], gas_model_, trans_prop_);
         {
             std::ofstream residual_file("log/residuals.dat", std::ios_base::out);
             residual_file << "time step wall_clock global mass momentum_x momentum_y "
@@ -99,12 +107,21 @@ void RungeKutta::estimate_dt() {
     }
 }
 
+void RungeKutta::function_eval_(size_t index) {
+    if (moving_grid_) {
+                
+    }
+
+    fv_.compute_dudt(flow_, grid_, k_[index], gas_model_, trans_prop_);
+}
+
 int RungeKutta::take_step(size_t step) {
     (void)step;
     // this has to be done before the estimation of dt, as may set
     // values used to estimate the stable time step. It also serves
     // as the first stage of all the runge-kutta schemes
-    fv_.compute_dudt(flow_, grid_, k_[0], gas_model_, trans_prop_);
+    // fv_.compute_dudt(flow_, grid_, k_[0], gas_model_, trans_prop_);
+    function_eval_(0);
 
     // estimate the stable time step we can take. After this call,
     // dt_ will be set to the stable time step.
@@ -131,7 +148,8 @@ int RungeKutta::take_step(size_t step) {
 
         // The function evaluation
         conserved_to_primatives(k_tmp_, flow_tmp_, gas_model_);
-        fv_.compute_dudt(flow_tmp_, grid_, k_[i], gas_model_, trans_prop_);
+        // fv_.compute_dudt(flow_tmp_, grid_, k_[i], gas_model_, trans_prop_);
+        function_eval_(i);
     }
 
     // Update the flow state

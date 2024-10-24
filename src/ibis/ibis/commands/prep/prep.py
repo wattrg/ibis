@@ -886,9 +886,17 @@ class IO:
         return {"flow_format": self.flow_format.value}
 
 
+class StaticGrid:
+    def as_dict(self):
+        return {"enabled": False}
+
+    def validate(self):
+        return
+
+
 class Config:
     _json_values = ["convective_flux", "viscous_flux", "solver", "grid",
-                    "gas_model", "transport_properties", "io"]
+                    "gas_model", "transport_properties", "io", "grid_movement"]
     __slots__ = _json_values
 
     def __init__(self):
@@ -900,6 +908,7 @@ class Config:
             self.gas_model
         )
         self.io = IO()
+        self.grid_movement = StaticGrid()
 
     def validate(self):
         for setting in self.__slots__:

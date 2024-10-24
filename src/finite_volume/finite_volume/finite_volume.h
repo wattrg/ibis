@@ -104,6 +104,10 @@ private:
     // The viscous flux calculator
     ViscousFlux<T> viscous_flux_;
 
+    // Flow states on the interfaces (used for time step calculation
+    // and viscous fluxes)
+    FlowStates<T> face_fs_;
+
     // boundary conditions
     std::vector<std::shared_ptr<BoundaryCondition<T>>> bcs_{};
 

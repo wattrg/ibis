@@ -9,6 +9,7 @@
 #include <solvers/cfl.h>
 #include <solvers/solver.h>
 #include <util/numeric_types.h>
+#include <finite_volume/grid_motion.h>
 
 #include <memory>
 
@@ -93,6 +94,8 @@ private:
     bool residuals_this_step(unsigned int step);
     bool write_residuals(unsigned int step, Ibis::real wc);
 
+    void function_eval_(size_t index);
+
 private:
     // memory
     FlowStates<Ibis::real> flow_;
@@ -100,6 +103,13 @@ private:
     std::vector<ConservedQuantities<Ibis::real>> k_;
     ConservedQuantities<Ibis::real> k_tmp_;
     FlowStates<Ibis::real> flow_tmp_;
+
+    // grid movement
+    bool moving_grid_;
+    std::shared_ptr<GridMotion<Ibis::real>> grid_motion_;
+    std::vector<Vector3s<Ibis::real>> vertex_vel_;
+    Vector3s<Ibis::real> vertex_pos_tmp_;
+    Vector3s<Ibis::real> vertex_pos_save_;
 
     // butcher tableau
     ButcherTableau tableau_;

@@ -23,8 +23,11 @@ FiniteVolume<T>::FiniteVolume(const GridBlock<T>& grid, json config) {
     // set up the convective flux
     convective_flux_ = ConvectiveFlux<T>(grid, convective_flux_config);
 
+    // flow states on the interfaces
+    face_fs_ = FlowStates<T>(grid.num_interfaces());
+
     // set up the viscous flux
-    viscous_flux_ = ViscousFlux<T>(grid, viscous_flux_config);
+    viscous_flux_ = ViscousFlux<T>(grid, face_fs_, viscous_flux_config);
 
     // allocate memory for gradients
     size_t reconstruction_order = convective_flux_.reconstruction_order();
