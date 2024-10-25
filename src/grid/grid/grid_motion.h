@@ -4,6 +4,7 @@
 // #include <finite_volume/grid_motion_driver.h>
 #include <gas/flow_state.h>
 #include <grid/grid.h>
+
 #include <nlohmann/json.hpp>
 
 using json = nlohmann::json;
@@ -27,10 +28,11 @@ public:
         }
     }
 
-    void compute_grid_motion(const FlowStates<T, Layout, MemSpace>& fs,
-                             const GridBlock<T, ExecSpace, Layout>& grid,
-                             std::shared_ptr<GridMotionDriver<T, ExecSpace, Layout>>& driver,
-                             Vector3s<T, Layout, MemSpace> vertex_vel) {
+    void compute_grid_motion(
+        const FlowStates<T, Layout, MemSpace>& fs,
+        const GridBlock<T, ExecSpace, Layout>& grid,
+        std::shared_ptr<GridMotionDriver<T, ExecSpace, Layout>>& driver,
+        Vector3s<T, Layout, MemSpace> vertex_vel) {
         driver->compute_vertex_velocities(fs, grid, vertex_vel);
         compute_face_vel(grid, vertex_vel);
     }

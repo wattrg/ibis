@@ -1,6 +1,7 @@
 
 #include <finite_volume/conserved_quantities.h>
 #include <finite_volume/primative_conserved_conversion.h>
+#include <finite_volume/shock_fitting.h>
 #include <gas/transport_properties.h>
 #include <io/io.h>
 #include <solvers/cfl.h>
@@ -8,7 +9,6 @@
 #include <solvers/solver.h>
 #include <spdlog/spdlog.h>
 #include <util/numeric_types.h>
-#include <finite_volume/shock_fitting.h>
 
 #include <limits>
 
@@ -58,8 +58,7 @@ RungeKutta::RungeKutta(json config, GridBlock<Ibis::real> grid, std::string grid
     if (grid_.moving()) {
         json grid_movement_config = config.at("grid").at("movement");
         grid_driver_ = std::shared_ptr<GridMotionDriver<Ibis::real>>(
-            new ShockFitting<Ibis::real>(grid_movement_config)
-        );
+            new ShockFitting<Ibis::real>(grid_movement_config));
         vertex_vel_ = std::vector<Vector3s<Ibis::real>>(
             tableau_.num_stages(), Vector3s<Ibis::real>(grid.num_vertices()));
 
@@ -152,7 +151,6 @@ int RungeKutta::take_step(size_t step) {
             add_scaled_vector(init_vertex_pos_, vertex_vel_[0], tableau_.a(i, 0) * dt_,
                               grid_.vertices().positions());
         }
-        
 
         // The remaining coefficients for this row
         for (size_t j = 1; j < i; j++) {

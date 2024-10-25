@@ -5,8 +5,8 @@
 #include <grid/grid_io.h>
 // #include <grid/grid_motion.h>
 // #include <finite_volume/grid_motion_driver.h>
-#include <grid/interface.h>
 #include <gas/flow_state.h>
+#include <grid/interface.h>
 
 #include <limits>
 #include <nlohmann/json.hpp>
@@ -492,9 +492,10 @@ public:
         return GridIO(vertices, cells, bcs);
     }
 
-    void compute_grid_motion(const FlowStates<T, Layout, memory_space>& fs,
-                             const Vector3s<T, array_layout, memory_space>& vertex_vel,
-                             std::shared_ptr<GridMotionDriver<T, ExecSpace, Layout>>& driver) {
+    void compute_grid_motion(
+        const FlowStates<T, Layout, memory_space>& fs,
+        const Vector3s<T, array_layout, memory_space>& vertex_vel,
+        std::shared_ptr<GridMotionDriver<T, ExecSpace, Layout>>& driver) {
         driver->compute_vertex_velocities(fs, *this, vertex_vel);
         compute_face_vel(vertex_vel);
     }

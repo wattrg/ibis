@@ -36,32 +36,37 @@ template void add<Ibis::real>(const Vector3s<Ibis::real> &a,
                               Vector3s<Ibis::real> &result);
 
 template <typename T>
-void add_scaled_vector(Vector3s<T>& a, const Vector3s<T>& b, T scale) {
+void add_scaled_vector(Vector3s<T> &a, const Vector3s<T> &b, T scale) {
     assert(a.size() == b.size());
     Kokkos::parallel_for(
         "Vector3s_add_scaled_vector", a.size(), KOKKOS_LAMBDA(const size_t i) {
             a(i, 0) += b(i, 0) * scale;
             a(i, 1) += b(i, 1) * scale;
             a(i, 2) += b(i, 2) * scale;
-        }
-    );
+        });
 }
-template void add_scaled_vector<Ibis::real>(Vector3s<Ibis::real>&, const Vector3s<Ibis::real>&, Ibis::real);
-template void add_scaled_vector<Ibis::dual>(Vector3s<Ibis::dual>&, const Vector3s<Ibis::dual>&, Ibis::dual);
+template void add_scaled_vector<Ibis::real>(Vector3s<Ibis::real> &,
+                                            const Vector3s<Ibis::real> &, Ibis::real);
+template void add_scaled_vector<Ibis::dual>(Vector3s<Ibis::dual> &,
+                                            const Vector3s<Ibis::dual> &, Ibis::dual);
 
 template <typename T>
-void add_scaled_vector(const Vector3s<T>& a, const Vector3s<T>& b, T scale, Vector3s<T>& result) {
+void add_scaled_vector(const Vector3s<T> &a, const Vector3s<T> &b, T scale,
+                       Vector3s<T> &result) {
     assert(a.size() == b.size());
     Kokkos::parallel_for(
         "Vector3s_add_scaled_vector", a.size(), KOKKOS_LAMBDA(const size_t i) {
             result(i, 0) = a(i, 0) + b(i, 0) * scale;
             result(i, 1) = a(i, 1) + b(i, 1) * scale;
             result(i, 2) = a(i, 2) + b(i, 2) * scale;
-        }
-    );
+        });
 }
-template void add_scaled_vector<Ibis::real>(const Vector3s<Ibis::real>&, const Vector3s<Ibis::real>&, Ibis::real, Vector3s<Ibis::real>&);
-template void add_scaled_vector<Ibis::dual>(const Vector3s<Ibis::dual>&, const Vector3s<Ibis::dual>&, Ibis::dual, Vector3s<Ibis::dual>&);
+template void add_scaled_vector<Ibis::real>(const Vector3s<Ibis::real> &,
+                                            const Vector3s<Ibis::real> &, Ibis::real,
+                                            Vector3s<Ibis::real> &);
+template void add_scaled_vector<Ibis::dual>(const Vector3s<Ibis::dual> &,
+                                            const Vector3s<Ibis::dual> &, Ibis::dual,
+                                            Vector3s<Ibis::dual> &);
 
 template <typename T>
 void subtract(const Vector3s<T> &a, const Vector3s<T> &b, Vector3s<T> &result) {
