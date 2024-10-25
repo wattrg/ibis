@@ -3,12 +3,18 @@
 
 #include <grid/cell.h>
 #include <grid/grid_io.h>
+// #include <grid/grid_motion.h>
+// #include <finite_volume/grid_motion_driver.h>
 #include <grid/interface.h>
+#include <gas/flow_state.h>
 
 #include <limits>
 #include <nlohmann/json.hpp>
 
 using json = nlohmann::json;
+
+template <typename T, class ExecSpace, class Layout>
+class GridMotionDriver;
 
 template <typename T, class ExecSpace = Kokkos::DefaultExecutionSpace,
           class Layout = Kokkos::DefaultExecutionSpace::array_layout>
@@ -132,6 +138,13 @@ public:
             cell_vertices, cell_interface_ids, cell_shapes, num_valid_cells_,
             num_ghost_cells_);
 
+        // initialise grid motion
+        json grid_motion_config = config.at("motion");
+        moving_grid_ = grid_motion_config.at("enabled");
+        if (moving_grid_) {
+            face_vel_ = Vector3s<T, Layout, memory_space>(num_interfaces());
+        }
+
         // compute geometric and connectivity properties of the grid
         // The order these are done in is important -- some things
         // rely on other properties already being set
@@ -142,6 +155,14 @@ public:
         compute_interface_connectivity(ghost_cell_map);
         cells_.compute_volumes(vertices_, interfaces_);
         compute_cell_neighbours();
+        compute_ghost_cell_centres();
+    }
+
+    void compute_geometric_data() {
+        interfaces_.compute_centres(vertices_);
+        interfaces_.compute_areas(vertices_);
+        cells_.compute_centroids(vertices_, interfaces_);
+        cells_.compute_volumes(vertices_, interfaces_);
         compute_ghost_cell_centres();
     }
 
@@ -471,6 +492,39 @@ public:
         return GridIO(vertices, cells, bcs);
     }
 
+    void compute_grid_motion(const FlowStates<T, Layout, memory_space>& fs,
+                             const Vector3s<T, array_layout, memory_space>& vertex_vel,
+                             std::shared_ptr<GridMotionDriver<T, ExecSpace, Layout>>& driver) {
+        driver->compute_vertex_velocities(fs, *this, vertex_vel);
+        compute_face_vel(vertex_vel);
+    }
+
+    void compute_face_vel(const Vector3s<T, Layout, memory_space>& vertex_vel) {
+        auto face_vertices = interfaces().vertex_ids();
+        Kokkos::parallel_for(
+            "compute_face_velocity", num_interfaces(),
+            KOKKOS_LAMBDA(const size_t face_i) {
+                auto vertices = face_vertices(face_i);
+                T vx = T(0.0);
+                T vy = T(0.0);
+                T vz = T(0.0);
+                size_t num_vertices = vertices.size();
+                for (size_t vertex_i = 0; vertex_i < num_vertices; vertex_i++) {
+                    size_t vertex_id = vertices(vertex_i);
+                    vx += vertex_vel.x(vertex_id);
+                    vy += vertex_vel.y(vertex_id);
+                    vz += vertex_vel.z(vertex_id);
+                }
+                face_vel_.x(face_i) = vx / num_vertices;
+                face_vel_.y(face_i) = vy / num_vertices;
+                face_vel_.z(face_i) = vz / num_vertices;
+            });
+    }
+
+    Vector3s<T, Layout, memory_space> face_vel() { return face_vel_; }
+
+    bool moving() { return moving_grid_; }
+
 public:
     // The primary grid data structures
     Vertices<T, execution_space, array_layout> vertices_;
@@ -492,6 +546,11 @@ public:
     // and other faces that have been marked for one reason or another (e.g.
     // shock fitting)
     std::map<std::string, Field<size_t, array_layout, memory_space>> markers_;
+
+    // grid motion
+    // GridMotion<T, execution_space, array_layout> motion_;
+    bool moving_grid_;
+    Vector3s<T, Layout, memory_space> face_vel_;
 };
 
 #endif

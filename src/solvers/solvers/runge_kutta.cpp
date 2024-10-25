@@ -8,6 +8,7 @@
 #include <solvers/solver.h>
 #include <spdlog/spdlog.h>
 #include <util/numeric_types.h>
+#include <finite_volume/shock_fitting.h>
 
 #include <limits>
 
@@ -54,11 +55,17 @@ RungeKutta::RungeKutta(json config, GridBlock<Ibis::real> grid, std::string grid
     fv_ = FiniteVolume<Ibis::real>(grid_, config);
 
     // grid movement
-    moving_grid_ = config.at("grid").at("grid_motion").at("enabled");
-    if (moving_grid_) {
+    if (grid_.moving()) {
+        json grid_movement_config = config.at("grid").at("movement");
+        grid_driver_ = std::shared_ptr<GridMotionDriver<Ibis::real>>(
+            new ShockFitting<Ibis::real>(grid_movement_config)
+        );
         vertex_vel_ = std::vector<Vector3s<Ibis::real>>(
             tableau_.num_stages(), Vector3s<Ibis::real>(grid.num_vertices()));
-        vertex_pos_tmp_ = Vector3s<Ibis::real>(grid.num_vertices());
+
+        if (tableau_.num_stages() > 1) {
+            vertex_pos_tmp_ = Vector3s<Ibis::real>(grid.num_vertices());
+        }
     }
 
     // progress
@@ -79,7 +86,7 @@ int RungeKutta::initialise() {
     dt_ = (dt_init_ > 0) ? dt_init_ : std::numeric_limits<Ibis::real>::max();
 
     // compute the initial residuals, and begin the residuals file
-    function_eval_(0);
+    function_eval_(flow_, 0);
     if (residuals_every_n_steps_ > 0 || residual_frequency_ > 0) {
         {
             std::ofstream residual_file("log/residuals.dat", std::ios_base::out);
@@ -107,20 +114,27 @@ void RungeKutta::estimate_dt() {
     }
 }
 
-void RungeKutta::function_eval_(size_t index) {
+void RungeKutta::function_eval_(FlowStates<Ibis::real> fs, size_t index) {
     if (moving_grid_) {
+        grid_.compute_grid_motion(fs, vertex_vel_[index], grid_driver_);
     }
 
-    fv_.compute_dudt(flow_, grid_, k_[index], gas_model_, trans_prop_);
+    fv_.compute_dudt(fs, grid_, k_[index], gas_model_, trans_prop_);
 }
 
 int RungeKutta::take_step(size_t step) {
     (void)step;
+
+    if (moving_grid_ && tableau_.num_stages() > 1) {
+        // we need to save the initial grid vertex positions
+        init_vertex_pos_ = grid_.vertices().positions();
+    }
+
     // this has to be done before the estimation of dt, as may set
     // values used to estimate the stable time step. It also serves
     // as the first stage of all the runge-kutta schemes
     // fv_.compute_dudt(flow_, grid_, k_[0], gas_model_, trans_prop_);
-    function_eval_(0);
+    function_eval_(flow_, 0);
 
     // estimate the stable time step we can take. After this call,
     // dt_ will be set to the stable time step.
@@ -134,6 +148,11 @@ int RungeKutta::take_step(size_t step) {
         // we do this step to make sure k_tmp_ is set correctly.
         apply_time_derivative(conserved_quantities_, k_tmp_, k_[0],
                               tableau_.a(i, 0) * dt_);
+        if (moving_grid_) {
+            add_scaled_vector(init_vertex_pos_, vertex_vel_[0], tableau_.a(i, 0) * dt_,
+                              grid_.vertices().positions());
+        }
+        
 
         // The remaining coefficients for this row
         for (size_t j = 1; j < i; j++) {
@@ -143,20 +162,34 @@ int RungeKutta::take_step(size_t step) {
 
             // accumulate the intermediate state for the next function evaluation
             k_tmp_.apply_time_derivative(k_[j], tableau_.a(i, j) * dt_);
+            if (moving_grid_) {
+                add_scaled_vector(grid_.vertices().positions(), vertex_vel_[i],
+                                  tableau_.a(i, j) * dt_);
+            }
         }
 
         // The function evaluation
         conserved_to_primatives(k_tmp_, flow_tmp_, gas_model_);
-        // fv_.compute_dudt(flow_tmp_, grid_, k_[i], gas_model_, trans_prop_);
-        function_eval_(i);
+        if (moving_grid_) {
+            grid_.compute_geometric_data();
+        }
+        function_eval_(flow_tmp_, i);
     }
 
-    // Update the flow state
+    // Update the solution
     for (size_t i = 0; i < tableau_.num_stages(); i++) {
         conserved_quantities_.apply_time_derivative(k_[i], tableau_.b(i) * dt_);
+
+        if (moving_grid_) {
+            add_scaled_vector(init_vertex_pos_, vertex_vel_[i], tableau_.b(i) * dt_);
+        }
     }
 
     conserved_to_primatives(conserved_quantities_, flow_, gas_model_);
+    if (moving_grid_) {
+        grid_.vertices().set_positions(init_vertex_pos_);
+        grid_.compute_geometric_data();
+    }
 
     // book keeping
     t_ += dt_;

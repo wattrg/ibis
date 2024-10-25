@@ -40,6 +40,10 @@ public:
         _positions(vertex_id, 2) = pos.z;
     }
 
+    void set_positions(vector_type new_positions) {
+        _positions = new_positions;
+    }
+
     KOKKOS_INLINE_FUNCTION
     Vector3s<T, array_layout, memory_space> &positions() { return _positions; }
 

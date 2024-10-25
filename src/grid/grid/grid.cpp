@@ -69,6 +69,7 @@ json build_config() {
     json slip_wall{};
     json inflow{};
     json outflow{};
+    json motion{};
     slip_wall["ghost_cells"] = true;
     inflow["ghost_cells"] = true;
     outflow["ghost_cells"] = true;
@@ -77,6 +78,8 @@ json build_config() {
     boundaries["inflow"] = inflow;
     boundaries["outflow"] = outflow;
     config["boundaries"] = boundaries;
+    motion["enabled"] = false;
+    config["motion"] = motion;
     return config;
 }
 
@@ -86,6 +89,7 @@ json build_3D_config() {
     json slip_wall{};
     json inflow{};
     json outflow{};
+    json motion{};
     slip_wall["ghost_cells"] = true;
     inflow["ghost_cells"] = true;
     outflow["ghost_cells"] = true;
@@ -96,6 +100,8 @@ json build_3D_config() {
     boundaries["north"] = slip_wall;
     boundaries["south"] = slip_wall;
     config["boundaries"] = boundaries;
+    motion["enabled"] = false;
+    config["motion"] = motion;
     return config;
 }
 

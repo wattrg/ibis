@@ -268,6 +268,17 @@ class StaticGrid:
         return
 
 
+class ShockFitting:
+    def as_dict(self):
+        return {
+            "enabled": True,
+            "type": "shock_fitting"
+        }
+
+    def validate(self):
+        return
+
+
 class Block:
     def __init__(self, file_name, initial_condition, boundaries):
         self._initial_condition = initial_condition
@@ -275,7 +286,7 @@ class Block:
         self.number_cells = 0
         self.number_vertices = 0
         self.boundaries = boundaries
-        self.grid_motion = StaticGrid()
+        self.motion = StaticGrid()
         self._read_file(file_name)
 
     def _read_file(self, file_name):
@@ -360,6 +371,7 @@ class Block:
         dictionary["dimensions"] = self.dim
         for key in self.boundaries:
             dictionary["boundaries"][key] = self.boundaries[key].as_dict()
+        dictionary["motion"] = self.motion.as_dict()
         return dictionary
 
 
@@ -910,7 +922,6 @@ class Config:
             self.gas_model
         )
         self.io = IO()
-        self.grid_movement = StaticGrid()
 
     def validate(self):
         for setting in self.__slots__:

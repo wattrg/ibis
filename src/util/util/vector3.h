@@ -162,6 +162,14 @@ void dot(const Vector3s<T>& a, const Vector3s<T>& b, Field<T>& result);
 template <typename T>
 void add(const Vector3s<T>& a, const Vector3s<T>& b, Vector3s<T>& result);
 
+// a += b * scale
+template <typename T>
+void add_scaled_vector(Vector3s<T>& a, const Vector3s<T>& b, T scale);
+
+// result = a + b * scale
+template <typename T>
+void add_scaled_vector(const Vector3s<T>& a, const Vector3s<T>& b, T scale, Vector3s<T>& result);
+
 template <typename T>
 void subtract(const Vector3s<T>& a, const Vector3s<T>& b, Vector3s<T>& result);
 

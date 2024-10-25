@@ -16,6 +16,8 @@ public:
 
     ShockFitting() {}
 
+    ShockFitting(json config) { (void)config; }
+
     void compute_vertex_velocities(const FlowStates<T, Layout, MemSpace>& fs,
                                    const GridBlock<T, ExecSpace, Layout>& grid,
                                    Vector3s<T, Layout, MemSpace> vertex_vel) {

@@ -23,6 +23,7 @@ target_link_libraries(
 	util
 	nlohmann_json::nlohmann_json
 	spdlog::spdlog
+	gas
 )
 
 if (Ibis_BUILD_TESTS)

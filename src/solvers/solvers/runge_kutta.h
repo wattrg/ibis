@@ -2,7 +2,7 @@
 #define RUNGE_KUTTA_H
 
 #include <finite_volume/conserved_quantities.h>
-#include <finite_volume/grid_motion.h>
+// #include <finite_volume/grid_motion.h>
 #include <gas/flow_state.h>
 #include <gas/transport_properties.h>
 #include <grid/grid.h>
@@ -12,6 +12,7 @@
 #include <util/numeric_types.h>
 
 #include <memory>
+#include <finite_volume/grid_motion_driver.h>
 
 class ButcherTableau {
 public:
@@ -94,7 +95,7 @@ private:
     bool residuals_this_step(unsigned int step);
     bool write_residuals(unsigned int step, Ibis::real wc);
 
-    void function_eval_(size_t index);
+    void function_eval_(FlowStates<Ibis::real>fs,  size_t index);
 
 private:
     // memory
@@ -106,10 +107,10 @@ private:
 
     // grid movement
     bool moving_grid_;
-    std::shared_ptr<GridMotionDriver<Ibis::real>> grid_motion_;
     std::vector<Vector3s<Ibis::real>> vertex_vel_;
     Vector3s<Ibis::real> vertex_pos_tmp_;
-    Vector3s<Ibis::real> vertex_pos_save_;
+    Vector3s<Ibis::real> init_vertex_pos_;
+    std::shared_ptr<GridMotionDriver<Ibis::real>> grid_driver_;
 
     // butcher tableau
     ButcherTableau tableau_;
