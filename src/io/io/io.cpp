@@ -113,6 +113,11 @@ int FVIO<T>::write(const FlowStates<T>& fs, FiniteVolume<T>& fv, const GridBlock
     std::filesystem::create_directory(directory_name);
     int result = output_->write(fs_host, fv, grid, gas_model, trans_prop, output_dir_,
                                 time_index, time);
+
+    if (grid.moving()) {
+        // write the grid 
+    }
+    
     time_index_++;
     return result;
 }
@@ -125,6 +130,9 @@ int FVIO<T>::read(FlowStates<T>& fs, GridBlock<T>& grid,
     auto fs_host = fs.host_mirror();
     std::string time_index = pad_time_index(time_idx, 4);
     std::string directory_name = input_dir_ + "/" + time_index;
+    if (grid.moving()) {
+        // read the grid
+    }
     int result =
         input_->read(fs_host, grid, gas_model, trans_prop, directory_name, meta_data);
     fs.deep_copy(fs_host);
