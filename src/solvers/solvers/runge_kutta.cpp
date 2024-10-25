@@ -185,8 +185,7 @@ int RungeKutta::take_step(size_t step) {
 
     conserved_to_primatives(conserved_quantities_, flow_, gas_model_);
     if (moving_grid_) {
-        grid_.vertices().set_positions(init_vertex_pos_);
-        grid_.compute_geometric_data();
+        grid_.set_vertex_positions(init_vertex_pos_);
     }
 
     // book keeping

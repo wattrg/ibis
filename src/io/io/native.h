@@ -10,7 +10,7 @@ class NativeTextInput : public FVInput<T> {
 public:
     NativeTextInput() {}
 
-    int read(typename FlowStates<T>::mirror_type& fs, const GridBlock<T>& grid,
+    int read(typename FlowStates<T>::mirror_type& fs, GridBlock<T>& grid,
              const IdealGas<T>& gas_model, const TransportProperties<T>& trans_prop,
              std::string dir, json& meta_data);
 };
@@ -33,7 +33,7 @@ class NativeBinaryInput : public FVInput<T> {
 public:
     NativeBinaryInput() {}
 
-    int read(typename FlowStates<T>::mirror_type& fs, const GridBlock<T>& grid,
+    int read(typename FlowStates<T>::mirror_type& fs, GridBlock<T>& grid,
              const IdealGas<T>& gas_model, const TransportProperties<T>& trans_prop,
              std::string dir, json& meta_data);
 };

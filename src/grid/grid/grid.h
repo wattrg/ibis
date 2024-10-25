@@ -502,6 +502,7 @@ public:
 
     void compute_face_vel(const Vector3s<T, Layout, memory_space>& vertex_vel) {
         auto face_vertices = interfaces().vertex_ids();
+        auto face_vel = face_vel_;
         Kokkos::parallel_for(
             "compute_face_velocity", num_interfaces(),
             KOKKOS_LAMBDA(const size_t face_i) {
@@ -516,10 +517,15 @@ public:
                     vy += vertex_vel.y(vertex_id);
                     vz += vertex_vel.z(vertex_id);
                 }
-                face_vel_.x(face_i) = vx / num_vertices;
-                face_vel_.y(face_i) = vy / num_vertices;
-                face_vel_.z(face_i) = vz / num_vertices;
+                face_vel.x(face_i) = vx / num_vertices;
+                face_vel.y(face_i) = vy / num_vertices;
+                face_vel.z(face_i) = vz / num_vertices;
             });
+    }
+
+    void set_vertex_positions(Vector3s<T, Layout, memory_space>& positions) {
+        vertices_.set_positions(positions);
+        compute_geometric_data();
     }
 
     Vector3s<T, Layout, memory_space> face_vel() { return face_vel_; }

@@ -89,7 +89,7 @@ template class NativeTextOutput<Ibis::dual>;
 
 template <typename T>
 int NativeTextInput<T>::read(typename FlowStates<T>::mirror_type& fs,
-                             const GridBlock<T>& grid, const IdealGas<T>& gas_model,
+                             GridBlock<T>& grid, const IdealGas<T>& gas_model,
                              const TransportProperties<T>& trans_prop, std::string dir,
                              json& meta_data) {
     (void)trans_prop;
@@ -262,7 +262,7 @@ template class NativeBinaryOutput<Ibis::dual>;
 
 template <typename T>
 int NativeBinaryInput<T>::read(typename FlowStates<T>::mirror_type& fs,
-                               const GridBlock<T>& grid, const IdealGas<T>& gas_model,
+                               GridBlock<T>& grid, const IdealGas<T>& gas_model,
                                const TransportProperties<T>& trans_prop, std::string dir,
                                json& meta_data) {
     (void)trans_prop;

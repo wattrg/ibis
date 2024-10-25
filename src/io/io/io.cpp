@@ -118,7 +118,7 @@ int FVIO<T>::write(const FlowStates<T>& fs, FiniteVolume<T>& fv, const GridBlock
 }
 
 template <typename T>
-int FVIO<T>::read(FlowStates<T>& fs, const GridBlock<T>& grid,
+int FVIO<T>::read(FlowStates<T>& fs, GridBlock<T>& grid,
                   const IdealGas<T>& gas_model, const TransportProperties<T>& trans_prop,
                   json& meta_data, int time_idx) {
     // auto grid_host = grid.host_mirror();

@@ -23,7 +23,7 @@ class FVInput {
 public:
     virtual ~FVInput() {}
 
-    virtual int read(typename FlowStates<T>::mirror_type& fs, const GridBlock<T>& grid,
+    virtual int read(typename FlowStates<T>::mirror_type& fs, GridBlock<T>& grid,
                      const IdealGas<T>& gas_model,
                      const TransportProperties<T>& trans_prop, std::string dir,
                      json& meta_data) = 0;
@@ -67,7 +67,7 @@ public:
     FVIO();
 
     // read a flow state
-    int read(FlowStates<T>& fs, const GridBlock<T>& grid, const IdealGas<T>& gas_model,
+    int read(FlowStates<T>& fs, GridBlock<T>& grid, const IdealGas<T>& gas_model,
              const TransportProperties<T>& trans_prop, json& meta_data, int time_idx);
 
     // write a flow state
