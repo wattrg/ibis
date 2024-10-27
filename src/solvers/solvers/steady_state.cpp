@@ -128,15 +128,17 @@ SteadyState::SteadyState(json config, GridBlock<Ibis::dual> grid, std::string gr
     diagnostics_frequency_ = solver_config.at("diagnostics_frequency");
 
     // I/O
-    FlowFormat flow_format = string_to_flow_format((config.at("io").at("flow_format")));
-    io_ = FVIO<Ibis::dual>(flow_format, flow_format, 1);
+    io_ = FVIO<Ibis::dual>(config, 1);
+
+    config_ = config;
 }
 
 int SteadyState::initialise() {
-    // read the initial conditions
+    // read grid and initial condition
     json meta_data{};
-    int ic_result =
-        io_.read(*fs_, sim_->grid, sim_->gas_model, sim_->trans_prop, meta_data, 0);
+    json grid_config = config_.at("grid");
+    int ic_result = io_.read(*fs_, sim_->grid, sim_->gas_model, sim_->trans_prop,
+                             grid_config, meta_data, 0);
     int conversion_result = primatives_to_conserved(*cq_, *fs_, sim_->gas_model);
 
     // initialise the JFNK solver

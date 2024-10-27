@@ -59,6 +59,7 @@ private:
     int plot_every_n_steps_;
     std::unique_ptr<CflSchedule> cfl_;
     Ibis::real dt_init_;
+    json config_;
 
 private:
     // progress

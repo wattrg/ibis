@@ -40,6 +40,7 @@ RungeKutta::RungeKutta(json config, GridBlock<Ibis::real> grid, std::string grid
     gas_model_ = IdealGas<Ibis::real>(config.at("gas_model"));
     trans_prop_ = TransportProperties<Ibis::real>(config.at("transport_properties"));
 
+
     // memory
     grid_ = grid;
     int number_cells = grid_.num_total_cells();
@@ -55,8 +56,9 @@ RungeKutta::RungeKutta(json config, GridBlock<Ibis::real> grid, std::string grid
     fv_ = FiniteVolume<Ibis::real>(grid_, config);
 
     // grid movement
+    json grid_config = config.at("grid");
     if (grid_.moving()) {
-        json grid_movement_config = config.at("grid").at("movement");
+        json grid_movement_config = grid_config.at("movement");
         grid_driver_ = std::shared_ptr<GridMotionDriver<Ibis::real>>(
             new ShockFitting<Ibis::real>(grid_movement_config));
         vertex_vel_ = std::vector<Vector3s<Ibis::real>>(
@@ -72,14 +74,17 @@ RungeKutta::RungeKutta(json config, GridBlock<Ibis::real> grid, std::string grid
     t_ = 0.0;
 
     // input/output
-    FlowFormat flow_format = string_to_flow_format((config.at("io").at("flow_format")));
-    io_ = FVIO<Ibis::real>(flow_format, flow_format, 1);
+    io_ = FVIO<Ibis::real>(config, 1);
+
+    config_ = config;
 }
 
 int RungeKutta::initialise() {
-    // read the initial condition
+    // read the grid and initial flow
     json meta_data;
-    int ic_result = io_.read(flow_, grid_, gas_model_, trans_prop_, meta_data, 0);
+    json grid_config = config_.at("grid");
+    int ic_result = io_.read(flow_, grid_, gas_model_, trans_prop_, grid_config,
+                             meta_data, 0);
     int conversion_result =
         primatives_to_conserved(conserved_quantities_, flow_, gas_model_);
     dt_ = (dt_init_ > 0) ? dt_init_ : std::numeric_limits<Ibis::real>::max();

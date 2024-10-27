@@ -156,6 +156,8 @@ public:
         cells_.compute_volumes(vertices_, interfaces_);
         compute_cell_neighbours();
         compute_ghost_cell_centres();
+
+        initialised_ = true;
     }
 
     void compute_geometric_data() {
@@ -530,7 +532,9 @@ public:
 
     Vector3s<T, Layout, memory_space> face_vel() { return face_vel_; }
 
-    bool moving() { return moving_grid_; }
+    bool moving() const { return moving_grid_; }
+
+    bool is_initialised() const  { return initialised_; }
 
 public:
     // The primary grid data structures
@@ -558,6 +562,8 @@ public:
     // GridMotion<T, execution_space, array_layout> motion_;
     bool moving_grid_;
     Vector3s<T, Layout, memory_space> face_vel_;
+
+    bool initialised_ = false;
 };
 
 #endif

@@ -1,5 +1,6 @@
 import json
 import os
+import pathlib
 import shutil
 from enum import Enum
 import struct
@@ -321,13 +322,9 @@ class Block:
         return f"{number:.16e}\n"
 
     def write(self, grid_directory, flow_directory, binary):
-        if not os.path.exists(grid_directory):
-            os.mkdir(grid_directory)
-        if not os.path.exists(flow_directory):
-            os.mkdir(flow_directory)
-        ic_path = f"{flow_directory}/0000"
-        if not os.path.exists(ic_path):
-            os.mkdir(ic_path)
+        pathlib.Path(grid_directory).mkdir(parents=True, exist_ok=True)
+        pathlib.Path(flow_directory).mkdir(parents=True, exist_ok=True)
+        pathlib.Path(f"{flow_directory}/0000").mkdir(parents=True, exist_ok=True)
 
         # write the grid
         shutil.copy(self._block, f"{grid_directory}/block_{0:04}.su2")

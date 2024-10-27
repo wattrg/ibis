@@ -19,6 +19,8 @@ public:
 
     void write_coordinating_file(std::string plot_dir);
 
+    bool combined_grid_and_flow() const { return true; }
+
 private:
     std::vector<Ibis::real> times_;
     std::vector<std::string> dirs_;
@@ -35,6 +37,8 @@ public:
               std::string time_dir, Ibis::real time);
 
     void write_coordinating_file(std::string plot_dir);
+
+    bool combined_grid_and_flow() const { return true; }
 
 private:
     std::vector<Ibis::real> times_;

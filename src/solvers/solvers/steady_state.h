@@ -92,6 +92,7 @@ private:
     unsigned int print_frequency_;
     unsigned int plot_frequency_;
     unsigned int diagnostics_frequency_;
+    json config_;
 
     // progress
     // Ibis::real stable_dt_;

@@ -96,7 +96,7 @@ int NativeTextInput<T>::read(typename FlowStates<T>::mirror_type& fs,
     size_t num_cells = grid.num_cells();
     std::ifstream meta_f(dir + "/meta_data.json");
     if (!meta_f) {
-        spdlog::error("Unable to load {}", dir + "/meta_dta.json");
+        spdlog::error("Unable to load {}", dir + "/meta_data.json");
         return 1;
     }
     meta_data = json::parse(meta_f);

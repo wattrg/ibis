@@ -4,6 +4,7 @@ inst
 compile_commands.json
 examples/**/flow
 examples/**/grid
+examples/**/io
 examples/**/config
 examples/**/log
 examples/**/plot

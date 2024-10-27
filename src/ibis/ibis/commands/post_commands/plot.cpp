@@ -53,18 +53,21 @@ void plot_vtk(json directories, std::vector<std::string> extra_vars) {
     FlowFormat flow_format = string_to_flow_format(config.at("io").at("flow_format"));
     constexpr FlowFormat plot_format =
         (binary) ? FlowFormat::VtkBinary : FlowFormat::VtkText;
-    FVIO<T> io(flow_format, plot_format, flow_dir, plot_dir);
+    bool moving_grid = config.at("grid").at("motion").at("enabled");
+    FVIO<T> io(flow_format, plot_format, moving_grid, 0);
 
     for (auto& extra_var : extra_vars) {
         io.add_output_variable(extra_var);
     }
 
     GridBlock<T> grid(grid_dir + "/block_0000.su2", config.at("grid"));
+    // GridBlock<T> grid;
+    json grid_config = config.at("grid");
     FiniteVolume<T> fv(grid, config);
     FlowStates<T> fs(grid.num_total_cells());
     for (unsigned int time_idx = 0; time_idx < dirs.size(); time_idx++) {
         json meta_data;
-        io.read(fs, grid, gas_model, trans_prop, meta_data, time_idx);
+        io.read(fs, grid, gas_model, trans_prop, grid_config, meta_data, time_idx);
         io.write(fs, fv, grid, gas_model, trans_prop, meta_data.at("time"));
         spdlog::info("Written VTK file at time index {}", time_idx);
     }

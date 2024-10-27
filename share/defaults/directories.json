@@ -2,8 +2,9 @@
     "config_dir": "config",
     "config_file": "config.json",
     "config_status": "config_status",
-    "grid_dir": "grid",
-    "flow_dir": "flow",
+    "io_dir": "io",
+    "grid_dir": "io/grid",
+    "flow_dir": "io/flow",
     "plot_dir": "plot",
     "log_dir": "log"
 }
