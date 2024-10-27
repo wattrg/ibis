@@ -464,7 +464,8 @@ public:
         }
 
         // get the vertices of each cell
-        std::vector<ElemIO> cells{host_grid.num_cells()};
+        std::vector<ElemIO> cells;
+        cells.reserve(host_grid.num_cells());
         for (size_t cell_i = 0; cell_i < host_grid.num_cells(); cell_i++) {
             ElemType cell_shape = host_grid.cells().shapes()(cell_i);
             auto cell_vertices = host_grid.cells().vertex_ids()(cell_i);
@@ -480,7 +481,8 @@ public:
         std::unordered_map<std::string, std::vector<ElemIO>> bcs;
         for (auto& [bc_tag, bc_faces] : host_grid.boundary_faces_) {
             size_t num_faces = bc_faces.size();
-            std::vector<ElemIO> bc_elems(num_faces);
+            std::vector<ElemIO> bc_elems;
+            bc_elems.reserve(num_faces);
             for (size_t bc_face = 0; bc_face < num_faces; bc_face++) {
                 ElemType face_shape = host_grid.interfaces().shapes()(bc_face);
                 auto bc_face_vertices = host_grid.interfaces().vertex_ids()(bc_face);
@@ -492,6 +494,7 @@ public:
                 }
                 bc_elems.push_back(ElemIO(vertex_ids, face_shape, FaceOrder::Vtk));
             }
+            bcs.insert({bc_tag, bc_elems});
         }
 
         return GridIO(vertices, cells, bcs, dim_);

@@ -63,9 +63,9 @@ size_t vtk_type_from_elem_type(const ElemType &elem_type) {
             return 13;
         case ElemType::Pyramid:
             return 14;
-            // default:
-            //     spdlog::error("Unkown ElemType");
-            //     throw new std::runtime_error("");
+        default:
+            spdlog::error("Unkown ElemType");
+            throw new std::runtime_error("");
     }
 }
 
