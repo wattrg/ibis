@@ -117,7 +117,6 @@ int FVIO<T>::write(const FlowStates<T>& fs, FiniteVolume<T>& fv, const GridBlock
     std::filesystem::create_directory(directory_name);
     int result = output_->write(fs_host, fv, grid, gas_model, trans_prop, output_dir_,
                                 time_index, time);
-    printf("%s\n", time_index.c_str());
     if (moving_grid_) {
         GridIO grid_io = grid.to_grid_io();
         std::filesystem::create_directory("io/grid/" + time_index);

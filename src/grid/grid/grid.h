@@ -454,7 +454,8 @@ public:
         auto host_grid = host_mirror();
 
         // get the position of the vertices
-        std::vector<Vertex<Ibis::real>> vertices(host_grid.num_vertices());
+        std::vector<Vertex<Ibis::real>> vertices;
+        vertices.reserve(host_grid.num_vertices());
         for (size_t vertex_i = 0; vertex_i < host_grid.num_vertices(); vertex_i++) {
             Vector3<Ibis::real> pos{Ibis::real_part(vertices_.positions().x(vertex_i)),
                                     Ibis::real_part(vertices_.positions().y(vertex_i)),
@@ -467,7 +468,8 @@ public:
         for (size_t cell_i = 0; cell_i < host_grid.num_cells(); cell_i++) {
             ElemType cell_shape = host_grid.cells().shapes()(cell_i);
             auto cell_vertices = host_grid.cells().vertex_ids()(cell_i);
-            std::vector<size_t> vertex_ids(cell_vertices.size());
+            std::vector<size_t> vertex_ids;
+            vertex_ids.reserve(cell_vertices.size());
             for (size_t vertex_i = 0; vertex_i < cell_vertices.size(); vertex_i++) {
                 vertex_ids.push_back(cell_vertices(vertex_i));
             }
@@ -482,7 +484,8 @@ public:
             for (size_t bc_face = 0; bc_face < num_faces; bc_face++) {
                 ElemType face_shape = host_grid.interfaces().shapes()(bc_face);
                 auto bc_face_vertices = host_grid.interfaces().vertex_ids()(bc_face);
-                std::vector<size_t> vertex_ids(bc_face_vertices.size());
+                std::vector<size_t> vertex_ids;
+                vertex_ids.reserve(bc_face_vertices.size());
                 for (size_t vertex_id = 0; vertex_id < bc_face_vertices.size();
                      vertex_id++) {
                     vertex_ids.push_back(bc_face_vertices(vertex_id));
