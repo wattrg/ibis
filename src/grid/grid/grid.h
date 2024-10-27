@@ -534,7 +534,7 @@ public:
 
     bool moving() const { return moving_grid_; }
 
-    bool is_initialised() const  { return initialised_; }
+    bool is_initialised() const { return initialised_; }
 
 public:
     // The primary grid data structures

@@ -88,8 +88,8 @@ template class NativeTextOutput<Ibis::real>;
 template class NativeTextOutput<Ibis::dual>;
 
 template <typename T>
-int NativeTextInput<T>::read(typename FlowStates<T>::mirror_type& fs,
-                             GridBlock<T>& grid, const IdealGas<T>& gas_model,
+int NativeTextInput<T>::read(typename FlowStates<T>::mirror_type& fs, GridBlock<T>& grid,
+                             const IdealGas<T>& gas_model,
                              const TransportProperties<T>& trans_prop, std::string dir,
                              json& meta_data) {
     (void)trans_prop;

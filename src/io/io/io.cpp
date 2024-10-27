@@ -89,8 +89,7 @@ FVIO<T>::FVIO(FlowFormat input_format, FlowFormat output_format, bool moving_gri
 }
 
 template <typename T>
-FVIO<T>::FVIO()
-    : FVIO(FlowFormat::NativeBinary, FlowFormat::NativeBinary, false, 0) {}
+FVIO<T>::FVIO() : FVIO(FlowFormat::NativeBinary, FlowFormat::NativeBinary, false, 0) {}
 
 template <typename T>
 FVIO<T>::FVIO(json config, int time_index) {
@@ -125,24 +124,24 @@ int FVIO<T>::write(const FlowStates<T>& fs, FiniteVolume<T>& fv, const GridBlock
         std::ofstream grid_file("io/grid/" + time_index + "/block_0000.su2");
         grid_io.write_su2_grid(grid_file);
     }
-    
+
     time_index_++;
     return result;
 }
 
 template <typename T>
-int FVIO<T>::read(FlowStates<T>& fs, GridBlock<T>& grid,
-                  const IdealGas<T>& gas_model, const TransportProperties<T>& trans_prop,
-                  json& config, json& meta_data, int time_idx) {
+int FVIO<T>::read(FlowStates<T>& fs, GridBlock<T>& grid, const IdealGas<T>& gas_model,
+                  const TransportProperties<T>& trans_prop, json& config, json& meta_data,
+                  int time_idx) {
     // auto grid_host = grid.host_mirror();
     auto fs_host = fs.host_mirror();
     std::string time_index = pad_time_index(time_idx, 4);
     std::string directory_name = input_dir_ + "/" + time_index;
     if (moving_grid_ && time_idx != 0) {
         grid = GridBlock<T>("io/grid/" + time_index + "/block_0000.su2", config);
-    }
-    else if (!grid.is_initialised()) {
-        grid = GridBlock<T>("io/grid/" + pad_time_index(0, 4) + "/block_0000.su2", config);
+    } else if (!grid.is_initialised()) {
+        grid =
+            GridBlock<T>("io/grid/" + pad_time_index(0, 4) + "/block_0000.su2", config);
     }
     int result =
         input_->read(fs_host, grid, gas_model, trans_prop, directory_name, meta_data);

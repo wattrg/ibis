@@ -40,7 +40,6 @@ RungeKutta::RungeKutta(json config, GridBlock<Ibis::real> grid, std::string grid
     gas_model_ = IdealGas<Ibis::real>(config.at("gas_model"));
     trans_prop_ = TransportProperties<Ibis::real>(config.at("transport_properties"));
 
-
     // memory
     grid_ = grid;
     int number_cells = grid_.num_total_cells();
@@ -83,8 +82,8 @@ int RungeKutta::initialise() {
     // read the grid and initial flow
     json meta_data;
     json grid_config = config_.at("grid");
-    int ic_result = io_.read(flow_, grid_, gas_model_, trans_prop_, grid_config,
-                             meta_data, 0);
+    int ic_result =
+        io_.read(flow_, grid_, gas_model_, trans_prop_, grid_config, meta_data, 0);
     int conversion_result =
         primatives_to_conserved(conserved_quantities_, flow_, gas_model_);
     dt_ = (dt_init_ > 0) ? dt_init_ : std::numeric_limits<Ibis::real>::max();

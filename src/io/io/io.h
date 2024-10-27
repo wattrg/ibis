@@ -65,8 +65,8 @@ public:
 
     // read a flow state
     int read(FlowStates<T>& fs, GridBlock<T>& grid, const IdealGas<T>& gas_model,
-             const TransportProperties<T>& trans_prop, json& config,
-             json& meta_data, int time_idx);
+             const TransportProperties<T>& trans_prop, json& config, json& meta_data,
+             int time_idx);
 
     // write a flow state
     int write(const FlowStates<T>& flow_state, FiniteVolume<T>& fv,
