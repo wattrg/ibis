@@ -118,10 +118,11 @@ int FVIO<T>::write(const FlowStates<T>& fs, FiniteVolume<T>& fv, const GridBlock
     std::filesystem::create_directory(directory_name);
     int result = output_->write(fs_host, fv, grid, gas_model, trans_prop, output_dir_,
                                 time_index, time);
-
+    printf("%s\n", time_index.c_str());
     if (moving_grid_) {
         GridIO grid_io = grid.to_grid_io();
-        std::ofstream grid_file("io/grid/" + time_index);
+        std::filesystem::create_directory("io/grid/" + time_index);
+        std::ofstream grid_file("io/grid/" + time_index + "/block_0000.su2");
         grid_io.write_su2_grid(grid_file);
     }
     
@@ -137,11 +138,11 @@ int FVIO<T>::read(FlowStates<T>& fs, GridBlock<T>& grid,
     auto fs_host = fs.host_mirror();
     std::string time_index = pad_time_index(time_idx, 4);
     std::string directory_name = input_dir_ + "/" + time_index;
-    if (moving_grid_) {
-        grid = GridBlock<T>("io/grid/" + time_index, config);
+    if (moving_grid_ && time_idx != 0) {
+        grid = GridBlock<T>("io/grid/" + time_index + "/block_0000.su2", config);
     }
     else if (!grid.is_initialised()) {
-        grid = GridBlock<T>("io/grid/" + pad_time_index(0, 4), config);
+        grid = GridBlock<T>("io/grid/" + pad_time_index(0, 4) + "/block_0000.su2", config);
     }
     int result =
         input_->read(fs_host, grid, gas_model, trans_prop, directory_name, meta_data);

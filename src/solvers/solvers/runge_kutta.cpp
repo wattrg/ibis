@@ -55,12 +55,12 @@ RungeKutta::RungeKutta(json config, GridBlock<Ibis::real> grid, std::string grid
     }
     fv_ = FiniteVolume<Ibis::real>(grid_, config);
 
-    // grid movement
-    json grid_config = config.at("grid");
+    // grid motion
     if (grid_.moving()) {
-        json grid_movement_config = grid_config.at("movement");
+        json grid_config = config.at("grid");
+        json grid_motion_config = grid_config.at("motion");
         grid_driver_ = std::shared_ptr<GridMotionDriver<Ibis::real>>(
-            new ShockFitting<Ibis::real>(grid_movement_config));
+            new ShockFitting<Ibis::real>(grid_motion_config));
         vertex_vel_ = std::vector<Vector3s<Ibis::real>>(
             tableau_.num_stages(), Vector3s<Ibis::real>(grid.num_vertices()));
 

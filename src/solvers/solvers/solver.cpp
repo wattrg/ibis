@@ -65,7 +65,7 @@ int Solver::solve() {
 
 std::unique_ptr<Solver> make_solver(json config, std::string grid_dir,
                                     std::string flow_dir) {
-    std::string grid_file = grid_dir + "/block_0000.su2";
+    std::string grid_file = grid_dir + "/0000/block_0000.su2";
     json solver_config = config.at("solver");
     json grid_config = config.at("grid");
     std::string solver_name = solver_config.at("name");

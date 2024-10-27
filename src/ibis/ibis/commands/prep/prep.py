@@ -281,13 +281,15 @@ class ShockFitting:
 
 
 class Block:
-    def __init__(self, file_name, initial_condition, boundaries):
+    def __init__(self, file_name, initial_condition, boundaries, **kwargs):
         self._initial_condition = initial_condition
         self._block = file_name
         self.number_cells = 0
         self.number_vertices = 0
         self.boundaries = boundaries
         self.motion = StaticGrid()
+        for key, value in kwargs.items():
+            setattr(self, key, value)
         self._read_file(file_name)
 
     def _read_file(self, file_name):
@@ -322,12 +324,11 @@ class Block:
         return f"{number:.16e}\n"
 
     def write(self, grid_directory, flow_directory, binary):
-        pathlib.Path(grid_directory).mkdir(parents=True, exist_ok=True)
-        pathlib.Path(flow_directory).mkdir(parents=True, exist_ok=True)
+        pathlib.Path(f"{grid_directory}/0000").mkdir(parents=True, exist_ok=True)
         pathlib.Path(f"{flow_directory}/0000").mkdir(parents=True, exist_ok=True)
 
         # write the grid
-        shutil.copy(self._block, f"{grid_directory}/block_{0:04}.su2")
+        shutil.copy(self._block, f"{grid_directory}/0000/block_{0:04}.su2")
 
         # write the initial condition
         format = "wb" if binary else "w"
@@ -1001,6 +1002,7 @@ def main(file_name, res_dir):
         "BarthJespersen": BarthJespersen,
         "Unlimited": Unlimited,
         "ThermoInterp": ThermoInterp,
+        "ShockFitting": ShockFitting,
     }
 
     # run the user supplied script
