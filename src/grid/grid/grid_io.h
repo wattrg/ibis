@@ -55,6 +55,10 @@ private:
 struct GridIO {
 public:
     GridIO(std::vector<Vertex<Ibis::real>> vertices, std::vector<ElemIO> cells,
+           std::unordered_map<std::string, std::vector<ElemIO>> markers, int dim)
+        : vertices_(vertices), cells_(cells), markers_(markers), dim_(dim) {}
+
+    GridIO(std::vector<Vertex<Ibis::real>> vertices, std::vector<ElemIO> cells,
            std::unordered_map<std::string, std::vector<ElemIO>> markers)
         : vertices_(vertices), cells_(cells), markers_(markers) {}
 

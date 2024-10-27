@@ -491,7 +491,7 @@ public:
             }
         }
 
-        return GridIO(vertices, cells, bcs);
+        return GridIO(vertices, cells, bcs, dim_);
     }
 
     void compute_grid_motion(
