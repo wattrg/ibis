@@ -24,17 +24,14 @@ public:
         }
     }
 
-    void compute_grid_motion(
-        const FlowStates<T>& fs,
-        const GridBlock<T>& grid,
-        std::shared_ptr<GridMotionDriver<T>>& driver,
-        Vector3s<T> vertex_vel) {
+    void compute_grid_motion(const FlowStates<T>& fs, const GridBlock<T>& grid,
+                             std::shared_ptr<GridMotionDriver<T>>& driver,
+                             Vector3s<T> vertex_vel) {
         driver->compute_vertex_velocities(fs, grid, vertex_vel);
         compute_face_vel(grid, vertex_vel);
     }
 
-    void compute_face_vel(const GridBlock<T>& grid,
-                          const Vector3s<T>& vertex_vel) {
+    void compute_face_vel(const GridBlock<T>& grid, const Vector3s<T>& vertex_vel) {
         auto face_vertices = grid.interfaces().vertex_ids();
         Kokkos::parallel_for(
             "compute_face_velocity", grid.num_interfaces(),

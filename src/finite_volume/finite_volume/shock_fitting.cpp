@@ -9,7 +9,6 @@ template <typename T>
 void ShockFitting<T>::compute_vertex_velocities(const FlowStates<T>& fs,
                                                 const GridBlock<T>& grid,
                                                 Vector3s<T> vertex_vel) {
-  
     (void)fs;
     (void)grid;
     Kokkos::parallel_for(

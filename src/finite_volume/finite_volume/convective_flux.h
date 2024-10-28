@@ -37,10 +37,10 @@ public:
 
     // Compute the convective fluxes. Includes gradient calculation,
     // but not boundary conditions
-    void compute_convective_flux(const FlowStates<T>& flow_states,
-                                 const GridBlock<T>& grid, IdealGas<T>& gas_model,
-                                 Gradients<T>& cell_grad, WLSGradient<T>& grad_calc,
-                                 ConservedQuantities<T>& flux, bool allow_reconstruction);
+    void compute_convective_flux(const FlowStates<T>& flow_states, GridBlock<T>& grid,
+                                 IdealGas<T>& gas_model, Gradients<T>& cell_grad,
+                                 WLSGradient<T>& grad_calc, ConservedQuantities<T>& flux,
+                                 bool allow_reconstruction);
 
     // Compute the convective gradients. This could be private,
     // except for the fact that we might want to compute

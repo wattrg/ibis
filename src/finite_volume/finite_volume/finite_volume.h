@@ -40,7 +40,7 @@ public:
      * @param[in] gas_model The gas model
      * @param[in] trans_prop The transport properties
      */
-    size_t compute_dudt(FlowStates<T>& flow_state, const GridBlock<T>& grid,
+    size_t compute_dudt(FlowStates<T>& flow_state, GridBlock<T>& grid,
                         ConservedQuantities<T>& dudt, IdealGas<T>& gas_model,
                         TransportProperties<T>& trans_prop,
                         bool allow_reconstruction = true);

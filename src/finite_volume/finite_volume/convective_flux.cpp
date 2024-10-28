@@ -84,7 +84,7 @@ ConvectiveFlux<T>::ConvectiveFlux(const GridBlock<T>& grid, json config) {
 
 template <typename T>
 void ConvectiveFlux<T>::compute_convective_flux(
-    const FlowStates<T>& flow_states, const GridBlock<T>& grid, IdealGas<T>& gas_model,
+    const FlowStates<T>& flow_states, GridBlock<T>& grid, IdealGas<T>& gas_model,
     Gradients<T>& cell_grad, WLSGradient<T>& grad_calc, ConservedQuantities<T>& flux,
     bool allow_reconstruction) {
     // reconstruct
@@ -112,9 +112,34 @@ void ConvectiveFlux<T>::compute_convective_flux(
     Interfaces<T> faces = grid.interfaces();
     transform_to_local_frame(left_.vel, faces.norm(), faces.tan1(), faces.tan2());
     transform_to_local_frame(right_.vel, faces.norm(), faces.tan1(), faces.tan2());
+    if (grid.moving()) {
+        transform_to_local_frame(grid.face_vel(), faces.norm(), faces.tan1(),
+                                 faces.tan2());
+    }
 
     // compute the flux
     flux_calculator_->compute_flux(left_, right_, flux, gas_model, grid.dim() == 3);
+
+    // translate flux from interface reference frame to the global reference frame
+    Vector3s<T> face_vel = grid.face_vel();
+    if (grid.moving()) {
+        Kokkos::parallel_for(
+            "flux::grid_motion", faces.size(), KOKKOS_LAMBDA(const size_t i) {
+                T v_sqr = face_vel.x(i) * face_vel.x(i) + face_vel.y(i) * face_vel.y(i) +
+                          face_vel.z(i) * face_vel.z(i);
+                flux.energy(i) += 0.5 * flux.mass(i) * v_sqr +
+                                  flux.momentum_x(i) * face_vel.x(i) +
+                                  flux.momentum_y(i) * face_vel.y(i);
+                if (flux.dim() == 3) {
+                    flux.energy(i) += flux.momentum_z(i) * face_vel.z(i);
+                }
+                flux.momentum_x(i) += face_vel.x(i) * flux.mass(i);
+                flux.momentum_y(i) += face_vel.y(i) * flux.mass(i);
+                if (flux.dim() == 3) {
+                    flux.momentum_z(i) += face_vel.z(i) * flux.mass(i);
+                }
+            });
+    }
 
     // rotate the fluxes to the global frame
     Vector3s<T> norm = faces.norm();

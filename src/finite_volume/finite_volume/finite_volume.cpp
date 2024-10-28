@@ -55,7 +55,7 @@ FiniteVolume<T>::FiniteVolume(const GridBlock<T>& grid, json config) {
 }
 
 template <typename T>
-size_t FiniteVolume<T>::compute_dudt(FlowStates<T>& flow_state, const GridBlock<T>& grid,
+size_t FiniteVolume<T>::compute_dudt(FlowStates<T>& flow_state, GridBlock<T>& grid,
                                      ConservedQuantities<T>& dudt, IdealGas<T>& gas_model,
                                      TransportProperties<T>& trans_prop,
                                      bool allow_reconstruction) {
