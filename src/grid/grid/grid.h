@@ -458,9 +458,10 @@ public:
         std::vector<Vertex<Ibis::real>> vertices;
         vertices.reserve(host_grid.num_vertices());
         for (size_t vertex_i = 0; vertex_i < host_grid.num_vertices(); vertex_i++) {
-            Vector3<Ibis::real> pos{Ibis::real_part(vertices_.positions().x(vertex_i)),
-                                    Ibis::real_part(vertices_.positions().y(vertex_i)),
-                                    Ibis::real_part(vertices_.positions().z(vertex_i))};
+            Vector3<Ibis::real> pos{
+                Ibis::real_part(host_grid.vertices_.positions().x(vertex_i)),
+                Ibis::real_part(host_grid.vertices_.positions().y(vertex_i)),
+                Ibis::real_part(host_grid.vertices_.positions().z(vertex_i))};
             vertices.push_back(Vertex<Ibis::real>(pos));
         }
 
