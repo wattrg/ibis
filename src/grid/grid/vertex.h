@@ -72,11 +72,19 @@ public:
         _positions.deep_copy(other._positions);
     }
 
+    void set_face_ids(Ibis::RaggedArray<size_t, array_layout, ExecSpace> interface_ids) {
+        interface_ids_ = interface_ids;
+    }
+
+    Ibis::RaggedArray<size_t, array_layout, ExecSpace> interface_ids() const {
+        return interface_ids_;
+    }
+
 public:
     Vector3s<T, array_layout, memory_space> _positions;
 
     // sometimes we need to know which interfaces this vertex is part of
-    Ibis::RaggedArray<size_t, array_layout, ExecSpace> interfaces_;
+    Ibis::RaggedArray<size_t, array_layout, ExecSpace> interface_ids_;
 };
 
 #endif

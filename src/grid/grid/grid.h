@@ -156,6 +156,7 @@ public:
         cells_.compute_volumes(vertices_, interfaces_);
         compute_cell_neighbours();
         compute_ghost_cell_centres();
+        setup_vertex_face_connectivity();
 
         initialised_ = true;
     }
@@ -448,6 +449,19 @@ public:
                 markers_.insert({marker_label, boundary_faces_[marker_label]});
             }
         }
+    }
+
+    void setup_vertex_face_connectivity() {
+        std::vector<std::vector<size_t>> vertex_face_connections(num_vertices());
+        for (size_t face_i = 0; face_i < interfaces_.size(); face_i++) {
+            auto vertices_of_face = interfaces_.vertex_ids()(face_i);
+            for (size_t vertex_i = 0; vertex_i < vertices_of_face.size(); vertex_i++) {
+                size_t vertex_id = vertices_of_face(vertex_i);
+                vertex_face_connections[vertex_id].push_back(face_i);
+            }
+        }
+        Ibis::RaggedArray<size_t, array_layout, ExecSpace> interface_ids(vertex_face_connections);
+        vertices_.set_face_ids(interface_ids);
     }
 
     GridIO to_grid_io() const {
