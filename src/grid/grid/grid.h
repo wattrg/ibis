@@ -13,7 +13,7 @@
 
 using json = nlohmann::json;
 
-template <typename T, class ExecSpace, class Layout>
+template <typename T>
 class GridMotionDriver;
 
 template <typename T, class ExecSpace = Kokkos::DefaultExecutionSpace,
@@ -505,7 +505,7 @@ public:
     void compute_grid_motion(
         const FlowStates<T, Layout, memory_space>& fs,
         const Vector3s<T, array_layout, memory_space>& vertex_vel,
-        std::shared_ptr<GridMotionDriver<T, ExecSpace, Layout>>& driver) {
+        std::shared_ptr<GridMotionDriver<T>>& driver) {
         driver->compute_vertex_velocities(fs, *this, vertex_vel);
         compute_face_vel(vertex_vel);
     }
@@ -538,7 +538,7 @@ public:
         compute_geometric_data();
     }
 
-    Vector3s<T, Layout, memory_space> face_vel() { return face_vel_; }
+    Vector3s<T, Layout, memory_space> face_vel() const { return face_vel_; }
 
     bool moving() const { return moving_grid_; }
 

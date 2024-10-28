@@ -14,6 +14,9 @@ add_library(
 	  finite_volume/boundaries/boundary.cpp
 	  finite_volume/gradient.cpp
 	  finite_volume/limiter.cpp
+	  finite_volume/grid_motion_driver.cpp
+	  finite_volume/shock_fitting.cpp
+	  finite_volume/rigid_body_translation.cpp
 )
 
 target_link_libraries(

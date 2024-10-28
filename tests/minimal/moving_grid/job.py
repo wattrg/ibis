@@ -30,5 +30,5 @@ config.grid = Block(
         "bottom": slip_wall(),
         "right": supersonic_outflow()
     },
-    motion = ShockFitting()
+    motion = RigidBodyTranslation(velocity={"x": 1000.0, "y": 0.0, "z": 0.0})
 )

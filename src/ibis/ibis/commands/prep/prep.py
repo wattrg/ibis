@@ -280,6 +280,27 @@ class ShockFitting:
         return
 
 
+class RigidBodyTranslation:
+    _json_values = ["velocity"]
+    __slots__ = _json_values
+    _defaults_file = "rigid_body_translation.json"
+
+    def __init__(self, **kwargs):
+        json_data = read_defaults(DEFAULTS_DIRECTORY, self._defaults_file)
+        for key in self._json_values:
+            setattr(self, key, json_data[key])
+
+        for key, value in kwargs.items():
+            setattr(self, key, value)
+
+    def as_dict(self):
+        return {
+            "enabled": True,
+            "type": "rigid_body_translation",
+            "velocity": self.velocity
+        }
+
+
 class Block:
     def __init__(self, file_name, initial_condition, boundaries, **kwargs):
         self._initial_condition = initial_condition
@@ -1003,6 +1024,7 @@ def main(file_name, res_dir):
         "Unlimited": Unlimited,
         "ThermoInterp": ThermoInterp,
         "ShockFitting": ShockFitting,
+        "RigidBodyTranslation": RigidBodyTranslation,
     }
 
     # run the user supplied script

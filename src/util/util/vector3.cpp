@@ -82,6 +82,9 @@ void subtract(const Vector3s<T> &a, const Vector3s<T> &b, Vector3s<T> &result) {
 template void subtract<Ibis::real>(const Vector3s<Ibis::real> &a,
                                    const Vector3s<Ibis::real> &b,
                                    Vector3s<Ibis::real> &result);
+template void subtract<Ibis::dual>(const Vector3s<Ibis::dual> &a,
+                                   const Vector3s<Ibis::dual> &b,
+                                   Vector3s<Ibis::dual> &result);
 
 template <typename T>
 void cross(const Vector3s<T> &a, const Vector3s<T> &b, Vector3s<T> &result) {

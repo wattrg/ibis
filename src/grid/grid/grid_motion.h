@@ -9,36 +9,32 @@
 
 using json = nlohmann::json;
 
-template <typename T, class ExecSpace, class Layout>
+template <typename T>
 class GridMotionDriver;
 
-template <typename T, class ExecSpace = Kokkos::DefaultExecutionSpace,
-          class Layout = Kokkos::DefaultExecutionSpace::array_layout>
+template <typename T>
 class GridMotion {
-public:
-    using MemSpace = typename ExecSpace::memory_space;
-
 public:
     GridMotion() {}
 
-    GridMotion(const GridBlock<T, ExecSpace, Layout>& grid, json config) {
+    GridMotion(const GridBlock<T>& grid, json config) {
         enabled_ = config.at("enabled");
         if (enabled_) {
-            face_vel_ = Vector3s<T, Layout, MemSpace>(grid.num_interfaces());
+            face_vel_ = Vector3s<T>(grid.num_interfaces());
         }
     }
 
     void compute_grid_motion(
-        const FlowStates<T, Layout, MemSpace>& fs,
-        const GridBlock<T, ExecSpace, Layout>& grid,
-        std::shared_ptr<GridMotionDriver<T, ExecSpace, Layout>>& driver,
-        Vector3s<T, Layout, MemSpace> vertex_vel) {
+        const FlowStates<T>& fs,
+        const GridBlock<T>& grid,
+        std::shared_ptr<GridMotionDriver<T>>& driver,
+        Vector3s<T> vertex_vel) {
         driver->compute_vertex_velocities(fs, grid, vertex_vel);
         compute_face_vel(grid, vertex_vel);
     }
 
-    void compute_face_vel(const GridBlock<T, ExecSpace, Layout>& grid,
-                          const Vector3s<T, Layout, MemSpace>& vertex_vel) {
+    void compute_face_vel(const GridBlock<T>& grid,
+                          const Vector3s<T>& vertex_vel) {
         auto face_vertices = grid.interfaces().vertex_ids();
         Kokkos::parallel_for(
             "compute_face_velocity", grid.num_interfaces(),
@@ -60,13 +56,13 @@ public:
             });
     }
 
-    const Vector3s<T, Layout, MemSpace> face_vel() { return face_vel_; }
+    const Vector3s<T> face_vel() { return face_vel_; }
 
     bool enabled() { return enabled_; }
 
 private:
     bool enabled_;
-    Vector3s<T, Layout, MemSpace> face_vel_;
+    Vector3s<T> face_vel_;
 };
 
 #endif

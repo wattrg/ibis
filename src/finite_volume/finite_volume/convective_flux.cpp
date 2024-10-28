@@ -101,6 +101,13 @@ void ConvectiveFlux<T>::compute_convective_flux(
             throw new std::runtime_error("Invalid reconstruction order");
     }
 
+    // transform the velocity at the interfaces to be in the frame of references
+    // of the interface
+    if (grid.moving()) {
+        subtract(left_.vel, grid.face_vel(), left_.vel);
+        subtract(right_.vel, grid.face_vel(), right_.vel);
+    }
+
     // rotate velocity to the interface reference frame
     Interfaces<T> faces = grid.interfaces();
     transform_to_local_frame(left_.vel, faces.norm(), faces.tan1(), faces.tan2());
