@@ -3,7 +3,7 @@ gas_state = GasState()
 gas_state.T = 300
 gas_state.rho = 1.225
 gas_model.update_thermo_from_rhoT(gas_state)
-flow_state = FlowState(gas=gas_state, vx=1000.0, vy=500.0)
+flow_state = FlowState(gas=gas_state, vx=1000.0, vy=0.0)
 
 config.convective_flux = ConvectiveFlux(
     flux_calculator=Hanel(),

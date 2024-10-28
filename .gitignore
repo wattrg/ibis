@@ -11,6 +11,7 @@ examples/**/plot
 examples/**/*.su2
 tests/**/flow
 tests/**/grid
+tests/**/io
 tests/**/config
 tests/**/log
 tests/**/plot

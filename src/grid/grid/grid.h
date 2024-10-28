@@ -452,6 +452,7 @@ public:
 
     GridIO to_grid_io() const {
         auto host_grid = host_mirror();
+        host_grid.deep_copy(*this);
 
         // get the position of the vertices
         std::vector<Vertex<Ibis::real>> vertices;
@@ -483,7 +484,8 @@ public:
             size_t num_faces = bc_faces.size();
             std::vector<ElemIO> bc_elems;
             bc_elems.reserve(num_faces);
-            for (size_t bc_face = 0; bc_face < num_faces; bc_face++) {
+            for (size_t bc_face_i = 0; bc_face_i < num_faces; bc_face_i++) {
+                size_t bc_face = bc_faces(bc_face_i);
                 ElemType face_shape = host_grid.interfaces().shapes()(bc_face);
                 auto bc_face_vertices = host_grid.interfaces().vertex_ids()(bc_face);
                 std::vector<size_t> vertex_ids;
