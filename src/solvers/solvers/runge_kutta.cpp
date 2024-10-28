@@ -55,8 +55,8 @@ RungeKutta::RungeKutta(json config, GridBlock<Ibis::real> grid, std::string grid
     fv_ = FiniteVolume<Ibis::real>(grid_, config);
 
     // grid motion
-    if (grid_.moving()) {
-        moving_grid_ = true;
+    moving_grid_ = grid_.moving();
+    if (moving_grid_) {
         json grid_config = config.at("grid");
         json grid_motion_config = grid_config.at("motion");
         // grid_driver_ = std::shared_ptr<GridMotionDriver<Ibis::real>>(
