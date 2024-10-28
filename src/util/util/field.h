@@ -30,7 +30,7 @@ public:
         Kokkos::deep_copy(view_, view_host);
     }
 
-    Field(view_type values) : view_(values) {} 
+    Field(view_type values) : view_(values) {}
 
     KOKKOS_FORCEINLINE_FUNCTION
     T& operator()(const size_t i) { return view_(i); }
