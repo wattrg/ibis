@@ -2,6 +2,7 @@
 #define VERTEX_H
 
 #include <util/vector3.h>
+#include "util/ragged_array.h"
 
 template <typename T>
 struct Vertex {
@@ -73,6 +74,9 @@ public:
 
 public:
     Vector3s<T, array_layout, memory_space> _positions;
+
+    // sometimes we need to know which interfaces this vertex is part of
+    Ibis::RaggedArray<size_t, array_layout, ExecSpace> interfaces_;
 };
 
 #endif
