@@ -2,6 +2,7 @@
 #define VERTEX_H
 
 #include <util/vector3.h>
+
 #include "util/ragged_array.h"
 
 template <typename T>

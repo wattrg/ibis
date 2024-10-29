@@ -7,9 +7,10 @@ template <typename T>
 class ShockFittingDirectVelocityAction {
 public:
     virtual ~ShockFittingDirectVelocityAction() {}
-    
+
     virtual void apply(const FlowStates<T>& fs, const GridBlock<T>& grid,
-                       Vector3s<T> vertex_vel, const Field<size_t>& boundary_vertices) = 0;  
+                       Vector3s<T> vertex_vel,
+                       const Field<size_t>& boundary_vertices) = 0;
 };
 
 template <typename T>
@@ -17,8 +18,8 @@ class WaveSpeed : public ShockFittingDirectVelocityAction<T> {
 public:
     ~WaveSpeed() {}
 
-    void apply(const FlowStates<T>& fs, const GridBlock<T>& grid,
-               Vector3s<T> vertex_vel, const Field<size_t>& boundary_vertices);  
+    void apply(const FlowStates<T>& fs, const GridBlock<T>& grid, Vector3s<T> vertex_vel,
+               const Field<size_t>& boundary_vertices);
 };
 
 template <typename T>
@@ -26,9 +27,9 @@ class ZeroVelocity : public ShockFittingDirectVelocityAction<T> {
 public:
     ~ZeroVelocity() {}
 
-    void apply(const FlowStates<T>& fs, const GridBlock<T>& grid,
-               Vector3s<T> vertex_vel, const Field<size_t>& boundary_vertices,
-               const Field<size_t>& boundary_faces);  
+    void apply(const FlowStates<T>& fs, const GridBlock<T>& grid, Vector3s<T> vertex_vel,
+               const Field<size_t>& boundary_vertices,
+               const Field<size_t>& boundary_faces);
 };
 
 template <typename T>
@@ -46,8 +47,8 @@ class ConstrainDirection {
 public:
     ~ConstrainDirection() {}
 
-    void apply(const GridBlock<T>& grid,
-               Vector3s<T> vertex_vel, std::vector<const Field<size_t>>& boundary_vertices);  
+    void apply(const GridBlock<T>& grid, Vector3s<T> vertex_vel,
+               std::vector<const Field<size_t>>& boundary_vertices);
 
 private:
     Vector3<T> direction_;
