@@ -27,19 +27,36 @@ class ZeroVelocity : public ShockFittingDirectVelocityAction<T> {
 public:
     ~ZeroVelocity() {}
 
+    ZeroVelocity() {}
+
     void apply(const FlowStates<T>& fs, const GridBlock<T>& grid, Vector3s<T> vertex_vel,
-               const Field<size_t>& boundary_vertices,
-               const Field<size_t>& boundary_faces);
+               const Field<size_t>& boundary_vertices);
 };
 
 template <typename T>
 class ShockFittingInterpolationAction {
 public:
-    virtual ~ShockFittingInterpolationAction() {}
+    ~ShockFittingInterpolationAction() {}
 
-    virtual void apply(const GridBlock<T>& grid, Vector3s<T> vertex_vel,
-                       std::vector<const Field<size_t>> interpolation_points,
-                       std::vector<const Field<size_t>> sample_points);
+    ShockFittingInterpolationAction() {}
+
+    ShockFittingInterpolationAction(Field<size_t> sample_points,
+                                    Field<size_t> interp_points, Ibis::real power)
+        : sample_points_(sample_points), interp_points_(interp_points), power_(power) {}
+
+    ShockFittingInterpolationAction(const GridBlock<T>& grid,
+                                    std::vector<std::string> sample_markers,
+                                    std::vector<std::string> interp_markers,
+                                    Ibis::real power);
+
+    ShockFittingInterpolationAction(json config);
+
+    void apply(const GridBlock<T>& grid, Vector3s<T> vertex_vel);
+
+private:
+    Field<size_t> sample_points_;
+    Field<size_t> interp_points_;
+    Ibis::real power_;
 };
 
 template <typename T>
@@ -47,28 +64,16 @@ class ConstrainDirection {
 public:
     ~ConstrainDirection() {}
 
-    void apply(const GridBlock<T>& grid, Vector3s<T> vertex_vel,
-               std::vector<const Field<size_t>>& boundary_vertices);
+    ConstrainDirection(Ibis::real x, Ibis::real y, Ibis::real z)
+        : direction_(Vector3<T>(x, y, z)) {}
+
+    ConstrainDirection(json config);
+
+    void apply(Vector3s<T> vertex_vel, Field<size_t>& boundary_vertices);
 
 private:
     Vector3<T> direction_;
 };
-
-// template <typename T>
-// class ShockFittingBC {
-// public:
-//     ~ShockFittingBC() {}
-
-//     ShockFittingBC(json config);
-
-// private:
-//     // these directly set the velocity of vertices on boundaries
-//     std::vector<std::shared_ptr<ShockFittingBCAction<T>>> direct_boundary_actions_;
-
-//     // these interpolate the velocity of vertices on boundary,
-//     // then potentially modify them to meet some constraint
-//     std::vector<std::shared_ptr<ShockFittingBCAction<T>>> interp_boundary_action_;
-// };
 
 template <typename T>
 class ShockFitting : public GridMotionDriver<T> {
@@ -89,9 +94,16 @@ public:
                                          Vector3s<T> vertex_vel);
 
 private:
-    // std::vector<ShockFittingBC<T>> bcs_;
-    std::vector<Field<size_t>> boundary_interfaces_;
-    std::vector<Field<size_t>> boundary_vertices_;
+    // actions to perform for setting vertex velocities on boundaries
+    // (the 'boundaries' for shock fitting may be intenral to the domain)
+    std::vector<
+        std::pair<std::string, std::shared_ptr<ShockFittingDirectVelocityAction<T>>>>
+        direct_actions_;
+    std::vector<ShockFittingInterpolationAction<T>> interp_actions_;
+    std::vector<std::pair<std::string, ConstrainDirection<T>>> constraints_;
+
+    // Compute the remaining vertex velocities
+    ShockFittingInterpolationAction<T> final_interp_;
 
     // think about a way to save memory by not storing the internal vertices,
     // and just using the vertices not in the boundary verties

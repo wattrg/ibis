@@ -308,6 +308,11 @@ public:
         return markers_.at(marker);
     }
 
+    const Field<size_t, array_layout, memory_space>& marked_vertices(
+        std::string marker) const {
+        return marked_vertices_.at(marker);
+    }
+
     const Field<size_t, array_layout, memory_space>& boundary_faces(
         std::string boundary_tag) const {
         return boundary_faces_.at(boundary_tag);
@@ -461,7 +466,9 @@ public:
                     }
                 }
             }
-            marked_vertices_.insert({marker_label, marked_vertices});
+            marked_vertices_.insert(
+                {marker_label, Field<size_t, array_layout, memory_space>(
+                                   "marked_vertices", marked_vertices)});
         }
     }
 
