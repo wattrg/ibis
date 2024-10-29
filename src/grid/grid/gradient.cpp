@@ -1,11 +1,11 @@
 #include <doctest/doctest.h>
-#include <finite_volume/gradient.h>
+#include <grid/gradient.h>
 #include <grid/grid.h>
 
 #include <Kokkos_Core.hpp>
 #include <nlohmann/json.hpp>
 
-json build_config() {
+json build_gradient_config() {
     json config{};
     json boundaries{};
     json slip_wall{};
@@ -27,7 +27,7 @@ json build_config() {
 }
 
 TEST_CASE("gradient") {
-    json config = build_config();
+    json config = build_gradient_config();
     GridBlock<Ibis::real> block_dev("../../../src/grid/test/grid.su2", config);
     auto block_host = block_dev.host_mirror();
     block_host.deep_copy(block_dev);

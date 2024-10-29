@@ -7,11 +7,10 @@
 #include <stdexcept>
 
 #include "finite_volume/convective_flux.h"
-#include "finite_volume/gradient.h"
 #include "gas/transport_properties.h"
 
 template <typename T>
-FiniteVolume<T>::FiniteVolume(const GridBlock<T>& grid, json config) {
+FiniteVolume<T>::FiniteVolume(GridBlock<T>& grid, json config) {
     dim_ = grid.dim();
 
     json convective_flux_config = config.at("convective_flux");
@@ -33,7 +32,7 @@ FiniteVolume<T>::FiniteVolume(const GridBlock<T>& grid, json config) {
     size_t reconstruction_order = convective_flux_.reconstruction_order();
     bool viscous = viscous_flux_.enabled();
     if (viscous || reconstruction_order > 1) {
-        grad_calc_ = WLSGradient<T>(grid);
+        grid.allocate_gradient_weights();
         const RequiredGradients grads = convective_flux_.required_gradients();
         cell_grad_ = Gradients<T>(grid.num_cells(), grads.pressure, grads.temp, grads.u,
                                   grads.rho, viscous);
@@ -61,11 +60,11 @@ size_t FiniteVolume<T>::compute_dudt(FlowStates<T>& flow_state, GridBlock<T>& gr
                                      bool allow_reconstruction) {
     apply_pre_reconstruction_bc(flow_state, grid, gas_model, trans_prop);
     convective_flux_.compute_convective_flux(flow_state, grid, gas_model, cell_grad_,
-                                             grad_calc_, flux_, allow_reconstruction);
+                                             grid.grad_calc(), flux_, allow_reconstruction);
     if (viscous_flux_.enabled()) {
         apply_pre_viscous_grad_bc(flow_state, grid, gas_model, trans_prop);
         viscous_flux_.compute_viscous_flux(flow_state, grid, gas_model, trans_prop,
-                                           cell_grad_, grad_calc_, flux_);
+                                           cell_grad_, grid.grad_calc(), flux_);
     }
 
     flux_surface_integral(grid, dudt);
@@ -209,7 +208,7 @@ void FiniteVolume<T>::compute_viscous_gradient(FlowStates<T>& fs,
                                                const TransportProperties<T>& trans_prop) {
     apply_pre_reconstruction_bc(fs, grid, gas_model, trans_prop);
     apply_pre_viscous_grad_bc(fs, grid, gas_model, trans_prop);
-    viscous_flux_.compute_viscous_gradient(fs, grid, cell_grad_, grad_calc_);
+    viscous_flux_.compute_viscous_gradient(fs, grid, cell_grad_, grid.grad_calc());
 }
 
 template <typename T>
@@ -217,7 +216,7 @@ void FiniteVolume<T>::compute_convective_gradient(
     FlowStates<T>& fs, const GridBlock<T>& grid, const IdealGas<T>& gas_model,
     const TransportProperties<T>& trans_prop) {
     apply_pre_reconstruction_bc(fs, grid, gas_model, trans_prop);
-    convective_flux_.compute_convective_gradient(fs, grid, cell_grad_, grad_calc_);
+    convective_flux_.compute_convective_gradient(fs, grid, cell_grad_, grid.grad_calc());
 }
 
 template class FiniteVolume<Ibis::real>;

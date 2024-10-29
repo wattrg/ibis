@@ -1,8 +1,8 @@
 #ifndef CONVECTIVE_FLUX_H
 #define CONVECTIVE_FLUX_H
 
+#include <grid/gradient.h>
 #include <finite_volume/flux_calc.h>
-#include <finite_volume/gradient.h>
 #include <finite_volume/limiter.h>
 #include <gas/flow_state.h>
 

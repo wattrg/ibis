@@ -3,6 +3,7 @@
 
 #include <grid/cell.h>
 #include <grid/grid_io.h>
+// #include <grid/gradient.h>
 // #include <grid/grid_motion.h>
 // #include <finite_volume/grid_motion_driver.h>
 #include <gas/flow_state.h>
@@ -13,9 +14,15 @@
 
 using json = nlohmann::json;
 
+// forward declarations
 template <typename T>
 class GridMotionDriver;
 
+template <typename T, class ExecSpace, class Layout>
+class WLSGradient;
+
+
+// The main GridBlock
 template <typename T, class ExecSpace = Kokkos::DefaultExecutionSpace,
           class Layout = Kokkos::DefaultExecutionSpace::array_layout>
 class GridBlock {
@@ -167,6 +174,9 @@ public:
         cells_.compute_centroids(vertices_, interfaces_);
         cells_.compute_volumes(vertices_, interfaces_);
         compute_ghost_cell_centres();
+        if (grad_calc_) {
+            compute_gradient_weights();
+        }
     }
 
     void compute_interface_connectivity(std::map<size_t, size_t> ghost_cells) {
@@ -486,6 +496,19 @@ public:
         vertices_.set_face_ids(interface_ids);
     }
 
+    void allocate_gradient_weights() {
+        grad_calc_ = std::shared_ptr<WLSGradient<T, ExecSpace, Layout>>(new WLSGradient<T, ExecSpace, Layout>(*this));
+        grad_calc_->compute_weights(*this);
+    }
+
+    void compute_gradient_weights() {
+        grad_calc_->compute_weights(*this);
+    }
+
+    WLSGradient<T, ExecSpace, Layout>& grad_calc() const {
+        return *grad_calc_;
+    }
+
     GridIO to_grid_io() const {
         auto host_grid = host_mirror();
         host_grid.deep_copy(*this);
@@ -585,6 +608,9 @@ public:
     Vertices<T, execution_space, array_layout> vertices_;
     Interfaces<T, execution_space, array_layout> interfaces_;
     Cells<T, execution_space, array_layout> cells_;
+
+    // gradients
+    std::shared_ptr<WLSGradient<T, ExecSpace, Layout>> grad_calc_;
 
     // Some information about the grid
     size_t dim_;

@@ -5,13 +5,13 @@
 #include <finite_volume/conserved_quantities.h>
 #include <finite_volume/convective_flux.h>
 #include <finite_volume/flux_calc.h>
-#include <finite_volume/gradient.h>
 #include <finite_volume/limiter.h>
 #include <finite_volume/viscous_flux.h>
 #include <gas/flow_state.h>
 #include <gas/gas_model.h>
 #include <gas/transport_properties.h>
 #include <grid/grid.h>
+#include <grid/gradient.h>
 #include <spdlog/spdlog.h>
 #include <util/numeric_types.h>
 
@@ -29,7 +29,7 @@ class FiniteVolume {
 public:
     FiniteVolume() {}
 
-    FiniteVolume(const GridBlock<T>& grid, json config);
+    FiniteVolume(GridBlock<T>& grid, json config);
 
     /**
      * Compute the time derivative of a particular flow state
@@ -118,7 +118,7 @@ private:
     size_t dim_;
 
     // Gradient calculator
-    WLSGradient<T> grad_calc_;
+    // WLSGradient<T> grad_calc_;
 
     // Storage for gradients at cells
     Gradients<T> cell_grad_;

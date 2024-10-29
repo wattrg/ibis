@@ -1,5 +1,4 @@
 #include <finite_volume/convective_flux.h>
-#include <finite_volume/gradient.h>
 #include <spdlog/spdlog.h>
 #include <util/numeric_types.h>
 

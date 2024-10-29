@@ -57,7 +57,7 @@ public:
         int num_cells = block.num_cells();
         int num_rs = block.dim() == 2 ? 3 : 6;
         r_ = Kokkos::View<T**, Layout, memory_space>("WLSGradient::r", num_cells, num_rs);
-        compute_workspace_(block);
+        compute_weights(block);
     }
 
     WLSGradient(view_type rs) : r_(rs) {}
@@ -116,7 +116,7 @@ public:
     }
 
 public:
-    void compute_workspace_(const GridBlock<T, ExecSpace, Layout>& block) {
+    void compute_weights(const GridBlock<T, ExecSpace, Layout>& block) {
         auto cells = block.cells();
         int dim = block.dim();
         Kokkos::parallel_for(

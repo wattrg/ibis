@@ -1,8 +1,8 @@
 #ifndef VISCOUS_FLUX_H
 #define VISCOUS_FLUX_H
 
+#include <grid/gradient.h>
 #include <finite_volume/conserved_quantities.h>
-#include <finite_volume/gradient.h>
 #include <gas/flow_state.h>
 #include <gas/gas_model.h>
 #include <gas/transport_properties.h>

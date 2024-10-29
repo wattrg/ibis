@@ -1,7 +1,6 @@
 #include <finite_volume/viscous_flux.h>
 
 #include "finite_volume/conserved_quantities.h"
-#include "finite_volume/gradient.h"
 #include "gas/transport_properties.h"
 
 template <typename T>
