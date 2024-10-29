@@ -436,7 +436,8 @@ public:
             if (boundary_faces_.find(marker_label) == boundary_faces_.end()) {
                 // this marker is not a boundary, so we'll allocate
                 // some memory for these faces
-                std::vector<size_t> marker_faces(marker.size());
+                std::vector<size_t> marker_faces;
+                marker_faces.reserve(marker.size());
                 for (size_t face_i = 0; face_i < marker.size(); face_i++) {
                     size_t face_id = interfaces.id(marker[face_i].vertex_ids());
                     marker_faces.push_back(face_id);
@@ -448,6 +449,19 @@ public:
                 // faces on the boundary
                 markers_.insert({marker_label, boundary_faces_[marker_label]});
             }
+
+            // keep track of the vertices belonging to these marked faces
+            std::vector<size_t> marked_vertices;
+            for (size_t face_i = 0; face_i < marker.size(); face_i++) {
+                std::vector<size_t> vertices = marker[face_i].vertex_ids();
+                for (const size_t& vertex_id : vertices) {
+                    if (std::find(marked_vertices.begin(), marked_vertices.end(),
+                                  vertex_id) == marked_vertices.end()) {
+                        marked_vertices.push_back(vertex_id);
+                    }
+                }
+            }
+            marked_vertices_.insert({marker_label, marked_vertices});
         }
     }
 
@@ -460,7 +474,8 @@ public:
                 vertex_face_connections[vertex_id].push_back(face_i);
             }
         }
-        Ibis::RaggedArray<size_t, array_layout, ExecSpace> interface_ids(vertex_face_connections);
+        Ibis::RaggedArray<size_t, array_layout, ExecSpace> interface_ids(
+            vertex_face_connections);
         vertices_.set_face_ids(interface_ids);
     }
 
@@ -579,6 +594,9 @@ public:
     // and other faces that have been marked for one reason or another (e.g.
     // shock fitting)
     std::map<std::string, Field<size_t, array_layout, memory_space>> markers_;
+
+    // vertices which belong to marked entities
+    std::map<std::string, Field<size_t, array_layout, memory_space>> marked_vertices_;
 
     // grid motion
     // GridMotion<T, execution_space, array_layout> motion_;
