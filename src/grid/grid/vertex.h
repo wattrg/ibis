@@ -52,6 +52,7 @@ public:
         return _positions;
     }
 
+    KOKKOS_INLINE_FUNCTION
     Vector3<T> position(size_t i) const {
         return Vector3<T>(_positions.x(i), _positions.y(i), _positions.z(i));
     }

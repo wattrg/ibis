@@ -46,10 +46,10 @@ public:
 
     ShockFittingInterpolationAction(const GridBlock<T>& grid,
                                     std::vector<std::string> sample_markers,
-                                    std::vector<std::string> interp_markers,
-                                    Ibis::real power);
+                                    std::string interp_marker, Ibis::real power);
 
-    ShockFittingInterpolationAction(json config);
+    ShockFittingInterpolationAction(const GridBlock<T>& grid, std::string interp_marker,
+                                    json config);
 
     void apply(const GridBlock<T>& grid, Vector3s<T> vertex_vel);
 
