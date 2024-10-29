@@ -4,26 +4,25 @@
 #include <finite_volume/grid_motion_driver.h>
 
 template <typename T>
-class ShockFittingBCAction {
-    virtual ~ShockFittingBCAction() {}
+class ShockFittingDirectVelocityAction {
+public:
+    virtual ~ShockFittingDirectVelocityAction() {}
     
     virtual void apply(const FlowStates<T>& fs, const GridBlock<T>& grid,
-                       Vector3s<T> vertex_vel, const Field<size_t>& boundary_vertices,
-                       const Field<size_t>& boundary_faces);  
+                       Vector3s<T> vertex_vel, const Field<size_t>& boundary_vertices) = 0;  
 };
 
 template <typename T>
-class MatchWaveSpeed : public ShockFittingBCAction<T> {
+class WaveSpeed : public ShockFittingDirectVelocityAction<T> {
 public:
-    ~MatchWaveSpeed() {}
+    ~WaveSpeed() {}
 
     void apply(const FlowStates<T>& fs, const GridBlock<T>& grid,
-               Vector3s<T> vertex_vel, const Field<size_t>& boundary_vertices,
-               const Field<size_t>& boundary_faces);  
+               Vector3s<T> vertex_vel, const Field<size_t>& boundary_vertices);  
 };
 
 template <typename T>
-class ZeroVelocity : public ShockFittingBCAction<T> {
+class ZeroVelocity : public ShockFittingDirectVelocityAction<T> {
 public:
     ~ZeroVelocity() {}
 
@@ -33,33 +32,42 @@ public:
 };
 
 template <typename T>
-class ConstrainDirection : public ShockFittingBCAction<T> {
+class ShockFittingInterpolationAction {
+public:
+    virtual ~ShockFittingInterpolationAction() {}
+
+    virtual void apply(const GridBlock<T>& grid, Vector3s<T> vertex_vel,
+                       std::vector<const Field<size_t>> interpolation_points,
+                       std::vector<const Field<size_t>> sample_points);
+};
+
+template <typename T>
+class ConstrainDirection {
 public:
     ~ConstrainDirection() {}
 
-    void apply(const FlowStates<T>& fs, const GridBlock<T>& grid,
-               Vector3s<T> vertex_vel, const Field<size_t>& boundary_vertices,
-               const Field<size_t>& boundary_faces);  
+    void apply(const GridBlock<T>& grid,
+               Vector3s<T> vertex_vel, std::vector<const Field<size_t>>& boundary_vertices);  
 
 private:
     Vector3<T> direction_;
 };
 
-template <typename T>
-class ShockFittingBC {
-public:
-    ~ShockFittingBC() {}
+// template <typename T>
+// class ShockFittingBC {
+// public:
+//     ~ShockFittingBC() {}
 
-    ShockFittingBC(json config);
+//     ShockFittingBC(json config);
 
-private:
-    // these directly set the velocity of vertices on boundaries
-    std::vector<std::shared_ptr<ShockFittingBCAction<T>>> direct_boundary_actions_;
+// private:
+//     // these directly set the velocity of vertices on boundaries
+//     std::vector<std::shared_ptr<ShockFittingBCAction<T>>> direct_boundary_actions_;
 
-    // these interpolate the velocity of vertices on boundary,
-    // then potentially modify them to meet some constraint
-    std::vector<std::shared_ptr<ShockFittingBCAction<T>>> interp_boundary_action_;
-};
+//     // these interpolate the velocity of vertices on boundary,
+//     // then potentially modify them to meet some constraint
+//     std::vector<std::shared_ptr<ShockFittingBCAction<T>>> interp_boundary_action_;
+// };
 
 template <typename T>
 class ShockFitting : public GridMotionDriver<T> {
@@ -80,7 +88,7 @@ public:
                                          Vector3s<T> vertex_vel);
 
 private:
-    std::vector<ShockFittingBC<T>> bcs_;
+    // std::vector<ShockFittingBC<T>> bcs_;
     std::vector<Field<size_t>> boundary_interfaces_;
     std::vector<Field<size_t>> boundary_vertices_;
 
