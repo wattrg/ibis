@@ -33,6 +33,14 @@ template class ShockFitting<Ibis::real>;
 template class ShockFitting<Ibis::dual>;
 
 template <typename T>
+FixedVelocity<T>::FixedVelocity(json config) {
+    T x = T(config.at("x"));
+    T y = T(config.at("y"));
+    T z = T(config.at("z"));
+    vel_ = Vector3<T>(x, y, z);
+}
+
+template <typename T>
 void FixedVelocity<T>::apply(const FlowStates<T>& fs, const GridBlock<T>& grid,
                              Vector3s<T> vertex_vel,
                              const Field<size_t>& boundary_vertices) {
@@ -47,8 +55,8 @@ void FixedVelocity<T>::apply(const FlowStates<T>& fs, const GridBlock<T>& grid,
             vertex_vel.z(i) = T(vel.z);
         });
 }
-template class ZeroVelocity<Ibis::real>;
-template class ZeroVelocity<Ibis::dual>;
+template class FixedVelocity<Ibis::real>;
+template class FixedVelocity<Ibis::dual>;
 
 template <typename T>
 ConstrainDirection<T>::ConstrainDirection(json config) {
@@ -132,7 +140,7 @@ void ShockFittingInterpolationAction<T>::apply(const GridBlock<T>& grid,
         "SFInterp::interp", interp_points.size(), KOKKOS_LAMBDA(const size_t interp_i) {
             size_t interp_id = interp_points(interp_i);
             Vector3<T> num;
-            T den;
+            T den = T(0.0);
             Vector3<T> interp_pos = vertices.position(interp_id);
             for (size_t sample_i = 0; sample_i < num_sample_points; sample_i++) {
                 size_t sample_id = sample_points(sample_i);

@@ -31,8 +31,7 @@ public:
 
     FixedVelocity(Vector3<T> vel) : vel_(vel) {}
 
-    FixedVelocity(json config)
-        : vel_(Vector3<T>(config.at("x"), config.at("y"), config.at("z"))) {}
+    FixedVelocity(json config);
 
     void apply(const FlowStates<T>& fs, const GridBlock<T>& grid, Vector3s<T> vertex_vel,
                const Field<size_t>& boundary_vertices);
