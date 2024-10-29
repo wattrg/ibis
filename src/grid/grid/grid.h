@@ -484,8 +484,10 @@ public:
 
     void setup_vertex_face_connectivity() {
         std::vector<std::vector<size_t>> vertex_face_connections(num_vertices());
+        auto vertex_ids = interfaces_.vertex_ids().host_mirror();
+        vertex_ids.deep_copy(interfaces_.vertex_ids());
         for (size_t face_i = 0; face_i < interfaces_.size(); face_i++) {
-            auto vertices_of_face = interfaces_.vertex_ids()(face_i);
+            auto vertices_of_face = vertex_ids(face_i);
             for (size_t vertex_i = 0; vertex_i < vertices_of_face.size(); vertex_i++) {
                 size_t vertex_id = vertices_of_face(vertex_i);
                 vertex_face_connections[vertex_id].push_back(face_i);
