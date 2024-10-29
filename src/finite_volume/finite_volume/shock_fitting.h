@@ -23,14 +23,22 @@ public:
 };
 
 template <typename T>
-class ZeroVelocity : public ShockFittingDirectVelocityAction<T> {
+class FixedVelocity : public ShockFittingDirectVelocityAction<T> {
 public:
-    ~ZeroVelocity() {}
+    ~FixedVelocity() {}
 
-    ZeroVelocity() {}
+    FixedVelocity() {}
+
+    FixedVelocity(Vector3<T> vel) : vel_(vel) {}
+
+    FixedVelocity(json config)
+        : vel_(Vector3<T>(config.at("x"), config.at("y"), config.at("z"))) {}
 
     void apply(const FlowStates<T>& fs, const GridBlock<T>& grid, Vector3s<T> vertex_vel,
                const Field<size_t>& boundary_vertices);
+
+private:
+    Vector3<T> vel_;
 };
 
 template <typename T>
@@ -69,7 +77,7 @@ public:
 
     ConstrainDirection(json config);
 
-    void apply(Vector3s<T> vertex_vel, Field<size_t>& boundary_vertices);
+    void apply(Vector3s<T> vertex_vel, const Field<size_t>& boundary_vertices);
 
 private:
     Vector3<T> direction_;

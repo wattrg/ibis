@@ -9,25 +9,42 @@ template <typename T>
 void ShockFitting<T>::compute_vertex_velocities(const FlowStates<T>& fs,
                                                 const GridBlock<T>& grid,
                                                 Vector3s<T> vertex_vel) {
-    (void)fs;
-    (void)grid;
-    (void)vertex_vel;
+    // Step 1: Compute velocities of vertices which have direct equations
+    for (auto& [marker_label, action] : direct_actions_) {
+        const Field<size_t>& vertices = grid.marked_vertices(marker_label);
+        action->apply(fs, grid, vertex_vel, vertices);
+    }
+
+    // Step 2: Interpolate velocities of vertices on boundaries
+    for (auto& action : interp_actions_) {
+        action.apply(grid, vertex_vel);
+    }
+
+    // Step 3: Constrain certain vertices to move in given direction
+    for (auto& [marker_label, constraint] : constraints_) {
+        const Field<size_t>& vertices = grid.marked_vertices(marker_label);
+        constraint.apply(vertex_vel, vertices);
+    }
+
+    // Step 4: Interpolate the remaining internal velocities
+    final_interp_.apply(grid, vertex_vel);
 }
 template class ShockFitting<Ibis::real>;
 template class ShockFitting<Ibis::dual>;
 
 template <typename T>
-void ZeroVelocity<T>::apply(const FlowStates<T>& fs, const GridBlock<T>& grid,
-                            Vector3s<T> vertex_vel,
-                            const Field<size_t>& boundary_vertices) {
+void FixedVelocity<T>::apply(const FlowStates<T>& fs, const GridBlock<T>& grid,
+                             Vector3s<T> vertex_vel,
+                             const Field<size_t>& boundary_vertices) {
     (void)fs;
     (void)grid;
+    Vector3<T> vel = vel_;
     Kokkos::parallel_for(
         "Shockfitting:zero_velocity", boundary_vertices.size(),
         KOKKOS_LAMBDA(const size_t i) {
-            vertex_vel.x(i) = T(0.0);
-            vertex_vel.y(i) = T(0.0);
-            vertex_vel.z(i) = T(0.0);
+            vertex_vel.x(i) = T(vel.x);
+            vertex_vel.y(i) = T(vel.y);
+            vertex_vel.z(i) = T(vel.z);
         });
 }
 template class ZeroVelocity<Ibis::real>;
@@ -43,7 +60,7 @@ ConstrainDirection<T>::ConstrainDirection(json config) {
 
 template <typename T>
 void ConstrainDirection<T>::apply(Vector3s<T> vertex_vel,
-                                  Field<size_t>& boundary_vertices) {
+                                  const Field<size_t>& boundary_vertices) {
     Vector3<T> dirn = direction_;
     Kokkos::parallel_for(
         "Shockfitting::ConstrainDirection", boundary_vertices.size(),
