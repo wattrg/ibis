@@ -18,8 +18,15 @@ class WaveSpeed : public ShockFittingDirectVelocityAction<T> {
 public:
     ~WaveSpeed() {}
 
+    WaveSpeed() {}
+
+    WaveSpeed(json config);
+
     void apply(const FlowStates<T>& fs, const GridBlock<T>& grid, Vector3s<T> vertex_vel,
                const Field<size_t>& boundary_vertices);
+
+private:
+    Ibis::real scale_;
 };
 
 template <typename T>
@@ -39,6 +46,10 @@ public:
 private:
     Vector3<T> vel_;
 };
+
+template <typename T>
+std::shared_ptr<ShockFittingDirectVelocityAction<T>> make_direct_velocity_action(
+    json config);
 
 template <typename T>
 class ShockFittingInterpolationAction {
@@ -83,13 +94,35 @@ private:
 };
 
 template <typename T>
+class ShockFittingBC {
+public:
+    ShockFittingBC() {}
+
+    ShockFittingBC(const GridBlock<T>& grid, std::string marker, json config);
+
+    void apply_direct_actions(const FlowStates<T>& fs, const GridBlock<T>& grid,
+                              Vector3s<T> vertex_vel);
+
+    void apply_interp_actions(const GridBlock<T>& grid, Vector3s<T> vertex_vel);
+
+    void apply_constraints(const GridBlock<T>& grid, Vector3s<T> vertex_vel);
+
+private:
+    std::vector<
+        std::pair<std::string, std::shared_ptr<ShockFittingDirectVelocityAction<T>>>>
+        direct_actions_;
+    std::vector<ShockFittingInterpolationAction<T>> interp_actions_;
+    std::vector<std::pair<std::string, ConstrainDirection<T>>> constraints_;
+};
+
+template <typename T>
 class ShockFitting : public GridMotionDriver<T> {
 public:
     ~ShockFitting() {}
 
     ShockFitting() {}
 
-    ShockFitting(json config);
+    ShockFitting(const GridBlock<T>& grid, json config);
 
     void compute_vertex_velocities(const FlowStates<T>& fs, const GridBlock<T>& grid,
                                    Vector3s<T> vertex_vel);
@@ -101,16 +134,10 @@ public:
                                          Vector3s<T> vertex_vel);
 
 private:
-    // actions to perform for setting vertex velocities on boundaries
-    // (the 'boundaries' for shock fitting may be intenral to the domain)
-    std::vector<
-        std::pair<std::string, std::shared_ptr<ShockFittingDirectVelocityAction<T>>>>
-        direct_actions_;
-    std::vector<ShockFittingInterpolationAction<T>> interp_actions_;
-    std::vector<std::pair<std::string, ConstrainDirection<T>>> constraints_;
+    std::vector<ShockFittingBC<T>> bcs_;
 
     // Compute the remaining vertex velocities
-    ShockFittingInterpolationAction<T> final_interp_;
+    ShockFittingInterpolationAction<T> interp_;
 
     // think about a way to save memory by not storing the internal vertices,
     // and just using the vertices not in the boundary verties

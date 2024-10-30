@@ -1,8 +1,43 @@
 #include <finite_volume/shock_fitting.h>
+#include <spdlog/spdlog.h>
 
 template <typename T>
-ShockFitting<T>::ShockFitting(json config) {
-    (void)config;
+ShockFitting<T>::ShockFitting(const GridBlock<T>& grid, json config) {
+    std::vector<size_t> boundary_vertices;
+    for (auto& [marker_label, config] : config.at("boundaries").items()) {
+        // build the boundary condition
+        bcs_.push_back(ShockFittingBC<T>(grid, marker_label, config));
+
+        // keep track of the points on the boundaries, so that we can
+        // interpolate the other points from them
+        const Field<size_t> vertices = grid.marked_vertices(marker_label);
+        for (size_t vertex_i = 0; vertex_i < vertices.size(); vertex_i++) {
+            size_t vertex_id = vertices(vertex_i);
+            if (std::find(boundary_vertices.begin(), boundary_vertices.end(),
+                          vertex_id) == boundary_vertices.end()) {
+                boundary_vertices.push_back(vertex_id);
+            }
+        }
+    }
+
+    // sort the vertices to interpolate (lets up use binary search later
+    // for efficiency, and might help with coalescing memory access)
+    std::sort(boundary_vertices.begin(), boundary_vertices.end());
+
+    // get all the remaining points which must be interpolated
+    std::vector<size_t> internal_vertices;
+    for (size_t vertex_id = 0; vertex_id < grid.num_vertices(); vertex_id++) {
+        if (!std::binary_search(boundary_vertices.begin(), boundary_vertices.end(),
+                                vertex_id)) {
+            // this vertex is not on a boundary
+            internal_vertices.push_back(vertex_id);
+        }
+    }
+
+    Field<size_t> sample_points{"ShockFit::sample_points", boundary_vertices};
+    Field<size_t> interp_points{"ShockFit::interp_points", internal_vertices};
+    Ibis::real power = config.at("interp_power");
+    interp_ = ShockFittingInterpolationAction<T>(sample_points, interp_points, power);
 }
 
 template <typename T>
@@ -10,33 +45,82 @@ void ShockFitting<T>::compute_vertex_velocities(const FlowStates<T>& fs,
                                                 const GridBlock<T>& grid,
                                                 Vector3s<T> vertex_vel) {
     // Step 1: Compute velocities of vertices which have direct equations
-    for (auto& [marker_label, action] : direct_actions_) {
-        const Field<size_t>& vertices = grid.marked_vertices(marker_label);
-        action->apply(fs, grid, vertex_vel, vertices);
+    for (auto& bc : bcs_) {
+        bc.apply_direct_actions(fs, grid, vertex_vel);
     }
 
     // Step 2: Interpolate velocities of vertices on boundaries
-    for (auto& action : interp_actions_) {
-        action.apply(grid, vertex_vel);
+    for (auto& bc : bcs_) {
+        bc.apply_interp_actions(grid, vertex_vel);
     }
 
     // Step 3: Constrain certain vertices to move in given direction
-    for (auto& [marker_label, constraint] : constraints_) {
-        const Field<size_t>& vertices = grid.marked_vertices(marker_label);
-        constraint.apply(vertex_vel, vertices);
+    for (auto& bc : bcs_) {
+        bc.apply_constraints(grid, vertex_vel);
     }
 
     // Step 4: Interpolate the remaining internal velocities
-    final_interp_.apply(grid, vertex_vel);
+    interp_.apply(grid, vertex_vel);
 }
 template class ShockFitting<Ibis::real>;
 template class ShockFitting<Ibis::dual>;
 
 template <typename T>
+ShockFittingBC<T>::ShockFittingBC(const GridBlock<T>& grid, std::string marker,
+                                  json config) {
+    json direct_configs = config.at("direct");
+    for (json direct_config : direct_configs) {
+        direct_actions_.push_back(
+            {marker, make_direct_velocity_action<T>(direct_config)});
+    }
+
+    json interp_configs = config.at("interp");
+    for (json interp_config : interp_configs) {
+        interp_actions_.push_back(
+            ShockFittingInterpolationAction<T>(grid, marker, interp_config));
+    }
+
+    json constraint_configs = config.at("constraint");
+    for (json constraint_config : constraint_configs) {
+        constraints_.push_back({marker, ConstrainDirection<T>(constraint_config)});
+    }
+}
+
+template <typename T>
+void ShockFittingBC<T>::apply_direct_actions(const FlowStates<T>& fs,
+                                             const GridBlock<T>& grid,
+                                             Vector3s<T> vertex_vel) {
+    for (auto& [marker, action] : direct_actions_) {
+        const Field<size_t>& vertices = grid.marked_vertices(marker);
+        action->apply(fs, grid, vertex_vel, vertices);
+    }
+}
+
+template <typename T>
+void ShockFittingBC<T>::apply_interp_actions(const GridBlock<T>& grid,
+                                             Vector3s<T> vertex_vel) {
+    for (auto& action : interp_actions_) {
+        action.apply(grid, vertex_vel);
+    }
+}
+
+template <typename T>
+void ShockFittingBC<T>::apply_constraints(const GridBlock<T>& grid,
+                                          Vector3s<T> vertex_vel) {
+    for (auto& [marker, action] : constraints_) {
+        const Field<size_t>& vertices = grid.marked_vertices(marker);
+        action.apply(vertex_vel, vertices);
+    }
+}
+template class ShockFittingBC<Ibis::real>;
+template class ShockFittingBC<Ibis::dual>;
+
+template <typename T>
 FixedVelocity<T>::FixedVelocity(json config) {
-    T x = T(config.at("x"));
-    T y = T(config.at("y"));
-    T z = T(config.at("z"));
+    json velocity = config.at("velocity");
+    T x = T(velocity.at("x"));
+    T y = T(velocity.at("y"));
+    T z = T(velocity.at("z"));
     vel_ = Vector3<T>(x, y, z);
 }
 
@@ -57,6 +141,42 @@ void FixedVelocity<T>::apply(const FlowStates<T>& fs, const GridBlock<T>& grid,
 }
 template class FixedVelocity<Ibis::real>;
 template class FixedVelocity<Ibis::dual>;
+
+template <typename T>
+WaveSpeed<T>::WaveSpeed(json config) {
+    scale_ = config.at("scale");
+}
+
+template <typename T>
+void WaveSpeed<T>::apply(const FlowStates<T>& fs, const GridBlock<T>& grid,
+                         Vector3s<T> vertex_vel, const Field<size_t>& boundary_vertices) {
+    (void)fs;
+    (void)grid;
+    (void)vertex_vel;
+    (void)boundary_vertices;
+}
+template class WaveSpeed<Ibis::real>;
+template class WaveSpeed<Ibis::dual>;
+
+template <typename T>
+std::shared_ptr<ShockFittingDirectVelocityAction<T>> make_direct_velocity_action(
+    json config) {
+    std::string type = config.at("type");
+    if (type == "shock_fit") {
+        return std::shared_ptr<ShockFittingDirectVelocityAction<T>>(
+            new WaveSpeed<T>(config));
+    } else if (type == "fixed_velocity") {
+        return std::shared_ptr<ShockFittingDirectVelocityAction<T>>(
+            new FixedVelocity<T>(config));
+    } else {
+        spdlog::error("Unkown grid motion direct velocity action {}", type);
+        throw new std::runtime_error("Unkown grid motion direction velocity action");
+    }
+}
+template std::shared_ptr<ShockFittingDirectVelocityAction<Ibis::real>>
+    make_direct_velocity_action(json);
+template std::shared_ptr<ShockFittingDirectVelocityAction<Ibis::dual>>
+    make_direct_velocity_action(json);
 
 template <typename T>
 ConstrainDirection<T>::ConstrainDirection(json config) {

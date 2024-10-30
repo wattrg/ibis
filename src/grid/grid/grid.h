@@ -21,7 +21,6 @@ class GridMotionDriver;
 template <typename T, class ExecSpace, class Layout>
 class WLSGradient;
 
-
 // The main GridBlock
 template <typename T, class ExecSpace = Kokkos::DefaultExecutionSpace,
           class Layout = Kokkos::DefaultExecutionSpace::array_layout>
@@ -499,17 +498,14 @@ public:
     }
 
     void allocate_gradient_weights() {
-        grad_calc_ = std::shared_ptr<WLSGradient<T, ExecSpace, Layout>>(new WLSGradient<T, ExecSpace, Layout>(*this));
+        grad_calc_ = std::shared_ptr<WLSGradient<T, ExecSpace, Layout>>(
+            new WLSGradient<T, ExecSpace, Layout>(*this));
         grad_calc_->compute_weights(*this);
     }
 
-    void compute_gradient_weights() {
-        grad_calc_->compute_weights(*this);
-    }
+    void compute_gradient_weights() { grad_calc_->compute_weights(*this); }
 
-    WLSGradient<T, ExecSpace, Layout>& grad_calc() const {
-        return *grad_calc_;
-    }
+    WLSGradient<T, ExecSpace, Layout>& grad_calc() const { return *grad_calc_; }
 
     GridIO to_grid_io() const {
         auto host_grid = host_mirror();

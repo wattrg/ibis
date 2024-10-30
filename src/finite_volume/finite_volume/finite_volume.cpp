@@ -60,7 +60,8 @@ size_t FiniteVolume<T>::compute_dudt(FlowStates<T>& flow_state, GridBlock<T>& gr
                                      bool allow_reconstruction) {
     apply_pre_reconstruction_bc(flow_state, grid, gas_model, trans_prop);
     convective_flux_.compute_convective_flux(flow_state, grid, gas_model, cell_grad_,
-                                             grid.grad_calc(), flux_, allow_reconstruction);
+                                             grid.grad_calc(), flux_,
+                                             allow_reconstruction);
     if (viscous_flux_.enabled()) {
         apply_pre_viscous_grad_bc(flow_state, grid, gas_model, trans_prop);
         viscous_flux_.compute_viscous_flux(flow_state, grid, gas_model, trans_prop,

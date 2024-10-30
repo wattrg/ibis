@@ -2,9 +2,9 @@
 #define ACCESSOR_H
 
 #include <finite_volume/finite_volume.h>
-#include <grid/gradient.h>
 #include <gas/flow_state.h>
 #include <gas/gas_model.h>
+#include <grid/gradient.h>
 #include <grid/grid.h>
 #include <util/vector3.h>
 

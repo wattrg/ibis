@@ -17,6 +17,7 @@ public:
 };
 
 template <typename T>
-std::shared_ptr<GridMotionDriver<T>> build_grid_motion_driver(json config);
+std::shared_ptr<GridMotionDriver<T>> build_grid_motion_driver(const GridBlock<T>& grid,
+                                                              json config);
 
 #endif

@@ -10,8 +10,8 @@
 #include <gas/flow_state.h>
 #include <gas/gas_model.h>
 #include <gas/transport_properties.h>
-#include <grid/grid.h>
 #include <grid/gradient.h>
+#include <grid/grid.h>
 #include <spdlog/spdlog.h>
 #include <util/numeric_types.h>
 

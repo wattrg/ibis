@@ -4,7 +4,8 @@
 #include <spdlog/spdlog.h>
 
 template <typename T>
-std::shared_ptr<GridMotionDriver<T>> build_grid_motion_driver(json config) {
+std::shared_ptr<GridMotionDriver<T>> build_grid_motion_driver(const GridBlock<T>& grid,
+                                                              json config) {
     if (!config.at("enabled")) {
         spdlog::error(
             "Attemping to build grid motion driver when grid motion is disabled");
@@ -16,7 +17,7 @@ std::shared_ptr<GridMotionDriver<T>> build_grid_motion_driver(json config) {
     if (type == "rigid_body_translation") {
         return std::shared_ptr<GridMotionDriver<T>>(new RigidBodyTranslation<T>(config));
     } else if (type == "shock_fitting") {
-        return std::shared_ptr<GridMotionDriver<T>>(new ShockFitting<T>(config));
+        return std::shared_ptr<GridMotionDriver<T>>(new ShockFitting<T>(grid, config));
     } else {
         spdlog::error("Unknown grid motion driver {}", type);
         throw new std::runtime_error("Unkown grid motion driver");
@@ -24,6 +25,6 @@ std::shared_ptr<GridMotionDriver<T>> build_grid_motion_driver(json config) {
 }
 
 template std::shared_ptr<GridMotionDriver<Ibis::real>>
-build_grid_motion_driver<Ibis::real>(json config);
+build_grid_motion_driver<Ibis::real>(const GridBlock<Ibis::real>&, json);
 template std::shared_ptr<GridMotionDriver<Ibis::dual>>
-build_grid_motion_driver<Ibis::dual>(json config);
+build_grid_motion_driver<Ibis::dual>(const GridBlock<Ibis::dual>&, json config);
