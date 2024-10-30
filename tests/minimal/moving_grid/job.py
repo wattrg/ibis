@@ -30,5 +30,13 @@ config.grid = Block(
         "bottom": slip_wall(),
         "right": supersonic_outflow()
     },
-    motion = RigidBodyTranslation(velocity={"x": 1000.0, "y": 0.0, "z": 0.0})
+    # motion = RigidBodyTranslation(velocity={"x": 1000.0, "y": 0.0, "z": 0.0})
+    motion=ShockFitting(
+        boundaries={
+            "left": fixed_velocity(Vector3(0.0, 0.0, 0.0)),
+            "right": fixed_velocity(Vector3(1000.0, 0.0, 0.0)),
+            "top": constrained_interpolation(sample_points=["left", "right"], constraint_direction=Vector3(1.0, 0.0, 0.0)),
+            "bottom": constrained_interpolation(sample_points=["left", "right"], constraint_direction=Vector3(1.0, 0.0, 0.0))
+        }
+    )
 )

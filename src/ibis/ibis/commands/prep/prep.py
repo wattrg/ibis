@@ -11,7 +11,7 @@ from ibis_py_utils import (
     TransportPropertyModel,
     read_defaults,
     FlowState,
-    GasModel
+    GasModel,
 )
 
 from python_api import (
@@ -28,6 +28,20 @@ validation_errors = []
 
 class ValidationException(Exception):
     pass
+
+
+class Vector3:
+    def __init__(self, x=0.0, y=0.0, z=0.0):
+        self.x = x
+        self.y = y
+        self.z = z
+
+    def as_dict(self):
+        return {
+            "x": self.x,
+            "y": self.y,
+            "z": self.z
+        }
 
 
 class Solver(Enum):
@@ -269,15 +283,27 @@ class StaticGrid:
         return
 
 
-class ShockFitting:
+class BoundaryInterpolationGridMotion:
+    def __init__(self, boundaries, interpolation_power=2.0):
+        self._interp_power = interpolation_power
+        self._boundaries = boundaries
+
     def as_dict(self):
-        return {
+        dictionary = {
             "enabled": True,
-            "type": "shock_fitting"
+            "type": "boundary_interpolation",
+            "interp_power": self._interp_power,
         }
+        dictionary["boundaries"] = {}
+        for key in self._boundaries:
+            dictionary["boundaries"][key] = self._boundaries[key].as_dict()
+        return dictionary
 
     def validate(self):
         return
+
+
+ShockFitting = BoundaryInterpolationGridMotion
 
 
 class RigidBodyTranslation:
@@ -551,6 +577,106 @@ def subsonic_outflow(pressure):
     return BoundaryCondition(
         pre_reconstruction=[_SubsonicOutflow(pressure)],
         pre_viscous_grad=[]
+    )
+
+
+class GridMotionBoundaryCondition:
+    def __init__(self, direct, interp, constraint):
+        self._direct = direct
+        self._interp = interp
+        self._constraint = constraint
+
+    def as_dict(self):
+        dictionary = {}
+        direct_actions = []
+        for direct_action in self._direct:
+            direct_actions.append(direct_action.as_dict())
+        dictionary["direct"] = direct_actions
+
+        interp_actions = []
+        for interp_action in self._interp:
+            interp_actions.append(interp_action.as_dict())
+        dictionary["interp"] = interp_actions
+
+        constraints = []
+        for constraint in self._constraint:
+            constraints.append(constraint.as_dict())
+        dictionary["constraint"] = constraints
+
+        return dictionary
+
+
+class _FixedVelocity:
+    def __init__(self, velocity):
+        self._velocity = velocity
+
+    def as_dict(self):
+        return {
+            "type": "fixed_velocity",
+            "velocity": self._velocity.as_dict()
+        }
+
+
+class _WaveSpeed:
+    _json_values = ["scale"]
+
+    def __init__(self, flow_state, scale):
+        self._flow_state = flow_state
+        self._scale = scale
+
+    def as_dict(self):
+        return {
+            "type": "wave_speed",
+            "flow_state": self._flow_state.as_dict(),
+            "scale": self._scale
+        }
+
+
+class _InverseDistanceWeighting:
+    def __init__(self, sample_points, power=2):
+        self._power = power
+        self._sample_points = sample_points
+
+    def as_dict(self):
+        return {
+            "type": "IDW",
+            "power": self._power,
+            "sample_points": self._sample_points
+        }
+
+
+class _DirectionConstraint:
+    def __init__(self, direction):
+        self._direction = direction
+
+    def as_dict(self):
+        return {
+            "type": "direction",
+            "direction": self._direction.as_dict()
+        }
+
+
+def bow_shock_fit(flow_state, scale=1.0):
+    return GridMotionBoundaryCondition(
+        direct=[_WaveSpeed(flow_state, scale)],
+        interp=[],
+        constraint=[]
+    )
+
+
+def fixed_velocity(velocity):
+    return GridMotionBoundaryCondition(
+        direct=[_FixedVelocity(velocity)],
+        interp=[],
+        constraint=[]
+    )
+
+
+def constrained_interpolation(sample_points, constraint_direction, power=2.0):
+    return GridMotionBoundaryCondition(
+        direct=[],
+        interp=[_InverseDistanceWeighting(sample_points, power)],
+        constraint=[_DirectionConstraint(constraint_direction)]
     )
 
 
@@ -992,6 +1118,7 @@ def main(file_name, res_dir):
     config = Config()
     namespace = {
         "config": config,
+        "Vector3": Vector3,
         "ConvectiveFlux": ConvectiveFlux,
         "ViscousFlux": ViscousFlux,
         "Ausmdv": Ausmdv,
@@ -1025,6 +1152,9 @@ def main(file_name, res_dir):
         "ThermoInterp": ThermoInterp,
         "ShockFitting": ShockFitting,
         "RigidBodyTranslation": RigidBodyTranslation,
+        "bow_shock_fit": bow_shock_fit,
+        "fixed_velocity": fixed_velocity,
+        "constrained_interpolation": constrained_interpolation
     }
 
     # run the user supplied script

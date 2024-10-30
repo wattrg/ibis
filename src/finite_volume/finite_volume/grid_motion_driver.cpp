@@ -16,7 +16,7 @@ std::shared_ptr<GridMotionDriver<T>> build_grid_motion_driver(const GridBlock<T>
     std::string type = config.at("type");
     if (type == "rigid_body_translation") {
         return std::shared_ptr<GridMotionDriver<T>>(new RigidBodyTranslation<T>(config));
-    } else if (type == "shock_fitting") {
+    } else if (type == "boundary_interpolation") {
         return std::shared_ptr<GridMotionDriver<T>>(new ShockFitting<T>(grid, config));
     } else {
         spdlog::error("Unknown grid motion driver {}", type);

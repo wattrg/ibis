@@ -10,7 +10,8 @@ ShockFitting<T>::ShockFitting(const GridBlock<T>& grid, json config) {
 
         // keep track of the points on the boundaries, so that we can
         // interpolate the other points from them
-        const Field<size_t> vertices = grid.marked_vertices(marker_label);
+        auto vertices = grid.marked_vertices(marker_label).host_mirror();
+        vertices.deep_copy(grid.marked_vertices(marker_label));
         for (size_t vertex_i = 0; vertex_i < vertices.size(); vertex_i++) {
             size_t vertex_id = vertices(vertex_i);
             if (std::find(boundary_vertices.begin(), boundary_vertices.end(),
@@ -134,9 +135,10 @@ void FixedVelocity<T>::apply(const FlowStates<T>& fs, const GridBlock<T>& grid,
     Kokkos::parallel_for(
         "Shockfitting:zero_velocity", boundary_vertices.size(),
         KOKKOS_LAMBDA(const size_t i) {
-            vertex_vel.x(i) = T(vel.x);
-            vertex_vel.y(i) = T(vel.y);
-            vertex_vel.z(i) = T(vel.z);
+            size_t vertex_i = boundary_vertices(i);
+            vertex_vel.x(vertex_i) = T(vel.x);
+            vertex_vel.y(vertex_i) = T(vel.y);
+            vertex_vel.z(vertex_i) = T(vel.z);
         });
 }
 template class FixedVelocity<Ibis::real>;
@@ -180,9 +182,10 @@ template std::shared_ptr<ShockFittingDirectVelocityAction<Ibis::dual>>
 
 template <typename T>
 ConstrainDirection<T>::ConstrainDirection(json config) {
-    Ibis::real x = config.at("x");
-    Ibis::real y = config.at("y");
-    Ibis::real z = config.at("z");
+    json direction = config.at("direction");
+    Ibis::real x = direction.at("x");
+    Ibis::real y = direction.at("y");
+    Ibis::real z = direction.at("z");
     direction_ = Vector3<T>(x, y, z);
 }
 
@@ -193,13 +196,14 @@ void ConstrainDirection<T>::apply(Vector3s<T> vertex_vel,
     Kokkos::parallel_for(
         "Shockfitting::ConstrainDirection", boundary_vertices.size(),
         KOKKOS_LAMBDA(const size_t i) {
-            T vx = vertex_vel.x(i);
-            T vy = vertex_vel.y(i);
-            T vz = vertex_vel.z(i);
+            size_t vertex_i = boundary_vertices(i);
+            T vx = vertex_vel.x(vertex_i);
+            T vy = vertex_vel.y(vertex_i);
+            T vz = vertex_vel.z(vertex_i);
             T dot = dirn.x * vx + dirn.y * vy + dirn.z * vz;
-            vertex_vel.x(i) = dirn.x * dot;
-            vertex_vel.y(i) = dirn.y * dot;
-            vertex_vel.z(i) = dirn.z * dot;
+            vertex_vel.x(vertex_i) = dirn.x * dot;
+            vertex_vel.y(vertex_i) = dirn.y * dot;
+            vertex_vel.z(vertex_i) = dirn.z * dot;
         });
 }
 template class ConstrainDirection<Ibis::real>;
@@ -212,7 +216,8 @@ ShockFittingInterpolationAction<T>::ShockFittingInterpolationAction(
     // get all the indices of the vertices to sample from
     std::vector<size_t> sample_points;
     for (std::string& marker_label : sample_markers) {
-        Field<size_t> vertices = grid.marked_vertices(marker_label);
+        auto vertices = grid.marked_vertices(marker_label).host_mirror();
+        vertices.deep_copy(grid.marked_vertices(marker_label));
         for (size_t i = 0; i < vertices.size(); i++) {
             size_t vertex_i = vertices(i);
             if (std::find(sample_points.begin(), sample_points.end(), vertex_i) ==
@@ -226,7 +231,8 @@ ShockFittingInterpolationAction<T>::ShockFittingInterpolationAction(
 
     // get all the indices of the vertices to interpolate
     std::vector<size_t> interp_points;
-    Field<size_t> vertices = grid.marked_vertices(interp_marker);
+    auto vertices = grid.marked_vertices(interp_marker).host_mirror();
+    vertices.deep_copy(grid.marked_vertices(interp_marker));
     for (size_t i = 0; i < vertices.size(); i++) {
         size_t vertex_i = vertices(i);
         if (std::find(sample_points.begin(), sample_points.end(), vertex_i) !=
