@@ -111,6 +111,9 @@ public:
     }
 
     KOKKOS_INLINE_FUNCTION
+    Vector3<T> vector(size_t i) const { return Vector3<T>{x(i), y(i), z(i)}; }
+
+    KOKKOS_INLINE_FUNCTION
     size_t size() const { return view_.extent(0); }
 
     KOKKOS_INLINE_FUNCTION

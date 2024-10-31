@@ -147,6 +147,115 @@ template class FixedVelocity<Ibis::dual>;
 template <typename T>
 WaveSpeed<T>::WaveSpeed(json config) {
     scale_ = config.at("scale");
+    shock_detection_threshold_ = config.at("shock_detection_threshold");
+    // flow_state_ = FlowState<T>{config.at("flow_state")};
+}
+
+template <typename T>
+KOKKOS_INLINE_FUNCTION T wave_speed(const FlowState<T>& left, const FlowState<T>& right,
+                                    const Vector3<T>& norm,
+                                    Ibis::real shock_detection_threshold) {
+    // the face normal
+    T nx = norm.x;
+    T ny = norm.y;
+    T nz = norm.z;
+
+    // left gas state
+    T pL = left.gas_state.pressure;
+    T rL = left.gas_state.rho;
+    T uL = left.velocity.x * nx + left.velocity.y * ny + left.velocity.z * nz;
+
+    // right gas state
+    T pR = right.gas_state.pressure;
+    T rR = right.gas_state.rho;
+    T uR = right.velocity.x * nx + right.velocity.y * ny + right.velocity.z * nz;
+
+    // shock detector
+    T delta_rho = Ibis::abs(rL - rR);
+    T max_rho = Ibis::max(rL, rR);
+    bool shock_detected = (delta_rho / max_rho) > shock_detection_threshold;
+
+    if (shock_detected) {
+        // wave speed from the mass conservation equation
+        T ws1 = (rL * uL - rR * uR) / (rL - rR);
+
+        // wave speeds from normal momentum conservation equation
+        T a = pR - pL + rR * uR * uR - rL * uL * uL;
+        T b = T(2.0) * (rL * uL - rR * uR);
+        T c = rR - rL;
+        T ws2a = (-b + Ibis::sqrt(b * b - 4 * a * c)) / (T(2.0) * a);
+        T ws2b = (-b - Ibis::sqrt(b * b - 4 * a * c)) / (T(2.0) * a);
+        T ws2 = Ibis::min(ws2a, ws2b);
+        return 0.5 * ws1 + 0.5 * ws2;
+    } else {
+        // assume ideal gas for the moment. Will have to pass a gas model in
+        // at some point
+        T aL = Ibis::sqrt(1.4 * 287 * left.gas_state.temp);
+        T aR = Ibis::sqrt(1.4 * 287.0 * right.gas_state.temp);
+
+        // use the local upwind sound speed
+        if (uL > 0.0 && uR < 0.0) {
+            // both sides upwind
+            return 0.5 * (uL - aL) + 0.5 * (uR - aR);
+        } else if (uL > 0.0 && uR > 0.0) {
+            // left side upwind, right side downwind
+            return uL - aL;
+        } else if (uL < 0.0 && uR < 0.0) {
+            // right side upwind, left side downwind
+            return uR - aR;
+        } else {
+            // both sides downwind ?!?
+            return T(0.0);
+        }
+    }
+}
+
+template <typename T>
+KOKKOS_INLINE_FUNCTION T mach_weighting(const FlowState<T>& left,
+                                        const FlowState<T>& right,
+                                        const Vector3<T>& vertex_pos,
+                                        const Vector3<T>& face_pos,
+                                        const Vector3<T>& face_norm) {
+    // determine velocity at the interface
+    T uL = left.velocity.x * face_norm.x + left.velocity.y * face_norm.y +
+           left.velocity.z * face_norm.z;
+    T uR = right.velocity.x * face_norm.x + right.velocity.y * face_norm.y +
+           right.velocity.z * face_norm.z;
+    T u;
+    FlowState<T> face_fs;
+    if (uL > 0.0 && uR < 0.0) {
+        // both sides upwind
+        face_fs.gas_state.temp = 0.5 * left.gas_state.temp + 0.5 * right.gas_state.temp;
+        face_fs.velocity.x = 0.5 * left.velocity.x + 0.5 * right.velocity.x;
+        face_fs.velocity.y = 0.5 * left.velocity.y + 0.5 * right.velocity.y;
+        face_fs.velocity.z = 0.5 * left.velocity.z + 0.5 * right.velocity.z;
+    } else if (uL > 0.0 && uR > 0.0) {
+        // left side upwind, right side downwind
+        face_fs.gas_state.temp = left.gas_state.temp;
+        face_fs.velocity.x = left.velocity.x;
+        face_fs.velocity.y = left.velocity.y;
+        face_fs.velocity.z = left.velocity.z;
+    } else if (uL < 0.0 && uR < 0.0) {
+        // right side upwind, left side downwind
+        face_fs.gas_state.temp = right.gas_state.temp;
+        face_fs.velocity.x = right.velocity.x;
+        face_fs.velocity.y = right.velocity.y;
+        face_fs.velocity.z = right.velocity.z;
+    } else {
+        face_fs.gas_state.temp = 0.5 * left.gas_state.temp + 0.5 * right.gas_state.temp;
+        face_fs.velocity.x = T(0.0);
+        face_fs.velocity.y = T(0.0);
+        face_fs.velocity.z = T(0.0);
+    }
+    T tan_x = vertex_pos.x - face_pos.x;
+    T tan_y = vertex_pos.y - face_pos.y;
+    T tan_z = vertex_pos.z - face_pos.z;
+    T len_tan = Ibis::sqrt(tan_x * tan_x + tan_y * tan_y + tan_z * tan_z);
+    T face_a = Ibis::sqrt(1.4 * 287 * face_fs.gas_state.temp);
+    T face_mach = (face_fs.velocity.x * tan_x + face_fs.velocity.y * tan_y +
+                   face_fs.velocity.z * tan_z) /
+                  (face_a * len_tan);
+    return (face_mach + Ibis::abs(face_mach)) / 2;
 }
 
 template <typename T>
@@ -156,6 +265,46 @@ void WaveSpeed<T>::apply(const FlowStates<T>& fs, const GridBlock<T>& grid,
     (void)grid;
     (void)vertex_vel;
     (void)boundary_vertices;
+    Ibis::real scale = scale_;
+    Ibis::real shock_detection_threshold = shock_detection_threshold_;
+    auto interface_ids = grid.vertices().interface_ids();
+    auto normals = grid.interfaces().norm();
+    auto vertices = grid.vertices();
+    auto grid_interfaces = grid.interfaces();
+    Kokkos::parallel_for(
+        "ShockFitting::wave_speed", boundary_vertices.size(),
+        KOKKOS_LAMBDA(const size_t i) {
+            size_t vertex_i = boundary_vertices(i);
+            auto interfaces = interface_ids(vertex_i);
+            // we repeat the calculation of the wave speed for each face for
+            // each vertex attached to the face. This is a bit wasteful of compute,
+            // but requires less memory. Some profiling would be good to see which
+            // is faster overall
+            T num_x = T(0.0);
+            T num_y = T(0.0);
+            T num_z = T(0.0);
+            T den = T(0.0);
+            Vector3<T> vertex_pos = vertices.position(vertex_i);
+            for (size_t face_i = 0; face_i < interfaces.size(); face_i++) {
+                size_t face_id = interfaces(face_i);
+                size_t left_id = grid_interfaces.left_cell(face_id);
+                size_t right_id = grid_interfaces.right_cell(face_id);
+                FlowState<T> left = fs.flow_state(left_id);
+                FlowState<T> right = fs.flow_state(right_id);
+                Vector3<T> norm = normals.vector(i);
+                T ws = wave_speed(left, right, norm, shock_detection_threshold);
+
+                Vector3<T> face_pos = grid_interfaces.centre().vector(face_id);
+                T weight = mach_weighting(left, right, vertex_pos, face_pos, norm);
+                num_x += weight * ws * norm.x;
+                num_y += weight * ws * norm.y;
+                num_z += weight * ws * norm.z;
+                den += weight;
+            }
+            vertex_vel.x(vertex_i) = num_x / den * scale;
+            vertex_vel.y(vertex_i) = num_y / den * scale;
+            vertex_vel.z(vertex_i) = num_z / den * scale;
+        });
 }
 template class WaveSpeed<Ibis::real>;
 template class WaveSpeed<Ibis::dual>;

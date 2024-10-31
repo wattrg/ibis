@@ -27,6 +27,8 @@ public:
 
 private:
     Ibis::real scale_;
+    Ibis::real shock_detection_threshold_;
+    // FlowState<T> flow_state_;
 };
 
 template <typename T>

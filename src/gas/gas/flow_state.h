@@ -78,6 +78,21 @@ public:
         return FlowState<T>{gas.average_pT(a, b), vel.average_vectors(a, b)};
     }
 
+    KOKKOS_INLINE_FUNCTION
+    FlowState<T> flow_state(size_t i) const {
+        GasState<T> gs;
+        gs.temp = gas.temp(i);
+        gs.pressure = gas.pressure(i);
+        gs.energy = gas.energy(i);
+        gs.rho = gas.rho(i);
+
+        Vector3<T> velocity;
+        velocity.x = vel.x(i);
+        velocity.y = vel.y(i);
+        velocity.z = vel.z(i);
+        return FlowState<T>{gs, velocity};
+    }
+
     GasStates<T, Layout, Space> gas;
     Vector3s<T, Layout, Space> vel;
 };
