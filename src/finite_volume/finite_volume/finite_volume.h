@@ -5,6 +5,7 @@
 #include <finite_volume/conserved_quantities.h>
 #include <finite_volume/convective_flux.h>
 #include <finite_volume/flux_calc.h>
+#include <finite_volume/grid_motion_driver.h>
 #include <finite_volume/limiter.h>
 #include <finite_volume/viscous_flux.h>
 #include <gas/flow_state.h>
@@ -43,6 +44,11 @@ public:
     size_t compute_dudt(FlowStates<T>& flow_state, GridBlock<T>& grid,
                         ConservedQuantities<T>& dudt, IdealGas<T>& gas_model,
                         TransportProperties<T>& trans_prop,
+                        bool allow_reconstruction = true);
+
+    size_t compute_dudt(FlowStates<T>& flow_state, Vector3s<T> vertex_vel,
+                        GridBlock<T>& grid, ConservedQuantities<T>& dudt,
+                        IdealGas<T>& gas_model, TransportProperties<T>& trans_prop,
                         bool allow_reconstruction = true);
 
     /**

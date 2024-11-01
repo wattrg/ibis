@@ -4,12 +4,11 @@
 #include <grid/cell.h>
 #include <grid/grid_io.h>
 // #include <grid/gradient.h>
-// #include <grid/grid_motion.h>
 // #include <finite_volume/grid_motion_driver.h>
 #include <gas/flow_state.h>
 #include <grid/interface.h>
 
-#include <limits>
+// #include <limits>
 #include <nlohmann/json.hpp>
 
 using json = nlohmann::json;
@@ -144,13 +143,6 @@ public:
             cell_vertices, cell_interface_ids, cell_shapes, num_valid_cells_,
             num_ghost_cells_);
 
-        // initialise grid motion
-        json grid_motion_config = config.at("motion");
-        moving_grid_ = grid_motion_config.at("enabled");
-        if (moving_grid_) {
-            face_vel_ = Vector3s<T, Layout, memory_space>(num_interfaces());
-        }
-
         // compute geometric and connectivity properties of the grid
         // The order these are done in is important -- some things
         // rely on other properties already being set
@@ -163,6 +155,13 @@ public:
         compute_cell_neighbours();
         compute_ghost_cell_centres();
         setup_vertex_face_connectivity();
+
+        // initialise grid motion
+        json grid_motion_config = config.at("motion");
+        moving_grid_ = grid_motion_config.at("enabled");
+        if (moving_grid_) {
+            face_vel_ = Vector3s<T, Layout, memory_space>(num_interfaces());
+        }
 
         initialised_ = true;
     }
@@ -560,11 +559,13 @@ public:
         return GridIO(vertices, cells, bcs, dim_);
     }
 
-    void compute_grid_motion(const FlowStates<T, Layout, memory_space>& fs,
-                             const Vector3s<T, array_layout, memory_space>& vertex_vel,
-                             std::shared_ptr<GridMotionDriver<T>>& driver) {
-        driver->compute_vertex_velocities(fs, *this, vertex_vel);
+    void compute_grid_motion(const FlowStates<T>& fs, const Vector3s<T>& vertex_vel) {
+        motion_driver_->compute_vertex_velocities(fs, *this, vertex_vel);
         compute_face_vel(vertex_vel);
+    }
+
+    void set_motion_driver(std::shared_ptr<GridMotionDriver<T>>& driver) {
+        motion_driver_ = driver;
     }
 
     void compute_face_vel(const Vector3s<T, Layout, memory_space>& vertex_vel) {
@@ -633,6 +634,7 @@ public:
     // GridMotion<T, execution_space, array_layout> motion_;
     bool moving_grid_;
     Vector3s<T, Layout, memory_space> face_vel_;
+    std::shared_ptr<GridMotionDriver<T>> motion_driver_;
 
     bool initialised_ = false;
 };

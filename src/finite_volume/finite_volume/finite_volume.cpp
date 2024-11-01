@@ -54,11 +54,15 @@ FiniteVolume<T>::FiniteVolume(GridBlock<T>& grid, json config) {
 }
 
 template <typename T>
-size_t FiniteVolume<T>::compute_dudt(FlowStates<T>& flow_state, GridBlock<T>& grid,
-                                     ConservedQuantities<T>& dudt, IdealGas<T>& gas_model,
+size_t FiniteVolume<T>::compute_dudt(FlowStates<T>& flow_state, Vector3s<T> vertex_vel,
+                                     GridBlock<T>& grid, ConservedQuantities<T>& dudt,
+                                     IdealGas<T>& gas_model,
                                      TransportProperties<T>& trans_prop,
                                      bool allow_reconstruction) {
     apply_pre_reconstruction_bc(flow_state, grid, gas_model, trans_prop);
+    if (grid.moving()) {
+        grid.compute_grid_motion(flow_state, vertex_vel);
+    }
     convective_flux_.compute_convective_flux(flow_state, grid, gas_model, cell_grad_,
                                              grid.grad_calc(), flux_,
                                              allow_reconstruction);
@@ -70,6 +74,16 @@ size_t FiniteVolume<T>::compute_dudt(FlowStates<T>& flow_state, GridBlock<T>& gr
 
     flux_surface_integral(grid, dudt);
     return 0;
+}
+
+template <typename T>
+size_t FiniteVolume<T>::compute_dudt(FlowStates<T>& flow_state, GridBlock<T>& grid,
+                                     ConservedQuantities<T>& dudt, IdealGas<T>& gas_model,
+                                     TransportProperties<T>& trans_prop,
+                                     bool allow_reconstruction) {
+    Vector3s<T> vertex_vel;
+    return compute_dudt(flow_state, vertex_vel, grid, dudt, gas_model, trans_prop,
+                        allow_reconstruction);
 }
 
 template <typename T>

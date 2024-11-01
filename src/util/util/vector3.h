@@ -123,9 +123,9 @@ public:
         }
 
         for (size_t i = 0; i < this->size(); i++) {
-            if (fabs(view_(i, 0) - other.view_(i, 0)) > 1e-14) return false;
-            if (fabs(view_(i, 1) - other.view_(i, 1)) > 1e-14) return false;
-            if (fabs(view_(i, 2) - other.view_(i, 2)) > 1e-14) return false;
+            if (Ibis::abs(view_(i, 0) - other.view_(i, 0)) > 1e-14) return false;
+            if (Ibis::abs(view_(i, 1) - other.view_(i, 1)) > 1e-14) return false;
+            if (Ibis::abs(view_(i, 2) - other.view_(i, 2)) > 1e-14) return false;
         }
         return true;
     }

@@ -618,17 +618,17 @@ class _FixedVelocity:
 
 
 class _WaveSpeed:
-    _json_values = ["scale"]
+    _json_values = ["scale", "shock_detection_threshold"]
 
-    def __init__(self, flow_state, scale):
-        self._flow_state = flow_state
+    def __init__(self, scale, shock_detection_threshold):
         self._scale = scale
+        self._shock_detection_threshold = shock_detection_threshold
 
     def as_dict(self):
         return {
             "type": "wave_speed",
-            "flow_state": self._flow_state.as_dict(),
-            "scale": self._scale
+            "scale": self._scale,
+            "shock_detection_threshold": self._shock_detection_threshold
         }
 
 
@@ -656,9 +656,9 @@ class _DirectionConstraint:
         }
 
 
-def bow_shock_fit(flow_state, scale=1.0):
+def shock_fit(scale=1.0, shock_detection_threshold=0.2):
     return GridMotionBoundaryCondition(
-        direct=[_WaveSpeed(flow_state, scale)],
+        direct=[_WaveSpeed(scale, shock_detection_threshold)],
         interp=[],
         constraint=[]
     )
@@ -1152,7 +1152,7 @@ def main(file_name, res_dir):
         "ThermoInterp": ThermoInterp,
         "ShockFitting": ShockFitting,
         "RigidBodyTranslation": RigidBodyTranslation,
-        "bow_shock_fit": bow_shock_fit,
+        "shock_fit": shock_fit,
         "fixed_velocity": fixed_velocity,
         "constrained_interpolation": constrained_interpolation
     }

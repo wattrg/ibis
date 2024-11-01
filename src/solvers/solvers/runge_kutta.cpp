@@ -59,7 +59,8 @@ RungeKutta::RungeKutta(json config, GridBlock<Ibis::real> grid, std::string grid
     if (moving_grid_) {
         json grid_config = config.at("grid");
         json grid_motion_config = grid_config.at("motion");
-        grid_driver_ = build_grid_motion_driver<Ibis::real>(grid, grid_motion_config);
+        auto grid_driver = build_grid_motion_driver<Ibis::real>(grid, grid_motion_config);
+        // grid.set_motion_driver(grid_driver);
         vertex_vel_ = std::vector<Vector3s<Ibis::real>>(
             tableau_.num_stages(), Vector3s<Ibis::real>(grid.num_vertices()));
 
@@ -118,11 +119,7 @@ void RungeKutta::estimate_dt() {
 }
 
 void RungeKutta::function_eval_(FlowStates<Ibis::real> fs, size_t index) {
-    if (moving_grid_) {
-        grid_.compute_grid_motion(fs, vertex_vel_[index], grid_driver_);
-    }
-
-    fv_.compute_dudt(fs, grid_, k_[index], gas_model_, trans_prop_);
+    fv_.compute_dudt(fs, vertex_vel_[index], grid_, k_[index], gas_model_, trans_prop_);
 }
 
 int RungeKutta::take_step(size_t step) {

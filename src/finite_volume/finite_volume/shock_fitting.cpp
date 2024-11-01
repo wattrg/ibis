@@ -313,7 +313,7 @@ template <typename T>
 std::shared_ptr<ShockFittingDirectVelocityAction<T>> make_direct_velocity_action(
     json config) {
     std::string type = config.at("type");
-    if (type == "shock_fit") {
+    if (type == "wave_speed") {
         return std::shared_ptr<ShockFittingDirectVelocityAction<T>>(
             new WaveSpeed<T>(config));
     } else if (type == "fixed_velocity") {

@@ -110,7 +110,7 @@ private:
     std::vector<Vector3s<Ibis::real>> vertex_vel_;
     Vector3s<Ibis::real> vertex_pos_tmp_;
     Vector3s<Ibis::real> init_vertex_pos_;
-    std::shared_ptr<GridMotionDriver<Ibis::real>> grid_driver_;
+    // std::shared_ptr<GridMotionDriver<Ibis::real>> grid_driver_;
 
     // butcher tableau
     ButcherTableau tableau_;
