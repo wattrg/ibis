@@ -55,6 +55,7 @@ FiniteVolume<T>::FiniteVolume(GridBlock<T>& grid, json config) {
 
 template <typename T>
 size_t FiniteVolume<T>::compute_dudt(FlowStates<T>& flow_state, Vector3s<T> vertex_vel,
+                                     const ConservedQuantities<T>& cq,
                                      GridBlock<T>& grid, ConservedQuantities<T>& dudt,
                                      IdealGas<T>& gas_model,
                                      TransportProperties<T>& trans_prop,
@@ -73,6 +74,10 @@ size_t FiniteVolume<T>::compute_dudt(FlowStates<T>& flow_state, Vector3s<T> vert
     }
 
     flux_surface_integral(grid, dudt);
+
+    if (grid.moving()) {
+        apply_geometric_conservation_law(cq, grid, dudt);
+    }
     return 0;
 }
 
@@ -81,9 +86,41 @@ size_t FiniteVolume<T>::compute_dudt(FlowStates<T>& flow_state, GridBlock<T>& gr
                                      ConservedQuantities<T>& dudt, IdealGas<T>& gas_model,
                                      TransportProperties<T>& trans_prop,
                                      bool allow_reconstruction) {
-    Vector3s<T> vertex_vel;
-    return compute_dudt(flow_state, vertex_vel, grid, dudt, gas_model, trans_prop,
-                        allow_reconstruction);
+    Vector3s<T> vertex_vel_temp;;
+    const ConservedQuantities<T> cq_temp;
+    return compute_dudt(flow_state, vertex_vel_temp, cq_temp, grid, dudt,
+                        gas_model, trans_prop, allow_reconstruction);
+}
+
+template <typename T>
+void FiniteVolume<T>::apply_geometric_conservation_law(const ConservedQuantities<T>& cq,
+                                                       const GridBlock<T>& grid,
+                                                       ConservedQuantities<T>& dudt) {
+    size_t num_cells = grid.num_cells();
+    Cells<T> cells = grid.cells();
+    CellFaces<T> cell_faces = grid.cells().faces();
+    Interfaces<T> faces = grid.interfaces();
+    Vector3s<T> face_vel = grid.face_vel();
+    Vector3s<T> face_norm = faces.norm();
+    Kokkos::parallel_for("FV::GCL", num_cells, KOKKOS_LAMBDA(const size_t cell_i){
+        auto face_ids = cell_faces.face_ids(cell_i);
+        T dVdt = T(0.0);
+        for (size_t face_i = 0; face_i < face_ids.size(); face_i++) {
+            size_t face_id = face_ids(face_i);
+            T area = -faces.area(face_id) * cell_faces.outsigns(cell_i)(face_i);
+            Vector3<T> vel = face_vel.vector(face_id);
+            Vector3<T> norm = face_norm.vector(face_id);
+            dVdt += (vel.x * norm.x + vel.y * norm.y + vel.z * norm.z) * area;
+        }
+        T V = cells.volume(cell_i);
+        dudt.mass(cell_i) -= cq.mass(cell_i) * dVdt / V;
+        dudt.momentum_x(cell_i) -= cq.momentum_x(cell_i) * dVdt / V;
+        dudt.momentum_y(cell_i) -= cq.momentum_y(cell_i) * dVdt / V;
+        if (cq.dim() == 3) {
+            dudt.momentum_z(cell_i) -= cq.momentum_z(cell_i) * dVdt / V;
+        }
+        dudt.energy(cell_i) -= cq.energy(cell_i) * dVdt / V;
+    });
 }
 
 template <typename T>

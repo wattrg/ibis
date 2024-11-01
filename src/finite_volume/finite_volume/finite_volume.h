@@ -47,6 +47,7 @@ public:
                         bool allow_reconstruction = true);
 
     size_t compute_dudt(FlowStates<T>& flow_state, Vector3s<T> vertex_vel,
+                        const ConservedQuantities<T>& cq,
                         GridBlock<T>& grid, ConservedQuantities<T>& dudt,
                         IdealGas<T>& gas_model, TransportProperties<T>& trans_prop,
                         bool allow_reconstruction = true);
@@ -79,6 +80,11 @@ public:
     void apply_pre_viscous_grad_bc(FlowStates<T>& fs, const GridBlock<T>& grid,
                                    const IdealGas<T>& gas_model,
                                    const TransportProperties<T>& trans_prop);
+
+    // Adjust fluxes to obey the geometric conservation law
+    void apply_geometric_conservation_law(const ConservedQuantities<T>& cq,
+                                          const GridBlock<T>& grid,
+                                          ConservedQuantities<T>& dudt);
 
     // Perform the surface integral of fluxes over the cells
     void flux_surface_integral(const GridBlock<T>& grid, ConservedQuantities<T>& dudt);

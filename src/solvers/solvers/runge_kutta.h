@@ -95,7 +95,8 @@ private:
     bool residuals_this_step(unsigned int step);
     bool write_residuals(unsigned int step, Ibis::real wc);
 
-    void function_eval_(FlowStates<Ibis::real> fs, size_t index);
+    void function_eval_(FlowStates<Ibis::real> fs, ConservedQuantities<Ibis::real>& cq,
+                        size_t index);
 
 private:
     // memory

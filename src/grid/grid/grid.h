@@ -596,6 +596,8 @@ public:
         compute_geometric_data();
     }
 
+    const Vector3s<T, Layout, memory_space>& face_vel() const { return face_vel_; }
+
     Vector3s<T, Layout, memory_space>& face_vel() { return face_vel_; }
 
     bool moving() const { return moving_grid_; }
