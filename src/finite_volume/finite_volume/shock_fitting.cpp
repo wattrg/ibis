@@ -185,33 +185,35 @@ KOKKOS_INLINE_FUNCTION T wave_speed(const FlowState<T>& left, const FlowState<T>
         T c = rR - rL;
         T ws2a = (-b + Ibis::sqrt(b * b - 4 * a * c)) / (T(2.0) * a);
         T ws2b = (-b - Ibis::sqrt(b * b - 4 * a * c)) / (T(2.0) * a);
-        T ws2 = Ibis::min(ws2a, ws2b);
-        return 0.5 * ws1 + 0.5 * ws2;
+        // T ws2 = ()
+        // T ws2 = Ibis::min(ws2a, ws2b);
+        // return 0.5 * ws1 + 0.5 * ws2;
+        return ws1;
     } else {
         // assume ideal gas for the moment. Will have to pass a gas model in
         // at some point
-        T aL = Ibis::sqrt(1.4 * 287 * left.gas_state.temp);
+        T aL = Ibis::sqrt(1.4 * 287.0 * left.gas_state.temp);
         T aR = Ibis::sqrt(1.4 * 287.0 * right.gas_state.temp);
 
         // use the local upwind sound speed
         if (uL > 0.0 && uR < 0.0) {
             // both sides upwind
-            return 0.5 * (uL - aL) + 0.5 * (uR - aR);
+            return 0.5 * (uL + aL) + 0.5 * (uR - aR);
         } else if (uL > 0.0 && uR > 0.0) {
             // left side upwind, right side downwind
-            return uL - aL;
+            return uL + aL;
         } else if (uL < 0.0 && uR < 0.0) {
             // right side upwind, left side downwind
             return uR - aR;
         } else {
             // both sides downwind ?!?
-            return T(0.0);
+            return 0.5 * uL + 0.5 * uR;
         }
     }
 }
 
 template <typename T>
-KOKKOS_INLINE_FUNCTION T mach_weighting(const FlowState<T>& left,
+KOKKOS_FUNCTION T mach_weighting(const FlowState<T>& left,
                                         const FlowState<T>& right,
                                         const Vector3<T>& vertex_pos,
                                         const Vector3<T>& face_pos,
@@ -221,7 +223,6 @@ KOKKOS_INLINE_FUNCTION T mach_weighting(const FlowState<T>& left,
            left.velocity.z * face_norm.z;
     T uR = right.velocity.x * face_norm.x + right.velocity.y * face_norm.y +
            right.velocity.z * face_norm.z;
-    T u;
     FlowState<T> face_fs;
     if (uL > 0.0 && uR < 0.0) {
         // both sides upwind
@@ -243,9 +244,9 @@ KOKKOS_INLINE_FUNCTION T mach_weighting(const FlowState<T>& left,
         face_fs.velocity.z = right.velocity.z;
     } else {
         face_fs.gas_state.temp = 0.5 * left.gas_state.temp + 0.5 * right.gas_state.temp;
-        face_fs.velocity.x = T(0.0);
-        face_fs.velocity.y = T(0.0);
-        face_fs.velocity.z = T(0.0);
+        face_fs.velocity.x = 0.5 * left.velocity.x + 0.5 * right.velocity.x;
+        face_fs.velocity.y = 0.5 * left.velocity.y + 0.5 * right.velocity.y;
+        face_fs.velocity.z = 0.5 * left.velocity.z + 0.5 * right.velocity.z;
     }
     T tan_x = vertex_pos.x - face_pos.x;
     T tan_y = vertex_pos.y - face_pos.y;
@@ -295,12 +296,14 @@ void WaveSpeed<T>::apply(const FlowStates<T>& fs, const GridBlock<T>& grid,
                 T ws = wave_speed(left, right, norm, shock_detection_threshold);
 
                 Vector3<T> face_pos = grid_interfaces.centre().vector(face_id);
+                // T weight = T(1.0);
                 T weight = mach_weighting(left, right, vertex_pos, face_pos, norm);
                 num_x += weight * ws * norm.x;
                 num_y += weight * ws * norm.y;
                 num_z += weight * ws * norm.z;
                 den += weight;
             }
+            // if (den < 1e-14) { den = T(1.0); }
             vertex_vel.x(vertex_i) = num_x / den * scale;
             vertex_vel.y(vertex_i) = num_y / den * scale;
             vertex_vel.z(vertex_i) = num_z / den * scale;

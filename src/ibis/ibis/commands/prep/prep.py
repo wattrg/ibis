@@ -672,6 +672,14 @@ def fixed_velocity(velocity):
     )
 
 
+def interpolation(sample_points, power=2.0):
+    return GridMotionBoundaryCondition(
+        direct=[],
+        interp=[_InverseDistanceWeighting(sample_points, power)],
+        constraint=[]
+    )
+
+
 def constrained_interpolation(sample_points, constraint_direction, power=2.0):
     return GridMotionBoundaryCondition(
         direct=[],
@@ -1154,7 +1162,8 @@ def main(file_name, res_dir):
         "RigidBodyTranslation": RigidBodyTranslation,
         "shock_fit": shock_fit,
         "fixed_velocity": fixed_velocity,
-        "constrained_interpolation": constrained_interpolation
+        "constrained_interpolation": constrained_interpolation,
+        "interpolation": interpolation
     }
 
     # run the user supplied script
