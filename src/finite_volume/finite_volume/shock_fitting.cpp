@@ -213,11 +213,9 @@ KOKKOS_INLINE_FUNCTION T wave_speed(const FlowState<T>& left, const FlowState<T>
 }
 
 template <typename T>
-KOKKOS_FUNCTION T mach_weighting(const FlowState<T>& left,
-                                        const FlowState<T>& right,
-                                        const Vector3<T>& vertex_pos,
-                                        const Vector3<T>& face_pos,
-                                        const Vector3<T>& face_norm) {
+KOKKOS_FUNCTION T mach_weighting(const FlowState<T>& left, const FlowState<T>& right,
+                                 const Vector3<T>& vertex_pos, const Vector3<T>& face_pos,
+                                 const Vector3<T>& face_norm) {
     // determine velocity at the interface
     T uL = left.velocity.x * face_norm.x + left.velocity.y * face_norm.y +
            left.velocity.z * face_norm.z;

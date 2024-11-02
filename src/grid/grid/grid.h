@@ -588,6 +588,8 @@ public:
                 face_vel.x(face_i) = vx / num_vertices;
                 face_vel.y(face_i) = vy / num_vertices;
                 face_vel.z(face_i) = vz / num_vertices;
+                // printf("face_id: %ld, v = %f %f %f\n", face_i, face_vel.x(face_i),
+                // face_vel.y(face_i), face_vel.z(face_i));
             });
     }
 

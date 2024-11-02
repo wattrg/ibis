@@ -13,6 +13,7 @@ config.convective_flux = ConvectiveFlux(
 config.gas_model = gas_model
 
 config.solver = RungeKutta(
+    # method="euler",
     cfl=0.5,
     max_step=10,
     max_time=1.0,
@@ -34,7 +35,7 @@ config.grid = Block(
     motion=ShockFitting(
         boundaries={
             "left": fixed_velocity(Vector3(0.0, 0.0, 0.0)),
-            "right": fixed_velocity(Vector3(1000.0, 0.0, 0.0)),
+            "right": fixed_velocity(Vector3(500.0, 0.0, 0.0)),
             "top": constrained_interpolation(sample_points=["left", "right"], constraint_direction=Vector3(1.0, 0.0, 0.0)),
             "bottom": constrained_interpolation(sample_points=["left", "right"], constraint_direction=Vector3(1.0, 0.0, 0.0))
         }

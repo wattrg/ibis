@@ -47,9 +47,9 @@ public:
                         bool allow_reconstruction = true);
 
     size_t compute_dudt(FlowStates<T>& flow_state, Vector3s<T> vertex_vel,
-                        const ConservedQuantities<T>& cq,
-                        GridBlock<T>& grid, ConservedQuantities<T>& dudt,
-                        IdealGas<T>& gas_model, TransportProperties<T>& trans_prop,
+                        const ConservedQuantities<T>& cq, GridBlock<T>& grid,
+                        ConservedQuantities<T>& dudt, IdealGas<T>& gas_model,
+                        TransportProperties<T>& trans_prop,
                         bool allow_reconstruction = true);
 
     /**

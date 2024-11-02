@@ -160,6 +160,19 @@ void ConvectiveFlux<T>::compute_convective_flux(
             if (flux.dim() == 3) {
                 flux.momentum_z(i) = z;
             }
+
+            // transform the interface velocity back to the global frame
+            if (grid.moving()) {
+                T vx = face_vel.x(i);
+                T vy = face_vel.y(i);
+                T vz = face_vel.z(i);
+                T x = vx * norm.x(i) + vy * tan1.x(i) + vz * tan2.x(i);
+                T y = vx * norm.y(i) + vy * tan1.y(i) + vz * tan2.y(i);
+                T z = vx * norm.z(i) + vy * tan1.z(i) + vz * tan2.z(i);
+                face_vel.x(i) = x;
+                face_vel.y(i) = y;
+                face_vel.z(i) = z;
+            }
         });
 }
 

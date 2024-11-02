@@ -121,7 +121,8 @@ void RungeKutta::estimate_dt() {
 void RungeKutta::function_eval_(FlowStates<Ibis::real> fs,
                                 ConservedQuantities<Ibis::real>& cq, size_t index) {
     if (grid_.moving()) {
-        fv_.compute_dudt(fs, vertex_vel_[index], cq, grid_, k_[index], gas_model_, trans_prop_);
+        fv_.compute_dudt(fs, vertex_vel_[index], cq, grid_, k_[index], gas_model_,
+                         trans_prop_);
     } else {
         fv_.compute_dudt(fs, grid_, k_[index], gas_model_, trans_prop_);
     }
@@ -130,10 +131,10 @@ void RungeKutta::function_eval_(FlowStates<Ibis::real> fs,
 int RungeKutta::take_step(size_t step) {
     (void)step;
 
-    if (moving_grid_ && tableau_.num_stages() > 1) {
-        // we need to save the initial grid vertex positions
-        init_vertex_pos_ = grid_.vertices().positions();
-    }
+    // if (moving_grid_ && tableau_.num_stages() > 1) {
+    // we need to save the initial grid vertex positions
+    init_vertex_pos_ = grid_.vertices().positions();
+    // }
 
     // this has to be done before the estimation of dt, as may set
     // values used to estimate the stable time step. It also serves
