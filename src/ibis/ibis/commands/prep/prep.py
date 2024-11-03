@@ -645,7 +645,7 @@ class _InverseDistanceWeighting:
         }
 
 
-class _DirectionConstraint:
+class DirectionConstraint:
     def __init__(self, direction):
         self._direction = direction
 
@@ -656,11 +656,27 @@ class _DirectionConstraint:
         }
 
 
-def shock_fit(scale=1.0, shock_detection_threshold=0.2):
+class RadialConstraint:
+    def __init__(self, centre):
+        self._centre = centre
+
+    def as_dict(self):
+        return {
+            "type": "radial",
+            "centre": self._centre.as_dict()
+        }
+
+
+def shock_fit(scale=1.0, constraint=None, shock_detection_threshold=0.2):
+    if constraint:
+        _constraint = [constraint]
+    else:
+        _constraint = []
+
     return GridMotionBoundaryCondition(
         direct=[_WaveSpeed(scale, shock_detection_threshold)],
         interp=[],
-        constraint=[]
+        constraint=_constraint
     )
 
 
@@ -680,11 +696,11 @@ def interpolation(sample_points, power=2.0):
     )
 
 
-def constrained_interpolation(sample_points, constraint_direction, power=2.0):
+def constrained_interpolation(sample_points, constraint, power=2.0):
     return GridMotionBoundaryCondition(
         direct=[],
         interp=[_InverseDistanceWeighting(sample_points, power)],
-        constraint=[_DirectionConstraint(constraint_direction)]
+        constraint=[constraint]
     )
 
 
@@ -1163,7 +1179,9 @@ def main(file_name, res_dir):
         "shock_fit": shock_fit,
         "fixed_velocity": fixed_velocity,
         "constrained_interpolation": constrained_interpolation,
-        "interpolation": interpolation
+        "interpolation": interpolation,
+        "DirectionConstraint": DirectionConstraint,
+        "RadialConstraint": RadialConstraint,
     }
 
     # run the user supplied script

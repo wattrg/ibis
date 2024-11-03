@@ -49,9 +49,6 @@ private:
     Vector3<T> vel_;
 };
 
-template <typename T>
-std::shared_ptr<ShockFittingDirectVelocityAction<T>> make_direct_velocity_action(
-    json config);
 
 template <typename T>
 class ShockFittingInterpolationAction {
@@ -80,7 +77,16 @@ private:
 };
 
 template <typename T>
-class ConstrainDirection {
+class Constraint {
+public:
+    virtual ~Constraint() {}
+
+    virtual void apply(const GridBlock<T>& grid, Vector3s<T> vertex_vel,
+                       const Field<size_t>& vertices) = 0;
+};
+
+template <typename T>
+class ConstrainDirection : public Constraint<T> {
 public:
     ~ConstrainDirection() {}
 
@@ -89,11 +95,29 @@ public:
 
     ConstrainDirection(json config);
 
-    void apply(Vector3s<T> vertex_vel, const Field<size_t>& boundary_vertices);
+    void apply(const GridBlock<T>& grid, 
+               Vector3s<T> vertex_vel, const Field<size_t>& boundary_vertices);
 
 private:
     Vector3<T> direction_;
 };
+
+template <typename T>
+class RadialConstraint : public Constraint<T> {
+public:
+    ~RadialConstraint() {}
+
+    RadialConstraint(Vector3<T> centre) : centre_(centre) {}
+
+    RadialConstraint(json config);
+
+    void apply(const GridBlock<T>& grid, 
+               Vector3s<T> vertex_vel, const Field<size_t>& boundary_vertices);
+
+private:
+    Vector3<T> centre_;
+};
+
 
 template <typename T>
 class ShockFittingBC {
@@ -114,8 +138,15 @@ private:
         std::pair<std::string, std::shared_ptr<ShockFittingDirectVelocityAction<T>>>>
         direct_actions_;
     std::vector<ShockFittingInterpolationAction<T>> interp_actions_;
-    std::vector<std::pair<std::string, ConstrainDirection<T>>> constraints_;
+    std::vector<std::pair<std::string, std::shared_ptr<Constraint<T>>>> constraints_;
 };
+
+template <typename T>
+std::shared_ptr<ShockFittingDirectVelocityAction<T>> make_direct_velocity_action(
+    json config);
+
+template <typename T>
+std::shared_ptr<Constraint<T>> make_constraint(json config);
 
 template <typename T>
 class ShockFitting : public GridMotionDriver<T> {

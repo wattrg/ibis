@@ -83,7 +83,8 @@ ShockFittingBC<T>::ShockFittingBC(const GridBlock<T>& grid, std::string marker,
 
     json constraint_configs = config.at("constraint");
     for (json constraint_config : constraint_configs) {
-        constraints_.push_back({marker, ConstrainDirection<T>(constraint_config)});
+        constraints_.push_back({marker, make_constraint<T>(constraint_config)});
+        // constraints_.push_back({marker, ConstrainDirection<T>(constraint_config)});
     }
 }
 
@@ -110,7 +111,7 @@ void ShockFittingBC<T>::apply_constraints(const GridBlock<T>& grid,
                                           Vector3s<T> vertex_vel) {
     for (auto& [marker, action] : constraints_) {
         const Field<size_t>& vertices = grid.marked_vertices(marker);
-        action.apply(vertex_vel, vertices);
+        action->apply(grid, vertex_vel, vertices);
     }
 }
 template class ShockFittingBC<Ibis::real>;
@@ -310,25 +311,6 @@ void WaveSpeed<T>::apply(const FlowStates<T>& fs, const GridBlock<T>& grid,
 template class WaveSpeed<Ibis::real>;
 template class WaveSpeed<Ibis::dual>;
 
-template <typename T>
-std::shared_ptr<ShockFittingDirectVelocityAction<T>> make_direct_velocity_action(
-    json config) {
-    std::string type = config.at("type");
-    if (type == "wave_speed") {
-        return std::shared_ptr<ShockFittingDirectVelocityAction<T>>(
-            new WaveSpeed<T>(config));
-    } else if (type == "fixed_velocity") {
-        return std::shared_ptr<ShockFittingDirectVelocityAction<T>>(
-            new FixedVelocity<T>(config));
-    } else {
-        spdlog::error("Unkown grid motion direct velocity action {}", type);
-        throw new std::runtime_error("Unkown grid motion direction velocity action");
-    }
-}
-template std::shared_ptr<ShockFittingDirectVelocityAction<Ibis::real>>
-    make_direct_velocity_action(json);
-template std::shared_ptr<ShockFittingDirectVelocityAction<Ibis::dual>>
-    make_direct_velocity_action(json);
 
 template <typename T>
 ConstrainDirection<T>::ConstrainDirection(json config) {
@@ -340,8 +322,10 @@ ConstrainDirection<T>::ConstrainDirection(json config) {
 }
 
 template <typename T>
-void ConstrainDirection<T>::apply(Vector3s<T> vertex_vel,
+void ConstrainDirection<T>::apply(const GridBlock<T>& grid,
+                                  Vector3s<T> vertex_vel,
                                   const Field<size_t>& boundary_vertices) {
+    (void)grid;
     Vector3<T> dirn = direction_;
     Kokkos::parallel_for(
         "Shockfitting::ConstrainDirection", boundary_vertices.size(),
@@ -358,6 +342,45 @@ void ConstrainDirection<T>::apply(Vector3s<T> vertex_vel,
 }
 template class ConstrainDirection<Ibis::real>;
 template class ConstrainDirection<Ibis::dual>;
+
+template <typename T>
+RadialConstraint<T>::RadialConstraint(json config) {
+    json centre = config.at("centre");
+    Ibis::real x = centre.at("x");
+    Ibis::real y = centre.at("y");
+    Ibis::real z = centre.at("z");
+    centre_ = Vector3<T>{x, y, z};
+}
+
+template <typename T>
+void RadialConstraint<T>::apply(const GridBlock<T>& grid,
+                                Vector3s<T> vertex_vel,
+                                const Field<size_t>& boundary_vertices) {
+    Vector3<T> centre = centre_;
+    Vector3s<T> vertex_pos = grid.vertices().positions(); 
+    Kokkos::parallel_for(
+        "Shockfitting::RadialConstraint", boundary_vertices.size(),
+        KOKKOS_LAMBDA(const size_t i){
+            size_t vertex_i = boundary_vertices(i);
+            Vector3<T> pos = vertex_pos.vector(vertex_i);
+            Vector3<T> dirn = Vector3<T>{
+                centre.x - pos.x,
+                centre.y - pos.y,
+                centre.z - pos.z
+            };
+            T len_dir = Ibis::sqrt(dirn.x * dirn.x + dirn.y * dirn.y + dirn.z * dirn.z);
+            dirn.x /= len_dir;
+            dirn.y /= len_dir;
+            dirn.z /= len_dir;
+            Vector3<T> vel = vertex_vel.vector(vertex_i);
+            T dot = dirn.x * vel.x + dirn.y * vel.y + dirn.z * vel.z;
+            vertex_vel.x(vertex_i) = dirn.x * dot;
+            vertex_vel.y(vertex_i) = dirn.y * dot;
+            vertex_vel.z(vertex_i) = dirn.z * dot;
+    });
+}
+template class RadialConstraint<Ibis::real>;
+template class RadialConstraint<Ibis::dual>;
 
 template <typename T>
 ShockFittingInterpolationAction<T>::ShockFittingInterpolationAction(
@@ -439,3 +462,38 @@ void ShockFittingInterpolationAction<T>::apply(const GridBlock<T>& grid,
 
 template class ShockFittingInterpolationAction<Ibis::real>;
 template class ShockFittingInterpolationAction<Ibis::dual>;
+
+template <typename T>
+std::shared_ptr<ShockFittingDirectVelocityAction<T>> make_direct_velocity_action(
+    json config) {
+    std::string type = config.at("type");
+    if (type == "wave_speed") {
+        return std::shared_ptr<ShockFittingDirectVelocityAction<T>>(
+            new WaveSpeed<T>(config));
+    } else if (type == "fixed_velocity") {
+        return std::shared_ptr<ShockFittingDirectVelocityAction<T>>(
+            new FixedVelocity<T>(config));
+    } else {
+        spdlog::error("Unkown grid motion direct velocity action {}", type);
+        throw new std::runtime_error("Unkown grid motion direction velocity action");
+    }
+}
+template std::shared_ptr<ShockFittingDirectVelocityAction<Ibis::real>>
+    make_direct_velocity_action(json);
+template std::shared_ptr<ShockFittingDirectVelocityAction<Ibis::dual>>
+    make_direct_velocity_action(json);
+
+template <typename T>
+std::shared_ptr<Constraint<T>> make_constraint(json config) {
+    std::string type = config.at("type");
+    if (type == "direction") {
+        return std::shared_ptr<Constraint<T>>(new ConstrainDirection<T>(config));
+    } else if (type == "radial") {
+        return std::shared_ptr<Constraint<T>>(new RadialConstraint<T>(config));
+    } else {
+        spdlog::error("Unknown grid motion constraint {}", type);
+        throw new std::runtime_error("Unkown grid motion constraint");
+    }
+}
+template std::shared_ptr<Constraint<Ibis::real>> make_constraint(json);
+template std::shared_ptr<Constraint<Ibis::dual>> make_constraint(json);
