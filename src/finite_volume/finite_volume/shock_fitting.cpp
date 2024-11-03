@@ -207,7 +207,7 @@ KOKKOS_INLINE_FUNCTION T wave_speed(const FlowState<T>& left, const FlowState<T>
             return uR - aR;
         } else {
             // both sides downwind ?!?
-            return 0.5 * uL + 0.5 * uR;
+            return 0.5 * aL + 0.5 * aR;
         }
     }
 }
@@ -290,12 +290,12 @@ void WaveSpeed<T>::apply(const FlowStates<T>& fs, const GridBlock<T>& grid,
                 size_t right_id = grid_interfaces.right_cell(face_id);
                 FlowState<T> left = fs.flow_state(left_id);
                 FlowState<T> right = fs.flow_state(right_id);
-                Vector3<T> norm = normals.vector(i);
+                Vector3<T> norm = normals.vector(face_id);
                 T ws = wave_speed(left, right, norm, shock_detection_threshold);
 
                 Vector3<T> face_pos = grid_interfaces.centre().vector(face_id);
-                // T weight = T(1.0);
-                T weight = mach_weighting(left, right, vertex_pos, face_pos, norm);
+                T weight = T(1.0);
+                // T weight = mach_weighting(left, right, vertex_pos, face_pos, norm);
                 num_x += weight * ws * norm.x;
                 num_y += weight * ws * norm.y;
                 num_z += weight * ws * norm.z;

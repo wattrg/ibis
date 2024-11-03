@@ -13,13 +13,13 @@ config.convective_flux = ConvectiveFlux(
 config.gas_model = gas_model
 
 config.solver = RungeKutta(
-    # method="euler",
+    method="euler",
     cfl=0.5,
-    max_step=10,
+    max_step=1,
     max_time=1.0,
     plot_frequency=-0.1,
     plot_every_n_steps=1,
-    print_frequency=200
+    print_frequency=1
 )
 
 config.grid = Block(
