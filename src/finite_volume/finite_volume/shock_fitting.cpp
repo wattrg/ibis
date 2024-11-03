@@ -149,7 +149,7 @@ template <typename T>
 WaveSpeed<T>::WaveSpeed(json config) {
     scale_ = config.at("scale");
     shock_detection_threshold_ = config.at("shock_detection_threshold");
-    // flow_state_ = FlowState<T>{config.at("flow_state")};
+    constraint_ = make_constraint<T>(config.at("constraint"));
 }
 
 template <typename T>
@@ -307,6 +307,10 @@ void WaveSpeed<T>::apply(const FlowStates<T>& fs, const GridBlock<T>& grid,
             vertex_vel.y(vertex_i) = num_y / den * scale;
             vertex_vel.z(vertex_i) = num_z / den * scale;
         });
+
+    if (constraint_) {
+        constraint_->apply(grid, vertex_vel, boundary_vertices);
+    }
 }
 template class WaveSpeed<Ibis::real>;
 template class WaveSpeed<Ibis::dual>;
@@ -490,6 +494,8 @@ std::shared_ptr<Constraint<T>> make_constraint(json config) {
         return std::shared_ptr<Constraint<T>>(new ConstrainDirection<T>(config));
     } else if (type == "radial") {
         return std::shared_ptr<Constraint<T>>(new RadialConstraint<T>(config));
+    } else if (type == "none") {
+        return std::shared_ptr<Constraint<T>>(); 
     } else {
         spdlog::error("Unknown grid motion constraint {}", type);
         throw new std::runtime_error("Unkown grid motion constraint");

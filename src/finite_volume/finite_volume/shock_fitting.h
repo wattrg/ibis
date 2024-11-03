@@ -4,6 +4,48 @@
 #include <finite_volume/grid_motion_driver.h>
 
 template <typename T>
+class Constraint {
+public:
+    virtual ~Constraint() {}
+
+    virtual void apply(const GridBlock<T>& grid, Vector3s<T> vertex_vel,
+                       const Field<size_t>& vertices) = 0;
+};
+
+template <typename T>
+class ConstrainDirection : public Constraint<T> {
+public:
+    ~ConstrainDirection() {}
+
+    ConstrainDirection(Ibis::real x, Ibis::real y, Ibis::real z)
+        : direction_(Vector3<T>(x, y, z)) {}
+
+    ConstrainDirection(json config);
+
+    void apply(const GridBlock<T>& grid, 
+               Vector3s<T> vertex_vel, const Field<size_t>& boundary_vertices);
+
+private:
+    Vector3<T> direction_;
+};
+
+template <typename T>
+class RadialConstraint : public Constraint<T> {
+public:
+    ~RadialConstraint() {}
+
+    RadialConstraint(Vector3<T> centre) : centre_(centre) {}
+
+    RadialConstraint(json config);
+
+    void apply(const GridBlock<T>& grid, 
+               Vector3s<T> vertex_vel, const Field<size_t>& boundary_vertices);
+
+private:
+    Vector3<T> centre_;
+};
+
+template <typename T>
 class ShockFittingDirectVelocityAction {
 public:
     virtual ~ShockFittingDirectVelocityAction() {}
@@ -28,6 +70,7 @@ public:
 private:
     Ibis::real scale_;
     Ibis::real shock_detection_threshold_;
+    std::shared_ptr<Constraint<T>> constraint_;
     // FlowState<T> flow_state_;
 };
 
@@ -76,47 +119,6 @@ private:
     Ibis::real power_;
 };
 
-template <typename T>
-class Constraint {
-public:
-    virtual ~Constraint() {}
-
-    virtual void apply(const GridBlock<T>& grid, Vector3s<T> vertex_vel,
-                       const Field<size_t>& vertices) = 0;
-};
-
-template <typename T>
-class ConstrainDirection : public Constraint<T> {
-public:
-    ~ConstrainDirection() {}
-
-    ConstrainDirection(Ibis::real x, Ibis::real y, Ibis::real z)
-        : direction_(Vector3<T>(x, y, z)) {}
-
-    ConstrainDirection(json config);
-
-    void apply(const GridBlock<T>& grid, 
-               Vector3s<T> vertex_vel, const Field<size_t>& boundary_vertices);
-
-private:
-    Vector3<T> direction_;
-};
-
-template <typename T>
-class RadialConstraint : public Constraint<T> {
-public:
-    ~RadialConstraint() {}
-
-    RadialConstraint(Vector3<T> centre) : centre_(centre) {}
-
-    RadialConstraint(json config);
-
-    void apply(const GridBlock<T>& grid, 
-               Vector3s<T> vertex_vel, const Field<size_t>& boundary_vertices);
-
-private:
-    Vector3<T> centre_;
-};
 
 
 template <typename T>
