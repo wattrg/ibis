@@ -7,10 +7,10 @@ gas_model.update_thermo_from_pT(gas_state)
 v = 3.0 * gas_model.speed_of_sound(gas_state)
 inflow = FlowState(gas=gas_state, vx=v)
 initial = FlowState(gas=gas_state, vx=v)
-max_time = 30 * 6.6e-3 / v
+max_time = 500 * 6.6e-3 / v
 
 config.convective_flux = ConvectiveFlux(
-    flux_calculator=Hanel(),
+    flux_calculator=Ausmdv(),
     reconstruction_order=1,
 )
 
@@ -21,7 +21,7 @@ config.gas_model = gas_model
 config.solver = RungeKutta(
     method="euler",
     cfl = 0.5,
-    max_step = 100000,
+    max_step = 1000000,
     max_time = max_time,
     # plot_every_n_steps = 1,
     plot_frequency = max_time / 10,
@@ -61,26 +61,27 @@ config.grid = Block(
         boundaries={
             "wall": fixed_velocity(Vector3(0.0)),
             "symmetry": constrained_interpolation(
-                sample_points=["wall", "shock"],
+                sample_points=["wall", "inflow"],
                 constraint=RadialConstraint(Vector3(0.0, 0.0))
             ),
-            "inflow": constrained_interpolation(
-                sample_points=["shock"],
-                power=5,
-                constraint=RadialConstraint(Vector3(0.0, 0.0))
-            ),
-            # "inflow": shock_fit(
-            #     constraint=RadialConstraint(centre=Vector3(0.0, 0.0, 0.0)),
-            #     scale=0.05
+            # "inflow": constrained_interpolation(
+            #     sample_points=["shock"],
+            #     power=5,
+            #     constraint=RadialConstraint(Vector3(0.0, 0.0))
             # ),
+            "inflow": shock_fit(
+                constraint=RadialConstraint(centre=Vector3(0.0, 0.0, 0.0)),
+                scale=0.01,
+                shock_detection_threshold=0.1,
+            ),
             "outflow": constrained_interpolation(
-                sample_points=["wall", "shock"],
+                sample_points=["wall", "inflow"],
                 constraint=RadialConstraint(Vector3(0.0, 0.0)),
             ),
-            "shock": shock_fit(
-                constraint=RadialConstraint(centre=Vector3(0.0, 0.0, 0.0)),
-                scale = 0.05
-            )
+            # "shock": shock_fit(
+            #     constraint=RadialConstraint(centre=Vector3(0.0, 0.0, 0.0)),
+            #     scale = 0.01
+            # )
         }
     )
 )

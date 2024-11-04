@@ -72,7 +72,7 @@ ShockFittingBC<T>::ShockFittingBC(const GridBlock<T>& grid, std::string marker,
     json direct_configs = config.at("direct");
     for (json direct_config : direct_configs) {
         direct_actions_.push_back(
-            {marker, make_direct_velocity_action<T>(direct_config)});
+            {marker, make_direct_velocity_action<T>(grid, marker, direct_config)});
     }
 
     json interp_configs = config.at("interp");
@@ -84,7 +84,6 @@ ShockFittingBC<T>::ShockFittingBC(const GridBlock<T>& grid, std::string marker,
     json constraint_configs = config.at("constraint");
     for (json constraint_config : constraint_configs) {
         constraints_.push_back({marker, make_constraint<T>(constraint_config)});
-        // constraints_.push_back({marker, ConstrainDirection<T>(constraint_config)});
     }
 }
 
@@ -146,10 +145,44 @@ template class FixedVelocity<Ibis::real>;
 template class FixedVelocity<Ibis::dual>;
 
 template <typename T>
-WaveSpeed<T>::WaveSpeed(json config) {
+WaveSpeed<T>::WaveSpeed(const GridBlock<T>& grid, std::string marker, json config) {
     scale_ = config.at("scale");
     shock_detection_threshold_ = config.at("shock_detection_threshold");
     constraint_ = make_constraint<T>(config.at("constraint"));
+
+
+    // the position of each marked vertex in the array of marked vertices
+    auto marked_vertices = grid.marked_vertices(marker).host_mirror();
+    marked_vertices.deep_copy(grid.marked_vertices(marker));
+    std::map<size_t, size_t> marked_vertex_index;
+    for (size_t vertex_index = 0; vertex_index < marked_vertices.size(); vertex_index++) {
+        size_t vertex_id = marked_vertices(vertex_index);
+        marked_vertex_index.insert({vertex_id, vertex_index});
+    }
+
+    // which faces attached to the vertices should be shock fit
+    std::vector<std::vector<size_t>> shock_fit_faces_connectivity(marked_vertices.size());
+    // shock_fit_faces_connectivity.reserve(marked_vertices.size());
+
+    // the faces to shockfit
+    auto marked_faces = grid.marked_faces(marker).host_mirror();
+    marked_faces.deep_copy(grid.marked_faces(marker));
+
+    // vertices of each face
+    auto face_vertices = grid.interfaces().vertex_ids().host_mirror();
+    face_vertices.deep_copy(grid.interfaces().vertex_ids());
+
+    for (size_t face_i = 0; face_i < marked_faces.size(); face_i++) {
+        size_t face_id = marked_faces(face_i);
+        auto face_id_vertices = face_vertices(face_id);
+        for (size_t vertex_i = 0; vertex_i < face_id_vertices.size(); vertex_i++) {
+            size_t vertex_id = face_id_vertices(vertex_i);
+            size_t vertex_marker_index = marked_vertex_index[vertex_id];
+            shock_fit_faces_connectivity[vertex_marker_index].push_back(face_id);
+        }
+    }
+
+    faces_ = Ibis::RaggedArray<size_t>{shock_fit_faces_connectivity};
 }
 
 template <typename T>
@@ -178,28 +211,36 @@ KOKKOS_INLINE_FUNCTION T wave_speed(const FlowState<T>& left, const FlowState<T>
 
     if (shock_detected) {
         // wave speed from the mass conservation equation
-        T ws1 = (rL * uL - rR * uR) / (rL - rR);
+        T ws1 = (rR * uR - rL * uL) / (rL - rR);
 
         // wave speeds from normal momentum conservation equation
-        T a = pR - pL + rR * uR * uR - rL * uL * uL;
-        T b = T(2.0) * (rL * uL - rR * uR);
-        T c = rR - rL;
-        T ws2a = (-b + Ibis::sqrt(b * b - 4 * a * c)) / (T(2.0) * a);
-        T ws2b = (-b - Ibis::sqrt(b * b - 4 * a * c)) / (T(2.0) * a);
+        T a = pL - pR + rL * uL * uL - rR * uR * uR;
+        T b = T(2.0) * (rR * uR - rL * uL);
+        T c = rL - rR;
+        int sign = (pR - pL > T(0.0)) ? -1 : 1;
+        T ws2 = (-b + sign * Ibis::sqrt(b * b - 4 * a * c)) / (T(2.0) * a);
+        // T ws2n = (-b - Ibis::sqrt(b * b - 4 * a * c)) / (T(2.0) * a);
+        // printf("ws2p = %.16f, ws2m = %.16f, delta P = %.16f\n", ws2p, ws2n, pR - pL);
         // T ws2 = ()
         // T ws2 = Ibis::min(ws2a, ws2b);
         // return 0.5 * ws1 + 0.5 * ws2;
-        return ws1;
+        return 0.5 * ws1 + 0.05 * ws2;
     } else {
         // assume ideal gas for the moment. Will have to pass a gas model in
         // at some point
         T aL = Ibis::sqrt(1.4 * 287.0 * left.gas_state.temp);
         T aR = Ibis::sqrt(1.4 * 287.0 * right.gas_state.temp);
 
+        T ML = uL / aL;
+        T MR = uR / aR;
+        T wL = ML / (ML + MR);
+        T wR = MR / (ML + MR);
+        // printf("ML = %.16f, wL = %.16f, MR = %.16f, wR = %.16f\n", ML, wL, MR, wR);
+
         // use the local upwind sound speed
         if (uL > 0.0 && uR < 0.0) {
             // both sides upwind
-            return 0.5 * (uL + aL) + 0.5 * (uR - aR);
+            return wL * (uL + aL) + wR * (uR - aR);
         } else if (uL > 0.0 && uR > 0.0) {
             // left side upwind, right side downwind
             return uL + aL;
@@ -208,7 +249,8 @@ KOKKOS_INLINE_FUNCTION T wave_speed(const FlowState<T>& left, const FlowState<T>
             return uR - aR;
         } else {
             // both sides downwind ?!?
-            return 0.5 * aL + 0.5 * aR;
+            // return 0.5 * aL + 0.5 * aR;
+            return T(0.0);
         }
     }
 }
@@ -222,13 +264,19 @@ KOKKOS_FUNCTION T mach_weighting(const FlowState<T>& left, const FlowState<T>& r
            left.velocity.z * face_norm.z;
     T uR = right.velocity.x * face_norm.x + right.velocity.y * face_norm.y +
            right.velocity.z * face_norm.z;
+    T aL = Ibis::sqrt(1.4 * 287.0 * left.gas_state.temp);
+    T aR = Ibis::sqrt(1.4 * 287.0 * right.gas_state.temp);
+    T ML = uL / aL;
+    T MR = uR / aR;
+    T wL = ML / (ML + MR);
+    T wR = MR / (ML + MR);
     FlowState<T> face_fs;
     if (uL > 0.0 && uR < 0.0) {
         // both sides upwind
-        face_fs.gas_state.temp = 0.5 * left.gas_state.temp + 0.5 * right.gas_state.temp;
-        face_fs.velocity.x = 0.5 * left.velocity.x + 0.5 * right.velocity.x;
-        face_fs.velocity.y = 0.5 * left.velocity.y + 0.5 * right.velocity.y;
-        face_fs.velocity.z = 0.5 * left.velocity.z + 0.5 * right.velocity.z;
+        face_fs.gas_state.temp = wL * left.gas_state.temp + wR * right.gas_state.temp;
+        face_fs.velocity.x = wL * left.velocity.x + wL * right.velocity.x;
+        face_fs.velocity.y = wL * left.velocity.y + wL * right.velocity.y;
+        face_fs.velocity.z = wL * left.velocity.z + wL * right.velocity.z;
     } else if (uL > 0.0 && uR > 0.0) {
         // left side upwind, right side downwind
         face_fs.gas_state.temp = left.gas_state.temp;
@@ -242,6 +290,7 @@ KOKKOS_FUNCTION T mach_weighting(const FlowState<T>& left, const FlowState<T>& r
         face_fs.velocity.y = right.velocity.y;
         face_fs.velocity.z = right.velocity.z;
     } else {
+        // return T(0.0);
         face_fs.gas_state.temp = 0.5 * left.gas_state.temp + 0.5 * right.gas_state.temp;
         face_fs.velocity.x = 0.5 * left.velocity.x + 0.5 * right.velocity.x;
         face_fs.velocity.y = 0.5 * left.velocity.y + 0.5 * right.velocity.y;
@@ -271,11 +320,12 @@ void WaveSpeed<T>::apply(const FlowStates<T>& fs, const GridBlock<T>& grid,
     auto normals = grid.interfaces().norm();
     auto vertices = grid.vertices();
     auto grid_interfaces = grid.interfaces();
+    auto face_connectivity = faces_;
     Kokkos::parallel_for(
         "ShockFitting::wave_speed", boundary_vertices.size(),
         KOKKOS_LAMBDA(const size_t i) {
             size_t vertex_i = boundary_vertices(i);
-            auto interfaces = interface_ids(vertex_i);
+            auto interfaces = face_connectivity(i);
             // we repeat the calculation of the wave speed for each face for
             // each vertex attached to the face. This is a bit wasteful of compute,
             // but requires less memory. Some profiling would be good to see which
@@ -294,13 +344,14 @@ void WaveSpeed<T>::apply(const FlowStates<T>& fs, const GridBlock<T>& grid,
                 Vector3<T> norm = normals.vector(face_id);
                 T ws = wave_speed(left, right, norm, shock_detection_threshold);
 
-                Vector3<T> face_pos = grid_interfaces.centre().vector(face_id);
                 T weight = T(1.0);
-                // T weight = mach_weighting(left, right, vertex_pos, face_pos, norm);
+                // Vector3<T> face_pos = grid_interfaces.centre().vector(face_id);
+                // T weight = (interfaces.size() > 1) ? mach_weighting(left, right, vertex_pos, face_pos, norm) : T(1.0);
                 num_x += weight * ws * norm.x;
                 num_y += weight * ws * norm.y;
                 num_z += weight * ws * norm.z;
                 den += weight;
+                // printf("face %ld, ws = %.16f, norm = [%.16f, %.16f, %.16f]\n", face_id, ws, norm.x, norm.y, norm.z);
             }
             // if (den < 1e-14) { den = T(1.0); }
             vertex_vel.x(vertex_i) = num_x / den * scale;
@@ -469,11 +520,13 @@ template class ShockFittingInterpolationAction<Ibis::dual>;
 
 template <typename T>
 std::shared_ptr<ShockFittingDirectVelocityAction<T>> make_direct_velocity_action(
+    const GridBlock<T>& grid,
+    std::string marker,
     json config) {
     std::string type = config.at("type");
     if (type == "wave_speed") {
         return std::shared_ptr<ShockFittingDirectVelocityAction<T>>(
-            new WaveSpeed<T>(config));
+            new WaveSpeed<T>(grid, marker, config));
     } else if (type == "fixed_velocity") {
         return std::shared_ptr<ShockFittingDirectVelocityAction<T>>(
             new FixedVelocity<T>(config));
@@ -483,9 +536,9 @@ std::shared_ptr<ShockFittingDirectVelocityAction<T>> make_direct_velocity_action
     }
 }
 template std::shared_ptr<ShockFittingDirectVelocityAction<Ibis::real>>
-    make_direct_velocity_action(json);
+    make_direct_velocity_action(const GridBlock<Ibis::real>&, std::string, json);
 template std::shared_ptr<ShockFittingDirectVelocityAction<Ibis::dual>>
-    make_direct_velocity_action(json);
+    make_direct_velocity_action(const GridBlock<Ibis::dual>&, std::string, json);
 
 template <typename T>
 std::shared_ptr<Constraint<T>> make_constraint(json config) {

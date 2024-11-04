@@ -2,6 +2,7 @@
 #define SHOCK_FITTING_H
 
 #include <finite_volume/grid_motion_driver.h>
+#include "util/ragged_array.h"
 
 template <typename T>
 class Constraint {
@@ -62,7 +63,7 @@ public:
 
     WaveSpeed() {}
 
-    WaveSpeed(json config);
+    WaveSpeed(const GridBlock<T>& grid, std::string marker, json config);
 
     void apply(const FlowStates<T>& fs, const GridBlock<T>& grid, Vector3s<T> vertex_vel,
                const Field<size_t>& boundary_vertices);
@@ -71,6 +72,7 @@ private:
     Ibis::real scale_;
     Ibis::real shock_detection_threshold_;
     std::shared_ptr<Constraint<T>> constraint_;
+    Ibis::RaggedArray<size_t> faces_;
     // FlowState<T> flow_state_;
 };
 
@@ -145,6 +147,8 @@ private:
 
 template <typename T>
 std::shared_ptr<ShockFittingDirectVelocityAction<T>> make_direct_velocity_action(
+    const GridBlock<T>& grid,
+    std::string marker,
     json config);
 
 template <typename T>

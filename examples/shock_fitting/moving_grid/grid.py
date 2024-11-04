@@ -4,12 +4,12 @@ gmsh.initialize()
 
 # general settings
 gmsh.option.setNumber("General.Terminal", 1)
-# gmsh.option.setNumber("Mesh.Algorithm", 8) # delauny
-# gmsh.option.setNumber("Mesh.RecombineAll", 1)
+gmsh.option.setNumber("Mesh.Algorithm", 8) # delauny
+gmsh.option.setNumber("Mesh.RecombineAll", 1)
 gmsh.option.setNumber("Mesh.SaveAll", 1)
 
 # geometric properties
-size = 1e-4
+size = 3e-4
 R = 6.6e-03  # sphere radius in meters
 
 # define points
