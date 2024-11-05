@@ -219,12 +219,7 @@ KOKKOS_INLINE_FUNCTION T wave_speed(const FlowState<T>& left, const FlowState<T>
         T c = rL - rR;
         int sign = (pR - pL > T(0.0)) ? -1 : 1;
         T ws2 = (-b + sign * Ibis::sqrt(b * b - 4 * a * c)) / (T(2.0) * a);
-        // T ws2n = (-b - Ibis::sqrt(b * b - 4 * a * c)) / (T(2.0) * a);
-        // printf("ws2p = %.16f, ws2m = %.16f, delta P = %.16f\n", ws2p, ws2n, pR - pL);
-        // T ws2 = ()
-        // T ws2 = Ibis::min(ws2a, ws2b);
-        // return 0.5 * ws1 + 0.5 * ws2;
-        return 0.5 * ws1 + 0.05 * ws2;
+        return 0.5 * ws1 + 0.5 * ws2;
     } else {
         // assume ideal gas for the moment. Will have to pass a gas model in
         // at some point
@@ -233,25 +228,9 @@ KOKKOS_INLINE_FUNCTION T wave_speed(const FlowState<T>& left, const FlowState<T>
 
         T ML = uL / aL;
         T MR = uR / aR;
-        T wL = ML / (ML + MR);
-        T wR = MR / (ML + MR);
-        // printf("ML = %.16f, wL = %.16f, MR = %.16f, wR = %.16f\n", ML, wL, MR, wR);
-
-        // use the local upwind sound speed
-        if (uL > 0.0 && uR < 0.0) {
-            // both sides upwind
-            return wL * (uL + aL) + wR * (uR - aR);
-        } else if (uL > 0.0 && uR > 0.0) {
-            // left side upwind, right side downwind
-            return uL + aL;
-        } else if (uL < 0.0 && uR < 0.0) {
-            // right side upwind, left side downwind
-            return uR - aR;
-        } else {
-            // both sides downwind ?!?
-            // return 0.5 * aL + 0.5 * aR;
-            return T(0.0);
-        }
+        T wL = (ML + Ibis::abs(ML)) / 2;
+        T wR = (MR - Ibis::abs(MR)) / 2;
+        return wL / (wL + wR) * (uL - aL) + wR / (wL + wR) * (uR + aR);
     }
 }
 
@@ -268,34 +247,11 @@ KOKKOS_FUNCTION T mach_weighting(const FlowState<T>& left, const FlowState<T>& r
     T aR = Ibis::sqrt(1.4 * 287.0 * right.gas_state.temp);
     T ML = uL / aL;
     T MR = uR / aR;
-    T wL = ML / (ML + MR);
-    T wR = MR / (ML + MR);
+    T wL = (ML + Ibis::abs(ML)) / 2;
+    T wR = (MR - Ibis::abs(MR)) / 2;
     FlowState<T> face_fs;
-    if (uL > 0.0 && uR < 0.0) {
-        // both sides upwind
-        face_fs.gas_state.temp = wL * left.gas_state.temp + wR * right.gas_state.temp;
-        face_fs.velocity.x = wL * left.velocity.x + wL * right.velocity.x;
-        face_fs.velocity.y = wL * left.velocity.y + wL * right.velocity.y;
-        face_fs.velocity.z = wL * left.velocity.z + wL * right.velocity.z;
-    } else if (uL > 0.0 && uR > 0.0) {
-        // left side upwind, right side downwind
-        face_fs.gas_state.temp = left.gas_state.temp;
-        face_fs.velocity.x = left.velocity.x;
-        face_fs.velocity.y = left.velocity.y;
-        face_fs.velocity.z = left.velocity.z;
-    } else if (uL < 0.0 && uR < 0.0) {
-        // right side upwind, left side downwind
-        face_fs.gas_state.temp = right.gas_state.temp;
-        face_fs.velocity.x = right.velocity.x;
-        face_fs.velocity.y = right.velocity.y;
-        face_fs.velocity.z = right.velocity.z;
-    } else {
-        // return T(0.0);
-        face_fs.gas_state.temp = 0.5 * left.gas_state.temp + 0.5 * right.gas_state.temp;
-        face_fs.velocity.x = 0.5 * left.velocity.x + 0.5 * right.velocity.x;
-        face_fs.velocity.y = 0.5 * left.velocity.y + 0.5 * right.velocity.y;
-        face_fs.velocity.z = 0.5 * left.velocity.z + 0.5 * right.velocity.z;
-    }
+    face_fs.set_weighted_average(left, wL / (wL + wR), right, wR / (wL + wR));
+
     T tan_x = vertex_pos.x - face_pos.x;
     T tan_y = vertex_pos.y - face_pos.y;
     T tan_z = vertex_pos.z - face_pos.z;
@@ -333,6 +289,9 @@ void WaveSpeed<T>::apply(const FlowStates<T>& fs, const GridBlock<T>& grid,
             T num_x = T(0.0);
             T num_y = T(0.0);
             T num_z = T(0.0);
+            T num_unweighted_x = T(0.0);
+            T num_unweighted_y = T(0.0);
+            T num_unweighted_z = T(0.0);
             T den = T(0.0);
             Vector3<T> vertex_pos = vertices.position(vertex_i);
             for (size_t face_i = 0; face_i < interfaces.size(); face_i++) {
@@ -344,19 +303,30 @@ void WaveSpeed<T>::apply(const FlowStates<T>& fs, const GridBlock<T>& grid,
                 Vector3<T> norm = normals.vector(face_id);
                 T ws = wave_speed(left, right, norm, shock_detection_threshold);
 
-                T weight = T(1.0);
-                // Vector3<T> face_pos = grid_interfaces.centre().vector(face_id);
-                // T weight = (interfaces.size() > 1) ? mach_weighting(left, right, vertex_pos, face_pos, norm) : T(1.0);
+                // T weight = T(1.0);
+                Vector3<T> face_pos = grid_interfaces.centre().vector(face_id);
+                T weight = mach_weighting(left, right, vertex_pos, face_pos, norm);
+                // printf("ws = %.16f, weight = %.16f\n", ws, weight);
                 num_x += weight * ws * norm.x;
                 num_y += weight * ws * norm.y;
                 num_z += weight * ws * norm.z;
+                num_unweighted_x += ws * norm.x;
+                num_unweighted_y += ws * norm.y;
+                num_unweighted_z += ws * norm.z;
                 den += weight;
                 // printf("face %ld, ws = %.16f, norm = [%.16f, %.16f, %.16f]\n", face_id, ws, norm.x, norm.y, norm.z);
             }
-            // if (den < 1e-14) { den = T(1.0); }
-            vertex_vel.x(vertex_i) = num_x / den * scale;
-            vertex_vel.y(vertex_i) = num_y / den * scale;
-            vertex_vel.z(vertex_i) = num_z / den * scale;
+            // printf("\n");
+            if (den < 1e-14) { 
+                vertex_vel.x(vertex_i) = num_unweighted_x / interfaces.size() * scale;
+                vertex_vel.y(vertex_i) = num_unweighted_y / interfaces.size() * scale;
+                vertex_vel.z(vertex_i) = num_unweighted_z / interfaces.size() * scale;
+            }
+            else {
+                vertex_vel.x(vertex_i) = num_x / den * scale;
+                vertex_vel.y(vertex_i) = num_y / den * scale;
+                vertex_vel.z(vertex_i) = num_z / den * scale;
+            }
         });
 
     if (constraint_) {
