@@ -150,7 +150,6 @@ WaveSpeed<T>::WaveSpeed(const GridBlock<T>& grid, std::string marker, json confi
     shock_detection_threshold_ = config.at("shock_detection_threshold");
     constraint_ = make_constraint<T>(config.at("constraint"));
 
-
     // the position of each marked vertex in the array of marked vertices
     auto marked_vertices = grid.marked_vertices(marker).host_mirror();
     marked_vertices.deep_copy(grid.marked_vertices(marker));
@@ -314,15 +313,15 @@ void WaveSpeed<T>::apply(const FlowStates<T>& fs, const GridBlock<T>& grid,
                 num_unweighted_y += ws * norm.y;
                 num_unweighted_z += ws * norm.z;
                 den += weight;
-                // printf("face %ld, ws = %.16f, norm = [%.16f, %.16f, %.16f]\n", face_id, ws, norm.x, norm.y, norm.z);
+                // printf("face %ld, ws = %.16f, norm = [%.16f, %.16f, %.16f]\n", face_id,
+                // ws, norm.x, norm.y, norm.z);
             }
             // printf("\n");
-            if (den < 1e-14) { 
+            if (den < 1e-14) {
                 vertex_vel.x(vertex_i) = num_unweighted_x / interfaces.size() * scale;
                 vertex_vel.y(vertex_i) = num_unweighted_y / interfaces.size() * scale;
                 vertex_vel.z(vertex_i) = num_unweighted_z / interfaces.size() * scale;
-            }
-            else {
+            } else {
                 vertex_vel.x(vertex_i) = num_x / den * scale;
                 vertex_vel.y(vertex_i) = num_y / den * scale;
                 vertex_vel.z(vertex_i) = num_z / den * scale;
@@ -336,7 +335,6 @@ void WaveSpeed<T>::apply(const FlowStates<T>& fs, const GridBlock<T>& grid,
 template class WaveSpeed<Ibis::real>;
 template class WaveSpeed<Ibis::dual>;
 
-
 template <typename T>
 ConstrainDirection<T>::ConstrainDirection(json config) {
     json direction = config.at("direction");
@@ -347,8 +345,7 @@ ConstrainDirection<T>::ConstrainDirection(json config) {
 }
 
 template <typename T>
-void ConstrainDirection<T>::apply(const GridBlock<T>& grid,
-                                  Vector3s<T> vertex_vel,
+void ConstrainDirection<T>::apply(const GridBlock<T>& grid, Vector3s<T> vertex_vel,
                                   const Field<size_t>& boundary_vertices) {
     (void)grid;
     Vector3<T> dirn = direction_;
@@ -378,21 +375,17 @@ RadialConstraint<T>::RadialConstraint(json config) {
 }
 
 template <typename T>
-void RadialConstraint<T>::apply(const GridBlock<T>& grid,
-                                Vector3s<T> vertex_vel,
+void RadialConstraint<T>::apply(const GridBlock<T>& grid, Vector3s<T> vertex_vel,
                                 const Field<size_t>& boundary_vertices) {
     Vector3<T> centre = centre_;
-    Vector3s<T> vertex_pos = grid.vertices().positions(); 
+    Vector3s<T> vertex_pos = grid.vertices().positions();
     Kokkos::parallel_for(
         "Shockfitting::RadialConstraint", boundary_vertices.size(),
-        KOKKOS_LAMBDA(const size_t i){
+        KOKKOS_LAMBDA(const size_t i) {
             size_t vertex_i = boundary_vertices(i);
             Vector3<T> pos = vertex_pos.vector(vertex_i);
-            Vector3<T> dirn = Vector3<T>{
-                centre.x - pos.x,
-                centre.y - pos.y,
-                centre.z - pos.z
-            };
+            Vector3<T> dirn =
+                Vector3<T>{centre.x - pos.x, centre.y - pos.y, centre.z - pos.z};
             T len_dir = Ibis::sqrt(dirn.x * dirn.x + dirn.y * dirn.y + dirn.z * dirn.z);
             dirn.x /= len_dir;
             dirn.y /= len_dir;
@@ -402,7 +395,7 @@ void RadialConstraint<T>::apply(const GridBlock<T>& grid,
             vertex_vel.x(vertex_i) = dirn.x * dot;
             vertex_vel.y(vertex_i) = dirn.y * dot;
             vertex_vel.z(vertex_i) = dirn.z * dot;
-    });
+        });
 }
 template class RadialConstraint<Ibis::real>;
 template class RadialConstraint<Ibis::dual>;
@@ -490,9 +483,7 @@ template class ShockFittingInterpolationAction<Ibis::dual>;
 
 template <typename T>
 std::shared_ptr<ShockFittingDirectVelocityAction<T>> make_direct_velocity_action(
-    const GridBlock<T>& grid,
-    std::string marker,
-    json config) {
+    const GridBlock<T>& grid, std::string marker, json config) {
     std::string type = config.at("type");
     if (type == "wave_speed") {
         return std::shared_ptr<ShockFittingDirectVelocityAction<T>>(
@@ -506,9 +497,9 @@ std::shared_ptr<ShockFittingDirectVelocityAction<T>> make_direct_velocity_action
     }
 }
 template std::shared_ptr<ShockFittingDirectVelocityAction<Ibis::real>>
-    make_direct_velocity_action(const GridBlock<Ibis::real>&, std::string, json);
+make_direct_velocity_action(const GridBlock<Ibis::real>&, std::string, json);
 template std::shared_ptr<ShockFittingDirectVelocityAction<Ibis::dual>>
-    make_direct_velocity_action(const GridBlock<Ibis::dual>&, std::string, json);
+make_direct_velocity_action(const GridBlock<Ibis::dual>&, std::string, json);
 
 template <typename T>
 std::shared_ptr<Constraint<T>> make_constraint(json config) {
@@ -518,7 +509,7 @@ std::shared_ptr<Constraint<T>> make_constraint(json config) {
     } else if (type == "radial") {
         return std::shared_ptr<Constraint<T>>(new RadialConstraint<T>(config));
     } else if (type == "none") {
-        return std::shared_ptr<Constraint<T>>(); 
+        return std::shared_ptr<Constraint<T>>();
     } else {
         spdlog::error("Unknown grid motion constraint {}", type);
         throw new std::runtime_error("Unkown grid motion constraint");

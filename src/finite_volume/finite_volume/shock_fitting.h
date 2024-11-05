@@ -2,6 +2,7 @@
 #define SHOCK_FITTING_H
 
 #include <finite_volume/grid_motion_driver.h>
+
 #include "util/ragged_array.h"
 
 template <typename T>
@@ -23,8 +24,8 @@ public:
 
     ConstrainDirection(json config);
 
-    void apply(const GridBlock<T>& grid, 
-               Vector3s<T> vertex_vel, const Field<size_t>& boundary_vertices);
+    void apply(const GridBlock<T>& grid, Vector3s<T> vertex_vel,
+               const Field<size_t>& boundary_vertices);
 
 private:
     Vector3<T> direction_;
@@ -39,8 +40,8 @@ public:
 
     RadialConstraint(json config);
 
-    void apply(const GridBlock<T>& grid, 
-               Vector3s<T> vertex_vel, const Field<size_t>& boundary_vertices);
+    void apply(const GridBlock<T>& grid, Vector3s<T> vertex_vel,
+               const Field<size_t>& boundary_vertices);
 
 private:
     Vector3<T> centre_;
@@ -94,7 +95,6 @@ private:
     Vector3<T> vel_;
 };
 
-
 template <typename T>
 class ShockFittingInterpolationAction {
 public:
@@ -121,8 +121,6 @@ private:
     Ibis::real power_;
 };
 
-
-
 template <typename T>
 class ShockFittingBC {
 public:
@@ -147,9 +145,7 @@ private:
 
 template <typename T>
 std::shared_ptr<ShockFittingDirectVelocityAction<T>> make_direct_velocity_action(
-    const GridBlock<T>& grid,
-    std::string marker,
-    json config);
+    const GridBlock<T>& grid, std::string marker, json config);
 
 template <typename T>
 std::shared_ptr<Constraint<T>> make_constraint(json config);

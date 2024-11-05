@@ -63,9 +63,12 @@ size_t FiniteVolume<T>::compute_dudt(FlowStates<T>& flow_state, Vector3s<T> vert
     if (grid.moving()) {
         grid.compute_grid_motion(flow_state, vertex_vel);
     }
+
     convective_flux_.compute_convective_flux(flow_state, grid, gas_model, cell_grad_,
                                              grid.grad_calc(), flux_,
                                              allow_reconstruction);
+    printf("flux = %.16f\n", Ibis::real_part(flux_.energy(0)));
+
     if (viscous_flux_.enabled()) {
         apply_pre_viscous_grad_bc(flow_state, grid, gas_model, trans_prop);
         viscous_flux_.compute_viscous_flux(flow_state, grid, gas_model, trans_prop,
@@ -86,7 +89,6 @@ size_t FiniteVolume<T>::compute_dudt(FlowStates<T>& flow_state, GridBlock<T>& gr
                                      TransportProperties<T>& trans_prop,
                                      bool allow_reconstruction) {
     Vector3s<T> vertex_vel_temp;
-    ;
     const ConservedQuantities<T> cq_temp;
     return compute_dudt(flow_state, vertex_vel_temp, cq_temp, grid, dudt, gas_model,
                         trans_prop, allow_reconstruction);

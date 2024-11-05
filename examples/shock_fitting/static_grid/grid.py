@@ -37,7 +37,7 @@ gmsh.model.geo.add_plane_surface([1])
 # define boundary names
 gmsh.model.geo.add_physical_group(1, [1], name="outflow")
 gmsh.model.geo.add_physical_group(1, [2], name="wall")
-gmsh.model.geo.add_physical_group(1, [3], name="slip_wall")
+gmsh.model.geo.add_physical_group(1, [3], name="symmetry")
 gmsh.model.geo.add_physical_group(1, [4], name="inflow")
 
 gmsh.model.geo.synchronize()
@@ -57,7 +57,7 @@ gmsh.model.geo.synchronize()
 gmsh.model.mesh.generate(2)
 
 # write grid to SU2 format
-gmsh.write("sphere.su2")
+gmsh.write("cylinder_gmsh.su2")
 
 # uncomment the line below to visualize the mesh
 # gmsh.fltk.run()
