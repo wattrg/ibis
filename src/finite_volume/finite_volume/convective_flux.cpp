@@ -121,7 +121,8 @@ void ConvectiveFlux<T>::compute_convective_flux(
 
     // translate flux from interface reference frame to the global reference frame
     Vector3s<T> face_vel = grid.face_vel();
-    if (grid.moving()) {
+    bool moving_grid = grid.moving();
+    if (moving_grid) {
         Kokkos::parallel_for(
             "flux::grid_motion", faces.size(), KOKKOS_LAMBDA(const size_t i) {
                 T v_sqr = face_vel.x(i) * face_vel.x(i) + face_vel.y(i) * face_vel.y(i) +
@@ -144,7 +145,6 @@ void ConvectiveFlux<T>::compute_convective_flux(
     Vector3s<T> norm = faces.norm();
     Vector3s<T> tan1 = faces.tan1();
     Vector3s<T> tan2 = faces.tan2();
-    bool moving_grid = grid.moving();
     Kokkos::parallel_for(
         "flux::transform_to_global", faces.size(), KOKKOS_LAMBDA(const size_t i) {
             T px = flux.momentum_x(i);

@@ -67,7 +67,6 @@ size_t FiniteVolume<T>::compute_dudt(FlowStates<T>& flow_state, Vector3s<T> vert
     convective_flux_.compute_convective_flux(flow_state, grid, gas_model, cell_grad_,
                                              grid.grad_calc(), flux_,
                                              allow_reconstruction);
-    printf("flux = %.16f\n", Ibis::real_part(flux_.energy(0)));
 
     if (viscous_flux_.enabled()) {
         apply_pre_viscous_grad_bc(flow_state, grid, gas_model, trans_prop);

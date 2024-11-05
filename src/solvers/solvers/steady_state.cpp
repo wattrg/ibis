@@ -113,13 +113,12 @@ void SteadyStateLinearisation::matrix_vector_product(Ibis::Vector<Ibis::real>& v
         size_t num_vertices = sim_->grid.num_vertices();
         auto vertex_vel = *vertex_vel_;
         size_t n_cells = n_cells_;
-        auto dim = sim_->grid.dim();
+        int dim = sim_->grid.dim();
         Kokkos::parallel_for(
             "SteadyStateLinearisation::set_vector::grid", num_vertices,
             KOKKOS_LAMBDA(const size_t vertex_i) {
-                const size_t vector_idx = n_cells * n_cells + vertex_i * dim;
+                const size_t vector_idx = n_cells * n_cons + vertex_i * dim;
                 for (size_t dim_i = 0; dim_i < dim; dim_i++) {
-                    // printf("%.16f\n", vertex_vel(vertex_i, dim_i).real());
                     result(vector_idx + dim_i) =
                         1 / dt_star * vec(vector_idx + dim_i) -
                         Ibis::dual_part(vertex_vel(vertex_i, dim_i));
@@ -130,10 +129,10 @@ void SteadyStateLinearisation::matrix_vector_product(Ibis::Vector<Ibis::real>& v
 
 void SteadyStateLinearisation::eval_rhs() {
     if (sim_->grid.moving()) {
-        sim_->fv.compute_dudt(fs_tmp_, *vertex_vel_, *cq_, sim_->grid, *residuals_,
+        sim_->fv.compute_dudt(*fs_, *vertex_vel_, *cq_, sim_->grid, *residuals_,
                               sim_->gas_model, sim_->trans_prop, allow_reconstruction_);
     } else {
-        sim_->fv.compute_dudt(fs_tmp_, sim_->grid, *residuals_, sim_->gas_model,
+        sim_->fv.compute_dudt(*fs_, sim_->grid, *residuals_, sim_->gas_model,
                               sim_->trans_prop, allow_reconstruction_);
     }
 
