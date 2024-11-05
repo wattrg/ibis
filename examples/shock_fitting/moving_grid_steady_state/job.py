@@ -29,19 +29,20 @@ config.gas_model = gas_model
 # )
 
 config.solver = SteadyState(
-    cfl=ResidualBasedCfl(
-        growth_threshold=0.9,
-        power=1.2,
-        start_cfl=0.5,
-        max_cfl=1e6
-    ),
+    # cfl=ResidualBasedCfl(
+    #     growth_threshold=0.9,
+    #     power=1.2,
+    #     start_cfl=0.5,
+    #     max_cfl=1e6
+    # ),
+    cfl=50.0,
     max_steps=10000,
     plot_frequency=100,
     print_frequency=20,
     diagnostics_frequency=1,
     tolerance=1e-8,
     linear_solver=FGmres(
-        tolerance=1e-3,
+        tolerance=1e-5,
         max_iters=100,
         preconditioner_tolerance=1e-2,
         max_preconditioner_iters=30
@@ -65,11 +66,6 @@ config.grid = Block(
                 sample_points=["wall", "inflow"],
                 constraint=RadialConstraint(Vector3(0.0, 0.0))
             ),
-            # "inflow": constrained_interpolation(
-            #     sample_points=["shock"],
-            #     power=1,
-            #     constraint=RadialConstraint(Vector3(0.0, 0.0))
-            # ),
             "inflow": shock_fit(
                 constraint=RadialConstraint(centre=Vector3(0.0, 0.0, 0.0)),
                 scale=0.009,
@@ -80,10 +76,6 @@ config.grid = Block(
                 constraint=RadialConstraint(Vector3(0.0, 0.0)),
                 power=1.5,
             ),
-            # "shock": shock_fit(
-            #     constraint=RadialConstraint(centre=Vector3(0.0, 0.0, 0.0)),
-            #     scale = 0.001
-            # )
         }
     )
 )
