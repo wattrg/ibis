@@ -4,12 +4,12 @@ gmsh.initialize()
 
 # general settings
 gmsh.option.setNumber("General.Terminal", 1)
-gmsh.option.setNumber("Mesh.Algorithm", 8) # delauny
-gmsh.option.setNumber("Mesh.RecombineAll", 1)
+# gmsh.option.setNumber("Mesh.Algorithm", 8) # delauny
+# gmsh.option.setNumber("Mesh.RecombineAll", 1)
 gmsh.option.setNumber("Mesh.SaveAll", 1)
 
 # geometric properties
-size = 3e-4
+size = 2e-4
 R = 6.6e-03  # sphere radius in meters
 
 # define points
@@ -72,7 +72,7 @@ gmsh.model.geo.synchronize()
 gmsh.model.mesh.generate(2)
 
 # write grid to SU2 format
-gmsh.write("sphere.su2")
+gmsh.write("cylinder_gmsh.su2")
 
 # uncomment the line below to visualize the mesh
 # gmsh.fltk.run()
