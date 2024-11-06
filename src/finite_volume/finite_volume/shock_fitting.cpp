@@ -220,6 +220,8 @@ KOKKOS_INLINE_FUNCTION T wave_speed(const FlowState<T>& left, const FlowState<T>
     // with the density jump required for defining a shock is `threshold`
     T shock_weight =
         (Ibis::tanh(1.0 / width * (density_jump - threshold)) + T(1.0)) / T(2.0);
+    if (shock_weight < 0.0001) { shock_weight = T(0.0); }
+    if (shock_weight > 0.999) { shock_weight = T(1.0); }
 
     // Rankine Hugoniot relations (for when the shock is nearby)
     // wave speed from the mass conservation equation
@@ -237,7 +239,8 @@ KOKKOS_INLINE_FUNCTION T wave_speed(const FlowState<T>& left, const FlowState<T>
         int sign = (pR - pL > T(0.0)) ? -1 : 1;
         ws_momentum = (-b + sign * Ibis::sqrt(b * b - 4 * a * c)) / (T(2.0) * a);
     }
-    T ws_rh = 0.5 * ws_mass + 0.5 * ws_momentum;
+    // T ws_rh = 0.5 * ws_mass + 0.5 * ws_momentum;
+    T ws_rh = ws_momentum;
 
     // local signal speed (for when the shock is not nearby)
     // assume ideal gas for the moment. Will have to pass a gas model in
@@ -250,7 +253,7 @@ KOKKOS_INLINE_FUNCTION T wave_speed(const FlowState<T>& left, const FlowState<T>
         T MR = uR / aR;
         T wL = (ML + Ibis::abs(ML)) / 2;
         T wR = (MR - Ibis::abs(MR)) / 2;
-        ws_signal = wL / (wL + wR) * (uL - aL) + wR / (wL + wR) * (uR + aR);
+        ws_signal = wL / (wL + wR) * (aL) + wR / (wL + wR) * (-aR);
     }
 
     return shock_weight * ws_rh + (T(1.0) - shock_weight) * ws_signal;
@@ -336,9 +339,8 @@ void WaveSpeed<T>::apply(const FlowStates<T>& fs, const GridBlock<T>& grid,
                 num_unweighted_y += ws * norm.y;
                 num_unweighted_z += ws * norm.z;
                 den += weight;
-                // ws, norm.x, norm.y, norm.z);
             }
-            if (den < 1e-14) {
+            if (den == 0.0) {
                 vertex_vel.x(vertex_i) = num_unweighted_x / interfaces.size() * scale;
                 vertex_vel.y(vertex_i) = num_unweighted_y / interfaces.size() * scale;
                 vertex_vel.z(vertex_i) = num_unweighted_z / interfaces.size() * scale;
@@ -412,10 +414,12 @@ void RadialConstraint<T>::apply(const GridBlock<T>& grid, Vector3s<T> vertex_vel
             dirn.y /= len_dir;
             dirn.z /= len_dir;
             Vector3<T> vel = vertex_vel.vector(vertex_i);
-            T dot = dirn.x * vel.x + dirn.y * vel.y + dirn.z * vel.z;
-            vertex_vel.x(vertex_i) = dirn.x * dot;
-            vertex_vel.y(vertex_i) = dirn.y * dot;
-            vertex_vel.z(vertex_i) = dirn.z * dot;
+
+            // T speed = Ibis::sqrt(vel.x * vel.x + vel.y * vel.y + vel.z * vel.z);
+            T speed = dirn.x * vel.x + dirn.y * vel.y + dirn.z * vel.z;
+            vertex_vel.x(vertex_i) = dirn.x * speed;
+            vertex_vel.y(vertex_i) = dirn.y * speed;
+            vertex_vel.z(vertex_i) = dirn.z * speed;
         });
 }
 template class RadialConstraint<Ibis::real>;

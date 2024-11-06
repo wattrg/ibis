@@ -413,11 +413,15 @@ void ConstantFlux<T>::apply(ConservedQuantities<T>& flux,
     FlowState<T> fs = fs_;
     Interfaces<T> interfaces = grid.interfaces();
     Vector3s<T> face_vels = grid.face_vel();
+    bool moving_grid = grid.moving();
     Kokkos::parallel_for(
         "ConstantFlux::apply", size, KOKKOS_LAMBDA(const size_t i) {
             size_t face_id = boundary_faces(i);
             Vector3<T> n = interfaces.norm().vector(face_id);
-            Vector3<T> face_vel = face_vels.vector(face_id);
+            Vector3<T> face_vel{0.0, 0.0, 0.0};
+            if (moving_grid) {
+                face_vel = face_vels.vector(face_id);
+            }
             T u = gas_model.internal_energy(fs.gas_state);
             T rel_vx = fs.velocity.x - face_vel.x;
             T rel_vy = fs.velocity.y - face_vel.y;

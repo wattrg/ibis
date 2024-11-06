@@ -35,14 +35,14 @@ config.solver = SteadyState(
     #     start_cfl=10.0,
     #     max_cfl=1e6
     # ),
-    cfl=20.0,
+    cfl=50.0,
     max_steps=10000,
     plot_frequency=100,
     print_frequency=20,
     diagnostics_frequency=1,
     tolerance=1e-8,
     linear_solver=FGmres(
-        tolerance=1e-5,
+        tolerance=1e-6,
         max_iters=100,
         preconditioner_tolerance=1e-2,
         max_preconditioner_iters=30
@@ -62,14 +62,14 @@ config.grid = Block(
         boundaries={
             "wall": fixed_velocity(Vector3(0.0)),
             "symmetry": constrained_interpolation(
-                power=2.0,
+                power=1.5,
                 sample_points=["wall", "inflow"],
                 constraint=RadialConstraint(Vector3(0.0, 0.0))
             ),
             "inflow": shock_fit(
                 constraint=RadialConstraint(centre=Vector3(0.0, 0.0, 0.0)),
                 scale=0.009,
-                shock_detection_threshold=0.1,
+                shock_detection_threshold=0.2,
                 shock_detection_width=1e-4
             ),
             "outflow": constrained_interpolation(

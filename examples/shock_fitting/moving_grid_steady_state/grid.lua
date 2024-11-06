@@ -5,7 +5,7 @@ a = Vector3:new{x=0.0, y=0.0}
 b = Vector3:new{x=-R, y=0.0}
 c = Vector3:new{x=0.0, y=R}
 d = { Vector3:new{x=-2.0*R, y=0.0}, Vector3:new{x=-2.0*R, y=R},
-      Vector3:new{x=-1.5*R, y=3*R}, Vector3:new{x=0.0, y=4*R} }
+      Vector3:new{x=-1.5*R, y=3*R}, Vector3:new{x=0.0, y=4.3*R} }
 
 -- define paths
 p1 = Line:new{p0=d[#d], p1=c}
