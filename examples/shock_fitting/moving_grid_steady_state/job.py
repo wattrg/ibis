@@ -29,18 +29,18 @@ config.gas_model = gas_model
 # )
 
 config.solver = SteadyState(
-    # cfl=ResidualBasedCfl(
-    #     growth_threshold=1e-2,
-    #     power=1.0,
-    #     start_cfl=10.0,
-    #     max_cfl=1e6
-    # ),
-    cfl=50.0,
+    cfl=ResidualBasedCfl(
+        growth_threshold=1e-2,
+        power=1.0,
+        start_cfl=20.0,
+        max_cfl=500
+    ),
+    # cfl=50.0,
     max_steps=10000,
     plot_frequency=100,
     print_frequency=20,
     diagnostics_frequency=1,
-    tolerance=1e-8,
+    tolerance=3e-8,
     linear_solver=FGmres(
         tolerance=1e-6,
         max_iters=100,
