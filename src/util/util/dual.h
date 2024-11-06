@@ -245,6 +245,28 @@ KOKKOS_INLINE_FUNCTION Dual<T> pow(const Dual<T>& base, const Dual<T>& power) {
 }
 
 template <typename T>
+KOKKOS_INLINE_FUNCTION Dual<T> sin(const Dual<T>& d) {
+    T real = Kokkos::sin(d.real());
+    T dual = d.dual() * Kokkos::cos(d.real());
+    return Dual<T>{real, dual};
+}
+
+template <typename T>
+KOKKOS_INLINE_FUNCTION Dual<T> cos(const Dual<T>& d) {
+    T real = Kokkos::cos(d.real());
+    T dual = -d.dual() * Kokkos::sin(d.real());
+    return Dual<T>{real, dual};
+}
+
+template <typename T>
+KOKKOS_INLINE_FUNCTION Dual<T> tanh(const Dual<T>& d) {
+    T real = Kokkos::tanh(d.real());
+    T cosh_real = Kokkos::cosh(d.real());
+    T dual = d.dual() / (cosh_real * cosh_real);
+    return Dual<T>{real, dual};
+}
+
+template <typename T>
 KOKKOS_INLINE_FUNCTION Dual<T> max(const Dual<T>& d1, const Dual<T>& d2) {
     return d1.real() > d2.real() ? d1 : d2;
 }

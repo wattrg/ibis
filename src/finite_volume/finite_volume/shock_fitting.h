@@ -72,6 +72,7 @@ public:
 private:
     Ibis::real scale_;
     Ibis::real shock_detection_threshold_;
+    Ibis::real shock_detection_width_;
     std::shared_ptr<Constraint<T>> constraint_;
     Ibis::RaggedArray<size_t> faces_;
     // FlowState<T> flow_state_;

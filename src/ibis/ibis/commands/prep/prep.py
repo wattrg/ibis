@@ -655,19 +655,26 @@ class _FixedVelocity:
 
 
 class _WaveSpeed:
-    _json_values = ["scale", "shock_detection_threshold"]
+    _json_values = ["scale", "shock_detection_threshold",
+                    "shock_detection_width"]
+    _defaults_file = "wave_speed.json"
+    __slots__ = _json_values + ["constraint"]
 
-    def __init__(self, scale, shock_detection_threshold, constraint):
-        self._scale = scale
-        self._shock_detection_threshold = shock_detection_threshold
-        self._constraint = constraint
+    def __init__(self, **kwargs):
+        json_data = read_defaults(DEFAULTS_DIRECTORY, self._defaults_file)
+        for key in json_data:
+            setattr(self, key, json_data[key])
+
+        for key, value in kwargs.items():
+            setattr(self, key, value)
 
     def as_dict(self):
         return {
             "type": "wave_speed",
-            "scale": self._scale,
-            "shock_detection_threshold": self._shock_detection_threshold,
-            "constraint": self._constraint.as_dict()
+            "scale": self.scale,
+            "shock_detection_threshold": self.shock_detection_threshold,
+            "shock_detection_width": self.shock_detection_width,
+            "constraint": self.constraint.as_dict()
         }
 
 
@@ -713,9 +720,15 @@ class RadialConstraint:
         }
 
 
-def shock_fit(scale=1.0, constraint=Unconstrained, shock_detection_threshold=0.2):
+def shock_fit(scale=0.001, constraint=Unconstrained,
+              shock_detection_threshold=0.5, shock_detection_width=0.01):
     return GridMotionBoundaryCondition(
-        direct=[_WaveSpeed(scale, shock_detection_threshold, constraint)],
+        direct=[
+            _WaveSpeed(scale=scale,
+                       shock_detection_width=shock_detection_width,
+                       shock_detection_threshold=shock_detection_threshold,
+                       constraint=constraint)
+        ],
         interp=[],
         constraint=[]
     )

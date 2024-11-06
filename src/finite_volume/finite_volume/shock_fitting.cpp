@@ -148,6 +148,7 @@ template <typename T>
 WaveSpeed<T>::WaveSpeed(const GridBlock<T>& grid, std::string marker, json config) {
     scale_ = config.at("scale");
     shock_detection_threshold_ = config.at("shock_detection_threshold");
+    shock_detection_width_ = config.at("shock_detection_width");
     constraint_ = make_constraint<T>(config.at("constraint"));
 
     // the position of each marked vertex in the array of marked vertices
@@ -184,10 +185,17 @@ WaveSpeed<T>::WaveSpeed(const GridBlock<T>& grid, std::string marker, json confi
     faces_ = Ibis::RaggedArray<size_t>{shock_fit_faces_connectivity};
 }
 
+// template <typename T>
+// KOKKOS_INLINE_FUNCTION T shock_blend(T x, Ibis::real threshold, Ibis::real width) {
+//     if (x < (threshold - width / 2)) { return T(0.0); }
+//     if (x > (threshold + width / 2)) { return T(0.0); }
+//     return
+// }
+
 template <typename T>
 KOKKOS_INLINE_FUNCTION T wave_speed(const FlowState<T>& left, const FlowState<T>& right,
-                                    const Vector3<T>& norm,
-                                    Ibis::real shock_detection_threshold) {
+                                    const Vector3<T>& norm, Ibis::real threshold,
+                                    Ibis::real width) {
     // the face normal
     T nx = norm.x;
     T ny = norm.y;
@@ -204,33 +212,48 @@ KOKKOS_INLINE_FUNCTION T wave_speed(const FlowState<T>& left, const FlowState<T>
     T uR = right.velocity.x * nx + right.velocity.y * ny + right.velocity.z * nz;
 
     // shock detector
-    T delta_rho = Ibis::abs(rL - rR);
-    T max_rho = Ibis::max(rL, rR);
-    bool shock_detected = (delta_rho / max_rho) > shock_detection_threshold;
+    T delta_rho = Ibis::abs(pL - pR);
+    T max_rho = Ibis::min(pL, pR);
+    T density_jump = (delta_rho / max_rho);
 
-    if (shock_detected) {
-        // wave speed from the mass conservation equation
-        T ws1 = (rR * uR - rL * uL) / (rL - rR);
+    // smooth function varying from 0 for no shock, and 1 for a shock
+    // with the density jump required for defining a shock is `threshold`
+    T shock_weight =
+        (Ibis::tanh(1.0 / width * (density_jump - threshold)) + T(1.0)) / T(2.0);
 
-        // wave speeds from normal momentum conservation equation
+    // Rankine Hugoniot relations (for when the shock is nearby)
+    // wave speed from the mass conservation equation
+    T ws_mass = T(0.0);
+    if (shock_weight > 0.0) {
+        ws_mass = (rR * uR - rL * uL) / (rL - rR);
+    }
+
+    // wave speeds from normal momentum conservation equation
+    T ws_momentum = T(0.0);
+    if (shock_weight > 0.0) {
         T a = pL - pR + rL * uL * uL - rR * uR * uR;
         T b = T(2.0) * (rR * uR - rL * uL);
         T c = rL - rR;
         int sign = (pR - pL > T(0.0)) ? -1 : 1;
-        T ws2 = (-b + sign * Ibis::sqrt(b * b - 4 * a * c)) / (T(2.0) * a);
-        return 0.5 * ws1 + 0.5 * ws2;
-    } else {
-        // assume ideal gas for the moment. Will have to pass a gas model in
-        // at some point
+        ws_momentum = (-b + sign * Ibis::sqrt(b * b - 4 * a * c)) / (T(2.0) * a);
+    }
+    T ws_rh = 0.5 * ws_mass + 0.5 * ws_momentum;
+
+    // local signal speed (for when the shock is not nearby)
+    // assume ideal gas for the moment. Will have to pass a gas model in
+    // at some point
+    T ws_signal = T(0.0);
+    if (shock_weight < 1.0) {
         T aL = Ibis::sqrt(1.4 * 287.0 * left.gas_state.temp);
         T aR = Ibis::sqrt(1.4 * 287.0 * right.gas_state.temp);
-
         T ML = uL / aL;
         T MR = uR / aR;
         T wL = (ML + Ibis::abs(ML)) / 2;
         T wR = (MR - Ibis::abs(MR)) / 2;
-        return wL / (wL + wR) * (uL - aL) + wR / (wL + wR) * (uR + aR);
+        ws_signal = wL / (wL + wR) * (uL - aL) + wR / (wL + wR) * (uR + aR);
     }
+
+    return shock_weight * ws_rh + (T(1.0) - shock_weight) * ws_signal;
 }
 
 template <typename T>
@@ -270,7 +293,8 @@ void WaveSpeed<T>::apply(const FlowStates<T>& fs, const GridBlock<T>& grid,
     (void)vertex_vel;
     (void)boundary_vertices;
     Ibis::real scale = scale_;
-    Ibis::real shock_detection_threshold = shock_detection_threshold_;
+    Ibis::real shock_threshold = shock_detection_threshold_;
+    Ibis::real shock_width = shock_detection_width_;
     auto interface_ids = grid.vertices().interface_ids();
     auto normals = grid.interfaces().norm();
     auto vertices = grid.vertices();
@@ -300,12 +324,11 @@ void WaveSpeed<T>::apply(const FlowStates<T>& fs, const GridBlock<T>& grid,
                 FlowState<T> left = fs.flow_state(left_id);
                 FlowState<T> right = fs.flow_state(right_id);
                 Vector3<T> norm = normals.vector(face_id);
-                T ws = wave_speed(left, right, norm, shock_detection_threshold);
+                T ws = wave_speed(left, right, norm, shock_threshold, shock_width);
 
                 // T weight = T(1.0);
                 Vector3<T> face_pos = grid_interfaces.centre().vector(face_id);
                 T weight = mach_weighting(left, right, vertex_pos, face_pos, norm);
-                // printf("ws = %.16f, weight = %.16f\n", ws, weight);
                 num_x += weight * ws * norm.x;
                 num_y += weight * ws * norm.y;
                 num_z += weight * ws * norm.z;
@@ -313,10 +336,8 @@ void WaveSpeed<T>::apply(const FlowStates<T>& fs, const GridBlock<T>& grid,
                 num_unweighted_y += ws * norm.y;
                 num_unweighted_z += ws * norm.z;
                 den += weight;
-                // printf("face %ld, ws = %.16f, norm = [%.16f, %.16f, %.16f]\n", face_id,
                 // ws, norm.x, norm.y, norm.z);
             }
-            // printf("\n");
             if (den < 1e-14) {
                 vertex_vel.x(vertex_i) = num_unweighted_x / interfaces.size() * scale;
                 vertex_vel.y(vertex_i) = num_unweighted_y / interfaces.size() * scale;

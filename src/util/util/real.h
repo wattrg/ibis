@@ -23,6 +23,21 @@ KOKKOS_INLINE_FUNCTION T pow(const T& base, const T& power) {
 }
 
 template <typename T>
+KOKKOS_INLINE_FUNCTION T sin(const T& x) {
+    return Kokkos::sin(x);
+}
+
+template <typename T>
+KOKKOS_INLINE_FUNCTION T cos(const T& x) {
+    return Kokkos::cos(x);
+}
+
+template <typename T>
+KOKKOS_INLINE_FUNCTION T tanh(const T& x) {
+    return Kokkos::tanh(x);
+}
+
+template <typename T>
 KOKKOS_INLINE_FUNCTION T max(const T& arg1, const T& arg2) {
     return Kokkos::max(arg1, arg2);
 }

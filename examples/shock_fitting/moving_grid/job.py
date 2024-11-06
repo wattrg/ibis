@@ -54,7 +54,7 @@ config.grid = Block(
     boundaries = {
         "wall": slip_wall(), # wall
         "symmetry": slip_wall(), # symmetry
-        "inflow": supersonic_inflow(inflow), # inflow
+        "inflow": bow_shock_fit(inflow), # inflow
         "outflow": supersonic_outflow(),
     },
     motion=ShockFitting(
@@ -65,25 +65,17 @@ config.grid = Block(
                 sample_points=["wall", "inflow"],
                 constraint=RadialConstraint(Vector3(0.0, 0.0))
             ),
-            # "inflow": constrained_interpolation(
-            #     sample_points=["shock"],
-            #     power=1,
-            #     constraint=RadialConstraint(Vector3(0.0, 0.0))
-            # ),
             "inflow": shock_fit(
                 constraint=RadialConstraint(centre=Vector3(0.0, 0.0, 0.0)),
                 scale=0.009,
-                shock_detection_threshold=0.3,
+                shock_detection_threshold=0.2,
+                shock_detection_width=1e-5,
             ),
             "outflow": constrained_interpolation(
                 sample_points=["wall", "inflow"],
                 constraint=RadialConstraint(Vector3(0.0, 0.0)),
                 power=1.5,
             ),
-            # "shock": shock_fit(
-            #     constraint=RadialConstraint(centre=Vector3(0.0, 0.0, 0.0)),
-            #     scale = 0.001
-            # )
         }
     )
 )

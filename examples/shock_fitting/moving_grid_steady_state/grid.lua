@@ -26,6 +26,6 @@ sgrid = StructuredGrid:new{psurface=psurf,
                                      south=cluster, west=None},
                            niv=20, njv=20}
 ugrid=UnstructuredGrid:new{sgrid=sgrid}
-ugrid:write_to_su2_file("sphere.su2")
+ugrid:write_to_su2_file("cylinder_eilmer.su2")
 
 
