@@ -421,8 +421,10 @@ class Block:
 
 
 class BoundaryCondition:
-    def __init__(self, pre_reconstruction, pre_viscous_grad, ghost_cells=True):
+    def __init__(self, pre_reconstruction, post_convective_flux,
+                 pre_viscous_grad, ghost_cells=True):
         self._pre_reconstruction = pre_reconstruction
+        self._post_convective_flux = post_convective_flux
         self._pre_viscous_grad = pre_viscous_grad
         self.ghost_cells = ghost_cells
 
@@ -432,6 +434,11 @@ class BoundaryCondition:
         for pre_reco in self._pre_reconstruction:
             pre_reco_dict.append(pre_reco.as_dict())
         dictionary["pre_reconstruction"] = pre_reco_dict
+
+        post_convective_flux_dict = []
+        for post_convective_flux in self._post_convective_flux:
+            post_convective_flux_dict.append(post_convective_flux.as_dict())
+        dictionary["post_convective_flux"] = post_convective_flux_dict
 
         pre_viscous_grad_dict = []
         for pre_viscous_grad in self._pre_viscous_grad:
@@ -520,9 +527,21 @@ class _SubsonicOutflow:
         }
 
 
+class _ConstantFlux:
+    def __init__(self, flow_state):
+        self._flow_state = flow_state
+
+    def as_dict(self):
+        return {
+            "type": "constant_flux",
+            "flow_state": self._flow_state.as_dict()
+        }
+
+
 def supersonic_inflow(inflow):
     return BoundaryCondition(
         pre_reconstruction=[_FlowStateCopy(inflow)],
+        post_convective_flux=[],
         pre_viscous_grad=[]
     )
 
@@ -533,6 +552,7 @@ def boundary_layer_inflow(height, velocity_profile,
         pre_reconstruction=[_BoundaryLayerProfile(height, velocity_profile,
                                                   temperature_profile,
                                                   pressure)],
+        post_convective_flux=[],
         pre_viscous_grad=[]
     )
 
@@ -540,6 +560,7 @@ def boundary_layer_inflow(height, velocity_profile,
 def supersonic_outflow():
     return BoundaryCondition(
         pre_reconstruction=[_InternalCopy()],
+        post_convective_flux=[],
         pre_viscous_grad=[]
     )
 
@@ -547,6 +568,7 @@ def supersonic_outflow():
 def slip_wall():
     return BoundaryCondition(
         pre_reconstruction=[_InternalCopyReflectNormal()],
+        post_convective_flux=[],
         pre_viscous_grad=[]
     )
 
@@ -554,6 +576,7 @@ def slip_wall():
 def adiabatic_no_slip_wall():
     return BoundaryCondition(
         pre_reconstruction=[_InternalCopyReflectNormal()],
+        post_convective_flux=[],
         pre_viscous_grad=[_InternalVelCopyReflect()]
     )
 
@@ -561,6 +584,7 @@ def adiabatic_no_slip_wall():
 def fixed_temperature_no_slip_wall(temperature):
     return BoundaryCondition(
         pre_reconstruction=[_InternalCopyReflectNormal()],
+        post_convective_flux=[],
         pre_viscous_grad=[_InternalVelCopyReflect(),
                           _FixTemperature(temperature)]
     )
@@ -569,6 +593,7 @@ def fixed_temperature_no_slip_wall(temperature):
 def subsonic_inflow(flow_state):
     return BoundaryCondition(
         pre_reconstruction=[_SubsonicInflow(flow_state)],
+        post_convective_flux=[],
         pre_viscous_grad=[]
     )
 
@@ -576,8 +601,20 @@ def subsonic_inflow(flow_state):
 def subsonic_outflow(pressure):
     return BoundaryCondition(
         pre_reconstruction=[_SubsonicOutflow(pressure)],
+        post_convective_flux=[],
         pre_viscous_grad=[]
     )
+
+
+def constant_flux(flow_state):
+    return BoundaryCondition(
+        pre_reconstruction=[_FlowStateCopy(flow_state)],
+        post_convective_flux=[_ConstantFlux(flow_state)],
+        pre_viscous_grad=[]
+    )
+
+
+bow_shock_fit = constant_flux
 
 
 class GridMotionBoundaryCondition:
@@ -1168,6 +1205,7 @@ def main(file_name, res_dir):
         "IO": IO,
         "IOFormat": IOFormat,
         "supersonic_inflow": supersonic_inflow,
+        "bow_shock_fit": bow_shock_fit,
         "boundary_layer_inflow": boundary_layer_inflow,
         "supersonic_outflow": supersonic_outflow,
         "slip_wall": slip_wall,

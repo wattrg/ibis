@@ -68,6 +68,8 @@ size_t FiniteVolume<T>::compute_dudt(FlowStates<T>& flow_state, Vector3s<T> vert
                                              grid.grad_calc(), flux_,
                                              allow_reconstruction);
 
+    apply_post_convective_flux_bc(flow_state, grid, gas_model, trans_prop);
+
     if (viscous_flux_.enabled()) {
         apply_pre_viscous_grad_bc(flow_state, grid, gas_model, trans_prop);
         viscous_flux_.compute_viscous_flux(flow_state, grid, gas_model, trans_prop,
@@ -189,6 +191,18 @@ void FiniteVolume<T>::apply_pre_reconstruction_bc(
         std::shared_ptr<BoundaryCondition<T>> bc = bcs_[i];
         Field<size_t> bc_faces = bc_interfaces_[i];
         bc->apply_pre_reconstruction(fs, grid, bc_faces, gas_model, trans_prop);
+    }
+}
+
+template <typename T>
+void FiniteVolume<T>::apply_post_convective_flux_bc(
+    const FlowStates<T>& fs, const GridBlock<T>& grid, const IdealGas<T>& gas_model,
+    const TransportProperties<T>& trans_prop) {
+    for (size_t i = 0; i < bcs_.size(); i++) {
+        std::shared_ptr<BoundaryCondition<T>> bc = bcs_[i];
+        Field<size_t> bc_faces = bc_interfaces_[i];
+        bc->apply_post_convective_flux_actions(flux_, fs, grid, bc_faces, gas_model,
+                                               trans_prop);
     }
 }
 

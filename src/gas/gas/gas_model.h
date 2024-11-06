@@ -160,6 +160,7 @@ public:
         return speed_of_sound_(gs.temp(i), R_, gamma_);
     }
 
+    KOKKOS_INLINE_FUNCTION
     T internal_energy(const GasState<T> &gs) const { return Cv_ * gs.temp; }
 
     template <typename layout = default_layout, typename space = default_space>

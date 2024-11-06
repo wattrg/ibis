@@ -76,6 +76,11 @@ public:
                                      const IdealGas<T>& gas_model,
                                      const TransportProperties<T>& trans_prop);
 
+    // Apply post-convective-flux boundary conditions
+    void apply_post_convective_flux_bc(const FlowStates<T>& fs, const GridBlock<T>& grid,
+                                       const IdealGas<T>& gas_model,
+                                       const TransportProperties<T>& trans_prop);
+
     // Apply pre-reconstruction boundary conditions
     void apply_pre_viscous_grad_bc(FlowStates<T>& fs, const GridBlock<T>& grid,
                                    const IdealGas<T>& gas_model,

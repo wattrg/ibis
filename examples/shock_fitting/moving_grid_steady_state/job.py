@@ -30,12 +30,12 @@ config.gas_model = gas_model
 
 config.solver = SteadyState(
     # cfl=ResidualBasedCfl(
-    #     growth_threshold=0.9,
-    #     power=1.2,
+    #     growth_threshold=0.1,
+    #     power=0.8,
     #     start_cfl=0.5,
     #     max_cfl=1e6
     # ),
-    cfl=50.0,
+    cfl=10.0,
     max_steps=10000,
     plot_frequency=100,
     print_frequency=20,
@@ -55,7 +55,7 @@ config.grid = Block(
     boundaries = {
         "wall": slip_wall(), # wall
         "symmetry": slip_wall(), # symmetry
-        "inflow": supersonic_inflow(inflow), # inflow
+        "inflow": bow_shock_fit(inflow), # inflow
         "outflow": supersonic_outflow(),
     },
     motion=ShockFitting(
@@ -69,7 +69,7 @@ config.grid = Block(
             "inflow": shock_fit(
                 constraint=RadialConstraint(centre=Vector3(0.0, 0.0, 0.0)),
                 scale=0.009,
-                shock_detection_threshold=0.3,
+                shock_detection_threshold=0.1,
             ),
             "outflow": constrained_interpolation(
                 sample_points=["wall", "inflow"],

@@ -118,7 +118,7 @@ void SteadyStateLinearisation::matrix_vector_product(Ibis::Vector<Ibis::real>& v
             "SteadyStateLinearisation::set_vector::grid", num_vertices,
             KOKKOS_LAMBDA(const size_t vertex_i) {
                 const size_t vector_idx = n_cells * n_cons + vertex_i * dim;
-                for (size_t dim_i = 0; dim_i < dim; dim_i++) {
+                for (int dim_i = 0; dim_i < dim; dim_i++) {
                     result(vector_idx + dim_i) =
                         1 / dt_star * vec(vector_idx + dim_i) -
                         Ibis::dual_part(vertex_vel(vertex_i, dim_i));
