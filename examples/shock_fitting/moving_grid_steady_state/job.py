@@ -32,7 +32,7 @@ config.solver = SteadyState(
     cfl=ResidualBasedCfl(
         growth_threshold=1e-2,
         power=1.0,
-        start_cfl=20.0,
+        start_cfl=0.5,
         max_cfl=500
     ),
     # cfl=50.0,
@@ -40,7 +40,7 @@ config.solver = SteadyState(
     plot_frequency=100,
     print_frequency=20,
     diagnostics_frequency=1,
-    tolerance=3e-8,
+    tolerance=1e-18,
     linear_solver=FGmres(
         tolerance=1e-6,
         max_iters=100,
@@ -68,7 +68,7 @@ config.grid = Block(
             ),
             "inflow": shock_fit(
                 constraint=RadialConstraint(centre=Vector3(0.0, 0.0, 0.0)),
-                scale=0.009,
+                scale=0.5,
                 shock_detection_threshold=0.2,
                 shock_detection_width=1e-4
             ),
