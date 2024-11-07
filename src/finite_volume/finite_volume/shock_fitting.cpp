@@ -212,8 +212,8 @@ KOKKOS_INLINE_FUNCTION T wave_speed(const FlowState<T>& left, const FlowState<T>
     T uR = right.velocity.x * nx + right.velocity.y * ny + right.velocity.z * nz;
 
     // shock detector
-    T delta_rho = Ibis::abs(pL - pR);
-    T max_rho = Ibis::min(pL, pR);
+    T delta_rho = Ibis::abs(rL - rR);
+    T max_rho = Ibis::max(rL, rR);
     T density_jump = (delta_rho / max_rho);
 
     // smooth function varying from 0 for no shock, and 1 for a shock
@@ -227,20 +227,25 @@ KOKKOS_INLINE_FUNCTION T wave_speed(const FlowState<T>& left, const FlowState<T>
     // wave speed from the mass conservation equation
     T ws_mass = T(0.0);
     if (shock_weight > 0.0) {
-        ws_mass = (rR * uR - rL * uL) / (rL - rR);
+        ws_mass = -(rR * uR - rL * uL) / (rL - rR);
+        // printf("ws_momentum = %.16f\n", Ibis::real_part(ws_momentum));
     }
 
     // wave speeds from normal momentum conservation equation
     T ws_momentum = T(0.0);
     if (shock_weight > 0.0) {
-        T a = pL - pR + rL * uL * uL - rR * uR * uR;
-        T b = T(2.0) * (rR * uR - rL * uL);
-        T c = rL - rR;
+        // T a = pL - pR + rL * uL * uL - rR * uR * uR;
+        // T b = T(2.0) * (rR * uR - rL * uL);
+        // T c = rL - rR;
         int sign = (pR - pL > T(0.0)) ? -1 : 1;
-        ws_momentum = (-b + sign * Ibis::sqrt(b * b - 4 * a * c)) / (T(2.0) * a);
+        // ws_momentum = (-b - sign * Ibis::sqrt(b * b - 4 * a * c)) / (T(2.0) * a);
+        // printf("ws_momentum = %.16f\n", Ibis::real_part(ws_momentum));
+        T pRpL = pR - pL;
+        ws_momentum = uL + sign / rL * Ibis::sqrt(Ibis::abs(pRpL / (1.0/rL - 1/rR)));
     }
-    // T ws_rh = 0.5 * ws_mass + 0.5 * ws_momentum;
-    T ws_rh = ws_momentum;
+    T ws_rh = 0.5 * ws_mass + 0.5 * ws_momentum;
+    // T ws_rh = ws_mass;
+    // T ws_rh = ws_momentum;
 
     // local signal speed (for when the shock is not nearby)
     // assume ideal gas for the moment. Will have to pass a gas model in
