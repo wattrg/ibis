@@ -8,7 +8,6 @@ v = 5 * gas_model.speed_of_sound(gas_state)
 aoa = math.radians(20)
 inflow = FlowState(gas=gas_state, vx = v * math.cos(aoa), vy=v*math.sin(aoa), vz=0)
 initial = FlowState(gas=gas_state, vx = v * math.cos(aoa), vy=v * math.sin(aoa), vz=0)
-max_time = 1e-5
 
 config.convective_flux = ConvectiveFlux(
     flux_calculator=Hanel(),
@@ -20,18 +19,8 @@ config.viscous_flux = ViscousFlux(enabled = False)
 
 config.gas_model = gas_model
 
-# config.solver = RungeKutta(
-#     method="euler",
-#     cfl = 0.1,
-#     max_step = 500000,
-#     max_time = max_time,
-#     plot_every_n_steps = -20,
-#     plot_frequency = max_time / 10,
-#     print_frequency = 1000,
-# )
-
 config.solver = SteadyState(
-    cfl=ResidualBasedCfl(growth_threshold=0.9, power=1.2, start_cfl=0.5),
+    cfl=ResidualBasedCfl(growth_threshold=0.9, power=1.0, start_cfl=0.5),
     max_steps=10000,
     plot_frequency=1000,
     print_frequency=20,
