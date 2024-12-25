@@ -220,8 +220,12 @@ KOKKOS_INLINE_FUNCTION T wave_speed(const FlowState<T>& left, const FlowState<T>
     // with the density jump required for defining a shock is `threshold`
     T shock_weight =
         (Ibis::tanh(1.0 / width * (density_jump - threshold)) + T(1.0)) / T(2.0);
-    if (shock_weight < 0.0001) { shock_weight = T(0.0); }
-    if (shock_weight > 0.999) { shock_weight = T(1.0); }
+    if (shock_weight < 0.0001) {
+        shock_weight = T(0.0);
+    }
+    if (shock_weight > 0.999) {
+        shock_weight = T(1.0);
+    }
 
     // Rankine Hugoniot relations (for when the shock is nearby)
     // wave speed from the mass conservation equation
@@ -241,7 +245,7 @@ KOKKOS_INLINE_FUNCTION T wave_speed(const FlowState<T>& left, const FlowState<T>
         // ws_momentum = (-b - sign * Ibis::sqrt(b * b - 4 * a * c)) / (T(2.0) * a);
         // printf("ws_momentum = %.16f\n", Ibis::real_part(ws_momentum));
         T pRpL = pR - pL;
-        ws_momentum = uL + sign / rL * Ibis::sqrt(Ibis::abs(pRpL / (1.0/rL - 1/rR)));
+        ws_momentum = uL + sign / rL * Ibis::sqrt(Ibis::abs(pRpL / (1.0 / rL - 1 / rR)));
     }
     T ws_rh = 0.5 * ws_mass + 0.5 * ws_momentum;
     // T ws_rh = ws_mass;
