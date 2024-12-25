@@ -82,7 +82,6 @@ T MachNumberAccess<T>::access(const FlowStates<T, array_layout, host_mem_space>&
 }
 template class MachNumberAccess<Ibis::real>;
 template class MachNumberAccess<Ibis::dual>;
-<<<<<<< HEAD
 
 template <typename T>
 T VolumeAccess<T>::access(const FlowStates<T, array_layout, host_mem_space>& fs,
@@ -96,8 +95,6 @@ T VolumeAccess<T>::access(const FlowStates<T, array_layout, host_mem_space>& fs,
 }
 template class VolumeAccess<Ibis::real>;
 template class VolumeAccess<Ibis::dual>;
-=======
->>>>>>> dev
 
 template <typename T>
 Vector3<T> VelocityAccess<T>::access(
