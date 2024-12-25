@@ -23,10 +23,12 @@ class FVInput {
 public:
     virtual ~FVInput() {}
 
-    virtual int read(typename FlowStates<T>::mirror_type& fs, const GridBlock<T>& grid,
+    virtual int read(typename FlowStates<T>::mirror_type& fs, GridBlock<T>& grid,
                      const IdealGas<T>& gas_model,
                      const TransportProperties<T>& trans_prop, std::string dir,
                      json& meta_data) = 0;
+
+    virtual bool combined_grid_and_flow() const = 0;
 };
 
 template <typename T>
@@ -43,6 +45,8 @@ public:
 
     virtual void write_coordinating_file(std::string plot_dir) = 0;
 
+    virtual bool combined_grid_and_flow() const = 0;
+
 protected:
     std::map<std::string, std::shared_ptr<ScalarAccessor<T>>> m_scalar_accessors;
     std::map<std::string, std::shared_ptr<VectorAccessor<T>>> m_vector_accessors;
@@ -52,23 +56,17 @@ template <typename T>
 class FVIO {
 public:
     // constructors
-    FVIO(FlowFormat input_format, FlowFormat output_format, std::string input_dir,
-         std::string output_dir, int time_index);
+    FVIO(FlowFormat input_format, FlowFormat output_format, bool moving_grid,
+         int time_index);
 
-    FVIO(FlowFormat input, FlowFormat output);
-
-    FVIO(FlowFormat input, FlowFormat output, std::string input_dir,
-         std::string output_dir);
-
-    FVIO(FlowFormat input, FlowFormat output, int time_index);
-
-    FVIO(int time_index);
+    FVIO(json config, int time_index);
 
     FVIO();
 
     // read a flow state
-    int read(FlowStates<T>& fs, const GridBlock<T>& grid, const IdealGas<T>& gas_model,
-             const TransportProperties<T>& trans_prop, json& meta_data, int time_idx);
+    int read(FlowStates<T>& fs, GridBlock<T>& grid, const IdealGas<T>& gas_model,
+             const TransportProperties<T>& trans_prop, json& config, json& meta_data,
+             int time_idx);
 
     // write a flow state
     int write(const FlowStates<T>& flow_state, FiniteVolume<T>& fv,
@@ -82,6 +80,7 @@ public:
 private:
     std::unique_ptr<FVInput<T>> input_;
     std::unique_ptr<FVOutput<T>> output_;
+    bool moving_grid_;
     int time_index_;
     std::string input_dir_;
     std::string output_dir_;

@@ -30,6 +30,18 @@ public:
     KOKKOS_INLINE_FUNCTION
     FlowState(GasState<T> gs, Vector3<T> vel) : gas_state(gs), velocity(vel) {}
 
+    KOKKOS_INLINE_FUNCTION
+    void set_weighted_average(const FlowState<T>& a, T wa, const FlowState<T>& b, T wb) {
+        gas_state.rho = wa * a.gas_state.rho + wb * b.gas_state.rho;
+        gas_state.pressure = wa * a.gas_state.pressure + wb * b.gas_state.pressure;
+        gas_state.temp = wa * a.gas_state.temp + wb * b.gas_state.temp;
+        gas_state.energy = wa * a.gas_state.energy + wb * b.gas_state.energy;
+
+        velocity.x = wa * a.velocity.x + wb * b.velocity.x;
+        velocity.y = wa * a.velocity.y + wb * b.velocity.y;
+        velocity.z = wa * a.velocity.z + wb * b.velocity.z;
+    }
+
     GasState<T> gas_state;
     Vector3<T> velocity;
 };
@@ -76,6 +88,21 @@ public:
     KOKKOS_INLINE_FUNCTION
     FlowState<T> average_flow_states_pT(const size_t a, const size_t b) const {
         return FlowState<T>{gas.average_pT(a, b), vel.average_vectors(a, b)};
+    }
+
+    KOKKOS_INLINE_FUNCTION
+    FlowState<T> flow_state(size_t i) const {
+        GasState<T> gs;
+        gs.temp = gas.temp(i);
+        gs.pressure = gas.pressure(i);
+        gs.energy = gas.energy(i);
+        gs.rho = gas.rho(i);
+
+        Vector3<T> velocity;
+        velocity.x = vel.x(i);
+        velocity.y = vel.y(i);
+        velocity.z = vel.z(i);
+        return FlowState<T>{gs, velocity};
     }
 
     GasStates<T, Layout, Space> gas;

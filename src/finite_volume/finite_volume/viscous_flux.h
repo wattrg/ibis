@@ -2,10 +2,10 @@
 #define VISCOUS_FLUX_H
 
 #include <finite_volume/conserved_quantities.h>
-#include <finite_volume/gradient.h>
 #include <gas/flow_state.h>
 #include <gas/gas_model.h>
 #include <gas/transport_properties.h>
+#include <grid/gradient.h>
 
 #include <nlohmann/json.hpp>
 
@@ -16,7 +16,7 @@ class ViscousFlux {
 public:
     ViscousFlux() {}
 
-    ViscousFlux(const GridBlock<T>& grid, json config);
+    ViscousFlux(const GridBlock<T>& grid, FlowStates<T> fs, json config);
 
     bool enabled() const { return enabled_; }
 

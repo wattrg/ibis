@@ -1,5 +1,4 @@
 #include <finite_volume/convective_flux.h>
-#include <finite_volume/gradient.h>
 #include <spdlog/spdlog.h>
 #include <util/numeric_types.h>
 
@@ -84,7 +83,7 @@ ConvectiveFlux<T>::ConvectiveFlux(const GridBlock<T>& grid, json config) {
 
 template <typename T>
 void ConvectiveFlux<T>::compute_convective_flux(
-    const FlowStates<T>& flow_states, const GridBlock<T>& grid, IdealGas<T>& gas_model,
+    const FlowStates<T>& flow_states, GridBlock<T>& grid, IdealGas<T>& gas_model,
     Gradients<T>& cell_grad, WLSGradient<T>& grad_calc, ConservedQuantities<T>& flux,
     bool allow_reconstruction) {
     // reconstruct
@@ -101,13 +100,46 @@ void ConvectiveFlux<T>::compute_convective_flux(
             throw new std::runtime_error("Invalid reconstruction order");
     }
 
+    // transform the velocity at the interfaces to be in the frame of references
+    // of the interface
+    if (grid.moving()) {
+        subtract(left_.vel, grid.face_vel(), left_.vel);
+        subtract(right_.vel, grid.face_vel(), right_.vel);
+    }
+
     // rotate velocity to the interface reference frame
     Interfaces<T> faces = grid.interfaces();
     transform_to_local_frame(left_.vel, faces.norm(), faces.tan1(), faces.tan2());
     transform_to_local_frame(right_.vel, faces.norm(), faces.tan1(), faces.tan2());
+    if (grid.moving()) {
+        transform_to_local_frame(grid.face_vel(), faces.norm(), faces.tan1(),
+                                 faces.tan2());
+    }
 
     // compute the flux
     flux_calculator_->compute_flux(left_, right_, flux, gas_model, grid.dim() == 3);
+
+    // translate flux from interface reference frame to the global reference frame
+    Vector3s<T> face_vel = grid.face_vel();
+    bool moving_grid = grid.moving();
+    if (moving_grid) {
+        Kokkos::parallel_for(
+            "flux::grid_motion", faces.size(), KOKKOS_LAMBDA(const size_t i) {
+                T v_sqr = face_vel.x(i) * face_vel.x(i) + face_vel.y(i) * face_vel.y(i) +
+                          face_vel.z(i) * face_vel.z(i);
+                flux.energy(i) += 0.5 * flux.mass(i) * v_sqr +
+                                  flux.momentum_x(i) * face_vel.x(i) +
+                                  flux.momentum_y(i) * face_vel.y(i);
+                if (flux.dim() == 3) {
+                    flux.energy(i) += flux.momentum_z(i) * face_vel.z(i);
+                }
+                flux.momentum_x(i) += face_vel.x(i) * flux.mass(i);
+                flux.momentum_y(i) += face_vel.y(i) * flux.mass(i);
+                if (flux.dim() == 3) {
+                    flux.momentum_z(i) += face_vel.z(i) * flux.mass(i);
+                }
+            });
+    }
 
     // rotate the fluxes to the global frame
     Vector3s<T> norm = faces.norm();
@@ -128,6 +160,19 @@ void ConvectiveFlux<T>::compute_convective_flux(
             flux.momentum_y(i) = y;
             if (flux.dim() == 3) {
                 flux.momentum_z(i) = z;
+            }
+
+            // transform the interface velocity back to the global frame
+            if (moving_grid) {
+                T vx = face_vel.x(i);
+                T vy = face_vel.y(i);
+                T vz = face_vel.z(i);
+                T x = vx * norm.x(i) + vy * tan1.x(i) + vz * tan2.x(i);
+                T y = vx * norm.y(i) + vy * tan1.y(i) + vz * tan2.y(i);
+                T z = vx * norm.z(i) + vy * tan1.z(i) + vz * tan2.z(i);
+                face_vel.x(i) = x;
+                face_vel.y(i) = y;
+                face_vel.z(i) = z;
             }
         });
 }

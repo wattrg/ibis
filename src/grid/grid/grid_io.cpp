@@ -47,6 +47,28 @@ ElemType elem_type_from_vtk_type(size_t su2_type) {
     }
 }
 
+size_t vtk_type_from_elem_type(const ElemType &elem_type) {
+    switch (elem_type) {
+        case ElemType::Line:
+            return 3;
+        case ElemType::Tri:
+            return 5;
+        case ElemType::Quad:
+            return 9;
+        case ElemType::Tetra:
+            return 10;
+        case ElemType::Hex:
+            return 12;
+        case ElemType::Wedge:
+            return 13;
+        case ElemType::Pyramid:
+            return 14;
+        default:
+            spdlog::error("Unkown ElemType");
+            throw new std::runtime_error("");
+    }
+}
+
 size_t number_vertices_from_elem_type(ElemType type) {
     switch (type) {
         case ElemType::Line:
@@ -68,6 +90,14 @@ size_t number_vertices_from_elem_type(ElemType type) {
     }
 }
 
+std::ostream &operator<<(std::ostream &file, const ElemIO &elem_io) {
+    file << vtk_type_from_elem_type(elem_io.cell_type_);
+    for (auto &vertex_id : elem_io.vertex_ids_) {
+        file << " " << vertex_id;
+    }
+    return file;
+}
+
 GridIO::GridIO(std::string file_name) {
     GridFileType type = file_type_from_name(file_name);
     std::ifstream grid_file(file_name);
@@ -77,10 +107,10 @@ GridIO::GridIO(std::string file_name) {
     }
     switch (type) {
         case GridFileType::Su2:
-            _read_su2_grid(grid_file);
+            read_su2_grid(grid_file);
             break;
         case GridFileType::Native:
-            _read_su2_grid(grid_file);
+            read_su2_grid(grid_file);
             break;
     }
     grid_file.close();
@@ -112,7 +142,7 @@ size_t read_int(std::string line) {
     return std::stoi(line);
 }
 
-bool get_next_line(std::ifstream &grid_file, std::string &line) {
+bool get_next_line(std::istream &grid_file, std::string &line) {
     // read the next line of a file. Trim the whitespace from the
     // front and back of the line. Return if there was actually
     // another line in the file.
@@ -172,8 +202,8 @@ Vector3<Ibis::real> read_vertex(std::string line, size_t dim) {
     }
 }
 
-std::pair<std::string, std::vector<ElemIO>> read_su2_boundary_marker(
-    std::ifstream &grid_file, std::string &line) {
+std::pair<std::string, std::vector<ElemIO>> read_su2_marker(std::istream &grid_file,
+                                                            std::string &line) {
     std::string tag = read_string(line);
     get_next_line(grid_file, line);
     size_t n_elems = read_int(line);
@@ -185,7 +215,7 @@ std::pair<std::string, std::vector<ElemIO>> read_su2_boundary_marker(
     return {tag, elem_io};
 }
 
-void GridIO::_read_su2_grid(std::ifstream &grid_file) {
+void GridIO::read_su2_grid(std::istream &grid_file) {
     // iterate through the file line by line. If we come across
     // a section heading, we read that section. If we come across
     // a line we don't know what to do with, we just ignore it.
@@ -219,20 +249,48 @@ void GridIO::_read_su2_grid(std::ifstream &grid_file) {
             for (size_t mark_i = 0; mark_i < n_mark; mark_i++) {
                 get_next_line(grid_file, line);
 
-                auto boundary = read_su2_boundary_marker(grid_file, line);
+                auto marker = read_su2_marker(grid_file, line);
 
-                if (bcs_.find(boundary.first) == bcs_.end()) {
+                if (markers_.find(marker.first) == markers_.end()) {
                     // we haven't seen a boundary with this tag before
-                    bcs_.insert(boundary);
+                    markers_.insert(marker);
                 } else {
                     // we have seen a boundary with this tag before,
                     // so we append the ElemIO's that we just read
                     // to the existing ones
-                    bcs_[boundary.first].insert(bcs_[boundary.first].end(),
-                                                boundary.second.begin(),
-                                                boundary.second.end());
+                    markers_[marker.first].insert(markers_[marker.first].end(),
+                                                  marker.second.begin(),
+                                                  marker.second.end());
                 }
             }
+        }
+    }
+}
+
+void GridIO::write_su2_grid(std::ostream &grid_file) {
+    grid_file << "NDIME= " << dim_ << "\n";
+
+    grid_file << "NELEM= " << cells_.size() << "\n";
+    for (size_t cell_i = 0; cell_i < cells_.size(); cell_i++) {
+        grid_file << cells_[cell_i] << " " << cell_i << "\n";
+    }
+
+    grid_file << "NPOIN= " << vertices_.size() << "\n";
+    for (size_t vertex_i = 0; vertex_i < vertices_.size(); vertex_i++) {
+        grid_file << vertices_[vertex_i].pos().x << " ";
+        grid_file << vertices_[vertex_i].pos().y << " ";
+        if (dim_ == 3) {
+            grid_file << vertices_[vertex_i].pos().z << " ";
+        }
+        grid_file << vertex_i << "\n";
+    }
+
+    grid_file << "NMARK= " << markers_.size() << "\n";
+    for (const auto &[tag, elements] : markers_) {
+        grid_file << "MARKER_TAG= " << tag << "\n";
+        grid_file << "MARKER_ELEMS= " << elements.size() << "\n";
+        for (const ElemIO &element : elements) {
+            grid_file << element << "\n";
         }
     }
 }
@@ -383,7 +441,8 @@ TEST_CASE("read_su2_element") {
     CHECK(read_su2_element(line) == ElemIO({1, 39, 23}, ElemType::Tri, FaceOrder::Vtk));
 
     // line = "12 1 14  15 13 19 20";
-    // CHECK(read_su2_element(line) == ElemIO({1, 14, 15, 13, 19, 20}, ElemType::Hex, FaceOrder::Vtk));
+    // CHECK(read_su2_element(line) == ElemIO({1, 14, 15, 13, 19, 20}, ElemType::Hex,
+    // FaceOrder::Vtk));
 }
 
 TEST_CASE("read_vetex") {
@@ -394,7 +453,7 @@ TEST_CASE("read_vetex") {
     CHECK(read_vertex(line, 3) == Vector3(12.0, 0.5, 3.4));
 }
 
-TEST_CASE("read_su2_boundary_marker") {
+TEST_CASE("read_su2_marker") {
     std::string line;
     std::ifstream file("../../../src/grid/test/boundary_test.txt");
     get_next_line(file, line);
@@ -405,7 +464,7 @@ TEST_CASE("read_su2_boundary_marker") {
          ElemIO({13, 14, 16}, ElemType::Tri, FaceOrder::Vtk),
          ElemIO({14, 15, 16, 1}, ElemType::Quad, FaceOrder::Vtk)}};
 
-    CHECK(read_su2_boundary_marker(file, line) == result);
+    CHECK(read_su2_marker(file, line) == result);
     file.close();
 }
 
@@ -452,5 +511,19 @@ TEST_CASE("read_su2_grid") {
 
     GridIO grid_io_expected = GridIO(vertices, cells, bcs);
     GridIO grid_io("../../../src/grid/test/grid.su2");
+    CHECK(grid_io == grid_io_expected);
+}
+
+TEST_CASE("write_su2_grid") {
+    // read the test grid
+    GridIO grid_io_expected("../../../src/grid/test/grid.su2");
+    std::stringstream test_file;
+
+    // write a new grid, then read that grid
+    grid_io_expected.write_su2_grid(test_file);
+    GridIO grid_io;
+    grid_io.read_su2_grid(test_file);
+
+    // make sure the original grid and the re-written grid are the same
     CHECK(grid_io == grid_io_expected);
 }

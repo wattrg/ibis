@@ -69,35 +69,39 @@ std::unique_ptr<FVOutput<T>> make_fv_output(FlowFormat format) {
 }
 
 template <typename T>
-FVIO<T>::FVIO(FlowFormat input_format, FlowFormat output_format, std::string input_dir,
-              std::string output_dir, int time_index)
-    : input_(make_fv_input<T>(input_format)),
-      output_(make_fv_output<T>(output_format)),
-      time_index_(time_index),
-      input_dir_(input_dir),
-      output_dir_(output_dir) {}
+FVIO<T>::FVIO(FlowFormat input_format, FlowFormat output_format, bool moving_grid,
+              int time_index) {
+    input_ = make_fv_input<T>(input_format);
+    output_ = make_fv_output<T>(output_format);
+    moving_grid_ = moving_grid;
+    time_index_ = time_index;
+    input_dir_ = "io/flow";
+    switch (output_format) {
+        case FlowFormat::NativeBinary:
+        case FlowFormat::NativeText:
+            output_dir_ = "io/flow";
+            break;
+        case FlowFormat::VtkBinary:
+        case FlowFormat::VtkText:
+            output_dir_ = "io/vtk";
+            break;
+    }
+}
 
 template <typename T>
-FVIO<T>::FVIO(FlowFormat input, FlowFormat output)
-    : FVIO(input, output, "flow", "flow", 0) {}
+FVIO<T>::FVIO() : FVIO(FlowFormat::NativeBinary, FlowFormat::NativeBinary, false, 0) {}
 
 template <typename T>
-FVIO<T>::FVIO(FlowFormat input, FlowFormat output, std::string input_dir,
-              std::string output_dir)
-    : FVIO(input, output, input_dir, output_dir, 0) {}
+FVIO<T>::FVIO(json config, int time_index) {
+    FlowFormat format = string_to_flow_format(config.at("io").at("flow_format"));
+    input_ = make_fv_input<T>(format);
+    output_ = make_fv_output<T>(format);
+    moving_grid_ = config.at("grid").at("motion").at("enabled");
+    time_index_ = time_index;
 
-template <typename T>
-FVIO<T>::FVIO()
-    : FVIO(FlowFormat::NativeBinary, FlowFormat::NativeBinary, "flow", "flow", 0) {}
-
-template <typename T>
-FVIO<T>::FVIO(int time_index)
-    : FVIO(FlowFormat::NativeBinary, FlowFormat::NativeBinary, "flow", "flow",
-           time_index) {}
-
-template <typename T>
-FVIO<T>::FVIO(FlowFormat input, FlowFormat output, int time_index)
-    : FVIO(input, output, "flow", "flow", time_index) {}
+    input_dir_ = "io/flow";
+    output_dir_ = "io/flow";
+}
 
 template <typename T>
 int FVIO<T>::write(const FlowStates<T>& fs, FiniteVolume<T>& fv, const GridBlock<T>& grid,
@@ -113,18 +117,31 @@ int FVIO<T>::write(const FlowStates<T>& fs, FiniteVolume<T>& fv, const GridBlock
     std::filesystem::create_directory(directory_name);
     int result = output_->write(fs_host, fv, grid, gas_model, trans_prop, output_dir_,
                                 time_index, time);
+    if (moving_grid_) {
+        GridIO grid_io = grid.to_grid_io();
+        std::filesystem::create_directory("io/grid/" + time_index);
+        std::ofstream grid_file("io/grid/" + time_index + "/block_0000.su2");
+        grid_io.write_su2_grid(grid_file);
+    }
+
     time_index_++;
     return result;
 }
 
 template <typename T>
-int FVIO<T>::read(FlowStates<T>& fs, const GridBlock<T>& grid,
-                  const IdealGas<T>& gas_model, const TransportProperties<T>& trans_prop,
-                  json& meta_data, int time_idx) {
+int FVIO<T>::read(FlowStates<T>& fs, GridBlock<T>& grid, const IdealGas<T>& gas_model,
+                  const TransportProperties<T>& trans_prop, json& config, json& meta_data,
+                  int time_idx) {
     // auto grid_host = grid.host_mirror();
     auto fs_host = fs.host_mirror();
     std::string time_index = pad_time_index(time_idx, 4);
     std::string directory_name = input_dir_ + "/" + time_index;
+    if (moving_grid_ && time_idx != 0) {
+        grid = GridBlock<T>("io/grid/" + time_index + "/block_0000.su2", config);
+    } else if (!grid.is_initialised()) {
+        grid =
+            GridBlock<T>("io/grid/" + pad_time_index(0, 4) + "/block_0000.su2", config);
+    }
     int result =
         input_->read(fs_host, grid, gas_model, trans_prop, directory_name, meta_data);
     fs.deep_copy(fs_host);

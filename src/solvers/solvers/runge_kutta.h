@@ -2,6 +2,7 @@
 #define RUNGE_KUTTA_H
 
 #include <finite_volume/conserved_quantities.h>
+#include <finite_volume/grid_motion_driver.h>
 #include <gas/flow_state.h>
 #include <gas/transport_properties.h>
 #include <grid/grid.h>
@@ -57,6 +58,7 @@ private:
     int plot_every_n_steps_;
     std::unique_ptr<CflSchedule> cfl_;
     Ibis::real dt_init_;
+    json config_;
 
 private:
     // progress
@@ -93,6 +95,9 @@ private:
     bool residuals_this_step(unsigned int step);
     bool write_residuals(unsigned int step, Ibis::real wc);
 
+    void function_eval_(FlowStates<Ibis::real> fs, ConservedQuantities<Ibis::real>& cq,
+                        size_t index);
+
 private:
     // memory
     FlowStates<Ibis::real> flow_;
@@ -100,6 +105,13 @@ private:
     std::vector<ConservedQuantities<Ibis::real>> k_;
     ConservedQuantities<Ibis::real> k_tmp_;
     FlowStates<Ibis::real> flow_tmp_;
+
+    // grid movement
+    bool moving_grid_;
+    std::vector<Vector3s<Ibis::real>> vertex_vel_;
+    Vector3s<Ibis::real> vertex_pos_tmp_;
+    Vector3s<Ibis::real> init_vertex_pos_;
+    // std::shared_ptr<GridMotionDriver<Ibis::real>> grid_driver_;
 
     // butcher tableau
     ButcherTableau tableau_;

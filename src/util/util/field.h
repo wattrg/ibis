@@ -30,6 +30,8 @@ public:
         Kokkos::deep_copy(view_, view_host);
     }
 
+    Field(view_type values) : view_(values) {}
+
     KOKKOS_FORCEINLINE_FUNCTION
     T& operator()(const size_t i) { return view_(i); }
 
@@ -49,7 +51,8 @@ public:
     }
 
     mirror_type host_mirror() const {
-        return mirror_type("host_mirror", view_.extent(0));
+        auto mirror_view = Kokkos::create_mirror_view(view_);
+        return mirror_type(mirror_view);
     }
 
     template <class OtherSpace>

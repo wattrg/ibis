@@ -7,6 +7,7 @@ add_library(
 	grid/grid.cpp 
 	grid/cell.cpp
 	grid/geom.cpp
+	grid/gradient.cpp
 )
 
 target_include_directories(
@@ -23,6 +24,7 @@ target_link_libraries(
 	util
 	nlohmann_json::nlohmann_json
 	spdlog::spdlog
+	gas
 )
 
 if (Ibis_BUILD_TESTS)
@@ -35,6 +37,7 @@ if (Ibis_BUILD_TESTS)
         grid/cell.cpp
         grid/vertex.cpp
         grid/geom.cpp
+        grid/gradient.cpp
     )
 
     target_link_libraries(

@@ -8,31 +8,45 @@
 #include <solvers/steady_state.h>
 #include <solvers/transient_linear_system.h>
 
+#include "finite_volume/grid_motion_driver.h"
+
 SteadyStateLinearisation::SteadyStateLinearisation(
     std::shared_ptr<Sim<Ibis::dual>> sim,
     std::shared_ptr<ConservedQuantities<Ibis::dual>> residuals,
     std::shared_ptr<ConservedQuantities<Ibis::dual>> cq,
-    std::shared_ptr<FlowStates<Ibis::dual>> fs, bool allow_reconstruction) {
+    std::shared_ptr<FlowStates<Ibis::dual>> fs,
+    std::shared_ptr<Vector3s<Ibis::dual>> vertex_vel, bool allow_reconstruction) {
     sim_ = sim;
     cq_ = cq;
     fs_ = fs;
     allow_reconstruction_ = allow_reconstruction;
+    size_t dim = sim_->grid.dim();
+
+    size_t num_grid_vars = 0;
+    if (sim_->grid.moving()) {
+        num_grid_vars = sim_->grid.num_vertices() * dim;
+    }
 
     n_total_cells_ = sim_->grid.num_total_cells();
     n_cells_ = sim_->grid.num_cells();
     n_cons_ = cq_->n_conserved();
-    n_vars_ = n_cells_ * n_cons_;
-    size_t dim = sim_->grid.dim();
+    n_vars_ = n_cells_ * n_cons_ + num_grid_vars;
 
     rhs_ = Ibis::Vector<Ibis::real>{"SteadyStateLinearisation::rhs", n_vars_};
     fs_tmp_ = FlowStates<Ibis::dual>{n_total_cells_};
     cq_tmp_ = ConservedQuantities<Ibis::dual>{n_total_cells_, dim};
     residuals_ = residuals;
+    vertex_vel_ = vertex_vel;
+
+    if (sim_->grid.moving()) {
+        vertex_pos_tmp_ = Vector3s<Ibis::dual>{"SteadyStateLinearisation::vertex_vel",
+                                               sim_->grid.num_vertices()};
+    }
 }
 
 std::unique_ptr<LinearSystem> SteadyStateLinearisation::preconditioner() {
     return std::unique_ptr<LinearSystem>(
-        new SteadyStateLinearisation(sim_, residuals_, cq_, fs_, false));
+        new SteadyStateLinearisation(sim_, residuals_, cq_, fs_, vertex_vel_, false));
 }
 
 void SteadyStateLinearisation::matrix_vector_product(Ibis::Vector<Ibis::real>& vec,
@@ -44,7 +58,8 @@ void SteadyStateLinearisation::matrix_vector_product(Ibis::Vector<Ibis::real>& v
     auto cq_tmp = cq_tmp_;
     auto cq = *cq_;
     Kokkos::parallel_for(
-        "SteadyStateLinearisation::set_dual", n_cells_, KOKKOS_LAMBDA(const int cell_i) {
+        "SteadyStateLinearisation::set_dual", n_cells_,
+        KOKKOS_LAMBDA(const size_t cell_i) {
             const int vector_idx = cell_i * n_cons;
             for (size_t cons_i = 0; cons_i < n_cons; cons_i++) {
                 cq_tmp(cell_i, cons_i).real() = cq(cell_i, cons_i).real();
@@ -52,12 +67,36 @@ void SteadyStateLinearisation::matrix_vector_product(Ibis::Vector<Ibis::real>& v
             }
         });
 
+    if (sim_->grid.moving()) {
+        auto vertex_pos_tmp = vertex_pos_tmp_;
+        int dim = sim_->grid.dim();
+        auto vertex_pos = sim_->grid.vertices().positions();
+        size_t n_cells = n_cells_;
+        Kokkos::parallel_for(
+            "SteadyStateLinearisation::set_dual_grid", sim_->grid.num_vertices(),
+            KOKKOS_LAMBDA(const size_t vertex_i) {
+                const size_t vector_idx = n_cells * n_cons + vertex_i * dim;
+                for (int dim_i = 0; dim_i < dim; dim_i++) {
+                    vertex_pos_tmp(vertex_i, dim_i).real() =
+                        vertex_pos(vertex_i, dim_i).real();
+                    vertex_pos_tmp(vertex_i, dim_i).dual() = vec(vector_idx + dim_i);
+                }
+            });
+
+        sim_->grid.set_vertex_positions(vertex_pos_tmp);
+    }
+
     // convert the conserved quantities to primatives, ready to evaluate the residuals
     conserved_to_primatives(cq_tmp_, fs_tmp_, sim_->gas_model);
 
     // evaluate the residuals
-    sim_->fv.compute_dudt(fs_tmp_, sim_->grid, residuals, sim_->gas_model,
-                          sim_->trans_prop, allow_reconstruction_);
+    if (sim_->grid.moving()) {
+        sim_->fv.compute_dudt(fs_tmp_, *vertex_vel_, *cq_, sim_->grid, residuals,
+                              sim_->gas_model, sim_->trans_prop, allow_reconstruction_);
+    } else {
+        sim_->fv.compute_dudt(fs_tmp_, sim_->grid, residuals, sim_->gas_model,
+                              sim_->trans_prop, allow_reconstruction_);
+    }
 
     // set the components of vec to the dual component of dudt
     Kokkos::parallel_for(
@@ -69,11 +108,33 @@ void SteadyStateLinearisation::matrix_vector_product(Ibis::Vector<Ibis::real>& v
                                               Ibis::dual_part(residuals(cell_i, cons_i));
             }
         });
+
+    if (sim_->grid.moving()) {
+        size_t num_vertices = sim_->grid.num_vertices();
+        auto vertex_vel = *vertex_vel_;
+        size_t n_cells = n_cells_;
+        int dim = sim_->grid.dim();
+        Kokkos::parallel_for(
+            "SteadyStateLinearisation::set_vector::grid", num_vertices,
+            KOKKOS_LAMBDA(const size_t vertex_i) {
+                const size_t vector_idx = n_cells * n_cons + vertex_i * dim;
+                for (int dim_i = 0; dim_i < dim; dim_i++) {
+                    result(vector_idx + dim_i) =
+                        1 / dt_star * vec(vector_idx + dim_i) -
+                        Ibis::dual_part(vertex_vel(vertex_i, dim_i));
+                }
+            });
+    }
 }
 
 void SteadyStateLinearisation::eval_rhs() {
-    sim_->fv.compute_dudt(*fs_, sim_->grid, *residuals_, sim_->gas_model,
-                          sim_->trans_prop);
+    if (sim_->grid.moving()) {
+        sim_->fv.compute_dudt(*fs_, *vertex_vel_, *cq_, sim_->grid, *residuals_,
+                              sim_->gas_model, sim_->trans_prop, allow_reconstruction_);
+    } else {
+        sim_->fv.compute_dudt(*fs_, sim_->grid, *residuals_, sim_->gas_model,
+                              sim_->trans_prop, allow_reconstruction_);
+    }
 
     size_t n_cons = n_cons_;
     auto rhs = rhs_;
@@ -85,6 +146,22 @@ void SteadyStateLinearisation::eval_rhs() {
                 rhs(vector_idx + cons_i) = Ibis::real_part(residuals(cell_i, cons_i));
             }
         });
+
+    if (sim_->grid.moving()) {
+        size_t n_cells = n_cells_;
+        size_t num_vertices = sim_->grid.num_vertices();
+        int dim = sim_->grid.dim();
+        auto vertex_vel = *vertex_vel_;
+        Kokkos::parallel_for(
+            "SteadyStateLinearisation::eval_rhs::grid", num_vertices,
+            KOKKOS_LAMBDA(const size_t vertex_i) {
+                const size_t vector_idx = n_cells * n_cons + vertex_i * dim;
+                for (int dim_i = 0; dim_i < dim; dim_i++) {
+                    rhs(vector_idx + dim_i) =
+                        Ibis::real_part(vertex_vel(vertex_i, dim_i));
+                }
+            });
+    }
 }
 
 void SteadyStateLinearisation::set_rhs(Ibis::Vector<Ibis::real>& rhs) {
@@ -115,11 +192,21 @@ SteadyState::SteadyState(json config, GridBlock<Ibis::dual> grid, std::string gr
     residuals_ = std::shared_ptr<ConservedQuantities<Ibis::dual>>{
         new ConservedQuantities<Ibis::dual>(n_total_cells, dim)};
 
+    if (sim_->grid.moving()) {
+        json grid_config = config.at("grid");
+        json grid_motion_config = grid_config.at("motion");
+        auto grid_driver =
+            build_grid_motion_driver<Ibis::dual>(sim_->grid, grid_motion_config);
+        sim_->grid.set_motion_driver(grid_driver);
+        vertex_vel_ = std::shared_ptr<Vector3s<Ibis::dual>>(
+            new Vector3s<Ibis::dual>(grid.num_vertices()));
+    }
+
     // set up the linear system and non-linear solver
     auto cfl = make_cfl_schedule(solver_config.at("cfl"));
     std::unique_ptr<PseudoTransientLinearSystem> system =
         std::unique_ptr<PseudoTransientLinearSystem>(
-            new SteadyStateLinearisation(sim_, residuals_, cq_, fs_));
+            new SteadyStateLinearisation(sim_, residuals_, cq_, fs_, vertex_vel_));
     jfnk_ = Jfnk(std::move(system), std::move(cfl), residuals_, solver_config);
 
     // configuration
@@ -128,15 +215,17 @@ SteadyState::SteadyState(json config, GridBlock<Ibis::dual> grid, std::string gr
     diagnostics_frequency_ = solver_config.at("diagnostics_frequency");
 
     // I/O
-    FlowFormat flow_format = string_to_flow_format((config.at("io").at("flow_format")));
-    io_ = FVIO<Ibis::dual>(flow_format, flow_format, 1);
+    io_ = FVIO<Ibis::dual>(config, 1);
+
+    config_ = config;
 }
 
 int SteadyState::initialise() {
-    // read the initial conditions
+    // read grid and initial condition
     json meta_data{};
-    int ic_result =
-        io_.read(*fs_, sim_->grid, sim_->gas_model, sim_->trans_prop, meta_data, 0);
+    json grid_config = config_.at("grid");
+    int ic_result = io_.read(*fs_, sim_->grid, sim_->gas_model, sim_->trans_prop,
+                             grid_config, meta_data, 0);
     int conversion_result = primatives_to_conserved(*cq_, *fs_, sim_->gas_model);
 
     // initialise the JFNK solver

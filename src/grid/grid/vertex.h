@@ -3,10 +3,15 @@
 
 #include <util/vector3.h>
 
+#include "util/ragged_array.h"
+
 template <typename T>
 struct Vertex {
 public:
+    Vertex() {}
+
     Vertex(Vector3<T> pos) : _pos(pos) {}
+
     Vector3<T> &pos() { return _pos; }
 
     bool operator==(const Vertex<T> &other) const { return _pos == other._pos; }
@@ -37,12 +42,19 @@ public:
         _positions(vertex_id, 2) = pos.z;
     }
 
+    void set_positions(vector_type new_positions) { _positions = new_positions; }
+
     KOKKOS_INLINE_FUNCTION
     Vector3s<T, array_layout, memory_space> &positions() { return _positions; }
 
     KOKKOS_INLINE_FUNCTION
     const Vector3s<T, array_layout, memory_space> &positions() const {
         return _positions;
+    }
+
+    KOKKOS_INLINE_FUNCTION
+    Vector3<T> position(size_t i) const {
+        return Vector3<T>(_positions.x(i), _positions.y(i), _positions.z(i));
     }
 
     bool operator==(const Vertices &other) const {
@@ -62,8 +74,19 @@ public:
         _positions.deep_copy(other._positions);
     }
 
+    void set_face_ids(Ibis::RaggedArray<size_t, array_layout, ExecSpace> interface_ids) {
+        interface_ids_ = interface_ids;
+    }
+
+    Ibis::RaggedArray<size_t, array_layout, ExecSpace> interface_ids() const {
+        return interface_ids_;
+    }
+
 public:
     Vector3s<T, array_layout, memory_space> _positions;
+
+    // sometimes we need to know which interfaces this vertex is part of
+    Ibis::RaggedArray<size_t, array_layout, ExecSpace> interface_ids_;
 };
 
 #endif

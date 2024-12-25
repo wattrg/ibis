@@ -2,6 +2,7 @@
 #include <gas/transport_properties.h>
 #include <spdlog/spdlog.h>
 #include <util/numeric_types.h>
+#include <util/vector3.h>
 
 #include <Kokkos_Core.hpp>
 
@@ -401,30 +402,75 @@ template class SubsonicOutflow<Ibis::real>;
 template class SubsonicOutflow<Ibis::dual>;
 
 template <typename T>
-std::shared_ptr<BoundaryAction<T>> build_boundary_action(json config) {
+void ConstantFlux<T>::apply(ConservedQuantities<T>& flux,
+                            const FlowStates<T>& flow_states, const GridBlock<T>& grid,
+                            const Field<size_t>& boundary_faces,
+                            const IdealGas<T>& gas_model,
+                            const TransportProperties<T>& trans_prop) {
+    (void)flow_states;
+    (void)trans_prop;
+    size_t size = boundary_faces.size();
+    FlowState<T> fs = fs_;
+    Interfaces<T> interfaces = grid.interfaces();
+    Vector3s<T> face_vels = grid.face_vel();
+    bool moving_grid = grid.moving();
+    Kokkos::parallel_for(
+        "ConstantFlux::apply", size, KOKKOS_LAMBDA(const size_t i) {
+            size_t face_id = boundary_faces(i);
+            Vector3<T> n = interfaces.norm().vector(face_id);
+            Vector3<T> face_vel{0.0, 0.0, 0.0};
+            if (moving_grid) {
+                face_vel = face_vels.vector(face_id);
+            }
+            T u = gas_model.internal_energy(fs.gas_state);
+            T rel_vx = fs.velocity.x - face_vel.x;
+            T rel_vy = fs.velocity.y - face_vel.y;
+            T rel_vz = fs.velocity.z - face_vel.z;
+            T mass_flux = fs.gas_state.rho * (rel_vx * n.x + rel_vy * n.y + rel_vz * n.z);
+
+            T p = fs.gas_state.pressure;
+            flux.mass(face_id) = mass_flux;
+            flux.momentum_x(face_id) = p * n.x + fs.velocity.x * mass_flux;
+            flux.momentum_y(face_id) = p * n.y + fs.velocity.y * mass_flux;
+            if (flux.dim() == 3) {
+                flux.momentum_z(face_id) = p * n.z + fs.velocity.z * mass_flux;
+            }
+            flux.energy(face_id) =
+                mass_flux * (u + 0.5 * (fs.velocity.x * fs.velocity.x +
+                                        fs.velocity.y * fs.velocity.y +
+                                        fs.velocity.z * fs.velocity.z)) +
+                p * (fs.velocity.x * n.x + fs.velocity.y * n.x + fs.velocity.z * n.z);
+        });
+}
+template class ConstantFlux<Ibis::real>;
+template class ConstantFlux<Ibis::dual>;
+
+template <typename T>
+std::shared_ptr<GhostCellAction<T>> build_boundary_action(json config) {
     std::string type = config.at("type");
-    std::shared_ptr<BoundaryAction<T>> action;
+    std::shared_ptr<GhostCellAction<T>> action;
     if (type == "flow_state_copy") {
         json flow_state = config.at("flow_state");
-        action = std::shared_ptr<BoundaryAction<T>>(new FlowStateCopy<T>(flow_state));
+        action = std::shared_ptr<GhostCellAction<T>>(new FlowStateCopy<T>(flow_state));
     } else if (type == "boundary_layer_profile") {
         json profile = config.at("profile");
-        action = std::shared_ptr<BoundaryAction<T>>(new BoundaryLayerProfile<T>(profile));
+        action =
+            std::shared_ptr<GhostCellAction<T>>(new BoundaryLayerProfile<T>(profile));
     } else if (type == "internal_copy") {
-        action = std::shared_ptr<BoundaryAction<T>>(new InternalCopy<T>());
+        action = std::shared_ptr<GhostCellAction<T>>(new InternalCopy<T>());
     } else if (type == "internal_copy_reflect_normal") {
-        action = std::shared_ptr<BoundaryAction<T>>(new InternalCopyReflectNormal<T>());
+        action = std::shared_ptr<GhostCellAction<T>>(new InternalCopyReflectNormal<T>());
     } else if (type == "internal_vel_copy_reflect") {
-        action = std::shared_ptr<BoundaryAction<T>>(new InternalVelCopyReflect<T>());
+        action = std::shared_ptr<GhostCellAction<T>>(new InternalVelCopyReflect<T>());
     } else if (type == "fix_temperature") {
         T temperature = T(config.at("temperature"));
-        action = std::shared_ptr<BoundaryAction<T>>(new FixTemperature<T>(temperature));
+        action = std::shared_ptr<GhostCellAction<T>>(new FixTemperature<T>(temperature));
     } else if (type == "subsonic_inflow") {
         json flow_state = config.at("flow_state");
-        action = std::shared_ptr<BoundaryAction<T>>(new SubsonicInflow<T>(flow_state));
+        action = std::shared_ptr<GhostCellAction<T>>(new SubsonicInflow<T>(flow_state));
     } else if (type == "subsonic_outflow") {
         T pressure = T(config.at("pressure"));
-        action = std::shared_ptr<BoundaryAction<T>>(new SubsonicOutflow<T>(pressure));
+        action = std::shared_ptr<GhostCellAction<T>>(new SubsonicOutflow<T>(pressure));
     } else {
         spdlog::error("Unknown boundary action {}", type);
         throw std::runtime_error("Unknown boundary action");
@@ -433,16 +479,36 @@ std::shared_ptr<BoundaryAction<T>> build_boundary_action(json config) {
 }
 
 template <typename T>
+std::shared_ptr<FluxAction<T>> build_flux_action(json config) {
+    std::string type = config.at("type");
+    std::shared_ptr<FluxAction<T>> action;
+    if (type == "constant_flux") {
+        action = std::shared_ptr<FluxAction<T>>(new ConstantFlux<T>(config));
+    } else {
+        spdlog::error("Unknown flux action {}", type);
+        throw std::runtime_error("Unknown flux action");
+    }
+    return action;
+}
+
+template <typename T>
 BoundaryCondition<T>::BoundaryCondition(json config) {
     std::vector<json> pre_reco = config.at("pre_reconstruction");
     for (size_t i = 0; i < pre_reco.size(); i++) {
-        std::shared_ptr<BoundaryAction<T>> action = build_boundary_action<T>(pre_reco[i]);
+        std::shared_ptr<GhostCellAction<T>> action =
+            build_boundary_action<T>(pre_reco[i]);
         pre_reconstruction_.push_back(action);
+    }
+
+    std::vector<json> post_convective_flux = config.at("post_convective_flux");
+    for (json config : post_convective_flux) {
+        std::shared_ptr<FluxAction<T>> action = build_flux_action<T>(config);
+        post_convective_flux_actions_.push_back(action);
     }
 
     std::vector<json> pre_viscous_grad = config.at("pre_viscous_grad");
     for (size_t i = 0; i < pre_viscous_grad.size(); i++) {
-        std::shared_ptr<BoundaryAction<T>> action =
+        std::shared_ptr<GhostCellAction<T>> action =
             build_boundary_action<T>(pre_viscous_grad[i]);
         pre_viscous_grad_.push_back(action);
     }
@@ -454,6 +520,16 @@ void BoundaryCondition<T>::apply_pre_reconstruction(
     const IdealGas<T>& gas_model, const TransportProperties<T>& trans_prop) {
     for (size_t i = 0; i < pre_reconstruction_.size(); i++) {
         pre_reconstruction_[i]->apply(fs, grid, boundary_faces, gas_model, trans_prop);
+    }
+}
+
+template <typename T>
+void BoundaryCondition<T>::apply_post_convective_flux_actions(
+    ConservedQuantities<T>& flux, const FlowStates<T>& fs, const GridBlock<T>& grid,
+    const Field<size_t>& boundary_faces, const IdealGas<T>& gas_model,
+    const TransportProperties<T>& trans_prop) {
+    for (auto flux_action : post_convective_flux_actions_) {
+        flux_action->apply(flux, fs, grid, boundary_faces, gas_model, trans_prop);
     }
 }
 

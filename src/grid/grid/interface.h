@@ -322,6 +322,9 @@ public:
             });
     }
 
+    KOKKOS_INLINE_FUNCTION
+    const Field<ElemType, array_layout, memory_space>& shapes() const { return shape_; }
+
 public:
     size_t size_;
 

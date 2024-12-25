@@ -1,8 +1,26 @@
 
 #include <doctest/doctest.h>
+#include <finite_volume/grid_motion_driver.h>
+#include <grid/cell.h>
 #include <grid/grid.h>
 #include <grid/grid_io.h>
 #include <grid/interface.h>
+
+// template <typename T, class ExecSpace, class Layout>
+// void GridBlock<T, ExecSpace,
+// Layout>::set_motion_driver(std::shared_ptr<GridMotionDriver<T>> driver) {
+//     motion_driver_ = driver;
+// }
+
+// template <typename T, class ExecSpace, class Layout>
+// void GridBlock<T, ExecSpace, Layout>::compute_grid_motion(const FlowStates<T>& fs,
+//                                        const Vector3s<T>& vertex_vel) {
+//     motion_driver_->compute_vertex_velocities(fs, *this, vertex_vel);
+//     compute_face_vel(vertex_vel);
+// }
+// template class GridBlock<Ibis::real, Kokkos::DefaultExecutionSpace,
+// Kokkos::DefaultExecutionSpace::array_layout>; template class GridBlock<Ibis::dual,
+// Kokkos::DefaultExecutionSpace, Kokkos::DefaultExecutionSpace::array_layout>;
 
 struct GridInfo {
     Vertices<Ibis::real, Kokkos::DefaultHostExecutionSpace> vertices;
@@ -69,6 +87,7 @@ json build_config() {
     json slip_wall{};
     json inflow{};
     json outflow{};
+    json motion{};
     slip_wall["ghost_cells"] = true;
     inflow["ghost_cells"] = true;
     outflow["ghost_cells"] = true;
@@ -77,6 +96,8 @@ json build_config() {
     boundaries["inflow"] = inflow;
     boundaries["outflow"] = outflow;
     config["boundaries"] = boundaries;
+    motion["enabled"] = false;
+    config["motion"] = motion;
     return config;
 }
 
@@ -86,6 +107,7 @@ json build_3D_config() {
     json slip_wall{};
     json inflow{};
     json outflow{};
+    json motion{};
     slip_wall["ghost_cells"] = true;
     inflow["ghost_cells"] = true;
     outflow["ghost_cells"] = true;
@@ -96,6 +118,8 @@ json build_3D_config() {
     boundaries["north"] = slip_wall;
     boundaries["south"] = slip_wall;
     config["boundaries"] = boundaries;
+    motion["enabled"] = false;
+    config["motion"] = motion;
     return config;
 }
 

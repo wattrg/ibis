@@ -10,9 +10,11 @@ class NativeTextInput : public FVInput<T> {
 public:
     NativeTextInput() {}
 
-    int read(typename FlowStates<T>::mirror_type& fs, const GridBlock<T>& grid,
+    int read(typename FlowStates<T>::mirror_type& fs, GridBlock<T>& grid,
              const IdealGas<T>& gas_model, const TransportProperties<T>& trans_prop,
              std::string dir, json& meta_data);
+
+    bool combined_grid_and_flow() const { return false; }
 };
 
 template <typename T>
@@ -26,6 +28,8 @@ public:
               std::string time_dir, Ibis::real time);
 
     void write_coordinating_file(std::string plot_dir) { (void)plot_dir; }
+
+    bool combined_grid_and_flow() const { return false; }
 };
 
 template <typename T>
@@ -33,9 +37,11 @@ class NativeBinaryInput : public FVInput<T> {
 public:
     NativeBinaryInput() {}
 
-    int read(typename FlowStates<T>::mirror_type& fs, const GridBlock<T>& grid,
+    int read(typename FlowStates<T>::mirror_type& fs, GridBlock<T>& grid,
              const IdealGas<T>& gas_model, const TransportProperties<T>& trans_prop,
              std::string dir, json& meta_data);
+
+    bool combined_grid_and_flow() const { return false; }
 };
 
 template <typename T>
@@ -49,6 +55,8 @@ public:
               std::string time_dir, Ibis::real time);
 
     void write_coordinating_file(std::string plot_dir) { (void)plot_dir; }
+
+    bool combined_grid_and_flow() const { return false; }
 };
 
 #endif

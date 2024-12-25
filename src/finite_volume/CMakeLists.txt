@@ -12,8 +12,10 @@ add_library(
 	  finite_volume/primative_conserved_conversion.cpp
 	  finite_volume/conserved_quantities.cpp
 	  finite_volume/boundaries/boundary.cpp
-	  finite_volume/gradient.cpp
 	  finite_volume/limiter.cpp
+	  finite_volume/grid_motion_driver.cpp
+	  finite_volume/shock_fitting.cpp
+	  finite_volume/rigid_body_translation.cpp
 )
 
 target_link_libraries(
@@ -41,7 +43,6 @@ if (Ibis_BUILD_TESTS)
     	  finite_volume/flux_calculators/ausmdv.cpp
 			  finite_volume/flux_calculators/ldfss2.cpp
 			  finite_volume/flux_calculators/rusanov.cpp
-			  finite_volume/gradient.cpp
 			  finite_volume/limiter.cpp
     )
     # target_compile_options(finite_volume_unittest -g)

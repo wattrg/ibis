@@ -111,6 +111,9 @@ public:
     }
 
     KOKKOS_INLINE_FUNCTION
+    Vector3<T> vector(size_t i) const { return Vector3<T>{x(i), y(i), z(i)}; }
+
+    KOKKOS_INLINE_FUNCTION
     size_t size() const { return view_.extent(0); }
 
     KOKKOS_INLINE_FUNCTION
@@ -120,9 +123,9 @@ public:
         }
 
         for (size_t i = 0; i < this->size(); i++) {
-            if (fabs(view_(i, 0) - other.view_(i, 0)) > 1e-14) return false;
-            if (fabs(view_(i, 1) - other.view_(i, 1)) > 1e-14) return false;
-            if (fabs(view_(i, 2) - other.view_(i, 2)) > 1e-14) return false;
+            if (Ibis::abs(view_(i, 0) - other.view_(i, 0)) > 1e-14) return false;
+            if (Ibis::abs(view_(i, 1) - other.view_(i, 1)) > 1e-14) return false;
+            if (Ibis::abs(view_(i, 2) - other.view_(i, 2)) > 1e-14) return false;
         }
         return true;
     }
@@ -161,6 +164,15 @@ void dot(const Vector3s<T>& a, const Vector3s<T>& b, Field<T>& result);
 
 template <typename T>
 void add(const Vector3s<T>& a, const Vector3s<T>& b, Vector3s<T>& result);
+
+// a += b * scale
+template <typename T>
+void add_scaled_vector(Vector3s<T>& a, const Vector3s<T>& b, T scale);
+
+// result = a + b * scale
+template <typename T>
+void add_scaled_vector(const Vector3s<T>& a, const Vector3s<T>& b, T scale,
+                       Vector3s<T>& result);
 
 template <typename T>
 void subtract(const Vector3s<T>& a, const Vector3s<T>& b, Vector3s<T>& result);

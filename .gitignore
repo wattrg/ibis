@@ -4,12 +4,14 @@ inst
 compile_commands.json
 examples/**/flow
 examples/**/grid
+examples/**/io
 examples/**/config
 examples/**/log
 examples/**/plot
 examples/**/*.su2
 tests/**/flow
 tests/**/grid
+tests/**/io
 tests/**/config
 tests/**/log
 tests/**/plot

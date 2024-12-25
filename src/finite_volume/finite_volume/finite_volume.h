@@ -5,12 +5,13 @@
 #include <finite_volume/conserved_quantities.h>
 #include <finite_volume/convective_flux.h>
 #include <finite_volume/flux_calc.h>
-#include <finite_volume/gradient.h>
+#include <finite_volume/grid_motion_driver.h>
 #include <finite_volume/limiter.h>
 #include <finite_volume/viscous_flux.h>
 #include <gas/flow_state.h>
 #include <gas/gas_model.h>
 #include <gas/transport_properties.h>
+#include <grid/gradient.h>
 #include <grid/grid.h>
 #include <spdlog/spdlog.h>
 #include <util/numeric_types.h>
@@ -29,7 +30,7 @@ class FiniteVolume {
 public:
     FiniteVolume() {}
 
-    FiniteVolume(const GridBlock<T>& grid, json config);
+    FiniteVolume(GridBlock<T>& grid, json config);
 
     /**
      * Compute the time derivative of a particular flow state
@@ -40,7 +41,13 @@ public:
      * @param[in] gas_model The gas model
      * @param[in] trans_prop The transport properties
      */
-    size_t compute_dudt(FlowStates<T>& flow_state, const GridBlock<T>& grid,
+    size_t compute_dudt(FlowStates<T>& flow_state, GridBlock<T>& grid,
+                        ConservedQuantities<T>& dudt, IdealGas<T>& gas_model,
+                        TransportProperties<T>& trans_prop,
+                        bool allow_reconstruction = true);
+
+    size_t compute_dudt(FlowStates<T>& flow_state, Vector3s<T> vertex_vel,
+                        const ConservedQuantities<T>& cq, GridBlock<T>& grid,
                         ConservedQuantities<T>& dudt, IdealGas<T>& gas_model,
                         TransportProperties<T>& trans_prop,
                         bool allow_reconstruction = true);
@@ -69,10 +76,20 @@ public:
                                      const IdealGas<T>& gas_model,
                                      const TransportProperties<T>& trans_prop);
 
+    // Apply post-convective-flux boundary conditions
+    void apply_post_convective_flux_bc(const FlowStates<T>& fs, const GridBlock<T>& grid,
+                                       const IdealGas<T>& gas_model,
+                                       const TransportProperties<T>& trans_prop);
+
     // Apply pre-reconstruction boundary conditions
     void apply_pre_viscous_grad_bc(FlowStates<T>& fs, const GridBlock<T>& grid,
                                    const IdealGas<T>& gas_model,
                                    const TransportProperties<T>& trans_prop);
+
+    // Adjust fluxes to obey the geometric conservation law
+    void apply_geometric_conservation_law(const ConservedQuantities<T>& cq,
+                                          const GridBlock<T>& grid,
+                                          ConservedQuantities<T>& dudt);
 
     // Perform the surface integral of fluxes over the cells
     void flux_surface_integral(const GridBlock<T>& grid, ConservedQuantities<T>& dudt);
@@ -104,6 +121,10 @@ private:
     // The viscous flux calculator
     ViscousFlux<T> viscous_flux_;
 
+    // Flow states on the interfaces (used for time step calculation
+    // and viscous fluxes)
+    FlowStates<T> face_fs_;
+
     // boundary conditions
     std::vector<std::shared_ptr<BoundaryCondition<T>>> bcs_{};
 
@@ -114,7 +135,7 @@ private:
     size_t dim_;
 
     // Gradient calculator
-    WLSGradient<T> grad_calc_;
+    // WLSGradient<T> grad_calc_;
 
     // Storage for gradients at cells
     Gradients<T> cell_grad_;

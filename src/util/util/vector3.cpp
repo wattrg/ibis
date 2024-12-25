@@ -36,6 +36,39 @@ template void add<Ibis::real>(const Vector3s<Ibis::real> &a,
                               Vector3s<Ibis::real> &result);
 
 template <typename T>
+void add_scaled_vector(Vector3s<T> &a, const Vector3s<T> &b, T scale) {
+    assert(a.size() == b.size());
+    Kokkos::parallel_for(
+        "Vector3s_add_scaled_vector", a.size(), KOKKOS_LAMBDA(const size_t i) {
+            a(i, 0) += b(i, 0) * scale;
+            a(i, 1) += b(i, 1) * scale;
+            a(i, 2) += b(i, 2) * scale;
+        });
+}
+template void add_scaled_vector<Ibis::real>(Vector3s<Ibis::real> &,
+                                            const Vector3s<Ibis::real> &, Ibis::real);
+template void add_scaled_vector<Ibis::dual>(Vector3s<Ibis::dual> &,
+                                            const Vector3s<Ibis::dual> &, Ibis::dual);
+
+template <typename T>
+void add_scaled_vector(const Vector3s<T> &a, const Vector3s<T> &b, T scale,
+                       Vector3s<T> &result) {
+    assert(a.size() == b.size());
+    Kokkos::parallel_for(
+        "Vector3s_add_scaled_vector", a.size(), KOKKOS_LAMBDA(const size_t i) {
+            result(i, 0) = a(i, 0) + b(i, 0) * scale;
+            result(i, 1) = a(i, 1) + b(i, 1) * scale;
+            result(i, 2) = a(i, 2) + b(i, 2) * scale;
+        });
+}
+template void add_scaled_vector<Ibis::real>(const Vector3s<Ibis::real> &,
+                                            const Vector3s<Ibis::real> &, Ibis::real,
+                                            Vector3s<Ibis::real> &);
+template void add_scaled_vector<Ibis::dual>(const Vector3s<Ibis::dual> &,
+                                            const Vector3s<Ibis::dual> &, Ibis::dual,
+                                            Vector3s<Ibis::dual> &);
+
+template <typename T>
 void subtract(const Vector3s<T> &a, const Vector3s<T> &b, Vector3s<T> &result) {
     assert((a.size() == b.size()) && (b.size() == result.size()));
 
@@ -49,6 +82,9 @@ void subtract(const Vector3s<T> &a, const Vector3s<T> &b, Vector3s<T> &result) {
 template void subtract<Ibis::real>(const Vector3s<Ibis::real> &a,
                                    const Vector3s<Ibis::real> &b,
                                    Vector3s<Ibis::real> &result);
+template void subtract<Ibis::dual>(const Vector3s<Ibis::dual> &a,
+                                   const Vector3s<Ibis::dual> &b,
+                                   Vector3s<Ibis::dual> &result);
 
 template <typename T>
 void cross(const Vector3s<T> &a, const Vector3s<T> &b, Vector3s<T> &result) {
@@ -236,6 +272,53 @@ TEST_CASE("Vector3s Add") {
         CHECK(Kokkos::fabs(expected(i, 0) - result_host(i, 0)) < VEC3_TOL);
         CHECK(Kokkos::fabs(expected(i, 1) - result_host(i, 1)) < VEC3_TOL);
         CHECK(Kokkos::fabs(expected(i, 2) - result_host(i, 2)) < VEC3_TOL);
+    }
+}
+
+TEST_CASE("Vector3s Add scaled ") {
+    size_t n = 20;
+
+    // allocate device memory
+    Vector3s<Ibis::real> a_dev("a", n);
+    Vector3s<Ibis::real> b_dev("b", n);
+    Vector3s<Ibis::real> result_dev("result", n);
+    Ibis::real scale = 0.5;
+
+    // allocate host memory
+    auto a_host = a_dev.host_mirror();
+    auto b_host = b_dev.host_mirror();
+    Vector3s<Ibis::real>::mirror_type expected("expected", n);
+
+    // set some data
+    for (size_t i = 0; i < n; i++) {
+        a_host(i, 0) = 1.0 * i;
+        a_host(i, 1) = -2.0 * i;
+        a_host(i, 2) = 3.0 * i - 5;
+
+        b_host(i, 0) = -1.0 * i * i;
+        b_host(i, 1) = 0.5 * (i - 1) * i;
+        b_host(i, 2) = 3.0 * i * i;
+
+        expected(i, 0) = a_host(i, 0) + b_host(i, 0) * scale;
+        expected(i, 1) = a_host(i, 1) + b_host(i, 1) * scale;
+        expected(i, 2) = a_host(i, 2) + b_host(i, 2) * scale;
+    }
+
+    // copy data to the device
+    a_dev.deep_copy(a_host);
+    b_dev.deep_copy(b_host);
+
+    // do the work
+    add_scaled_vector(a_dev, b_dev, scale);
+
+    // copy the result to the host
+    a_host.deep_copy(a_dev);
+
+    // check the results are correct
+    for (size_t i = 0; i < n; i++) {
+        CHECK(expected(i, 0) == doctest::Approx(a_host(i, 0)));
+        CHECK(expected(i, 1) == doctest::Approx(a_host(i, 1)));
+        CHECK(expected(i, 2) == doctest::Approx(a_host(i, 2)));
     }
 }
 

@@ -3,13 +3,24 @@
 
 #include <grid/cell.h>
 #include <grid/grid_io.h>
+// #include <grid/gradient.h>
+// #include <finite_volume/grid_motion_driver.h>
+#include <gas/flow_state.h>
 #include <grid/interface.h>
 
-#include <limits>
+// #include <limits>
 #include <nlohmann/json.hpp>
 
 using json = nlohmann::json;
 
+// forward declarations
+template <typename T>
+class GridMotionDriver;
+
+template <typename T, class ExecSpace, class Layout>
+class WLSGradient;
+
+// The main GridBlock
 template <typename T, class ExecSpace = Kokkos::DefaultExecutionSpace,
           class Layout = Kokkos::DefaultExecutionSpace::array_layout>
 class GridBlock {
@@ -123,6 +134,7 @@ public:
 
         std::map<size_t, size_t> ghost_cell_map =
             setup_boundaries(grid_io, boundaries, cell_vertices, interfaces, cell_shapes);
+        setup_face_markers(grid_io, interfaces);
 
         interfaces_ = Interfaces<T, execution_space, array_layout>(interface_vertices,
                                                                    interface_shapes);
@@ -142,6 +154,27 @@ public:
         cells_.compute_volumes(vertices_, interfaces_);
         compute_cell_neighbours();
         compute_ghost_cell_centres();
+        setup_vertex_face_connectivity();
+
+        // initialise grid motion
+        json grid_motion_config = config.at("motion");
+        moving_grid_ = grid_motion_config.at("enabled");
+        if (moving_grid_) {
+            face_vel_ = Vector3s<T, Layout, memory_space>(num_interfaces());
+        }
+
+        initialised_ = true;
+    }
+
+    void compute_geometric_data() {
+        interfaces_.compute_centres(vertices_);
+        interfaces_.compute_areas(vertices_);
+        cells_.compute_centroids(vertices_, interfaces_);
+        cells_.compute_volumes(vertices_, interfaces_);
+        compute_ghost_cell_centres();
+        if (grad_calc_) {
+            compute_gradient_weights();
+        }
     }
 
     void compute_interface_connectivity(std::map<size_t, size_t> ghost_cells) {
@@ -278,6 +311,16 @@ public:
     KOKKOS_INLINE_FUNCTION
     bool is_ghost(const size_t i) const { return i >= num_valid_cells_; }
 
+    const Field<size_t, array_layout, memory_space>& marked_faces(
+        std::string marker) const {
+        return markers_.at(marker);
+    }
+
+    const Field<size_t, array_layout, memory_space>& marked_vertices(
+        std::string marker) const {
+        return marked_vertices_.at(marker);
+    }
+
     const Field<size_t, array_layout, memory_space>& boundary_faces(
         std::string boundary_tag) const {
         return boundary_faces_.at(boundary_tag);
@@ -368,12 +411,9 @@ public:
         (void)cell_shapes;
         num_ghost_cells_ = 0;
         std::map<size_t, size_t> ghost_cell_map;  // face_id -> ghost_cell_id
-        for (auto bc : grid_io.bcs()) {
-            // unpack the boundary data from the grid_io object
-            std::string bc_label = bc.first;
+        for (auto& [bc_label, boundary_config] : boundaries.items()) {
             boundary_tags_.push_back(bc_label);
-            std::vector<ElemIO> bc_faces = bc.second;
-            json boundary_config = boundaries.at(bc_label);
+            std::vector<ElemIO> bc_faces = grid_io.markers()[bc_label];
 
             // loop over all the boundary faces for this boundary, keeping
             // track of which cells and faces belong to this boundary
@@ -402,16 +442,203 @@ public:
         return ghost_cell_map;
     }
 
+    void setup_face_markers(const GridIO& grid_io, InterfaceLookup& interfaces) {
+        // setup_face_markers should be called after setup_boundaries,
+        // since it checks if markers have already been assigned to boundaries
+        for (auto& [marker_label, marker] : grid_io.markers()) {
+            if (boundary_faces_.find(marker_label) == boundary_faces_.end()) {
+                // this marker is not a boundary, so we'll allocate
+                // some memory for these faces
+                std::vector<size_t> marker_faces;
+                marker_faces.reserve(marker.size());
+                for (size_t face_i = 0; face_i < marker.size(); face_i++) {
+                    size_t face_id = interfaces.id(marker[face_i].vertex_ids());
+                    marker_faces.push_back(face_id);
+                }
+                markers_.insert({marker_label, Field<size_t, array_layout, memory_space>(
+                                                   "marker_faces", marker_faces)});
+            } else {
+                // this marker is a boundary, so we'll point to the
+                // faces on the boundary
+                markers_.insert({marker_label, boundary_faces_[marker_label]});
+            }
+
+            // keep track of the vertices belonging to these marked faces
+            std::vector<size_t> marked_vertices;
+            for (size_t face_i = 0; face_i < marker.size(); face_i++) {
+                std::vector<size_t> vertices = marker[face_i].vertex_ids();
+                for (const size_t& vertex_id : vertices) {
+                    if (std::find(marked_vertices.begin(), marked_vertices.end(),
+                                  vertex_id) == marked_vertices.end()) {
+                        marked_vertices.push_back(vertex_id);
+                    }
+                }
+            }
+            marked_vertices_.insert(
+                {marker_label, Field<size_t, array_layout, memory_space>(
+                                   "marked_vertices", marked_vertices)});
+        }
+    }
+
+    void setup_vertex_face_connectivity() {
+        std::vector<std::vector<size_t>> vertex_face_connections(num_vertices());
+        auto vertex_ids = interfaces_.vertex_ids().host_mirror();
+        vertex_ids.deep_copy(interfaces_.vertex_ids());
+        for (size_t face_i = 0; face_i < interfaces_.size(); face_i++) {
+            auto vertices_of_face = vertex_ids(face_i);
+            for (size_t vertex_i = 0; vertex_i < vertices_of_face.size(); vertex_i++) {
+                size_t vertex_id = vertices_of_face(vertex_i);
+                vertex_face_connections[vertex_id].push_back(face_i);
+            }
+        }
+        Ibis::RaggedArray<size_t, array_layout, ExecSpace> interface_ids(
+            vertex_face_connections);
+        vertices_.set_face_ids(interface_ids);
+    }
+
+    void allocate_gradient_weights() {
+        grad_calc_ = std::shared_ptr<WLSGradient<T, ExecSpace, Layout>>(
+            new WLSGradient<T, ExecSpace, Layout>(*this));
+        grad_calc_->compute_weights(*this);
+    }
+
+    void compute_gradient_weights() { grad_calc_->compute_weights(*this); }
+
+    WLSGradient<T, ExecSpace, Layout>& grad_calc() const { return *grad_calc_; }
+
+    GridIO to_grid_io() const {
+        auto host_grid = host_mirror();
+        host_grid.deep_copy(*this);
+
+        // get the position of the vertices
+        std::vector<Vertex<Ibis::real>> vertices;
+        vertices.reserve(host_grid.num_vertices());
+        for (size_t vertex_i = 0; vertex_i < host_grid.num_vertices(); vertex_i++) {
+            Vector3<Ibis::real> pos{
+                Ibis::real_part(host_grid.vertices_.positions().x(vertex_i)),
+                Ibis::real_part(host_grid.vertices_.positions().y(vertex_i)),
+                Ibis::real_part(host_grid.vertices_.positions().z(vertex_i))};
+            vertices.push_back(Vertex<Ibis::real>(pos));
+        }
+
+        // get the vertices of each cell
+        std::vector<ElemIO> cells;
+        cells.reserve(host_grid.num_cells());
+        for (size_t cell_i = 0; cell_i < host_grid.num_cells(); cell_i++) {
+            ElemType cell_shape = host_grid.cells().shapes()(cell_i);
+            auto cell_vertices = host_grid.cells().vertex_ids()(cell_i);
+            std::vector<size_t> vertex_ids;
+            vertex_ids.reserve(cell_vertices.size());
+            for (size_t vertex_i = 0; vertex_i < cell_vertices.size(); vertex_i++) {
+                vertex_ids.push_back(cell_vertices(vertex_i));
+            }
+            cells.push_back(ElemIO(vertex_ids, cell_shape, FaceOrder::Vtk));
+        }
+
+        // get the boundary conditions
+        std::unordered_map<std::string, std::vector<ElemIO>> bcs;
+        for (auto& [bc_tag, bc_faces] : host_grid.boundary_faces_) {
+            size_t num_faces = bc_faces.size();
+            std::vector<ElemIO> bc_elems;
+            bc_elems.reserve(num_faces);
+            for (size_t bc_face_i = 0; bc_face_i < num_faces; bc_face_i++) {
+                size_t bc_face = bc_faces(bc_face_i);
+                ElemType face_shape = host_grid.interfaces().shapes()(bc_face);
+                auto bc_face_vertices = host_grid.interfaces().vertex_ids()(bc_face);
+                std::vector<size_t> vertex_ids;
+                vertex_ids.reserve(bc_face_vertices.size());
+                for (size_t vertex_id = 0; vertex_id < bc_face_vertices.size();
+                     vertex_id++) {
+                    vertex_ids.push_back(bc_face_vertices(vertex_id));
+                }
+                bc_elems.push_back(ElemIO(vertex_ids, face_shape, FaceOrder::Vtk));
+            }
+            bcs.insert({bc_tag, bc_elems});
+        }
+
+        return GridIO(vertices, cells, bcs, dim_);
+    }
+
+    void compute_grid_motion(const FlowStates<T>& fs, const Vector3s<T>& vertex_vel) {
+        motion_driver_->compute_vertex_velocities(fs, *this, vertex_vel);
+        compute_face_vel(vertex_vel);
+    }
+
+    void set_motion_driver(std::shared_ptr<GridMotionDriver<T>>& driver) {
+        motion_driver_ = driver;
+    }
+
+    void compute_face_vel(const Vector3s<T, Layout, memory_space>& vertex_vel) {
+        auto face_vertices = interfaces().vertex_ids();
+        auto face_vel = face_vel_;
+        Kokkos::parallel_for(
+            "compute_face_velocity", num_interfaces(),
+            KOKKOS_LAMBDA(const size_t face_i) {
+                auto vertices = face_vertices(face_i);
+                T vx = T(0.0);
+                T vy = T(0.0);
+                T vz = T(0.0);
+                size_t num_vertices = vertices.size();
+                for (size_t vertex_i = 0; vertex_i < num_vertices; vertex_i++) {
+                    size_t vertex_id = vertices(vertex_i);
+                    vx += vertex_vel.x(vertex_id);
+                    vy += vertex_vel.y(vertex_id);
+                    vz += vertex_vel.z(vertex_id);
+                }
+                face_vel.x(face_i) = vx / num_vertices;
+                face_vel.y(face_i) = vy / num_vertices;
+                face_vel.z(face_i) = vz / num_vertices;
+            });
+    }
+
+    void set_vertex_positions(Vector3s<T, Layout, memory_space>& positions) {
+        vertices_.set_positions(positions);
+        compute_geometric_data();
+    }
+
+    const Vector3s<T, Layout, memory_space>& face_vel() const { return face_vel_; }
+
+    Vector3s<T, Layout, memory_space>& face_vel() { return face_vel_; }
+
+    bool moving() const { return moving_grid_; }
+
+    bool is_initialised() const { return initialised_; }
+
 public:
+    // The primary grid data structures
     Vertices<T, execution_space, array_layout> vertices_;
     Interfaces<T, execution_space, array_layout> interfaces_;
     Cells<T, execution_space, array_layout> cells_;
+
+    // gradients
+    std::shared_ptr<WLSGradient<T, ExecSpace, Layout>> grad_calc_;
+
+    // Some information about the grid
     size_t dim_;
     size_t num_valid_cells_;
     size_t num_ghost_cells_;
+
+    // information about which faces are on boundaries, and which ghost
+    // cells belong to which boundary
     std::map<std::string, Field<size_t, array_layout, memory_space>> ghost_cells_;
     std::map<std::string, Field<size_t, array_layout, memory_space>> boundary_faces_;
     std::vector<std::string> boundary_tags_;
+
+    // this contains all marked interfaces. This includes faces on the boundary,
+    // and other faces that have been marked for one reason or another (e.g.
+    // shock fitting)
+    std::map<std::string, Field<size_t, array_layout, memory_space>> markers_;
+
+    // vertices which belong to marked entities
+    std::map<std::string, Field<size_t, array_layout, memory_space>> marked_vertices_;
+
+    // grid motion
+    // GridMotion<T, execution_space, array_layout> motion_;
+    bool moving_grid_;
+    Vector3s<T, Layout, memory_space> face_vel_;
+    std::shared_ptr<GridMotionDriver<T>> motion_driver_;
+
+    bool initialised_ = false;
 };
 
 #endif

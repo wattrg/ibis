@@ -11,6 +11,8 @@
 #include <solvers/solver.h>
 #include <solvers/transient_linear_system.h>
 
+#include "finite_volume/grid_motion_driver.h"
+
 class SteadyStateLinearisation : public PseudoTransientLinearSystem {
 public:
     // Construction / destruction
@@ -18,6 +20,7 @@ public:
                              std::shared_ptr<ConservedQuantities<Ibis::dual>> residuals,
                              std::shared_ptr<ConservedQuantities<Ibis::dual>> cq,
                              std::shared_ptr<FlowStates<Ibis::dual>> fs,
+                             std::shared_ptr<Vector3s<Ibis::dual>> vertex_vel,
                              bool allow_reconstruction = true);
 
     ~SteadyStateLinearisation() {}
@@ -65,11 +68,13 @@ private:
     std::shared_ptr<ConservedQuantities<Ibis::dual>> cq_;
     std::shared_ptr<FlowStates<Ibis::dual>> fs_;
     std::shared_ptr<ConservedQuantities<Ibis::dual>> residuals_;
+    std::shared_ptr<Vector3s<Ibis::dual>> vertex_vel_;
 
     // memory owned by this class
     Ibis::Vector<Ibis::real> rhs_;   // the rhs of the system of equations
     FlowStates<Ibis::dual> fs_tmp_;  // temporary storage for perturbed flow states
     ConservedQuantities<Ibis::dual> cq_tmp_;  // storage for perturbed cq
+    Vector3s<Ibis::dual> vertex_pos_tmp_;     // storage for perturbed vertex pos
 
     // the simulation
     std::shared_ptr<Sim<Ibis::dual>> sim_;
@@ -92,6 +97,7 @@ private:
     unsigned int print_frequency_;
     unsigned int plot_frequency_;
     unsigned int diagnostics_frequency_;
+    json config_;
 
     // progress
     // Ibis::real stable_dt_;
@@ -125,6 +131,7 @@ private:
     std::shared_ptr<ConservedQuantities<Ibis::dual>> cq_;
     std::shared_ptr<ConservedQuantities<Ibis::dual>> residuals_;
     std::shared_ptr<FlowStates<Ibis::dual>> fs_;
+    std::shared_ptr<Vector3s<Ibis::dual>> vertex_vel_;
 
     // the core simulation
     std::shared_ptr<Sim<Ibis::dual>> sim_;

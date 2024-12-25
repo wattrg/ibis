@@ -1,0 +1,5 @@
+{
+  "scale": 0.001,
+  "shock_detection_threshold": 0.5,
+  "shock_detection_width": 0.01
+}

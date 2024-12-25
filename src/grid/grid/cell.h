@@ -10,8 +10,6 @@
 
 #include <Kokkos_Core.hpp>
 
-#include "Kokkos_Core_fwd.hpp"
-
 template <typename T, class ExecSpace = Kokkos::DefaultExecutionSpace,
           class Layout = Kokkos::DefaultExecutionSpace::array_layout>
 struct Cells;

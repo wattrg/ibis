@@ -74,5 +74,20 @@ void Jfnk::apply_update_(std::shared_ptr<Sim<Ibis::dual>>& sim,
                 cq(cell_i, cons_i).dual() = 0.0;
             }
         });
+    if (sim->grid.moving()) {
+        size_t n_vertices = sim->grid.num_vertices();
+        int dim = sim->grid.dim();
+        auto vertex_pos = sim->grid.vertices().positions();
+        Kokkos::parallel_for(
+            "Jfnk::apply_update::grid", n_vertices, KOKKOS_LAMBDA(const size_t vertex_i) {
+                const size_t vector_idx = n_cells * n_cons + vertex_i * dim;
+                for (int dim_i = 0; dim_i < dim; dim_i++) {
+                    vertex_pos(vertex_i, dim_i).real() += dU(vector_idx + dim_i);
+                    vertex_pos(vertex_i, dim_i).dual() = 0.0;
+                }
+            });
+        sim->grid.compute_geometric_data();
+    }
+
     conserved_to_primatives(cq, fs, sim->gas_model);
 }

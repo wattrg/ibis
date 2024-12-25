@@ -1,5 +1,6 @@
 import json
 import os
+import pathlib
 import shutil
 from enum import Enum
 import struct
@@ -10,7 +11,7 @@ from ibis_py_utils import (
     TransportPropertyModel,
     read_defaults,
     FlowState,
-    GasModel
+    GasModel,
 )
 
 from python_api import (
@@ -27,6 +28,20 @@ validation_errors = []
 
 class ValidationException(Exception):
     pass
+
+
+class Vector3:
+    def __init__(self, x=0.0, y=0.0, z=0.0):
+        self.x = x
+        self.y = y
+        self.z = z
+
+    def as_dict(self):
+        return {
+            "x": self.x,
+            "y": self.y,
+            "z": self.z
+        }
 
 
 class Solver(Enum):
@@ -260,13 +275,68 @@ class ViscousFlux:
         return dictionary
 
 
+class StaticGrid:
+    def as_dict(self):
+        return {"enabled": False}
+
+    def validate(self):
+        return
+
+
+class BoundaryInterpolationGridMotion:
+    def __init__(self, boundaries, interpolation_power=2.0):
+        self._interp_power = interpolation_power
+        self._boundaries = boundaries
+
+    def as_dict(self):
+        dictionary = {
+            "enabled": True,
+            "type": "boundary_interpolation",
+            "interp_power": self._interp_power,
+        }
+        dictionary["boundaries"] = {}
+        for key in self._boundaries:
+            dictionary["boundaries"][key] = self._boundaries[key].as_dict()
+        return dictionary
+
+    def validate(self):
+        return
+
+
+ShockFitting = BoundaryInterpolationGridMotion
+
+
+class RigidBodyTranslation:
+    _json_values = ["velocity"]
+    __slots__ = _json_values
+    _defaults_file = "rigid_body_translation.json"
+
+    def __init__(self, **kwargs):
+        json_data = read_defaults(DEFAULTS_DIRECTORY, self._defaults_file)
+        for key in self._json_values:
+            setattr(self, key, json_data[key])
+
+        for key, value in kwargs.items():
+            setattr(self, key, value)
+
+    def as_dict(self):
+        return {
+            "enabled": True,
+            "type": "rigid_body_translation",
+            "velocity": self.velocity
+        }
+
+
 class Block:
-    def __init__(self, file_name, initial_condition, boundaries):
+    def __init__(self, file_name, initial_condition, boundaries, **kwargs):
         self._initial_condition = initial_condition
         self._block = file_name
         self.number_cells = 0
         self.number_vertices = 0
         self.boundaries = boundaries
+        self.motion = StaticGrid()
+        for key, value in kwargs.items():
+            setattr(self, key, value)
         self._read_file(file_name)
 
     def _read_file(self, file_name):
@@ -301,16 +371,11 @@ class Block:
         return f"{number:.16e}\n"
 
     def write(self, grid_directory, flow_directory, binary):
-        if not os.path.exists(grid_directory):
-            os.mkdir(grid_directory)
-        if not os.path.exists(flow_directory):
-            os.mkdir(flow_directory)
-        ic_path = f"{flow_directory}/0000"
-        if not os.path.exists(ic_path):
-            os.mkdir(ic_path)
+        pathlib.Path(f"{grid_directory}/0000").mkdir(parents=True, exist_ok=True)
+        pathlib.Path(f"{flow_directory}/0000").mkdir(parents=True, exist_ok=True)
 
         # write the grid
-        shutil.copy(self._block, f"{grid_directory}/block_{0:04}.su2")
+        shutil.copy(self._block, f"{grid_directory}/0000/block_{0:04}.su2")
 
         # write the initial condition
         format = "wb" if binary else "w"
@@ -351,12 +416,15 @@ class Block:
         dictionary["dimensions"] = self.dim
         for key in self.boundaries:
             dictionary["boundaries"][key] = self.boundaries[key].as_dict()
+        dictionary["motion"] = self.motion.as_dict()
         return dictionary
 
 
 class BoundaryCondition:
-    def __init__(self, pre_reconstruction, pre_viscous_grad, ghost_cells=True):
+    def __init__(self, pre_reconstruction, post_convective_flux,
+                 pre_viscous_grad, ghost_cells=True):
         self._pre_reconstruction = pre_reconstruction
+        self._post_convective_flux = post_convective_flux
         self._pre_viscous_grad = pre_viscous_grad
         self.ghost_cells = ghost_cells
 
@@ -366,6 +434,11 @@ class BoundaryCondition:
         for pre_reco in self._pre_reconstruction:
             pre_reco_dict.append(pre_reco.as_dict())
         dictionary["pre_reconstruction"] = pre_reco_dict
+
+        post_convective_flux_dict = []
+        for post_convective_flux in self._post_convective_flux:
+            post_convective_flux_dict.append(post_convective_flux.as_dict())
+        dictionary["post_convective_flux"] = post_convective_flux_dict
 
         pre_viscous_grad_dict = []
         for pre_viscous_grad in self._pre_viscous_grad:
@@ -454,9 +527,21 @@ class _SubsonicOutflow:
         }
 
 
+class _ConstantFlux:
+    def __init__(self, flow_state):
+        self._flow_state = flow_state
+
+    def as_dict(self):
+        return {
+            "type": "constant_flux",
+            "flow_state": self._flow_state.as_dict()
+        }
+
+
 def supersonic_inflow(inflow):
     return BoundaryCondition(
         pre_reconstruction=[_FlowStateCopy(inflow)],
+        post_convective_flux=[],
         pre_viscous_grad=[]
     )
 
@@ -467,6 +552,7 @@ def boundary_layer_inflow(height, velocity_profile,
         pre_reconstruction=[_BoundaryLayerProfile(height, velocity_profile,
                                                   temperature_profile,
                                                   pressure)],
+        post_convective_flux=[],
         pre_viscous_grad=[]
     )
 
@@ -474,6 +560,7 @@ def boundary_layer_inflow(height, velocity_profile,
 def supersonic_outflow():
     return BoundaryCondition(
         pre_reconstruction=[_InternalCopy()],
+        post_convective_flux=[],
         pre_viscous_grad=[]
     )
 
@@ -481,6 +568,7 @@ def supersonic_outflow():
 def slip_wall():
     return BoundaryCondition(
         pre_reconstruction=[_InternalCopyReflectNormal()],
+        post_convective_flux=[],
         pre_viscous_grad=[]
     )
 
@@ -488,6 +576,7 @@ def slip_wall():
 def adiabatic_no_slip_wall():
     return BoundaryCondition(
         pre_reconstruction=[_InternalCopyReflectNormal()],
+        post_convective_flux=[],
         pre_viscous_grad=[_InternalVelCopyReflect()]
     )
 
@@ -495,6 +584,7 @@ def adiabatic_no_slip_wall():
 def fixed_temperature_no_slip_wall(temperature):
     return BoundaryCondition(
         pre_reconstruction=[_InternalCopyReflectNormal()],
+        post_convective_flux=[],
         pre_viscous_grad=[_InternalVelCopyReflect(),
                           _FixTemperature(temperature)]
     )
@@ -503,6 +593,7 @@ def fixed_temperature_no_slip_wall(temperature):
 def subsonic_inflow(flow_state):
     return BoundaryCondition(
         pre_reconstruction=[_SubsonicInflow(flow_state)],
+        post_convective_flux=[],
         pre_viscous_grad=[]
     )
 
@@ -510,7 +601,160 @@ def subsonic_inflow(flow_state):
 def subsonic_outflow(pressure):
     return BoundaryCondition(
         pre_reconstruction=[_SubsonicOutflow(pressure)],
+        post_convective_flux=[],
         pre_viscous_grad=[]
+    )
+
+
+def constant_flux(flow_state):
+    return BoundaryCondition(
+        pre_reconstruction=[_FlowStateCopy(flow_state)],
+        post_convective_flux=[_ConstantFlux(flow_state)],
+        pre_viscous_grad=[]
+    )
+
+
+bow_shock_fit = constant_flux
+
+
+class GridMotionBoundaryCondition:
+    def __init__(self, direct, interp, constraint):
+        self._direct = direct
+        self._interp = interp
+        self._constraint = constraint
+
+    def as_dict(self):
+        dictionary = {}
+        direct_actions = []
+        for direct_action in self._direct:
+            direct_actions.append(direct_action.as_dict())
+        dictionary["direct"] = direct_actions
+
+        interp_actions = []
+        for interp_action in self._interp:
+            interp_actions.append(interp_action.as_dict())
+        dictionary["interp"] = interp_actions
+
+        constraints = []
+        for constraint in self._constraint:
+            constraints.append(constraint.as_dict())
+        dictionary["constraint"] = constraints
+
+        return dictionary
+
+
+class _FixedVelocity:
+    def __init__(self, velocity):
+        self._velocity = velocity
+
+    def as_dict(self):
+        return {
+            "type": "fixed_velocity",
+            "velocity": self._velocity.as_dict()
+        }
+
+
+class _WaveSpeed:
+    _json_values = ["scale", "shock_detection_threshold",
+                    "shock_detection_width"]
+    _defaults_file = "wave_speed.json"
+    __slots__ = _json_values + ["constraint"]
+
+    def __init__(self, **kwargs):
+        json_data = read_defaults(DEFAULTS_DIRECTORY, self._defaults_file)
+        for key in json_data:
+            setattr(self, key, json_data[key])
+
+        for key, value in kwargs.items():
+            setattr(self, key, value)
+
+    def as_dict(self):
+        return {
+            "type": "wave_speed",
+            "scale": self.scale,
+            "shock_detection_threshold": self.shock_detection_threshold,
+            "shock_detection_width": self.shock_detection_width,
+            "constraint": self.constraint.as_dict()
+        }
+
+
+class _InverseDistanceWeighting:
+    def __init__(self, sample_points, power=2):
+        self._power = power
+        self._sample_points = sample_points
+
+    def as_dict(self):
+        return {
+            "type": "IDW",
+            "power": self._power,
+            "sample_points": self._sample_points
+        }
+
+
+class Unconstrained:
+    def as_dict(self):
+        return {
+            "type": "none"
+        }
+
+
+class DirectionConstraint:
+    def __init__(self, direction):
+        self._direction = direction
+
+    def as_dict(self):
+        return {
+            "type": "direction",
+            "direction": self._direction.as_dict()
+        }
+
+
+class RadialConstraint:
+    def __init__(self, centre):
+        self._centre = centre
+
+    def as_dict(self):
+        return {
+            "type": "radial",
+            "centre": self._centre.as_dict()
+        }
+
+
+def shock_fit(scale=0.001, constraint=Unconstrained,
+              shock_detection_threshold=0.5, shock_detection_width=0.01):
+    return GridMotionBoundaryCondition(
+        direct=[
+            _WaveSpeed(scale=scale,
+                       shock_detection_width=shock_detection_width,
+                       shock_detection_threshold=shock_detection_threshold,
+                       constraint=constraint)
+        ],
+        interp=[],
+        constraint=[]
+    )
+
+
+def fixed_velocity(velocity):
+    return GridMotionBoundaryCondition(
+        direct=[_FixedVelocity(velocity)],
+        interp=[],
+        constraint=[]
+    )
+
+
+def interpolation(sample_points, power=2.0):
+    return GridMotionBoundaryCondition(
+        direct=[],
+        interp=[_InverseDistanceWeighting(sample_points, power)],
+        constraint=[]
+    )
+
+
+def constrained_interpolation(sample_points, constraint, power=2.0):
+    return GridMotionBoundaryCondition(
+        direct=[],
+        interp=[_InverseDistanceWeighting(sample_points, power)],
+        constraint=[constraint]
     )
 
 
@@ -886,6 +1130,7 @@ class IO:
         return {"flow_format": self.flow_format.value}
 
 
+
 class Config:
     _json_values = ["convective_flux", "viscous_flux", "solver", "grid",
                     "gas_model", "transport_properties", "io"]
@@ -951,6 +1196,7 @@ def main(file_name, res_dir):
     config = Config()
     namespace = {
         "config": config,
+        "Vector3": Vector3,
         "ConvectiveFlux": ConvectiveFlux,
         "ViscousFlux": ViscousFlux,
         "Ausmdv": Ausmdv,
@@ -972,6 +1218,7 @@ def main(file_name, res_dir):
         "IO": IO,
         "IOFormat": IOFormat,
         "supersonic_inflow": supersonic_inflow,
+        "bow_shock_fit": bow_shock_fit,
         "boundary_layer_inflow": boundary_layer_inflow,
         "supersonic_outflow": supersonic_outflow,
         "slip_wall": slip_wall,
@@ -982,6 +1229,14 @@ def main(file_name, res_dir):
         "BarthJespersen": BarthJespersen,
         "Unlimited": Unlimited,
         "ThermoInterp": ThermoInterp,
+        "ShockFitting": ShockFitting,
+        "RigidBodyTranslation": RigidBodyTranslation,
+        "shock_fit": shock_fit,
+        "fixed_velocity": fixed_velocity,
+        "constrained_interpolation": constrained_interpolation,
+        "interpolation": interpolation,
+        "DirectionConstraint": DirectionConstraint,
+        "RadialConstraint": RadialConstraint,
     }
 
     # run the user supplied script
