@@ -52,7 +52,7 @@ jobs:
     - uses: Jimver/cuda-toolkit@master
       id: cuda-toolkit
       with:
-        cuda: '12.2.0'
+        cuda: '12.6.1'
         sub-packages: '["nvcc"]'
         method: 'network'
 
