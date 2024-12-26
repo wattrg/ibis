@@ -52,6 +52,11 @@ add_subdirectory(extern/CLI11 EXCLUDE_FROM_ALL)
 find_package(Python COMPONENTS Interpreter Development REQUIRED)
 add_subdirectory(extern/pybind11 EXCLUDE_FROM_ALL)
 
+# MPI configuration
+if (Ibis_ENABLE_MPI)
+    add_compile_options(-DIbis_ENABLE_MPI)
+endif(Ibis_ENABLE_MPI)
+
 # tests configuration
 option(Ibis_BUILD_TESTS "Build Ibis CI tests" ON)
 if (Ibis_BUILD_TESTS)
@@ -78,6 +83,7 @@ add_subdirectory(src/solvers)
 add_subdirectory(src/io)
 add_subdirectory(src/python)
 add_subdirectory(src/simulation)
+add_subdirectory(src/parallel)
 add_subdirectory(share)
 
 # allow packaging to distribute a pre-compiled 
