@@ -11,6 +11,7 @@ target_link_libraries(
     Kokkos::kokkos 
     doctest
     util
+    MPI::MPI_CXX
 )
 
 target_include_directories(
@@ -24,6 +25,7 @@ if (Ibis_BUILD_TESTS)
         parallel_unittest
         test/unittest.cpp
         parallel/distributed_memory.cpp
+        parallel/mpi/ibis_mpi.cpp
     )
 
     target_include_directories(
@@ -38,7 +40,8 @@ if (Ibis_BUILD_TESTS)
         doctest
         Kokkos::kokkos
         parallel
+        MPI::MPI_CXX
     )
 
-    add_test(NAME parallel_unittest COMMAND mpirun -np 2 parallel_unittest)
+    add_test(NAME parallel_unittest COMMAND ${MPIEXEC_EXECUTABLE} ${MPIEXEC_NUMPROC_FLAG} 2 parallel_unittest)
 endif(Ibis_BUILD_TESTS)

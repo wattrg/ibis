@@ -50,7 +50,7 @@ public:
 
     Scalar reduce(Scalar& local_value);
 
-    // Scalar reduce(Scalar* local_values, size_t num_values);
+    void reduce(Scalar* local_values, Scalar* global_values, size_t num_values);
 
 public:
     using scalar_type = Scalar;

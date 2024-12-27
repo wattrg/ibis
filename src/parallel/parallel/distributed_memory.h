@@ -16,9 +16,9 @@ auto parallel_reduce(const std::string& str, const size_t work_count,
     return reducer.reduce(local_reduction);    
 }
 
-inline void parallel_reduce(const size_t work_count) {
-    parallel_reduce(work_count);
-}
+// inline void parallel_reduce(const size_t work_count) {
+//     parallel_reduce(work_count);
+// }
 
     
 }
