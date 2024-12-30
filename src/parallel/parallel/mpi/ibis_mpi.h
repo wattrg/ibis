@@ -4,6 +4,7 @@
 #ifdef Ibis_ENABLE_MPI
 
 #include <mpi.h>
+#include <parallel/reductions.h>
 
 namespace Ibis{
 namespace Distributed{
@@ -40,12 +41,7 @@ MpiTypeMapping(long double, MPI_LONG_DOUBLE)
 MpiTypeMapping(char, MPI_CHAR)
 
 
-
-
 // Reductions
-struct Min;
-struct Sum;
-
 template <typename Reduction>
 struct MpiReduction;
 
@@ -56,6 +52,7 @@ struct MpiReduction<reduction> {                       \
 };
 
 MpiReductionMapping(Min, MPI_MIN)
+MpiReductionMapping(Max, MPI_MAX)
 MpiReductionMapping(Sum, MPI_SUM)
 
 
@@ -80,6 +77,7 @@ public:
 
 public:
     using scalar_type = Scalar;
+    using reduction = Reduction;
 
 private:
     MPI_Comm comm_;
@@ -90,8 +88,10 @@ template <typename Scalar>
 using DistributedMin = DistributedReduction<Scalar, Min>;
 
 template <typename Scalar>
-using DistributedSum = DistributedReduction<Scalar, Sum>;
+using DistributedMax = DistributedReduction<Scalar, Max>;
 
+template <typename Scalar>
+using DistributedSum = DistributedReduction<Scalar, Sum>;
 
  
 }

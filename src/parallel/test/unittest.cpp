@@ -9,12 +9,14 @@
 int main(int argc, char* argv[]) {
     // MPI_Init(&argc, &argv);
     doctest::mpi_init_thread(argc,argv,MPI_THREAD_MULTIPLE);
-    doctest::Context ctx;
     Kokkos::initialize(argc, argv);
+    doctest::Context ctx;
+
     ctx.applyCommandLine(argc, argv);
     int res = ctx.run();
-    // MPI_Finalize();
-    doctest::mpi_finalize();
+
     Kokkos::finalize();
+    doctest::mpi_finalize();
+    // MPI_Finalize();
     return res;
 }
