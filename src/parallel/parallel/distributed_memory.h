@@ -48,6 +48,7 @@ inline auto parallel_reduce(const std::string& str, const size_t work_count,
     return reducer.reduce(local_reduction);
 }
 
+
     
 }
 }

@@ -4,6 +4,7 @@
 #ifdef Ibis_ENABLE_MPI
 
 #include <mpi.h>
+#include <Kokkos_Core.hpp>
 #include <parallel/reductions.h>
 
 namespace Ibis{
@@ -92,6 +93,63 @@ using DistributedMax = DistributedReduction<Scalar, Max>;
 
 template <typename Scalar>
 using DistributedSum = DistributedReduction<Scalar, Sum>;
+
+
+
+
+template <typename T, class MemSpace=Kokkos::DefaultExecutionSpace::memory_space>
+class SymmetricComm {
+public:
+    SymmetricComm(int other_rank, size_t buf_size) 
+    : other_rank_(other_rank), mpi_comm_(MPI_COMM_WORLD) {
+        send_buf_ = Kokkos::View<T*, MemSpace>("send_buf", buf_size);        
+        recv_buf_ = Kokkos::View<T*, MemSpace>("recv_buf", buf_size);        
+    }
+
+    SymmetricComm(int other_rank)
+    : other_rank_(other_rank), mpi_comm_(MPI_COMM_WORLD) {}  
+
+    void expect_receive() {
+        MPI_Irecv(recv_buf_.data(), recv_buf_.size(), mpi_type_,
+                  other_rank_, 0, mpi_comm_, &recv_request_);
+    }
+    
+    void send() {
+        MPI_Send(send_buf_.data(), send_buf_.size(),
+                 mpi_type_, other_rank_, 0, mpi_comm_);
+    }
+
+    MPI_Status receive() {
+        MPI_Status recv_status;
+        MPI_Wait(&recv_request_, &recv_status);
+        return recv_status;
+    }
+
+    void resize_buffers(size_t new_size) {
+        Kokkos::resize(send_buf_, new_size);
+        Kokkos::resize(recv_buf_, new_size);
+    }
+
+    const Kokkos::View<T*, MemSpace>& send_buf() const {
+        return send_buf_;
+    }
+
+    const Kokkos::View<T*, MemSpace>& recv_buf() const {
+        return recv_buf_;
+    }
+
+
+private:
+    // the send/receive buffers
+    Kokkos::View<T*, MemSpace> send_buf_;
+    Kokkos::View<T*, MemSpace> recv_buf_;
+
+    // some info for MPI
+    MPI_Request recv_request_;
+    MPI_Datatype mpi_type_ = Ibis::Distributed::MpiDataType<T>::value();
+    int other_rank_;
+    MPI_Comm mpi_comm_;
+};
 
  
 }
