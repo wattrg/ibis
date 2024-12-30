@@ -42,7 +42,7 @@ inline auto parallel_reduce(const std::string& str, const size_t work_count,
     using scalar_type = typename Reducer::scalar_type;
     using reduction = typename Reducer::reduction;
     using shared_reducer = typename SharedReducerMapping<scalar_type, reduction>::value;
-    scalar_type local_reduction;
+    scalar_type local_reduction = ReductionIdentity<scalar_type, reduction>::identity();
     shared_reducer local_reducer(local_reduction);
     Kokkos::parallel_reduce(str, work_count, functor, local_reducer);
     return reducer.reduce(local_reduction);

@@ -13,4 +13,14 @@ struct SharedReducerMapping<Scalar, Min> {
     using value = Kokkos::Min<Scalar>;
 };
 
+template <class Scalar>
+struct SharedReducerMapping<Scalar, Max> {
+    using value = Kokkos::Max<Scalar>;
+};
+
+template <class Scalar>
+struct SharedReducerMapping<Scalar, Sum> {
+    using value = Kokkos::Sum<Scalar>;
+};
+
 #endif
