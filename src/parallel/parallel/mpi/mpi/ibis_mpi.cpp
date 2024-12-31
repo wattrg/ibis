@@ -1,5 +1,5 @@
 #include <doctest/extensions/doctest_mpi.h>
-#include <ibis_mpi/ibis_mpi.h>
+#include <mpi/ibis_mpi.h>
 #include <util/numeric_types.h>
 
 #include <Kokkos_Core.hpp>

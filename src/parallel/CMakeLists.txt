@@ -2,7 +2,7 @@ add_library(
     parallel
     STATIC
     parallel/distributed_memory.cpp
-    parallel/mpi/ibis_mpi.cpp
+    parallel/shared_memory.cpp
 )
 
 target_link_libraries(
@@ -11,8 +11,16 @@ target_link_libraries(
     Kokkos::kokkos 
     doctest
     util
-    MPI::MPI_CXX
 )
+
+if (Ibis_ENABLE_MPI)
+    add_subdirectory(parallel/mpi)
+    target_link_libraries(
+        parallel
+        PUBLIC
+        ibis_mpi
+    )
+endif(Ibis_ENABLE_MPI)
 
 target_include_directories(
     parallel
@@ -25,7 +33,7 @@ if (Ibis_BUILD_TESTS)
         parallel_unittest
         test/unittest.cpp
         parallel/distributed_memory.cpp
-        parallel/mpi/ibis_mpi.cpp
+        parallel/shared_memory.cpp
     )
 
     target_include_directories(
@@ -40,8 +48,25 @@ if (Ibis_BUILD_TESTS)
         doctest
         Kokkos::kokkos
         parallel
-        MPI::MPI_CXX
     )
 
-    add_test(NAME parallel_unittest COMMAND ${MPIEXEC_EXECUTABLE} ${MPIEXEC_NUMPROC_FLAG} 2 parallel_unittest)
+    if (Ibis_ENABLE_MPI)
+        target_link_libraries(
+            parallel
+            PUBLIC
+            ibis_mpi
+        )
+        add_test(
+            NAME parallel_unittest
+            COMMAND ${MPIEXEC_EXECUTABLE} ${MPIEXEC_NUMPROC_FLAG} 2 parallel_unittest
+        )
+    else()
+        add_test(
+            NAME parallel_unittest
+            COMMAND parallel_unittest
+        )
+    endif(Ibis_ENABLE_MPI)
+
+    
+
 endif(Ibis_BUILD_TESTS)
