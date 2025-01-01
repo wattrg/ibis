@@ -60,17 +60,21 @@ MPI_TEST_CASE("MPI_comm", 2) {
     comm.expect_receive();
 
     auto send_buf = comm.send_buf();
+    auto send_buf_mirror = Kokkos::create_mirror_view(send_buf);
     for (int i = 0; i < 10; i++) {
-        send_buf(i) = (double)test_rank + (double)i;
+        send_buf_mirror(i) = (double)test_rank + (double)i;
     }
+    Kokkos::deep_copy(send_buf, send_buf_mirror);
 
     comm.send();
     comm.receive();
 
     auto recv_buf = comm.recv_buf();
+    auto recv_buf_mirror = Kokkos::create_mirror_view(recv_buf);
+    Kokkos::deep_copy(recv_buf_mirror, recv_buf);
     for (int i = 0; i < 10; i++) {
-        MPI_CHECK(0, recv_buf(i) == 1.0 + (double)i);
-        MPI_CHECK(1, recv_buf(i) == 0.0 + (double)i);
+        MPI_CHECK(0, recv_buf_mirror(i) == 1.0 + (double)i);
+        MPI_CHECK(1, recv_buf_mirror(i) == 0.0 + (double)i);
     }
 }
 
