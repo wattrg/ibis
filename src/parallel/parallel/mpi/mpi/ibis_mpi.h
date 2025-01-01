@@ -98,8 +98,7 @@ using DistributedMax = DistributedReduction<Max<Scalar>>;
 template <typename Scalar>
 using DistributedSum = DistributedReduction<Sum<Scalar>>;
 
-template <typename T, bool gpu_aware = false,
-          class MemSpace = Ibis::DefaultMemSpace>
+template <typename T, bool gpu_aware = false, class MemSpace = Ibis::DefaultMemSpace>
 class SymmetricComm {
 private:
     using view_type = Kokkos::View<T*, MemSpace>;
@@ -126,7 +125,6 @@ public:
         } else {
             MPI_Irecv(host_recv_buf_.data(), host_recv_buf_.size(), mpi_type_,
                       other_rank_, 0, mpi_comm_, &recv_request_);
-            
         }
     }
 
@@ -136,8 +134,8 @@ public:
                      mpi_comm_);
         } else {
             Kokkos::deep_copy(host_send_buf_, send_buf_);
-            MPI_Send(host_send_buf_.data(), host_send_buf_.size(), mpi_type_,
-                     other_rank_, 0, mpi_comm_);
+            MPI_Send(host_send_buf_.data(), host_send_buf_.size(), mpi_type_, other_rank_,
+                     0, mpi_comm_);
         }
     }
 
