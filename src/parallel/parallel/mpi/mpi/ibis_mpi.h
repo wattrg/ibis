@@ -4,6 +4,7 @@
 #ifdef Ibis_ENABLE_MPI
 
 #include <mpi.h>
+#include <parallel/parallel_fwd.h>
 #include <parallel/reductions.h>
 #include <util/types.h>
 
@@ -11,10 +12,6 @@
 
 namespace Ibis {
 namespace Distributed {
-
-// Used as template parameter to determine which distributed memory
-// paradigm to use
-struct Mpi;
 
 // MPI data types
 template <typename Type>
@@ -61,7 +58,7 @@ struct MpiReduction<Sum<T>> {
 };
 
 template <class Reduction>
-struct DistributedReduction {
+struct DistributedReduction<Reduction, Mpi> {
 public:
     using Scalar = typename Reduction::scalar_type;
     using scalar_type = Scalar;
@@ -72,14 +69,14 @@ public:
 
     DistributedReduction(MPI_Comm comm) : comm_(comm) {}
 
-    Scalar reduce(Scalar& local_value) {
+    inline Scalar reduce(Scalar& local_value) {
         Scalar global_min;
         MPI_Datatype mpi_type = Ibis::Distributed::MpiDataType<Scalar>::value();
         MPI_Allreduce(&local_value, &global_min, 1, mpi_type, mpi_op_, comm_);
         return global_min;
     }
 
-    void reduce(Scalar* local_values, Scalar* global_values, size_t num_values) {
+    inline void reduce(Scalar* local_values, Scalar* global_values, size_t num_values) {
         MPI_Datatype mpi_type = Ibis::Distributed::MpiDataType<Scalar>::value();
         MPI_Allreduce(local_values, global_values, num_values, mpi_type, mpi_op_, comm_);
     }
@@ -88,15 +85,6 @@ private:
     MPI_Comm comm_;
     MPI_Op mpi_op_ = MpiReduction<Reduction>::op();
 };
-
-template <typename Scalar>
-using DistributedMin = DistributedReduction<Min<Scalar>>;
-
-template <typename Scalar>
-using DistributedMax = DistributedReduction<Max<Scalar>>;
-
-template <typename Scalar>
-using DistributedSum = DistributedReduction<Sum<Scalar>>;
 
 template <typename T, bool gpu_aware = false, class MemSpace = Ibis::DefaultMemSpace>
 class SymmetricComm {

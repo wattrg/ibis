@@ -1,5 +1,6 @@
 #include <doctest/extensions/doctest_mpi.h>
 #include <mpi/ibis_mpi.h>
+#include <parallel/parallel.h>
 #include <util/numeric_types.h>
 
 #include <Kokkos_Core.hpp>
@@ -8,7 +9,7 @@
 #ifdef Ibis_ENABLE_MPI
 
 MPI_TEST_CASE("MPI_Min_scalar", 2) {
-    Ibis::Distributed::DistributedMin<double> mpi_min;
+    Ibis::DistributedMin<double, Mpi> mpi_min;
 
     double x = 1.0 + test_rank;
     MPI_CHECK(0, x == 1.0);
@@ -20,7 +21,7 @@ MPI_TEST_CASE("MPI_Min_scalar", 2) {
 }
 
 MPI_TEST_CASE("MPI_Min_array", 2) {
-    Ibis::Distributed::DistributedMin<double> mpi_min;
+    Ibis::DistributedMin<double, Mpi> mpi_min;
 
     std::vector<double> local_values{1.0 + test_rank, 2.0 + test_rank};
     std::vector<double> global_values(2);
@@ -31,7 +32,7 @@ MPI_TEST_CASE("MPI_Min_array", 2) {
 }
 
 MPI_TEST_CASE("MPI_Sum_scalar", 2) {
-    Ibis::Distributed::DistributedSum<double> mpi_sum;
+    Ibis::DistributedSum<double, Mpi> mpi_sum;
 
     double x = 1.0 + test_rank;
     MPI_CHECK(0, x == 1.0);
@@ -43,7 +44,7 @@ MPI_TEST_CASE("MPI_Sum_scalar", 2) {
 }
 
 MPI_TEST_CASE("MPI_Min_array", 2) {
-    Ibis::Distributed::DistributedSum<double> mpi_sum;
+    Ibis::DistributedSum<double, Mpi> mpi_sum;
 
     std::vector<double> local_values{1.0 + test_rank, 2.0 + test_rank};
     std::vector<double> global_values(2);

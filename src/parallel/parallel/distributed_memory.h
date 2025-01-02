@@ -10,10 +10,13 @@
 #include <mpi/ibis_mpi.h>
 #endif
 
-#ifdef Ibis_ENABLE_MPI
-
 namespace Ibis {
-namespace Distributed {
+
+template <class SharedPolicy, class MemModel>
+struct Policy {
+    using shared_policy = SharedPolicy;
+    using mem_model = MemModel;
+};
 
 template <class ReducerType, class FunctorType>
 inline auto parallel_reduce(const std::string& str, const size_t work_count,
@@ -25,7 +28,7 @@ inline auto parallel_reduce(const std::string& str, const size_t work_count,
         Ibis::Shared::parallel_reduce<ReducerType>(str, work_count, functor);
 
     // The distributed part of the reduction
-    DistributedReduction<ReducerType> reducer;
+    Distributed::DistributedReduction<ReducerType, DefaultMemModel> reducer;
     return reducer.reduce(local_reduction);
 }
 
@@ -39,12 +42,10 @@ inline auto parallel_reduce(const std::string& str, PolicyType policy,
         Ibis::Shared::parallel_reduce<ReducerType>(str, policy, functor);
 
     // The distributed part of the reduction
-    DistributedReduction<ReducerType> reducer;
+    Distributed::DistributedReduction<ReducerType, DefaultMemModel> reducer;
     return reducer.reduce(local_reduction);
 }
 
-}  // namespace Distributed
 }  // namespace Ibis
 
-#endif
 #endif

@@ -41,5 +41,8 @@ if (Ibis_BUILD_TESTS)
         MPI::MPI_CXX
         parallel
     )
-    add_test(NAME mpi_unittest COMMAND ${MPIEXEC_EXECUTABLE} ${MPIEXEC_NUMPROC_FLAG} 2 mpi_unittest)
+    add_test(
+        NAME mpi_unittest
+        COMMAND ${MPIEXEC_EXECUTABLE} ${MPIEXEC_NUMPROC_FLAG} 2 mpi_unittest
+    )
 endif(Ibis_BUILD_TESTS)

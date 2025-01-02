@@ -6,9 +6,10 @@
 #include <util/numeric_types.h>
 
 #ifdef Ibis_ENABLE_MPI
+#ifdef Ibis_ENABLE_DISTRIBUTED_MEMORY
 
 MPI_TEST_CASE("MPI_Min_scalar", 2) {
-    double result = Ibis::Distributed::parallel_reduce<Min<double>>(
+    double result = Ibis::parallel_reduce<Min<double>>(
         "test", 10, KOKKOS_LAMBDA(const int i, double& utd) {
             utd = Ibis::min(utd, (double)test_rank + i);
         });
@@ -18,7 +19,7 @@ MPI_TEST_CASE("MPI_Min_scalar", 2) {
 }
 
 MPI_TEST_CASE("MPI_Sum_scalar", 2) {
-    double result = Ibis::Distributed::parallel_reduce<Sum<double>>(
+    double result = Ibis::parallel_reduce<Sum<double>>(
         "test", 10, KOKKOS_LAMBDA(const int i, double& utd) {
             utd += (double)i + (double)test_rank;
         });
@@ -28,7 +29,7 @@ MPI_TEST_CASE("MPI_Sum_scalar", 2) {
 }
 
 MPI_TEST_CASE("MPI_Max_scalar", 2) {
-    double result = Ibis::Distributed::parallel_reduce<Max<double>>(
+    double result = Ibis::parallel_reduce<Max<double>>(
         "test", 10, KOKKOS_LAMBDA(const int i, double& utd) {
             utd = Ibis::max(utd, (double)test_rank + i);
         });
@@ -37,4 +38,5 @@ MPI_TEST_CASE("MPI_Max_scalar", 2) {
     MPI_CHECK(0, result == 10.0);
 }
 
+#endif
 #endif

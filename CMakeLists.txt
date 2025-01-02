@@ -56,7 +56,7 @@ add_subdirectory(extern/pybind11 EXCLUDE_FROM_ALL)
 if (Ibis_ENABLE_MPI)
     find_package(MPI COMPONENTS CXX)
     include_directories(SYSTEM ${MPI_INCLUDE_PATH})
-    add_compile_options(-DIbis_ENABLE_MPI)
+    add_compile_definitions(Ibis_ENABLE_MPI)
 endif(Ibis_ENABLE_MPI)
 
 # tests configuration

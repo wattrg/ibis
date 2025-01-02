@@ -1,0 +1,20 @@
+#ifndef IBIS_PARALLEL_FWD_H
+#define IBIS_PARALLEL_FWS_H
+
+#include <parallel/shared_memory_fwd.h>
+
+#ifdef Ibis_ENABLE_MPI
+#include <mpi/ibis_mpi_fwd.h>
+#endif
+
+namespace Ibis {
+
+#ifdef Ibis_ENABLE_MPI
+using DefaultMemModel = Mpi;
+#else
+using DefaultMemModel = SharedMem;
+#endif
+
+}  // namespace Ibis
+
+#endif
