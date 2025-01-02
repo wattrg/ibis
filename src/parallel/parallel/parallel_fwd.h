@@ -9,8 +9,10 @@
 
 namespace Ibis {
 
+#ifdef Ibis_ENABLE_DISTRIBUTED_MEMORY
 #ifdef Ibis_ENABLE_MPI
 using DefaultMemModel = Mpi;
+#endif
 #else
 using DefaultMemModel = SharedMem;
 #endif
