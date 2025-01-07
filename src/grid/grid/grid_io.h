@@ -34,6 +34,8 @@ struct ElemIO {
     ElemIO(std::vector<size_t> ids, ElemType type, FaceOrder face_order)
         : vertex_ids_(ids), cell_type_(type), face_order_(face_order) {}
 
+    ElemIO(ElemIO& other);
+
     bool operator==(const ElemIO &other) const {
         return (vertex_ids_ == other.vertex_ids_) && (cell_type_ == other.cell_type_);
     }
@@ -50,6 +52,11 @@ private:
     std::vector<size_t> vertex_ids_{};
     ElemType cell_type_;
     FaceOrder face_order_;
+};
+
+struct MappedCell {
+    size_t block_id;
+    size_t local_cell_id;
 };
 
 struct GridIO {
@@ -89,6 +96,10 @@ private:
     std::vector<ElemIO> cells_{};
     std::unordered_map<std::string, std::vector<ElemIO>> markers_;
     size_t dim_;
+
+    // for partitioned grids, we need to know which cells connect
+    // to cells in a different block
+    std::unordered_map<size_t, MappedCell> cell_mapping_;
 };
 
 #endif

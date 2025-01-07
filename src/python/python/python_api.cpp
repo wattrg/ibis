@@ -67,4 +67,7 @@ PYBIND11_MODULE(python_api, m) {
     pybind11::class_<Rusanov<Ibis::real>>(m, "PyRusanov")
         .def(pybind11::init<>())
         .def("name", &Rusanov<Ibis::real>::name);
+
+    // GridIO
+    pybind11::class_<GridIO>(m, "GridIO").def(pybind11::init<std::string>());
 }

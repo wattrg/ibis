@@ -52,11 +52,28 @@ add_subdirectory(extern/CLI11 EXCLUDE_FROM_ALL)
 find_package(Python COMPONENTS Interpreter Development REQUIRED)
 add_subdirectory(extern/pybind11 EXCLUDE_FROM_ALL)
 
+# Find METIS
+option(Ibis_ENABLE_METIS "Enable using METIS" ON)
+if (Ibis_ENABLE_METIS)
+    list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake/modules")
+    find_package(METIS)
+    if (METIS_FOUND)
+        add_compile_definitions(Ibis_ENABLE_METIS)
+    else()
+        MESSAGE(WARNING "METIS not found, continuing without it")
+    endif(METIS_FOUND)
+endif(Ibis_ENABLE_METIS)
+
 # MPI configuration
+option(Ibis_ENABLE_MPI "Enable using MPI" ON)
 if (Ibis_ENABLE_MPI)
     find_package(MPI COMPONENTS CXX)
-    include_directories(SYSTEM ${MPI_INCLUDE_PATH})
-    add_compile_definitions(Ibis_ENABLE_MPI)
+    if (MPI_FOUND)
+        include_directories(SYSTEM ${MPI_INCLUDE_PATH})
+        add_compile_definitions(Ibis_ENABLE_MPI)
+    else ()
+        MESSAGE(WARNING "MPI not found, continuing without it")
+    endif (MPI_FOUND)
 endif(Ibis_ENABLE_MPI)
 
 # tests configuration

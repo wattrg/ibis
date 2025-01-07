@@ -8,6 +8,7 @@ add_library(
 	grid/cell.cpp
 	grid/geom.cpp
 	grid/gradient.cpp
+	grid/partition.cpp
 )
 
 target_include_directories(
@@ -26,6 +27,11 @@ target_link_libraries(
 	spdlog::spdlog
 	gas
 )
+
+if (METIS_FOUND)
+    # target_include_directories(grid PRIVATE SYSTEM ${METIS_INCLUDE_PATH})
+    target_link_libraries(grid PRIVATE ${METIS_LIBRARIES})
+endif(METIS_FOUND)
 
 if (Ibis_BUILD_TESTS)
     add_executable(
@@ -50,6 +56,6 @@ if (Ibis_BUILD_TESTS)
         spdlog::spdlog
         grid
     )
-    
+   
     add_test(NAME grid_unittest COMMAND grid_unittest)
 endif(Ibis_BUILD_TESTS)

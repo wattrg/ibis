@@ -5,6 +5,12 @@
 #include <stdexcept>
 #include <string>
 
+ElemIO::ElemIO(ElemIO& other) {
+    vertex_ids_(other.vertex_ids_);
+    cell_type_ = other.cell_type_;
+    face_order_ = other.face_order_;
+}
+
 GridFileType file_type_from_name(std::string file_name) {
     std::size_t pos = file_name.find_last_of(".");
     std::string ext;
