@@ -5,8 +5,8 @@
 #include <stdexcept>
 #include <string>
 
-ElemIO::ElemIO(ElemIO& other) {
-    vertex_ids_(other.vertex_ids_);
+ElemIO::ElemIO(const ElemIO& other) : vertex_ids_(other.vertex_ids_) {
+    // vertex_ids_(other.vertex_ids_};
     cell_type_ = other.cell_type_;
     face_order_ = other.face_order_;
 }

@@ -34,7 +34,7 @@ struct ElemIO {
     ElemIO(std::vector<size_t> ids, ElemType type, FaceOrder face_order)
         : vertex_ids_(ids), cell_type_(type), face_order_(face_order) {}
 
-    ElemIO(ElemIO& other);
+    ElemIO(const ElemIO& other);
 
     bool operator==(const ElemIO &other) const {
         return (vertex_ids_ == other.vertex_ids_) && (cell_type_ == other.cell_type_);
