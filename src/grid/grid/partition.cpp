@@ -39,8 +39,13 @@ std::vector<GridIO> partition_metis(GridIO& monolithic_grid, size_t n_partitions
     
     // build the partitioned grids
     std::vector<GridIO> grids(nparts);
+    std::vector<std::vector<size_t>> cells_in_partition(n_partitions);
     for (size_t cell_i = 0; cell_i < monolithic_grid.cells().size(); cell_i++) {
-        
+        size_t cell_i_partition = partitions[cell_i];
+        cells_in_partition[cell_i_partition].push_back(cell_i);
+    }
+    for (size_t partition_i = 0; partition_i < n_partitions; partition_i++) {
+        grids[partition_i] = GridIO(monolithic_grid, cells_in_partition[partition_i]);
     }
     
 

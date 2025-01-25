@@ -11,6 +11,13 @@ ElemIO::ElemIO(const ElemIO& other) : vertex_ids_(other.vertex_ids_) {
     face_order_ = other.face_order_;
 }
 
+ElemIO& ElemIO::operator=(const ElemIO& other) {
+    vertex_ids_.assign(other.vertex_ids_.begin(), other.vertex_ids_.end());
+    cell_type_ = other.cell_type_;
+    face_order_ = other.face_order_;
+    return *this;
+}
+
 GridFileType file_type_from_name(std::string file_name) {
     std::size_t pos = file_name.find_last_of(".");
     std::string ext;
@@ -120,6 +127,43 @@ GridIO::GridIO(std::string file_name) {
             break;
     }
     grid_file.close();
+}
+
+
+GridIO::GridIO(const GridIO& monolithic_grid,
+               const std::vector<size_t>& cells_to_include) {
+    dim_ = monolithic_grid.dim_;
+    size_t num_cells = cells_to_include.size();
+    cells_.reserve(num_cells);
+
+    // maps global_vertex_id -> local_vertex_id
+    std::unordered_map<size_t, size_t> vertex_map; 
+
+    for (size_t local_cell_i = 0; local_cell_i < num_cells; local_cell_i++) {
+        // gather the information about the global cell
+        size_t global_cell_i = cells_to_include[local_cell_i];
+        ElemIO global_elem_io = monolithic_grid.cells()[local_cell_i];
+        std::vector<size_t> global_vertex_ids = global_elem_io.vertex_ids();
+
+        // gather the list of local vertices for this cell
+        std::vector<size_t> local_vertex_ids;
+        for (auto& global_vertex : global_vertex_ids) {
+            if (vertex_map.find(global_vertex) == vertex_map.end()) {
+                // we haven't encountered this vertex in this partition yet,
+                // so we'll add it now
+                vertex_map[global_vertex] = vertex_map.size();
+                vertices_.push_back(monolithic_grid.vertices()[global_vertex]);
+            }
+            local_vertex_ids.push_back(vertex_map[global_vertex]);
+        }
+
+        // At this point, we have the information to build the local cell
+        cells_.push_back(
+            ElemIO(local_vertex_ids, global_elem_io.cell_type(), global_elem_io.face_order())
+        );
+    }
+
+    // TODO: setup the markers for this partition
 }
 
 void trim_whitespace(std::string &str) {

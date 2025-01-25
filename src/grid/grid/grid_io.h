@@ -36,6 +36,8 @@ struct ElemIO {
 
     ElemIO(const ElemIO& other);
 
+    ElemIO& operator=(const ElemIO& other);
+
     bool operator==(const ElemIO &other) const {
         return (vertex_ids_ == other.vertex_ids_) && (cell_type_ == other.cell_type_);
     }
@@ -43,6 +45,8 @@ struct ElemIO {
     std::vector<size_t> vertex_ids() const { return vertex_ids_; }
 
     ElemType cell_type() const { return cell_type_; }
+
+    FaceOrder face_order() const { return face_order_; }
 
     std::vector<ElemIO> interfaces() const;
 
@@ -70,6 +74,8 @@ public:
         : vertices_(vertices), cells_(cells), markers_(markers) {}
 
     GridIO(std::string file_name);
+
+    GridIO(const GridIO& monolithic_grid, const std::vector<size_t>& cells_to_include);
 
     GridIO() {}
 
