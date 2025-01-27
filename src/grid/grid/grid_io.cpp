@@ -142,7 +142,7 @@ GridIO::GridIO(const GridIO& monolithic_grid,
     for (size_t local_cell_i = 0; local_cell_i < num_cells; local_cell_i++) {
         // gather the information about the global cell
         size_t global_cell_i = cells_to_include[local_cell_i];
-        ElemIO global_elem_io = monolithic_grid.cells()[local_cell_i];
+        ElemIO global_elem_io = monolithic_grid.cells()[global_cell_i];
         std::vector<size_t> global_vertex_ids = global_elem_io.vertex_ids();
 
         // gather the list of local vertices for this cell

@@ -1,5 +1,5 @@
 #ifndef IBIS_PARALLEL_FWD_H
-#define IBIS_PARALLEL_FWS_H
+#define IBIS_PARALLEL_FWD_H
 
 #include <parallel/shared_memory_fwd.h>
 

@@ -1,7 +1,8 @@
+#ifdef Ibis_ENABLE_METIS
+
 #include <metis.h>
 #include <grid/partition.h>
 
-#ifdef Ibis_ENABLE_METIS
 std::vector<GridIO> partition_metis(GridIO& monolithic_grid, size_t n_partitions) {
     // construct information in the form METIS expects it
     idx_t ne = monolithic_grid.cells().size();
