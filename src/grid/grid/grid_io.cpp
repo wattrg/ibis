@@ -163,7 +163,29 @@ GridIO::GridIO(const GridIO& monolithic_grid,
         );
     }
 
-    // TODO: setup the markers for this partition
+    // setup the local markers for this partition
+    for (const auto& [tag, global_elems] : monolithic_grid.markers_) {
+        std::vector<ElemIO> local_elems;
+        for (const ElemIO& global_elem : global_elems) {
+            std::vector<size_t> local_vertices;
+            bool elem_in_this_partition = false;
+            for (const size_t& global_vertex : global_elem.vertex_ids()) {
+                if (vertex_map.find(global_vertex) != vertex_map.end()) {
+                    // this vertex is in this partition, so this
+                    // marker should exist in this partition.
+                    elem_in_this_partition = true;
+                    local_vertices.push_back(vertex_map[global_vertex]);
+                }
+            }
+            if (elem_in_this_partition) {
+                local_elems.push_back(ElemIO(local_vertices,
+                                             global_elem.cell_type(),
+                                             global_elem.face_order()));
+            }
+        }
+    }
+
+    // TODO: setup the cell mapping
 }
 
 void trim_whitespace(std::string &str) {
