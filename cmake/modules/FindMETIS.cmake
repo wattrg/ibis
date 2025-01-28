@@ -51,6 +51,7 @@ else(METIS_LIBRARIES AND METIS_INCLUDE_DIRS)
     #
     set(metis_inc_names "metis.h")
     if (METIS_INCLUDE_DIR)
+        message("METIS_INCLUDE_DIR=${METIS_INCLUDE_DIR}")
 
         if (EXISTS "${METIS_INCLUDE_DIR}")
 
@@ -68,13 +69,10 @@ else(METIS_LIBRARIES AND METIS_INCLUDE_DIRS)
             set(METIS_INCLUDE_DIR "METIS_INCLUDE_DIR-NOTFOUND")
         endif()
 
-   else()
-
-# Metis sometimes puts the include files in a subdir called Lib
-
+    else()
+        # Metis sometimes puts the include files in a subdir called Lib
         set(metis_inc_suffixes "include" "Lib")
         if(METIS_DIR)
-
             if (EXISTS "${METIS_DIR}" )
 
                 find_path(METIS_INCLUDE_DIR
