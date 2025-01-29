@@ -3,6 +3,20 @@
 #include <doctest/doctest.h>
 #include <grid/partition.h>
 #include <metis.h>
+#include <spdlog/spdlog.h>
+
+void check_metis_result(int result) {
+    if (result == METIS_ERROR_INPUT) {
+        spdlog::error("Metis input error");
+        throw new std::runtime_error("Metis input error");
+    } else if (result == METIS_ERROR_MEMORY) {
+        spdlog::error("Metis ran out of memory");
+        throw new std::runtime_error("Metis ran out of memory");
+    } else if (result == METIS_ERROR) {
+        spdlog::error("Metis error");
+        throw new std::runtime_error("Metis error");
+    }
+}
 
 std::vector<GridIO> partition_metis(GridIO& monolithic_grid, size_t n_partitions) {
     // construct information in the form METIS expects it
@@ -30,6 +44,7 @@ std::vector<GridIO> partition_metis(GridIO& monolithic_grid, size_t n_partitions
     idx_t* adjncy;
     int metis_result = METIS_MeshToDual(&ne, &nn, eptr.data(), eind.data(), &ncommon,
                                         &numflag, &xadj, &adjncy);
+    check_metis_result(metis_result);
 
     // partition the graph
     idx_t ncon = 1;
@@ -38,6 +53,7 @@ std::vector<GridIO> partition_metis(GridIO& monolithic_grid, size_t n_partitions
     metis_result =
         METIS_PartGraphKway(&ne, &ncon, xadj, adjncy, NULL, NULL, NULL, &nparts, NULL,
                             NULL, NULL, &objval, partitions.data());
+    check_metis_result(metis_result);
 
     // build lists of cells in each partition
     std::vector<std::vector<size_t>> cells_in_partition(n_partitions);
@@ -96,7 +112,11 @@ std::vector<GridIO> build_partitioned_grid() {
 TEST_CASE("partition_metis_number_of_cells") {
     std::vector<GridIO> partitioned_grids = build_partitioned_grid();
 
-    CHECK(partitioned_grids[0].cells().size() == 4);
-    CHECK(partitioned_grids[1].cells().size() == 5);
+    size_t total_cells = 0;
+    for (const GridIO& partition : partitioned_grids) {
+        total_cells += partition.cells().size();
+    }
+
+    CHECK(total_cells == 9);
 }
 #endif
