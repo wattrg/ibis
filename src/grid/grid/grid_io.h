@@ -84,7 +84,8 @@ public:
 
     GridIO(const GridIO& monolithic_grid,
            const std::vector<size_t>& cells_to_include,
-           const std::vector<CellMapping>&& cell_mapping);
+           const std::vector<CellMapping>&& cell_mapping,
+           size_t id);
 
     GridIO() {}
 

@@ -44,6 +44,7 @@ if (Ibis_BUILD_TESTS)
         grid/vertex.cpp
         grid/geom.cpp
         grid/gradient.cpp
+        grid/partition.cpp
     )
 
     target_link_libraries(
