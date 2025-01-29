@@ -37,6 +37,31 @@ std::vector<GridIO> partition_metis(GridIO& monolithic_grid, size_t n_partitions
     metis_result = METIS_PartGraphKway(&ne, &ncon, xadj, adjncy, NULL, NULL, NULL,
                                        &nparts, NULL, NULL, NULL, &objval,
                                        partitions.data());
+
+    // build cell mappings
+    std::vector<std::vector<CellMapping>> cell_mapping(n_partitions);
+    for (size_t cell_i = 0; cell_i < monolithic_grid.cells().size(); cell_i++) {
+        size_t this_cell_partition = partitions[cell_i];
+        size_t ngbr_idx_start = xadj[cell_i];
+        size_t ngbr_idx_end = xadj[cell_i + 1];
+        size_t num_ngbr = ngbr_idx_end - ngbr_idx_start;
+        for (size_t ngbr_i = 0; ngbr_i < num_ngbr; ngbr_i++) {
+            size_t ngbr_id = adjncy[ngbr_idx_start + ngbr_i]; 
+            size_t ngbr_partition = partitions[ngbr_id];
+            if (this_cell_partition != ngbr_partition) {
+                cell_mapping[this_cell_partition].push_back(
+                    CellMapping{this_cell_partition, ngbr_partition, ngbr_id}
+                );
+            }
+        }
+    }
+
+    // METIS allocated memory for xadj and adjncy, but we are responsible
+    // for cleaning up the memory. We don't need them anymore, so we'll
+    // free the memory now.
+    // I don't know what the difference between METIS_Free and plain free is...
+    METIS_Free(xadj);
+    METIS_Free(adjncy);
     
     // build the partitioned grids
     std::vector<GridIO> grids(nparts);
@@ -46,15 +71,12 @@ std::vector<GridIO> partition_metis(GridIO& monolithic_grid, size_t n_partitions
         cells_in_partition[cell_i_partition].push_back(cell_i);
     }
     for (size_t partition_i = 0; partition_i < n_partitions; partition_i++) {
-        grids[partition_i] = GridIO(monolithic_grid, cells_in_partition[partition_i]);
+        grids[partition_i] = GridIO(monolithic_grid,
+                                    cells_in_partition[partition_i],
+                                    std::move(cell_mapping[partition_i]));
     }
     
 
-    // METIS allocated memory for xadj and adjncy, but we are responsible
-    // for cleaning up the memory.
-    // I don't know what the difference between METIS_Free and plain free is...
-    METIS_Free(xadj);
-    METIS_Free(adjncy);
     return grids;
 }
 #endif

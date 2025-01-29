@@ -58,9 +58,16 @@ private:
     FaceOrder face_order_;
 };
 
-struct MappedCell {
-    size_t block_id;
-    size_t local_cell_id;
+struct CellMapping {
+    size_t local_cell;
+    size_t other_block;
+    size_t other_cell;
+
+    CellMapping(size_t local_cell_, size_t other_block_, size_t other_cell_)
+        : local_cell(local_cell_),
+          other_block(other_block_),
+          other_cell(other_cell_)
+    {}
 };
 
 struct GridIO {
@@ -75,7 +82,9 @@ public:
 
     GridIO(std::string file_name);
 
-    GridIO(const GridIO& monolithic_grid, const std::vector<size_t>& cells_to_include);
+    GridIO(const GridIO& monolithic_grid,
+           const std::vector<size_t>& cells_to_include,
+           const std::vector<CellMapping>&& cell_mapping);
 
     GridIO() {}
 
@@ -94,6 +103,8 @@ public:
 
     size_t dim() const { return dim_; }
 
+    size_t id() const { return id_; }
+
     void read_su2_grid(std::istream &grid_file);
     void write_su2_grid(std::ostream &grid_file);
 
@@ -102,10 +113,11 @@ private:
     std::vector<ElemIO> cells_{};
     std::unordered_map<std::string, std::vector<ElemIO>> markers_;
     size_t dim_;
-
+    size_t id_ = 0;
+    
     // for partitioned grids, we need to know which cells connect
-    // to cells in a different block
-    std::unordered_map<size_t, MappedCell> cell_mapping_;
+    // to cells in a different block.
+    std::vector<CellMapping> cell_mapping_;
 };
 
 #endif

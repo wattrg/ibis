@@ -131,8 +131,11 @@ GridIO::GridIO(std::string file_name) {
 
 
 GridIO::GridIO(const GridIO& monolithic_grid,
-               const std::vector<size_t>& cells_to_include) {
+               const std::vector<size_t>& cells_to_include,
+               const std::vector<CellMapping>&& cell_mapping)
+    : cell_mapping_(cell_mapping) {
     dim_ = monolithic_grid.dim_;
+    id_ = monolithic_grid.id_;
     size_t num_cells = cells_to_include.size();
     cells_.reserve(num_cells);
 
