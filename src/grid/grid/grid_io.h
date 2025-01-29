@@ -34,9 +34,9 @@ struct ElemIO {
     ElemIO(std::vector<size_t> ids, ElemType type, FaceOrder face_order)
         : vertex_ids_(ids), cell_type_(type), face_order_(face_order) {}
 
-    ElemIO(const ElemIO& other);
+    ElemIO(const ElemIO &other);
 
-    ElemIO& operator=(const ElemIO& other);
+    ElemIO &operator=(const ElemIO &other);
 
     bool operator==(const ElemIO &other) const {
         return (vertex_ids_ == other.vertex_ids_) && (cell_type_ == other.cell_type_);
@@ -64,10 +64,7 @@ struct CellMapping {
     size_t other_cell;
 
     CellMapping(size_t local_cell_, size_t other_block_, size_t other_cell_)
-        : local_cell(local_cell_),
-          other_block(other_block_),
-          other_cell(other_cell_)
-    {}
+        : local_cell(local_cell_), other_block(other_block_), other_cell(other_cell_) {}
 };
 
 struct GridIO {
@@ -82,10 +79,8 @@ public:
 
     GridIO(std::string file_name);
 
-    GridIO(const GridIO& monolithic_grid,
-           const std::vector<size_t>& cells_to_include,
-           const std::vector<CellMapping>&& cell_mapping,
-           size_t id);
+    GridIO(const GridIO &monolithic_grid, const std::vector<size_t> &cells_to_include,
+           const std::vector<CellMapping> &&cell_mapping, size_t id);
 
     GridIO() {}
 
@@ -115,7 +110,7 @@ private:
     std::unordered_map<std::string, std::vector<ElemIO>> markers_;
     size_t dim_;
     size_t id_ = 0;
-    
+
     // for partitioned grids, we need to know which cells connect
     // to cells in a different block.
     std::vector<CellMapping> cell_mapping_;

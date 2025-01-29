@@ -5,13 +5,13 @@
 #include <stdexcept>
 #include <string>
 
-ElemIO::ElemIO(const ElemIO& other) : vertex_ids_(other.vertex_ids_) {
+ElemIO::ElemIO(const ElemIO &other) : vertex_ids_(other.vertex_ids_) {
     // vertex_ids_(other.vertex_ids_};
     cell_type_ = other.cell_type_;
     face_order_ = other.face_order_;
 }
 
-ElemIO& ElemIO::operator=(const ElemIO& other) {
+ElemIO &ElemIO::operator=(const ElemIO &other) {
     vertex_ids_.assign(other.vertex_ids_.begin(), other.vertex_ids_.end());
     cell_type_ = other.cell_type_;
     face_order_ = other.face_order_;
@@ -129,20 +129,16 @@ GridIO::GridIO(std::string file_name) {
     grid_file.close();
 }
 
-
-GridIO::GridIO(const GridIO& monolithic_grid,
-               const std::vector<size_t>& cells_to_include,
-               const std::vector<CellMapping>&& cell_mapping,
-               size_t id)
-    : id_(id), cell_mapping_(cell_mapping)
- {
+GridIO::GridIO(const GridIO &monolithic_grid, const std::vector<size_t> &cells_to_include,
+               const std::vector<CellMapping> &&cell_mapping, size_t id)
+    : id_(id), cell_mapping_(cell_mapping) {
     dim_ = monolithic_grid.dim_;
     id_ = monolithic_grid.id_;
     size_t num_cells = cells_to_include.size();
     cells_.reserve(num_cells);
 
     // maps global_vertex_id -> local_vertex_id
-    std::unordered_map<size_t, size_t> vertex_map; 
+    std::unordered_map<size_t, size_t> vertex_map;
 
     for (size_t local_cell_i = 0; local_cell_i < num_cells; local_cell_i++) {
         // gather the information about the global cell
@@ -152,7 +148,7 @@ GridIO::GridIO(const GridIO& monolithic_grid,
 
         // gather the list of local vertices for this cell
         std::vector<size_t> local_vertex_ids;
-        for (auto& global_vertex : global_vertex_ids) {
+        for (auto &global_vertex : global_vertex_ids) {
             if (vertex_map.find(global_vertex) == vertex_map.end()) {
                 // we haven't encountered this vertex in this partition yet,
                 // so we'll add it now
@@ -163,18 +159,17 @@ GridIO::GridIO(const GridIO& monolithic_grid,
         }
 
         // At this point, we have the information to build the local cell
-        cells_.push_back(
-            ElemIO(local_vertex_ids, global_elem_io.cell_type(), global_elem_io.face_order())
-        );
+        cells_.push_back(ElemIO(local_vertex_ids, global_elem_io.cell_type(),
+                                global_elem_io.face_order()));
     }
 
     // setup the local markers for this partition
-    for (const auto& [tag, global_elems] : monolithic_grid.markers_) {
+    for (const auto &[tag, global_elems] : monolithic_grid.markers_) {
         std::vector<ElemIO> local_elems;
-        for (const ElemIO& global_elem : global_elems) {
+        for (const ElemIO &global_elem : global_elems) {
             std::vector<size_t> local_vertices;
             bool elem_in_this_partition = false;
-            for (const size_t& global_vertex : global_elem.vertex_ids()) {
+            for (const size_t &global_vertex : global_elem.vertex_ids()) {
                 if (vertex_map.find(global_vertex) != vertex_map.end()) {
                     // this vertex is in this partition, so this
                     // marker should exist in this partition.
@@ -183,8 +178,7 @@ GridIO::GridIO(const GridIO& monolithic_grid,
                 }
             }
             if (elem_in_this_partition) {
-                local_elems.push_back(ElemIO(local_vertices,
-                                             global_elem.cell_type(),
+                local_elems.push_back(ElemIO(local_vertices, global_elem.cell_type(),
                                              global_elem.face_order()));
             }
         }
