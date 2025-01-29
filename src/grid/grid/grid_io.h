@@ -97,6 +97,8 @@ public:
         return markers_;
     }
 
+    std::vector<CellMapping> cell_mapping() const { return cell_mapping_; }
+
     size_t dim() const { return dim_; }
 
     size_t id() const { return id_; }

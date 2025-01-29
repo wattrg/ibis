@@ -119,4 +119,32 @@ TEST_CASE("partition_metis_number_of_cells") {
 
     CHECK(total_cells == 9);
 }
+
+TEST_CASE("partition_metis_symmetric_mapping") {
+    std::vector<GridIO> partitioned_grids = build_partitioned_grid();
+
+    std::vector<std::vector<CellMapping>> mappings;
+    for (const GridIO &partition : partitioned_grids) {
+        mappings.push_back(partition.cell_mapping());
+    }
+
+    for (size_t this_block = 0; this_block < mappings.size(); this_block++) {
+        const std::vector<CellMapping> &part_mapping = mappings[this_block];
+        for (const CellMapping& map : part_mapping) {
+            size_t this_cell = map.local_cell;
+            size_t other_block = map.other_block;
+            size_t other_cell = map.other_cell;
+
+            bool mapping_is_symmetric = false;
+            for (const CellMapping& other_map : mappings[other_block]) {
+                if (other_map.other_block == this_block &&
+                    other_map.local_cell == other_cell &&
+                    other_map.other_cell == this_cell) {
+                    mapping_is_symmetric = true;
+                }
+            }
+            CHECK(mapping_is_symmetric);
+        }
+    }
+}
 #endif
