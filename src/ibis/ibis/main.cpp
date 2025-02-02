@@ -13,6 +13,7 @@
 #include <ibis/commands/post_commands/post.h>
 #include <ibis/commands/prep/prep.h>
 #include <ibis/commands/run/run.h>
+#include <ibis/commands/partition/partition_grid.h>
 #include <io/io.h>
 // #include <ibis_version_info.h>
 #include <runtime_dirs.h>
@@ -33,6 +34,21 @@ int cli(int argc, char* argv[]) {
     CLI::App* prep_command = ibis.add_subcommand("prep", "prepare the simulation");
     CLI::App* run_command = ibis.add_subcommand("run", "run the simulation");
 
+    // The partition command
+    CLI::App* partition_command = ibis.add_subcommand("partition",
+                                                      "partition grids");
+    size_t n_partitions;
+    std::string grid_filename;
+    std::string output_dir;
+    partition_command->add_option("-f,--file,grid_file", grid_filename,
+                                  "The grid to parition")->required();
+    partition_command->add_option("-o,--output-dir,output-dir",
+                                  output_dir,
+                                  "The directory to place the partitioned grid")->required();
+    partition_command->add_option("-n,--n-partitions", n_partitions,
+                                  "Number of partitions")->required();
+
+    // The post-processing command
     CLI::App* post_command = ibis.add_subcommand("post", "post-process the simulation");
     post_command->require_subcommand(1);
 
@@ -75,6 +91,8 @@ int cli(int argc, char* argv[]) {
         } else if (post_command->got_subcommand(plot_residuals_command)) {
             return plot_residuals();
         }
+    } else if (ibis.got_subcommand(partition_command)) {
+        return partition_grid(grid_filename, output_dir, n_partitions, argc, argv);  
     } else {
         spdlog::error("Nothing to do. Try `ibis --help`");
     }

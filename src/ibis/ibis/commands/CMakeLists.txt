@@ -20,6 +20,18 @@ target_link_libraries(
 )
 target_include_directories(ibis_clean PUBLIC ../..)
 
+# partitioning command
+add_library(partition STATIC partition/partition_grid.cpp ../config.cpp)
+target_link_libraries(
+        partition PUBLIC
+        doctest
+        grid
+        spdlog::spdlog
+        CLI11::CLI11
+        runtime_dirs
+)
+target_include_directories(partition PUBLIC ../..)
+
 # non-distributed variant of the run command
 add_library(run STATIC run/run.cpp ../config.cpp)
 target_link_libraries(

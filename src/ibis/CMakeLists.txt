@@ -8,6 +8,7 @@ target_link_libraries(
 	prep 
 	run 
 	post
+  partition
 	ibis_clean 
 	gas 
 	util 
