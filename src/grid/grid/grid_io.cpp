@@ -111,6 +111,11 @@ std::ostream &operator<<(std::ostream &file, const ElemIO &elem_io) {
     return file;
 }
 
+std::ostream &operator<<(std::ostream &file, const CellMapping &map) {
+    file << map.local_cell << " " <<  map.other_block << " " << map.other_cell;
+    return file;
+}
+
 GridIO::GridIO(std::string file_name) {
     GridFileType type = file_type_from_name(file_name);
     std::ifstream grid_file(file_name);
@@ -183,8 +188,6 @@ GridIO::GridIO(const GridIO &monolithic_grid, const std::vector<size_t> &cells_t
             }
         }
     }
-
-    // TODO: setup the cell mapping
 }
 
 void trim_whitespace(std::string &str) {
@@ -363,6 +366,55 @@ void GridIO::write_su2_grid(std::ostream &grid_file) {
         for (const ElemIO &element : elements) {
             grid_file << element << "\n";
         }
+    }
+}
+
+void GridIO::read_mapped_cells(std::istream &file) {
+    std::string line;
+    get_next_line(file, line);
+    trim_whitespace(line);
+    size_t num_cells = std::stoi(line);
+    cell_mapping_.reserve(num_cells);
+
+    std::string value;
+    size_t sep;
+    size_t local_cell;
+    size_t other_block;
+    size_t other_cell;
+    while(get_next_line(file, line)) {
+        trim_whitespace(line);
+
+        sep = line.find(" ");
+        value = line.substr(0, sep);
+        local_cell = std::stoi(value);
+        line = line.substr(sep + 1, std::string::npos);
+        trim_whitespace(line);
+
+        sep = line.find(" ");
+        value = line.substr(0, sep);
+        trim_whitespace(value);
+        other_block = std::stoi(value);
+        line = line.substr(sep + 1, std::string::npos);
+        trim_whitespace(line);
+
+        sep = line.find(" ");
+        value = line.substr(0, sep);
+        trim_whitespace(value);
+        other_cell = std::stoi(value);
+
+        cell_mapping_.push_back(CellMapping(local_cell, other_block, other_cell));
+    }   
+}
+
+void GridIO::write_mapped_cells(std::ostream &file) {
+    file << cell_mapping_.size() << "\n";
+    for (const CellMapping &map : cell_mapping_) {
+        file << map.local_cell;
+        file << " ";
+        file << map.other_block;
+        file << " ";
+        file << map.other_cell;
+        file << "\n";
     }
 }
 
@@ -597,4 +649,50 @@ TEST_CASE("write_su2_grid") {
 
     // make sure the original grid and the re-written grid are the same
     CHECK(grid_io == grid_io_expected);
+}
+
+TEST_CASE("read_cell_mapping") {
+    // read some partitioned grids
+    GridIO part0("../../../src/grid/test/grid_0000.su2");
+    GridIO part1("../../../src/grid/test/grid_0001.su2");
+
+    std::ifstream mapping0_file("../../../src/grid/test/mapped_cells_0000");
+    std::ifstream mapping1_file("../../../src/grid/test/mapped_cells_0001");
+    part0.read_mapped_cells(mapping0_file);
+    part1.read_mapped_cells(mapping1_file);
+
+    std::vector<CellMapping> expected_map0 {
+        CellMapping(1, 1, 1),
+        CellMapping(1, 1, 5),
+        CellMapping(2, 1, 2),
+        CellMapping(2, 1, 4),
+        CellMapping(3, 1, 5),
+        CellMapping(4, 1, 4),
+    };
+
+    std::vector<CellMapping> expected_map1 {
+        CellMapping(1, 0, 1),
+        CellMapping(2, 0, 2),  
+        CellMapping(4, 0, 2),
+        CellMapping(4, 0, 4),
+        CellMapping(5, 0, 1),
+        CellMapping(5, 0, 3),
+    };
+
+    CHECK(part0.cell_mapping()[0] == expected_map0[0]);
+    CHECK(part0.cell_mapping()[1] == expected_map0[1]);
+    CHECK(part0.cell_mapping()[2] == expected_map0[2]);
+    CHECK(part0.cell_mapping()[3] == expected_map0[3]);
+    CHECK(part0.cell_mapping()[4] == expected_map0[4]);
+    CHECK(part0.cell_mapping()[5] == expected_map0[5]);
+
+    CHECK(part1.cell_mapping()[0] == expected_map1[0]);
+    CHECK(part1.cell_mapping()[1] == expected_map1[1]);
+    CHECK(part1.cell_mapping()[2] == expected_map1[2]);
+    CHECK(part1.cell_mapping()[3] == expected_map1[3]);
+    CHECK(part1.cell_mapping()[4] == expected_map1[4]);
+    CHECK(part1.cell_mapping()[5] == expected_map1[5]);
+
+    // CHECK(part0.cell_mapping() == expected_map0);
+    // CHECK(part1.cell_mapping() == expected_map1);
 }

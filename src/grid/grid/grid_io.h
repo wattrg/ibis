@@ -65,6 +65,14 @@ struct CellMapping {
 
     CellMapping(size_t local_cell_, size_t other_block_, size_t other_cell_)
         : local_cell(local_cell_), other_block(other_block_), other_cell(other_cell_) {}
+
+    bool operator==(const CellMapping &other) const {
+        return (local_cell == other.local_cell) &&
+               (other_block == other.other_block) &&
+               (other_cell == other.other_cell);
+    }
+
+    friend std::ostream &operator<<(std::ostream &file, const CellMapping &map);
 };
 
 struct GridIO {
@@ -86,7 +94,8 @@ public:
 
     bool operator==(const GridIO &other) const {
         return (vertices_ == other.vertices_) && (cells_ == other.cells_) &&
-               (markers_ == other.markers_);
+               (markers_ == other.markers_) &&
+               (cell_mapping_ == other.cell_mapping_);
     }
 
     std::vector<Vertex<Ibis::real>> vertices() const { return vertices_; }
@@ -105,6 +114,9 @@ public:
 
     void read_su2_grid(std::istream &grid_file);
     void write_su2_grid(std::ostream &grid_file);
+
+    void read_mapped_cells(std::istream &file);
+    void write_mapped_cells(std::ostream &file);
 
 private:
     std::vector<Vertex<Ibis::real>> vertices_{};
