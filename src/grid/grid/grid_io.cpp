@@ -112,7 +112,7 @@ std::ostream &operator<<(std::ostream &file, const ElemIO &elem_io) {
 }
 
 std::ostream &operator<<(std::ostream &file, const CellMapping &map) {
-    file << map.local_cell << " " <<  map.other_block << " " << map.other_cell;
+    file << map.local_cell << " " << map.other_block << " " << map.other_cell;
     return file;
 }
 
@@ -381,7 +381,7 @@ void GridIO::read_mapped_cells(std::istream &file) {
     size_t local_cell;
     size_t other_block;
     size_t other_cell;
-    while(get_next_line(file, line)) {
+    while (get_next_line(file, line)) {
         trim_whitespace(line);
 
         sep = line.find(" ");
@@ -403,7 +403,7 @@ void GridIO::read_mapped_cells(std::istream &file) {
         other_cell = std::stoi(value);
 
         cell_mapping_.push_back(CellMapping(local_cell, other_block, other_cell));
-    }   
+    }
 }
 
 void GridIO::write_mapped_cells(std::ostream &file) {
@@ -661,22 +661,14 @@ TEST_CASE("read_cell_mapping") {
     part0.read_mapped_cells(mapping0_file);
     part1.read_mapped_cells(mapping1_file);
 
-    std::vector<CellMapping> expected_map0 {
-        CellMapping(1, 1, 1),
-        CellMapping(1, 1, 5),
-        CellMapping(2, 1, 2),
-        CellMapping(2, 1, 4),
-        CellMapping(3, 1, 5),
-        CellMapping(4, 1, 4),
+    std::vector<CellMapping> expected_map0{
+        CellMapping(1, 1, 1), CellMapping(1, 1, 5), CellMapping(2, 1, 2),
+        CellMapping(2, 1, 4), CellMapping(3, 1, 5), CellMapping(4, 1, 4),
     };
 
-    std::vector<CellMapping> expected_map1 {
-        CellMapping(1, 0, 1),
-        CellMapping(2, 0, 2),  
-        CellMapping(4, 0, 2),
-        CellMapping(4, 0, 4),
-        CellMapping(5, 0, 1),
-        CellMapping(5, 0, 3),
+    std::vector<CellMapping> expected_map1{
+        CellMapping(1, 0, 1), CellMapping(2, 0, 2), CellMapping(4, 0, 2),
+        CellMapping(4, 0, 4), CellMapping(5, 0, 1), CellMapping(5, 0, 3),
     };
 
     CHECK(part0.cell_mapping()[0] == expected_map0[0]);

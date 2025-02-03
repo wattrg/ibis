@@ -67,8 +67,7 @@ struct CellMapping {
         : local_cell(local_cell_), other_block(other_block_), other_cell(other_cell_) {}
 
     bool operator==(const CellMapping &other) const {
-        return (local_cell == other.local_cell) &&
-               (other_block == other.other_block) &&
+        return (local_cell == other.local_cell) && (other_block == other.other_block) &&
                (other_cell == other.other_cell);
     }
 
@@ -94,8 +93,7 @@ public:
 
     bool operator==(const GridIO &other) const {
         return (vertices_ == other.vertices_) && (cells_ == other.cells_) &&
-               (markers_ == other.markers_) &&
-               (cell_mapping_ == other.cell_mapping_);
+               (markers_ == other.markers_) && (cell_mapping_ == other.cell_mapping_);
     }
 
     std::vector<Vertex<Ibis::real>> vertices() const { return vertices_; }

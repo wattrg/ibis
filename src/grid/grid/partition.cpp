@@ -124,12 +124,12 @@ TEST_CASE("partition_metis_symmetric_mapping") {
     std::vector<GridIO> partitioned_grids = build_partitioned_grid();
 
     std::vector<std::vector<CellMapping>> mappings;
-    for (const GridIO &partition : partitioned_grids) {
+    for (const GridIO& partition : partitioned_grids) {
         mappings.push_back(partition.cell_mapping());
     }
 
     for (size_t this_block = 0; this_block < mappings.size(); this_block++) {
-        const std::vector<CellMapping> &part_mapping = mappings[this_block];
+        const std::vector<CellMapping>& part_mapping = mappings[this_block];
         for (const CellMapping& map : part_mapping) {
             size_t this_cell = map.local_cell;
             size_t other_block = map.other_block;
