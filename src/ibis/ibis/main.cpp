@@ -34,6 +34,11 @@ int cli(int argc, char* argv[]) {
     CLI::App* prep_command = ibis.add_subcommand("prep", "prepare the simulation");
     CLI::App* run_command = ibis.add_subcommand("run", "run the simulation");
 
+#ifdef Ibis_ENABLE_DISTRIBUTED_MEMORY
+    CLI::App* run_dist_command = ibis.add_subcommand("run-dist",
+                                                     "run a distributed simulation");
+#endif
+
     // The partition command
     CLI::App* partition_command = ibis.add_subcommand("partition", "partition grids");
     size_t n_partitions;
@@ -87,7 +92,13 @@ int cli(int argc, char* argv[]) {
         return prep(argc, argv);
     } else if (ibis.got_subcommand(run_command)) {
         return run(argc, argv);
-    } else if (ibis.got_subcommand("post")) {
+    }
+#ifdef Ibis_ENABLE_DISTRIBUTED_MEMORY
+    } else if (ibis.got_subcommand(run_dist_command)) {
+        return run(argc, argv);   
+    }
+#endif
+    else if (ibis.got_subcommand("post")) {
         if (post_command->got_subcommand(plot_command)) {
             return plot(format, extra_vars, argc, argv);
         } else if (post_command->got_subcommand(plot_residuals_command)) {

@@ -27,6 +27,10 @@ struct SharedReducerMapping<Sum<Scalar>> {
 namespace Ibis {
 namespace Shared {
 
+void initialise(int argc, char** argv);
+
+void finalise();
+
 template <class ReducerType, class FunctorType>
 inline auto parallel_reduce(const std::string& str, const size_t work_count,
                             FunctorType functor) -> typename ReducerType::scalar_type {

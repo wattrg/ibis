@@ -3,6 +3,7 @@ add_library(
     STATIC
     parallel/distributed_memory.cpp
     parallel/shared_memory.cpp
+    parallel/parallel.cpp
 )
 
 target_link_libraries(

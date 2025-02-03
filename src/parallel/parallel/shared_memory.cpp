@@ -1,6 +1,15 @@
 #include <doctest/doctest.h>
 #include <parallel/shared_memory.h>
 #include <util/numeric_types.h>
+#include "Kokkos_Core.hpp"
+
+void Ibis::Shared::initialise(int argc, char **argv) {
+    Kokkos::initialize(argc, argv);
+}
+
+void Ibis::Shared::finalise() {
+    Kokkos::finalize();
+}
 
 TEST_CASE("shared_parallel_reduction") {
     double result = Ibis::Shared::parallel_reduce<Min<double>>(

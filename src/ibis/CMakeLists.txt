@@ -24,6 +24,10 @@ target_link_libraries(
 	CLI11::CLI11
 )
 
+if (Ibis_ENABLE_DISTRIBUTED_MEMORY)
+	target_link_libraries(ibis PUBLIC run_dist)
+endif()
+
 set_target_properties(ibis PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 
 if (Ibis_LINK_FS)

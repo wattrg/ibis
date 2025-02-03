@@ -1,4 +1,5 @@
 #include <doctest/extensions/doctest_mpi.h>
+#include <mpi.h>
 #include <mpi/ibis_mpi.h>
 #include <parallel/parallel.h>
 #include <util/numeric_types.h>
@@ -7,6 +8,14 @@
 #include <vector>
 
 #ifdef Ibis_ENABLE_MPI
+
+void Ibis::Distributed::initialise(int argc, char **argv) {
+    MPI_Init(&argc, &argv);
+}
+
+void Ibis::Distributed::finalise() {
+    MPI_Finalize();
+}
 
 MPI_TEST_CASE("MPI_Min_scalar", 2) {
     Ibis::DistributedMin<double, Mpi> mpi_min;

@@ -13,6 +13,13 @@
 namespace Ibis {
 namespace Distributed {
 
+
+// namespace MPI {
+void initialise(int argc, char** argv);
+
+void finalise();
+// }
+
 // MPI data types
 template <typename Type>
 struct MpiDataType;

@@ -8,6 +8,7 @@
 #ifdef Ibis_ENABLE_MPI
 #ifdef Ibis_ENABLE_DISTRIBUTED_MEMORY
 
+
 MPI_TEST_CASE("MPI_Min_scalar", 2) {
     double result = Ibis::parallel_reduce<Min<double>>(
         "test", 10, KOKKOS_LAMBDA(const int i, double& utd) {

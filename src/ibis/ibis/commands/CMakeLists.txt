@@ -43,6 +43,7 @@ target_link_libraries(
         solver 
         nlohmann_json::nlohmann_json
         gas
+        parallel
         spdlog::spdlog
         runtime_dirs
         CLI11::CLI11
@@ -61,6 +62,7 @@ if (Ibis_ENABLE_MPI)
           solver 
           nlohmann_json::nlohmann_json
           gas
+          parallel
           spdlog::spdlog
           runtime_dirs
           CLI11::CLI11

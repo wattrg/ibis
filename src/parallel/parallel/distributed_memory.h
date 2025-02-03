@@ -12,6 +12,12 @@
 
 namespace Ibis {
 
+namespace Distributed {
+void initialise(int argc, char **argv);
+
+void finalise();
+
+}
 template <class SharedPolicy, class MemModel>
 struct Policy {
     using shared_policy = SharedPolicy;

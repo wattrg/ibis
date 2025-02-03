@@ -6,6 +6,10 @@
 
 namespace Ibis {
 
+void initialise(int argc, char** argv);
+
+void finalise();
+
 template <typename Scalar, class MemoryModel = Ibis::DefaultMemModel>
 using DistributedMin = Distributed::DistributedReduction<Min<Scalar>, MemoryModel>;
 

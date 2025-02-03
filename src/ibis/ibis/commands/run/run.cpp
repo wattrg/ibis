@@ -1,4 +1,5 @@
 #include <grid/grid.h>
+#include <parallel/parallel.h>
 #include <ibis/commands/run/run.h>
 #include <ibis/config.h>
 #include <ibis_git_info.h>
@@ -7,8 +8,6 @@
 #include <spdlog/spdlog.h>
 
 #include <Kokkos_Core.hpp>
-#include <cstdlib>
-#include <fstream>
 #include <nlohmann/json.hpp>
 
 using json = nlohmann::json;
@@ -42,7 +41,7 @@ int run(int argc, char* argv[]) {
 
     std::string grid_dir = directories.at("grid_dir");
     std::string flow_dir = directories.at("flow_dir");
-    Kokkos::initialize(argc, argv);
+    Ibis::initialise(argc, argv);
     int result;
 
     {
@@ -53,7 +52,7 @@ int run(int argc, char* argv[]) {
         result = solver->solve();
     }
 
-    Kokkos::finalize();
+    Ibis::finalise();
 
     if (result != 0) {
         spdlog::error("run failed");
