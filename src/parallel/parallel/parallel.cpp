@@ -17,7 +17,7 @@ void finalise() {
     Ibis::Shared::finalise();
 
 #ifdef Ibis_ENABLE_DISTRIBUTED_MEMORY
-    Ibis::Distributed::finalse();
+    Ibis::Distributed::finalise();
 #endif
 }
   

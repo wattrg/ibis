@@ -7,7 +7,7 @@
 #include <Kokkos_Core.hpp>
 
 #ifdef Ibis_ENABLE_MPI
-#include <mpi/ibis_mpi.h>
+#include "mpi/mpi/ibis_mpi.h"
 #endif
 
 namespace Ibis {
@@ -18,6 +18,7 @@ void initialise(int argc, char **argv);
 void finalise();
 
 }
+
 template <class SharedPolicy, class MemModel>
 struct Policy {
     using shared_policy = SharedPolicy;

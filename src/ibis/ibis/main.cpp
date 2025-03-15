@@ -37,6 +37,9 @@ int cli(int argc, char* argv[]) {
 #ifdef Ibis_ENABLE_DISTRIBUTED_MEMORY
     CLI::App* run_dist_command = ibis.add_subcommand("run-dist",
                                                      "run a distributed simulation");
+    const bool distributed_memory_enabled = true;
+#else
+    const bool distributed_memory_enabled = false;
 #endif
 
     // The partition command

@@ -39,7 +39,6 @@ target_link_libraries(
         Kokkos::kokkos 
         doctest 
         grid 
-        runge_kutta 
         solver 
         nlohmann_json::nlohmann_json
         gas
@@ -58,17 +57,16 @@ if (Ibis_ENABLE_MPI)
           Kokkos::kokkos 
           doctest 
           grid 
-          runge_kutta 
           solver 
           nlohmann_json::nlohmann_json
           gas
-          parallel
+          parallel_dist
           spdlog::spdlog
           runtime_dirs
           CLI11::CLI11
   )
   target_include_directories(run_dist PUBLIC ../..)
-  target_compile_definitions(run_dist PUBLIC Ibis_ENABLE_DISTRIBUTED_MEMORY)
+  target_compile_definitions(run_dist PRIVATE Ibis_ENABLE_DISTRIBUTED_MEMORY)
 endif (Ibis_ENABLE_MPI)
 
 add_library(

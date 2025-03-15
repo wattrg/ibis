@@ -4,7 +4,7 @@
 #include <parallel/shared_memory_fwd.h>
 
 #ifdef Ibis_ENABLE_MPI
-#include <mpi/ibis_mpi_fwd.h>
+#include "mpi/mpi/ibis_mpi_fwd.h"
 #endif
 
 namespace Ibis {

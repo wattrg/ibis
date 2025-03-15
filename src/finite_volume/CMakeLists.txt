@@ -22,6 +22,7 @@ target_link_libraries(
 	  finite_volume 
 	  PUBLIC
 	  Kokkos::kokkos 
+	  parallel
 	  doctest 
 	  util
 	  nlohmann_json::nlohmann_json
@@ -52,6 +53,7 @@ if (Ibis_BUILD_TESTS)
     	  util
     	  doctest
     	  Kokkos::kokkos
+    	  parallel
     	  nlohmann_json::nlohmann_json
     	  spdlog::spdlog
 	      gas

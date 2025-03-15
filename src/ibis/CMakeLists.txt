@@ -6,7 +6,7 @@ target_link_libraries(
 	ibis 
 	PUBLIC 
 	prep 
-	run 
+	run
 	post
   partition
 	ibis_clean 
@@ -25,6 +25,7 @@ target_link_libraries(
 )
 
 if (Ibis_ENABLE_DISTRIBUTED_MEMORY)
+	target_compile_definitions(ibis PUBLIC Ibis_ENABLE_DISTRIBUTED_MEMORY)
 	target_link_libraries(ibis PUBLIC run_dist)
 endif()
 

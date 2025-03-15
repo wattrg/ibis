@@ -3,8 +3,7 @@
 #include <finite_volume/finite_volume.h>
 #include <finite_volume/flux_calc.h>
 #include <util/numeric_types.h>
-
-#include <stdexcept>
+#include <parallel/parallel.h>
 
 #include "finite_volume/convective_flux.h"
 #include "gas/transport_properties.h"
@@ -141,8 +140,7 @@ Ibis::real FiniteVolume<T>::estimate_dt(const FlowStates<T>& flow_state,
     Ibis::real viscous_signal_factor = viscous_flux_.signal_factor();
     // IdealGas<T> gas_model = gas_model_;
 
-    Ibis::real dt;
-    Kokkos::parallel_reduce(
+    return Ibis::parallel_reduce<Min<Ibis::real>>(
         "FV::signal_frequency", num_cells,
         KOKKOS_LAMBDA(const size_t cell_i, Ibis::real& dt_utd) {
             auto cell_face_ids = cell_interfaces.face_ids(cell_i);
@@ -177,10 +175,7 @@ Ibis::real FiniteVolume<T>::estimate_dt(const FlowStates<T>& flow_state,
             T local_dt =
                 volume / (spectral_radii_c + viscous_signal_factor * spectral_radii_v);
             dt_utd = Ibis::min(Ibis::real_part(local_dt), dt_utd);
-        },
-        Kokkos::Min<Ibis::real>(dt));
-
-    return dt;
+        });
 }
 
 template <typename T>
