@@ -49,24 +49,8 @@ target_link_libraries(
 )
 target_include_directories(run PUBLIC ../..)
 
-# distributed variant of the run command
 if (Ibis_ENABLE_MPI)
-  add_library(run_dist STATIC run/run.cpp ../config.cpp)
-  target_link_libraries(
-          run_dist PUBLIC 
-          Kokkos::kokkos 
-          doctest 
-          grid 
-          solver 
-          nlohmann_json::nlohmann_json
-          gas
-          parallel_dist
-          spdlog::spdlog
-          runtime_dirs
-          CLI11::CLI11
-  )
-  target_include_directories(run_dist PUBLIC ../..)
-  target_compile_definitions(run_dist PRIVATE Ibis_ENABLE_DISTRIBUTED_MEMORY)
+  target_compile_definitions(run PRIVATE Ibis_ENABLE_DISTRIBUTED_MEMORY)
 endif (Ibis_ENABLE_MPI)
 
 add_library(

@@ -20,6 +20,7 @@
 #include <spdlog/sinks/basic_file_sink.h>
 #include <spdlog/sinks/stdout_color_sinks.h>
 #include <spdlog/spdlog.h>
+#include <parallel/parallel.h>
 
 #include <CLI/CLI.hpp>
 
@@ -37,9 +38,6 @@ int cli(int argc, char* argv[]) {
 #ifdef Ibis_ENABLE_DISTRIBUTED_MEMORY
     CLI::App* run_dist_command = ibis.add_subcommand("run-dist",
                                                      "run a distributed simulation");
-    const bool distributed_memory_enabled = true;
-#else
-    const bool distributed_memory_enabled = false;
 #endif
 
     // The partition command
@@ -94,11 +92,11 @@ int cli(int argc, char* argv[]) {
     } else if (ibis.got_subcommand(prep_command)) {
         return prep(argc, argv);
     } else if (ibis.got_subcommand(run_command)) {
-        return run(argc, argv);
+        return run<SharedMem>(argc, argv);
     }
 #ifdef Ibis_ENABLE_DISTRIBUTED_MEMORY
     } else if (ibis.got_subcommand(run_dist_command)) {
-        return run(argc, argv);   
+        return run<Mpi>(argc, argv);   
     }
 #endif
     else if (ibis.got_subcommand("post")) {

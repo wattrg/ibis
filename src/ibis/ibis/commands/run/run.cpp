@@ -32,6 +32,7 @@ void print_config_info(json config) {
         std::string(config.at("convective_flux").at("flux_calculator").at("type")));
 }
 
+template <class MemModel>
 int run(int argc, char* argv[]) {
     json directories = read_directories();
     json config = read_config(directories);
@@ -61,3 +62,8 @@ int run(int argc, char* argv[]) {
     }
     return result;
 }
+template int run<SharedMem> (int, char*[]);
+
+#ifdef Ibis_ENABLE_MPI
+template int run<Mpi> (int, char*[]);
+#endif
