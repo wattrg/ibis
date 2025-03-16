@@ -41,7 +41,7 @@ int run(int argc, char* argv[]) {
 
     std::string grid_dir = directories.at("grid_dir");
     std::string flow_dir = directories.at("flow_dir");
-    Ibis::initialise(argc, argv);
+    Ibis::initialise<SharedMem>(argc, argv);
     int result;
 
     {
@@ -52,7 +52,7 @@ int run(int argc, char* argv[]) {
         result = solver->solve();
     }
 
-    Ibis::finalise();
+    Ibis::finalise<SharedMem>();
 
     if (result != 0) {
         spdlog::error("run failed");

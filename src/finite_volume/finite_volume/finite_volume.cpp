@@ -4,8 +4,7 @@
 #include <finite_volume/flux_calc.h>
 #include <util/numeric_types.h>
 #include <parallel/parallel.h>
-
-#include "finite_volume/convective_flux.h"
+#include <finite_volume/convective_flux.h>
 #include "gas/transport_properties.h"
 
 template <typename T>
@@ -140,7 +139,7 @@ Ibis::real FiniteVolume<T>::estimate_dt(const FlowStates<T>& flow_state,
     Ibis::real viscous_signal_factor = viscous_flux_.signal_factor();
     // IdealGas<T> gas_model = gas_model_;
 
-    return Ibis::parallel_reduce<Min<Ibis::real>>(
+    return Ibis::parallel_reduce<Min<Ibis::real>, SharedMem>(
         "FV::signal_frequency", num_cells,
         KOKKOS_LAMBDA(const size_t cell_i, Ibis::real& dt_utd) {
             auto cell_face_ids = cell_interfaces.face_ids(cell_i);

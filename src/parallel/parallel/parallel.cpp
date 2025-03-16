@@ -4,21 +4,23 @@
 
 namespace Ibis {
 
-void initialise(int argc, char **argv) {
+// template <class MemModel>
+// void initialise(int argc, char **argv) {
 
-#ifdef Ibis_ENABLE_DISTRIBUTED_MEMORY
-    Ibis::Distributed::initialise(argc, argv);  
-#endif
+// #ifdef Ibis_ENABLE_DISTRIBUTED_MEMORY
+//     Ibis::Distributed::initialise(argc, argv);  
+// #endif
 
-    Ibis::Shared::initialise(argc, argv);
-}
+//     Ibis::Shared::initialise(argc, argv);
+// }
 
-void finalise() {
-    Ibis::Shared::finalise();
+// template <class MemModel>
+// void finalise() {
+//     Ibis::Shared::finalise();
 
-#ifdef Ibis_ENABLE_DISTRIBUTED_MEMORY
-    Ibis::Distributed::finalise();
-#endif
-}
+// #ifdef Ibis_ENABLE_MPI
+//     Ibis::Distributed::finalise();
+// #endif
+// }
   
 }

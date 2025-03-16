@@ -6,19 +6,13 @@
 #include <mpi.h>
 #include <parallel/parallel_fwd.h>
 #include <parallel/reductions.h>
+#include <parallel/parallel.h>
+#include <parallel/shared_memory.h>
 #include <util/types.h>
 
 #include <Kokkos_Core.hpp>
 
 namespace Ibis {
-namespace Distributed {
-
-
-// namespace MPI {
-void initialise(int argc, char** argv);
-
-void finalise();
-// }
 
 // MPI data types
 template <typename Type>
@@ -65,26 +59,26 @@ struct MpiReduction<Sum<T>> {
 };
 
 template <class Reduction>
-struct DistributedReduction<Reduction, Mpi> {
+struct MpiReducer {
 public:
     using Scalar = typename Reduction::scalar_type;
     using scalar_type = Scalar;
     using reduction = Reduction;
 
 public:
-    DistributedReduction() : comm_(MPI_COMM_WORLD) {}
+    MpiReducer() : comm_(MPI_COMM_WORLD) {}
 
-    DistributedReduction(MPI_Comm comm) : comm_(comm) {}
+    MpiReducer(MPI_Comm comm) : comm_(comm) {}
 
     inline Scalar reduce(Scalar& local_value) {
         Scalar global_min;
-        MPI_Datatype mpi_type = Ibis::Distributed::MpiDataType<Scalar>::value();
+        MPI_Datatype mpi_type = Ibis::MpiDataType<Scalar>::value();
         MPI_Allreduce(&local_value, &global_min, 1, mpi_type, mpi_op_, comm_);
         return global_min;
     }
 
     inline void reduce(Scalar* local_values, Scalar* global_values, size_t num_values) {
-        MPI_Datatype mpi_type = Ibis::Distributed::MpiDataType<Scalar>::value();
+        MPI_Datatype mpi_type = Ibis::MpiDataType<Scalar>::value();
         MPI_Allreduce(local_values, global_values, num_values, mpi_type, mpi_op_, comm_);
     }
 
@@ -93,6 +87,46 @@ private:
     MPI_Op mpi_op_ = MpiReduction<Reduction>::op();
 };
 
+
+template <class ReducerType>
+class Reducer<ReducerType, Mpi> {
+public:
+    template <class FunctorType>
+    inline auto execute(const std::string& str, const size_t work_count,
+                        FunctorType functor) -> typename ReducerType::scalar_type {
+        using scalar_type = typename ReducerType::scalar_type;
+
+        // The shared memory part of the reduction
+        scalar_type local_reduction =
+            Ibis::parallel_reduce<ReducerType, SharedMem>(str, work_count, functor);
+
+        // The distributed part of the reduction
+        MpiReducer<ReducerType> mpi_reducer;
+        return mpi_reducer.reduce(local_reduction);
+    }
+
+    template <class PolicyType, class FunctorType>
+    inline auto execute(const std::string& str, PolicyType policy,
+                        FunctorType functor) -> typename ReducerType::scalar_type {
+        using scalar_type = typename ReducerType::scalar_type;
+
+        // The shared memory part of the reduction
+        scalar_type local_reduction =
+            Ibis::parallel_reduce<ReducerType, SharedMem>(str, policy, functor);
+
+        // The distributed part of the reduction
+        MpiReducer<ReducerType> mpi_reducer;
+        return mpi_reducer.reduce(local_reduction);
+    }
+};
+
+template <class ReducerType>
+struct ReducerMap<ReducerType, Mpi> {
+    using reducer_type = Reducer<ReducerType, Mpi>;
+};
+
+
+// Message passing communicator
 template <typename T, bool gpu_aware = false, class MemSpace = Ibis::DefaultMemSpace>
 class SymmetricComm {
 private:
@@ -161,12 +195,11 @@ private:
 
     // some info for MPI
     MPI_Request recv_request_;
-    MPI_Datatype mpi_type_ = Ibis::Distributed::MpiDataType<T>::value();
+    MPI_Datatype mpi_type_ = Ibis::MpiDataType<T>::value();
     int other_rank_;
     MPI_Comm mpi_comm_;
 };
 
-}  // namespace Distributed
 }  // namespace Ibis
 
 #endif

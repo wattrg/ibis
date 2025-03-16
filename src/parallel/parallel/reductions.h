@@ -43,10 +43,6 @@ struct ReductionIdentity<Sum<Scalar>> {
 };
 
 namespace Ibis {
-namespace Distributed {
-template <class ReductionType, class MemoryModel>
-struct DistributedReduction;
-}
 }  // namespace Ibis
 
 #endif
