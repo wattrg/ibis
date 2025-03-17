@@ -3,7 +3,6 @@
 
 #include <parallel/parallel_fwd.h>
 #include <parallel/reductions.h>
-#include <ibis_kokkos/ibis_kokkos.h>
 
 namespace Ibis {
 
@@ -44,5 +43,13 @@ inline auto parallel_reduce(const std::string& str, PolicyType policy,
 }
 
 }  // namespace Ibis
+
+// Include the headers of the active memory models so that this
+// header is the only thing that needs to be included in other files
+#include <ibis_kokkos/ibis_kokkos.h>
+
+#ifdef Ibis_ENABLE_MPI
+#include <ibis_mpi/ibis_mpi.h>
+#endif
 
 #endif

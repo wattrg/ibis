@@ -4,9 +4,8 @@
 #ifdef Ibis_ENABLE_MPI
 
 #include <mpi.h>
-#include <parallel/parallel.h>
 #include <parallel/parallel_fwd.h>
-#include <parallel/reductions.h>
+#include <parallel/parallel.h>
 #include <ibis_kokkos/ibis_kokkos.h>
 #include <util/types.h>
 
@@ -41,9 +40,10 @@ MpiTypeMapping(short int, MPI_SHORT)                                // NOLINT
     MpiTypeMapping(long double, MPI_LONG_DOUBLE)                    // NOLINT
     MpiTypeMapping(char, MPI_CHAR)                                  // NOLINT
 
-    // Reductions
-    template <typename Reduction>
-    struct MpiReduction;
+// 
+// Reductions
+template <typename Reduction>
+struct MpiReduction;
 
 template <typename T>
 struct MpiReduction<Min<T>> {
