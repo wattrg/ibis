@@ -1,7 +1,7 @@
 add_library(
     ibis_mpi
     STATIC
-    mpi/ibis_mpi.cpp
+    ibis_mpi/ibis_mpi.cpp
 )
 
 target_link_libraries(
@@ -26,7 +26,7 @@ if (Ibis_BUILD_TESTS)
     add_executable(
         mpi_unittest
         test/unittest.cpp
-        mpi/ibis_mpi.cpp
+        ibis_mpi/ibis_mpi.cpp
     )
     target_include_directories(
         mpi_unittest
@@ -38,10 +38,7 @@ if (Ibis_BUILD_TESTS)
         mpi_unittest
         PRIVATE
         doctest
-        Kokkos::kokkos
-        parallel
-        MPI::MPI_CXX
-        parallel
+        ibis_mpi
     )
     add_test(
         NAME mpi_unittest

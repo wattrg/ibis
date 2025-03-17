@@ -1,10 +1,10 @@
 #ifndef MEMORY_MODEL_FWD_H
 #define MEMORY_MODEL_FWD_H
 
-#include <parallel/shared_memory_fwd.h>
+#include <ibis_kokkos/ibis_kokkos_fwd.h>
 
 #ifdef Ibis_ENABLE_MPI
-#include "mpi/mpi/ibis_mpi_fwd.h"
+#include <ibis_mpi/ibis_mpi_fwd.h>
 #endif
 
 namespace Ibis {

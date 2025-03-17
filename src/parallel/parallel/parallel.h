@@ -3,7 +3,7 @@
 
 #include <parallel/parallel_fwd.h>
 #include <parallel/reductions.h>
-#include <parallel/shared_memory.h>
+#include <ibis_kokkos/ibis_kokkos.h>
 
 namespace Ibis {
 

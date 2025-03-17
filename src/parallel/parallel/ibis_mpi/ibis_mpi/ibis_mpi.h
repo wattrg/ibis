@@ -7,7 +7,7 @@
 #include <parallel/parallel.h>
 #include <parallel/parallel_fwd.h>
 #include <parallel/reductions.h>
-#include <parallel/shared_memory.h>
+#include <ibis_kokkos/ibis_kokkos.h>
 #include <util/types.h>
 
 #include <Kokkos_Core.hpp>
