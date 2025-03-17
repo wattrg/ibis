@@ -1,7 +1,6 @@
 #ifndef IBIS_PARALLEL_H
 #define IBIS_PARALLEL_H
 
-#include <parallel/distributed_memory.h>
 #include <parallel/parallel_fwd.h>
 #include <parallel/reductions.h>
 #include <parallel/shared_memory.h>

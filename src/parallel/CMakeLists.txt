@@ -1,9 +1,7 @@
 add_library(
     parallel
     STATIC
-    parallel/distributed_memory.cpp
     parallel/shared_memory.cpp
-    parallel/parallel.cpp
 )
 
 target_link_libraries(
@@ -40,7 +38,6 @@ if (Ibis_BUILD_TESTS)
     add_executable(
         parallel_unittest
         test/unittest.cpp
-        parallel/shared_memory.cpp
     )
 
     target_include_directories(
