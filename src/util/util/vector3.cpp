@@ -228,6 +228,7 @@ TEST_CASE("Vector Dot Product") {
     }
 }
 
+#ifndef DOCTEST_CONFIG_DISABLE
 TEST_CASE("Vector3s Add") {
     size_t n = 20;
 
@@ -540,3 +541,4 @@ TEST_CASE("Vector3s::transform_to_local_frame") {
     CHECK(Kokkos::abs(a_host.x(1) - 0.0) < 1e-14);
     CHECK(Kokkos::abs(a_host.y(1) - 1.0) < 1e-14);
 }
+#endif // DOCTEST_CONFIG_DISABLE

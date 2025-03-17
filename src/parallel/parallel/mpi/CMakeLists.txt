@@ -20,6 +20,8 @@ target_include_directories(
     .
 )
 
+target_compile_definitions(ibis_mpi PRIVATE Ibis_ENABLE_DISTRIBUTED_MEMORY)
+
 if (Ibis_BUILD_TESTS)
     add_executable(
         mpi_unittest

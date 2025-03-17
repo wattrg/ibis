@@ -19,6 +19,7 @@ void Ibis::finalise<Mpi>() {
     MPI_Finalize();
 }
 
+#ifndef DOCTEST_CONFIG_DISABLE
 // Tests
 // Pure MPI reductions
 MPI_TEST_CASE("MPI_Min_scalar", 2) {
@@ -90,7 +91,7 @@ MPI_TEST_CASE("MPI_Sum_scalar", 2) {
 }
 
 MPI_TEST_CASE("MPI_Max_scalar", 2) {
-    double result = Ibis::parallel_reduce<Max<double>, SharedMem>(
+    double result = Ibis::parallel_reduce<Max<double>, Mpi>(
         "test", 10, KOKKOS_LAMBDA(const int i, double& utd) {
             utd = Ibis::max(utd, (double)test_rank + i);
         });
@@ -124,5 +125,6 @@ MPI_TEST_CASE("MPI_comm", 2) {
         MPI_CHECK(1, recv_buf_mirror(i) == 0.0 + (double)i);
     }
 }
+#endif // DOCTEST_CONFIG_DISABLE
 
 #endif

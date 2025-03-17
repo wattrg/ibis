@@ -479,6 +479,7 @@ std::vector<ElemIO> ElemIO::interfaces() const {
     }
 }
 
+#ifndef DOCTEST_CONFIG_DISABLE
 TEST_CASE("trim whitespace") {
     std::string test1 = " hello world    ";
     std::string test2 = "hello world";
@@ -688,3 +689,4 @@ TEST_CASE("read_cell_mapping") {
     // CHECK(part0.cell_mapping() == expected_map0);
     // CHECK(part1.cell_mapping() == expected_map1);
 }
+#endif // DOCTEST_CONFIG_DISABLE
