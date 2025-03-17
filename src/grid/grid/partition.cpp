@@ -148,5 +148,5 @@ TEST_CASE("partition_metis_symmetric_mapping") {
         }
     }
 }
-#endif // DOCTEST_CONFIG_DISABLE
-#endif // Ibis_ENABLE_METIS
+#endif  // DOCTEST_CONFIG_DISABLE
+#endif  // Ibis_ENABLE_METIS

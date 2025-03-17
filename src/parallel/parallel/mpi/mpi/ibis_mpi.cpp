@@ -9,7 +9,7 @@
 #ifdef Ibis_ENABLE_MPI
 
 template <>
-void Ibis::initialise<Mpi>(int argc, char **argv) {
+void Ibis::initialise<Mpi>(int argc, char** argv) {
     MPI_Init(&argc, &argv);
     Ibis::initialise<SharedMem>(argc, argv);
 }
@@ -68,7 +68,6 @@ MPI_TEST_CASE("MPI_Sum_array", 2) {
     MPI_CHECK(1, global_values == std::vector<double>{3.0, 5.0});
 }
 
-
 // Mixed shared and MPI reductions
 MPI_TEST_CASE("MPI_Min_scalar", 2) {
     double result = Ibis::parallel_reduce<Min<double>, Mpi>(
@@ -125,6 +124,6 @@ MPI_TEST_CASE("MPI_comm", 2) {
         MPI_CHECK(1, recv_buf_mirror(i) == 0.0 + (double)i);
     }
 }
-#endif // DOCTEST_CONFIG_DISABLE
+#endif  // DOCTEST_CONFIG_DISABLE
 
 #endif

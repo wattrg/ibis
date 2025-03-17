@@ -1,8 +1,9 @@
 #include <doctest/doctest.h>
 // #include <parallel/shared_memory.h>
-#include <util/numeric_types.h>
-#include <Kokkos_Core.hpp>
 #include <parallel/parallel.h>
+#include <util/numeric_types.h>
+
+#include <Kokkos_Core.hpp>
 
 template <>
 void Ibis::initialise<SharedMem>(int argc, char **argv) {
@@ -30,4 +31,4 @@ TEST_CASE("shared_parallel_reduction") {
 
     CHECK(result == 5);
 }
-#endif // DOCTEST_CONFIG_DISABLE
+#endif  // DOCTEST_CONFIG_DISABLE

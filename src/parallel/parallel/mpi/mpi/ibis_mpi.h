@@ -4,9 +4,9 @@
 #ifdef Ibis_ENABLE_MPI
 
 #include <mpi.h>
+#include <parallel/parallel.h>
 #include <parallel/parallel_fwd.h>
 #include <parallel/reductions.h>
-#include <parallel/parallel.h>
 #include <parallel/shared_memory.h>
 #include <util/types.h>
 
@@ -87,7 +87,6 @@ private:
     MPI_Op mpi_op_ = MpiReduction<Reduction>::op();
 };
 
-
 template <class ReducerType>
 class Reducer<ReducerType, Mpi> {
 public:
@@ -106,8 +105,8 @@ public:
     }
 
     template <class PolicyType, class FunctorType>
-    inline auto execute(const std::string& str, PolicyType policy,
-                        FunctorType functor) -> typename ReducerType::scalar_type {
+    inline auto execute(const std::string& str, PolicyType policy, FunctorType functor) ->
+        typename ReducerType::scalar_type {
         using scalar_type = typename ReducerType::scalar_type;
 
         // The shared memory part of the reduction
@@ -124,7 +123,6 @@ template <class ReducerType>
 struct ReducerMap<ReducerType, Mpi> {
     using reducer_type = Reducer<ReducerType, Mpi>;
 };
-
 
 // Message passing communicator
 template <typename T, bool gpu_aware = false, class MemSpace = Ibis::DefaultMemSpace>

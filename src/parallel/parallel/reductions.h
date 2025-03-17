@@ -42,7 +42,6 @@ struct ReductionIdentity<Sum<Scalar>> {
     }
 };
 
-namespace Ibis {
-}  // namespace Ibis
+namespace Ibis {}  // namespace Ibis
 
 #endif

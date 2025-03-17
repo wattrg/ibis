@@ -16,11 +16,11 @@
 #include <ibis/commands/run/run.h>
 #include <io/io.h>
 // #include <ibis_version_info.h>
+#include <parallel/parallel.h>
 #include <runtime_dirs.h>
 #include <spdlog/sinks/basic_file_sink.h>
 #include <spdlog/sinks/stdout_color_sinks.h>
 #include <spdlog/spdlog.h>
-#include <parallel/parallel.h>
 
 #include <CLI/CLI.hpp>
 
@@ -36,8 +36,8 @@ int cli(int argc, char* argv[]) {
     CLI::App* run_command = ibis.add_subcommand("run", "run the simulation");
 
 #ifdef Ibis_ENABLE_DISTRIBUTED_MEMORY
-    CLI::App* run_dist_command = ibis.add_subcommand("run-dist",
-                                                     "run a distributed simulation");
+    CLI::App* run_dist_command =
+        ibis.add_subcommand("run-dist", "run a distributed simulation");
 #endif
 
     // The partition command
@@ -95,22 +95,25 @@ int cli(int argc, char* argv[]) {
         return run<SharedMem>(argc, argv);
     }
 #ifdef Ibis_ENABLE_DISTRIBUTED_MEMORY
-    } else if (ibis.got_subcommand(run_dist_command)) {
-        return run<Mpi>(argc, argv);   
-    }
+}
+else if (ibis.got_subcommand(run_dist_command)) {
+    return run<Mpi>(argc, argv);
+}
 #endif
-    else if (ibis.got_subcommand("post")) {
-        if (post_command->got_subcommand(plot_command)) {
-            return plot(format, extra_vars, argc, argv);
-        } else if (post_command->got_subcommand(plot_residuals_command)) {
-            return plot_residuals();
-        }
-    } else if (ibis.got_subcommand(partition_command)) {
-        return partition_grid(grid_filename, output_dir, n_partitions, argc, argv);
-    } else {
-        spdlog::error("Nothing to do. Try `ibis --help`");
+else if (ibis.got_subcommand("post")) {
+    if (post_command->got_subcommand(plot_command)) {
+        return plot(format, extra_vars, argc, argv);
+    } else if (post_command->got_subcommand(plot_residuals_command)) {
+        return plot_residuals();
     }
-    return 1;
+}
+else if (ibis.got_subcommand(partition_command)) {
+    return partition_grid(grid_filename, output_dir, n_partitions, argc, argv);
+}
+else {
+    spdlog::error("Nothing to do. Try `ibis --help`");
+}
+return 1;
 }
 
 int main(int argc, char* argv[]) {

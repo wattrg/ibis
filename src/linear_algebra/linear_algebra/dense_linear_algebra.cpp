@@ -351,4 +351,4 @@ TEST_CASE("Ibis::Matrix::columns") {
     CHECK(columns.n_cols() == 2);
     // CHECK(columns(0, 0) == 1.0);
 }
-#endif // DOCTEST_CONFIG_DISABLE
+#endif  // DOCTEST_CONFIG_DISABLE

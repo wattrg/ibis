@@ -8,7 +8,5 @@
 #ifdef Ibis_ENABLE_MPI
 #ifdef Ibis_ENABLE_DISTRIBUTED_MEMORY
 
-
-
 #endif
 #endif

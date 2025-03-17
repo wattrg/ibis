@@ -17,6 +17,6 @@ using DefaultMemModel = Mpi;
 using DefaultMemModel = SharedMem;
 #endif
 
-}
+}  // namespace Ibis
 
 #endif

@@ -1,9 +1,9 @@
 #include <grid/grid.h>
-#include <parallel/parallel.h>
 #include <ibis/commands/run/run.h>
 #include <ibis/config.h>
 #include <ibis_git_info.h>
 #include <ibis_version.h>
+#include <parallel/parallel.h>
 #include <solvers/solver.h>
 #include <spdlog/spdlog.h>
 
@@ -62,8 +62,8 @@ int run(int argc, char* argv[]) {
     }
     return result;
 }
-template int run<SharedMem> (int, char*[]);
+template int run<SharedMem>(int, char*[]);
 
 #ifdef Ibis_ENABLE_MPI
-template int run<Mpi> (int, char*[]);
+template int run<Mpi>(int, char*[]);
 #endif
