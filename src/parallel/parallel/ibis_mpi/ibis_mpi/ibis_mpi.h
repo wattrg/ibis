@@ -8,6 +8,7 @@
 #include <parallel/parallel.h>
 #include <ibis_kokkos/ibis_kokkos.h>
 #include <util/types.h>
+#include <util/numeric_types.h>
 
 #include <Kokkos_Core.hpp>
 
@@ -40,6 +41,17 @@ MpiTypeMapping(short int, MPI_SHORT)                                // NOLINT
     MpiTypeMapping(long double, MPI_LONG_DOUBLE)                    // NOLINT
     MpiTypeMapping(char, MPI_CHAR)                                  // NOLINT
 
+
+// Convert Ibis::dual to MPI types
+template <>
+struct MpiDataType<Dual<double>> {
+    static MPI_Datatype value() { return MPI_2DOUBLE_PRECISION; }  
+};
+template <>
+struct MpiDataType<Dual<float>> {
+    static MPI_Datatype value() { return MPI_2REAL; }  
+};
+    
 // 
 // Reductions
 template <typename Reduction>

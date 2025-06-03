@@ -1,4 +1,5 @@
 #include <finite_volume/conserved_quantities.h>
+#include <parallel/parallel.h>
 #include <util/numeric_types.h>
 
 template <typename T>
@@ -40,7 +41,7 @@ void ConservedQuantities<T>::apply_time_derivative(const ConservedQuantities<T>&
 template <typename T>
 ConservedQuantitiesNorm<T> ConservedQuantities<T>::L2_norms() const {
     ConservedQuantitiesNorm<T> norms{};
-    Kokkos::parallel_reduce(
+    norms = Ibis::parallel_reduce<Sum<ConservedQuantitiesNorm<T>>, Ibis::DefaultMemModel>(
         "L2_norm", num_values_,
         KOKKOS_CLASS_LAMBDA(const size_t i, ConservedQuantitiesNorm<T>& tl_cq) {
             T mass_i = mass(i);
@@ -56,8 +57,7 @@ ConservedQuantitiesNorm<T> ConservedQuantities<T>::L2_norms() const {
             tl_cq.global() += mass_i * mass_i + momentum_xi * momentum_xi +
                               momentum_yi * momentum_yi + momentum_zi * momentum_zi +
                               energy_i * energy_i;
-        },
-        Kokkos::Sum<ConservedQuantitiesNorm<T>>(norms));
+        });
 
     norms.global() = Ibis::sqrt(norms.global());
     norms.mass() = Ibis::sqrt(norms.mass());
