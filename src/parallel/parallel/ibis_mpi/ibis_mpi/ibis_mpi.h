@@ -27,6 +27,16 @@ struct MpiDataType;
         static MPI_Datatype value() { return MPI_type; } \
     };
 
+template <>
+struct MpiDataType<Dual<double>> {
+    static MPI_Datatype value() { return MPI_2DOUBLE_PRECISION; }  
+};
+
+template <>
+struct MpiDataType<Dual<float>> {
+    static MPI_Datatype value() { return MPI_2REAL; }  
+};
+
 MpiTypeMapping(short int, MPI_SHORT)                                // NOLINT
     MpiTypeMapping(int, MPI_INT)                                    // NOLINT
     MpiTypeMapping(long int, MPI_LONG)                              // NOLINT
@@ -41,19 +51,33 @@ MpiTypeMapping(short int, MPI_SHORT)                                // NOLINT
     MpiTypeMapping(long double, MPI_LONG_DOUBLE)                    // NOLINT
     MpiTypeMapping(char, MPI_CHAR)                                  // NOLINT
 
+// Custom MPI operations of standard overloaded operators
+template <typename T>
+void MPI_custom_sum(T* invec, T* inoutvec, int* len, MPI_Datatype* datatype) {
+    (void) datatype;
+    for(int i = 0; i < *len; i++) {
+        inoutvec[i] += invec[i];
+    }
+}
 
-// Convert Ibis::dual to MPI types
-template <>
-struct MpiDataType<Dual<double>> {
-    static MPI_Datatype value() { return MPI_2DOUBLE_PRECISION; }  
-};
-template <>
-struct MpiDataType<Dual<float>> {
-    static MPI_Datatype value() { return MPI_2REAL; }  
-};
+template <typename T>
+void MPI_custom_max(T* invec, T* inoutvec, int* len, MPI_Datatype* datatype) {
+    (void) datatype;
+    for(int i = 0; i < *len; i++) {
+        inoutvec[i] = max(invec[i], inoutvec[i]);
+    }
+}
+
+template <typename T>
+void MPI_custom_min(T* invec, T* inoutvec, int* len, MPI_Datatype* datatype) {
+    (void) datatype;
+    for(int i = 0; i < *len; i++) {
+        inoutvec[i] = min(invec[i], inoutvec[i]);
+    }
+}
     
-// 
-// Reductions
+ 
+// Map between Ibis reduction types and MPI reduction types
 template <typename Reduction>
 struct MpiReduction;
 
@@ -61,15 +85,37 @@ template <typename T>
 struct MpiReduction<Min<T>> {
     static MPI_Op op() { return MPI_MIN; }
 };
+
 template <typename T>
 struct MpiReduction<Max<T>> {
     static MPI_Op op() { return MPI_MAX; }
 };
+
 template <typename T>
 struct MpiReduction<Sum<T>> {
     static MPI_Op op() { return MPI_SUM; }
 };
 
+extern MPI_Op MPI_dual_min;
+template<typename T>
+struct MpiReduction<Min<Dual<T>>> {
+    static MPI_Op op() { return MPI_dual_min; }
+};
+
+extern MPI_Op MPI_dual_max;
+template<typename T>
+struct MpiReduction<Max<Dual<T>>> {
+    static MPI_Op op() { return MPI_dual_max; }
+};
+
+extern MPI_Op MPI_dual_sum;
+template<typename T>
+struct MpiReduction<Sum<Dual<T>>> {
+    static MPI_Op op() { return MPI_dual_sum; }
+};
+
+
+// An object to perform MPI reductions with a nicer interfacer
 template <class Reduction>
 struct MpiReducer {
 public:

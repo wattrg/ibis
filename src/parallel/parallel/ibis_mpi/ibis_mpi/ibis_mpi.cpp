@@ -1,20 +1,35 @@
 #include <doctest/extensions/doctest_mpi.h>
 #include <ibis_mpi/ibis_mpi.h>
 #include <parallel/parallel.h>
-#include <util/numeric_types.h>
 
 #include <Kokkos_Core.hpp>
 
 #ifdef Ibis_ENABLE_MPI
 
+namespace Ibis {
+    MPI_Op MPI_dual_min;
+    MPI_Op MPI_dual_max;
+    MPI_Op MPI_dual_sum;
+};
+
 template <>
 void Ibis::initialise<Mpi>(int argc, char** argv) {
     MPI_Init(&argc, &argv);
+
+    // Create MPI operations for dual numbers
+    MPI_Op_create((MPI_User_function*)MPI_custom_max<Ibis::dual>,
+                  1, &Ibis::MPI_dual_max);
+    MPI_Op_create((MPI_User_function*)MPI_custom_min<Ibis::dual>,
+                  1, &Ibis::MPI_dual_min);
+    MPI_Op_create((MPI_User_function*)MPI_custom_sum<Ibis::dual>,
+                  1, &Ibis::MPI_dual_sum);
+    
     Ibis::initialise<SharedMem>(argc, argv);
 }
 
 template <>
 void Ibis::finalise<Mpi>() {
+    Ibis::finalise<SharedMem>();
     MPI_Finalize();
 }
 
@@ -123,6 +138,21 @@ MPI_TEST_CASE("MPI_comm", 2) {
         MPI_CHECK(1, recv_buf_mirror(i) == 0.0 + (double)i);
     }
 }
+
+MPI_TEST_CASE("MPI_dual_max", 2) {
+    Ibis::dual x;
+    if (test_rank == 0) {
+        x = Ibis::dual(1.0, 1.0);
+    }
+    else {
+        x = Ibis::dual(2.0, 0.5);
+    }
+
+    Ibis::MpiReducer<Min<Ibis::dual>> mpi_min;
+    Ibis::dual min = mpi_min.reduce(x);
+    CHECK(min == Ibis::dual(1.0, 1.0));
+}
+
 #endif  // DOCTEST_CONFIG_DISABLE
 
 #endif

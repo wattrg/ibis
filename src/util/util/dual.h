@@ -2,6 +2,7 @@
 #define DUAL_H
 
 #include <util/real.h>
+// #include <parallel/parallel.h>
 
 #include <Kokkos_Core.hpp>
 
@@ -345,5 +346,19 @@ KOKKOS_INLINE_FUNCTION T& dual_part(Dual<T>& d) {
 
 typedef Dual<real> dual;
 }  // namespace Ibis
+
+
+#ifdef Ibis_ENABLE_MPI
+// Convert Ibis::dual to MPI types
+
+// MPI_Op* Ibis_MPI_dual_max;
+// void ibis_MPI_dual_max(Ibis::dual* invec, Ibis::dual* inoutvec,
+                       // int* len, MPI_Datatype* datatype);
+
+
+
+// TODO: MPI reductions for dual numbers
+
+#endif
 
 #endif

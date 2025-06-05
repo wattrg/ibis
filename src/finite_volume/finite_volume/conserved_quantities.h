@@ -4,7 +4,8 @@
 #include <gas/flow_state.h>
 #include <util/numeric_types.h>
 #include <util/types.h>
-#include <ibis_mpi/ibis_mpi.h>
+// #include <ibis_mpi/ibis_mpi.h>
+#include <parallel/parallel.h>
 
 #include <Kokkos_Core.hpp>
 #include <fstream>
@@ -105,6 +106,7 @@ struct reduction_identity<ConservedQuantitiesNorm<T> > {
 };
 }  // namespace Kokkos
 
+#ifdef Ibis_ENABLE_MPI
 // Allow ConservedQuantitiesNorm to be used as a custom scalar type for MPI reductions
 namespace Ibis {
     template <typename T>
@@ -112,6 +114,9 @@ namespace Ibis {
         static MPI_Datatype value() { return MpiDataType<T>::value(); }  
     };
 }
+
+// TODO: Custom MPI reductions for conserved quantity norms
+#endif // Ibis_ENABLE_MPI
 
 template <typename T>
 class ConservedQuantities {

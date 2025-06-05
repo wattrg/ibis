@@ -5,7 +5,7 @@ add_library(
     util/ragged_array.cpp
     util/cubic_spline.cpp
 )
-target_link_libraries(util PUBLIC Kokkos::kokkos doctest)
+target_link_libraries(util PUBLIC Kokkos::kokkos doctest parallel)
 target_include_directories(util PUBLIC .)
 
 
@@ -22,6 +22,7 @@ if (Ibis_BUILD_TESTS)
     target_link_libraries(
 	      util_unittest 	
 	      PRIVATE
+	      parallel
 	      Kokkos::kokkos
 	      doctest
     )
