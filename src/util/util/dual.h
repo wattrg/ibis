@@ -5,6 +5,7 @@
 // #include <parallel/parallel.h>
 
 #include <Kokkos_Core.hpp>
+#include <parallel/reductions.h>
 
 namespace Ibis {
 
@@ -344,21 +345,48 @@ KOKKOS_INLINE_FUNCTION T& dual_part(Dual<T>& d) {
     return d.dual();
 }
 
+
 typedef Dual<real> dual;
 }  // namespace Ibis
 
+// reduction identities
 
-#ifdef Ibis_ENABLE_MPI
-// Convert Ibis::dual to MPI types
+namespace Kokkos {
+template <typename T>
+struct reduction_identity<Ibis::Dual<T>> {
+    KOKKOS_FORCEINLINE_FUNCTION
+    static Ibis::Dual<T> sum() { return Ibis::Dual<T> {Kokkos::reduction_identity<T>::sum(), T(0.0)}; }   
 
-// MPI_Op* Ibis_MPI_dual_max;
-// void ibis_MPI_dual_max(Ibis::dual* invec, Ibis::dual* inoutvec,
-                       // int* len, MPI_Datatype* datatype);
+    KOKKOS_FORCEINLINE_FUNCTION
+    static Ibis::Dual<T> min() { return Ibis::Dual<T> {Kokkos::reduction_identity<T>::min(), T(0.0)}; }   
+
+    KOKKOS_FORCEINLINE_FUNCTION
+    static Ibis::Dual<T> max() { return Ibis::Dual<T> {Kokkos::reduction_identity<T>::max(), T(0.0)}; }   
+};
+
+}
+
+template <typename T>
+struct ReductionIdentity<Min<Ibis::Dual<T>>> {
+    constexpr static Ibis::Dual<T> identity() {
+        return Ibis::Dual<T> { ReductionIdentity<T>::identity(), T(0.0) };
+    }
+};
+
+template <typename T>
+struct ReductionIdentity<Max<Ibis::Dual<T>>> {
+    constexpr static Ibis::Dual<T> identity() {
+        return Ibis::Dual<T> { ReductionIdentity<T>::identity(), T(0.0) };
+    }
+};
+
+template <typename T>
+struct ReductionIdentity<Sum<Ibis::Dual<T>>> {
+    constexpr static Ibis::Dual<T> identity() {
+        return Ibis::Dual<T> { ReductionIdentity<T>::identity(), T(0.0) };
+    }
+};
 
 
-
-// TODO: MPI reductions for dual numbers
-
-#endif
 
 #endif

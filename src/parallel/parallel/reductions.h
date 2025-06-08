@@ -2,6 +2,7 @@
 #define REDUCTIONS_H
 
 #include <Kokkos_Core.hpp>
+// #include <util/numeric_types.h>
 
 template <typename T>
 struct Min {
@@ -20,6 +21,27 @@ struct Sum {
 
 template <class Reduction>
 struct ReductionIdentity;
+
+// template <typename T>
+// struct ReductionIdentity<Min<Ibis::Dual<T>>> {
+//     constexpr static Ibis::Dual<T> identity() {
+//         return Ibis::Dual<T> { ReductionIdentity<T>::identity(), T(0.0) };
+//     }
+// };
+
+// template <typename T>
+// struct ReductionIdentity<Max<Ibis::Dual<T>>> {
+//     constexpr static Ibis::Dual<T> identity() {
+//         return Ibis::Dual<T> { ReductionIdentity<T>::identity(), T(0.0) };
+//     }
+// };
+
+// template <typename T>
+// struct ReductionIdentity<Sum<Ibis::Dual<T>>> {
+//     constexpr static Ibis::Dual<T> identity() {
+//         return Ibis::Dual<T> { ReductionIdentity<T>::identity(), T(0.0) };
+//     }
+// };
 
 template <typename Scalar>
 struct ReductionIdentity<Min<Scalar>> {

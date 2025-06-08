@@ -1,6 +1,7 @@
 #include <doctest/extensions/doctest_mpi.h>
 #include <ibis_mpi/ibis_mpi.h>
 #include <parallel/parallel.h>
+#include <util/numeric_types.h>
 
 #include <Kokkos_Core.hpp>
 
@@ -184,16 +185,18 @@ MPI_TEST_CASE("MPI_dual_max", 2) {
     CHECK(max == Ibis::dual(2.0, 0.5));
 }
 
-// MPI_TEST_CASE("MPI_dual_max_lambda", 2) {
-//     Ibis::dual result = Ibis::parallel_reduce<Max<Ibis::dual>, Mpi>(
-//         "test", 10, KOKKOS_LAMBDA(const int i, Ibis::dual& utd) {
-//             Ibis::dual x{test_rank + i, test_rank + i + 1};
-//             utd = Ibis::max(utd, x);
-//         });
+MPI_TEST_CASE("MPI_dual_max_lambda", 2) {
+    Ibis::dual result = Ibis::parallel_reduce<Max<Ibis::dual>, Mpi>(
+        "test", 10, KOKKOS_LAMBDA(const int i, Ibis::dual& utd) {
+            Ibis::dual x{(double)test_rank + i, (double)test_rank + i + 1};
+            utd = Ibis::max(utd, x);
+        });
 
-//     MPI_CHECK(0, result == Ibis::dual{10.0, 11.0});
-//     MPI_CHECK(1, result == Ibis::dual{10.0, 11.0});
-// }
+    MPI_CHECK(0, Ibis::real_part(result) == 10.0);
+    MPI_CHECK(0, Ibis::dual_part(result) == 11.0);
+    MPI_CHECK(1, Ibis::real_part(result) == 10.0);
+    MPI_CHECK(1, Ibis::dual_part(result) == 11.0);
+}
 
 MPI_TEST_CASE("MPI_dual_sum", 2) {
     Ibis::dual x;
