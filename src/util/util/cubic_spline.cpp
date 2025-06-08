@@ -1,12 +1,12 @@
-#include "cubic_spline.h"
-
+#include <util/cubic_spline.h>
 #include <doctest/doctest.h>
-
 #include <stdexcept>
 
-#include "Kokkos_Core_fwd.hpp"
+// #include "Kokkos_Core_fwd.hpp"
 
 CubicSpline::CubicSpline(std::vector<Ibis::real> x_vec, std::vector<Ibis::real> y_vec) {
+    // allocate memory on the device, and mirrors on the host for setting
+    // up the interpolation
     size_t n_pts = x_vec.size();
     n_pts_ = n_pts;
     if (n_pts < 4) {
@@ -33,53 +33,25 @@ CubicSpline::CubicSpline(std::vector<Ibis::real> x_vec, std::vector<Ibis::real> 
         y(i) = y_vec[i];
     }
 
-    // we solve for the second derivative at internal points, so we
-    // have n_points - 2 equations to solve
-    size_t n_eqns = n_pts - 2;
+    Kokkos::View<Ibis::real*, Kokkos::DefaultHostExecutionSpace> u("u", n_pts);
+    y_dash_dash_ = Kokkos::View<Ibis::real*>("CubicSpline::y''", n_pts);
+    auto y_dash_dash = Kokkos::create_mirror_view(y_dash_dash_);
 
-    Kokkos::View<Ibis::real*, Kokkos::DefaultHostExecutionSpace> diag("diag", n_eqns);
-    Kokkos::View<Ibis::real*, Kokkos::DefaultHostExecutionSpace> upper("upper",
-                                                                       n_eqns - 1);
-    Kokkos::View<Ibis::real*, Kokkos::DefaultHostExecutionSpace> rhs("rhs", n_eqns);
-    Kokkos::View<Ibis::real*, Kokkos::DefaultHostExecutionSpace> y_dash_dash(
-        "y_dash_dash", n_eqns);
-    y_dash_dash_ = Kokkos::View<Ibis::real*>("CubicSpline::y''", n_eqns);
-
-    // fill in the arrays to set up the system of equations
-    Ibis::real delta_xi, delta_yi;
-    for (size_t i = 0; i <= n_eqns; i++) {
-        delta_xi = x(i + 1) - x(i);
-        delta_yi = y(i + 1) - y(i);
-
-        if (i != n_eqns) {
-            diag(i) += delta_xi;
-            rhs(i) -= delta_yi / delta_xi;
-        }
-
-        if (i == 0) continue;
-
-        rhs(i - 1) += delta_yi / delta_xi;
-        diag(i - 1) += delta_xi;
-        upper(i - 1) += delta_xi;
-    }
-    for (size_t i = 0; i < n_eqns; i++) {
-        rhs(i) *= 6;
-        diag(i) *= 2;
+    // Formation (and decompoistion) of the tri-diagonal system.
+    // This implementation is from the cubic spline interpolation section of the 3rd
+    // edition of Numerical Methods in C (p. 123), using natural boundary conditions.
+    for (size_t i = 1; i < n_pts - 1; i++) {
+        Ibis::real sigma = (x(i) - x(i-1)) / (x(i+1) - x(i-1));
+        Ibis::real p = sigma * y_dash_dash(i - 1) + 2.0;
+        y_dash_dash(i) = (sigma - 1) / p;
+        u(i) = (y(i+1) - y(i)) / (x(i+1) - x(i)) - (y(i) - y(i-1)) / (x(i) - x(i-1));
+        u(i) = (6.0 * u(i) / (x(i+1) - x(i-1)) - sigma * u(i-1)) / p;
     }
 
-    // use the Thomas alorithm to solve the tri-diagonal system of equations
-    // sweep forward, eliminating bottom diagonal
-    Ibis::real w;
-    for (size_t i = 1; i < n_eqns; i++) {
-        w = upper(i - 1) / diag(i - 1);
-        diag(i) = diag(i) - w * upper(i - 1);
-        rhs(i) = rhs(i) - w * rhs(i - 1);
-    }
-
-    // back substitution
-    y_dash_dash(n_pts - 2) = rhs(n_eqns - 1) / diag(n_eqns - 1);
-    for (int i = n_eqns - 2; i >= 0; i--) {
-        y_dash_dash(i + 1) = (rhs(i) - upper(i) * y_dash_dash(i + 2)) / diag(i);
+    // backsubstitution
+    y_dash_dash(n_pts - 1) = 0.0;
+    for (int k = n_pts - 2; k >= 0; k--) {
+        y_dash_dash(k) = y_dash_dash(k) * y_dash_dash(k+1) + u(k);
     }
 
     // copy data to the device

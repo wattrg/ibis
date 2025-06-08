@@ -7,6 +7,7 @@
 class CubicSpline {
 public:
     CubicSpline() {}
+
     CubicSpline(std::vector<Ibis::real> x, std::vector<Ibis::real> y);
 
     KOKKOS_FUNCTION
