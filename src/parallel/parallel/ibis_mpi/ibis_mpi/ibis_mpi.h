@@ -9,6 +9,7 @@
 #include <ibis_kokkos/ibis_kokkos.h>
 #include <util/types.h>
 #include <util/numeric_types.h>
+#include <finite_volume/conserved_quantities.h>
 
 #include <Kokkos_Core.hpp>
 
@@ -113,6 +114,25 @@ template<typename T>
 struct MpiReduction<Sum<Dual<T>>> {
     static MPI_Op op() { return MPI_dual_sum; }
 };
+
+// Allow ConservedQuantitiesNorm to be used as a custom scalar type for MPI reductions
+extern MPI_Datatype MPI_ConservedQuantitiesNorm;
+template <typename T>
+struct MpiDataType<ConservedQuantitiesNorm<T>> {
+    static MPI_Datatype value() { return MPI_ConservedQuantitiesNorm; }  
+};
+
+extern MPI_Op MPI_ConservedQuantitiesNorm_sum;
+template <typename T>
+struct MpiReduction<Sum<ConservedQuantitiesNorm<T>>> {
+    static MPI_Op op() { return MPI_ConservedQuantitiesNorm_sum; }
+};
+
+template <typename T>
+void init_mpi_conserved_quantities_norm_sum(MPI_Datatype* type, MPI_Op* op) {
+    MPI_Type_contiguous(6, MpiDataType<ConservedQuantitiesNorm<T>>::value(), type);
+    MPI_Op_create((MPI_User_function*)MPI_custom_sum<ConservedQuantitiesNorm<T>>, 1, op);
+}
 
 
 // An object to perform MPI reductions with a nicer interfacer

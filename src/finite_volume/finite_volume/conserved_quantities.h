@@ -5,7 +5,7 @@
 #include <util/numeric_types.h>
 #include <util/types.h>
 // #include <ibis_mpi/ibis_mpi.h>
-#include <parallel/parallel.h>
+// #include <parallel/parallel.h>
 
 #include <Kokkos_Core.hpp>
 #include <fstream>
@@ -15,85 +15,71 @@ class ConservedQuantitiesNorm {
 public:
     KOKKOS_INLINE_FUNCTION
     ConservedQuantitiesNorm() {
-        global_ = 0.0;
-        mass_ = 0.0;
-        momentum_x_ = 0.0;
-        momentum_y_ = 0.0;
-        momentum_z_ = 0.0;
-        energy_ = 0.0;
+        for (size_t i = 0; i < 6; i++) {
+            data_[i] = T(0.0);
+        }
     }
 
     KOKKOS_INLINE_FUNCTION
     ConservedQuantitiesNorm(const ConservedQuantitiesNorm<T>& rhs) {
-        global_ = rhs.global_;
-        mass_ = rhs.mass_;
-        momentum_x_ = rhs.momentum_x_;
-        momentum_y_ = rhs.momentum_y_;
-        momentum_z_ = rhs.momentum_z_;
-        energy_ = rhs.energy_;
+        for (size_t i = 0; i < 6; i++) {
+            data_[i] = rhs.data_[i];
+        }
     }
 
     KOKKOS_INLINE_FUNCTION
     ConservedQuantitiesNorm& operator=(const ConservedQuantitiesNorm<T>& rhs) {
-        global_ = rhs.global_;
-        mass_ = rhs.mass_;
-        momentum_x_ = rhs.momentum_x_;
-        momentum_y_ = rhs.momentum_y_;
-        momentum_z_ = rhs.momentum_z_;
-        energy_ = rhs.energy_;
+        for (size_t i = 0; i < 6; i++) {
+            data_[i] = rhs.data_[i];
+        }
         return *this;
     }
 
     KOKKOS_INLINE_FUNCTION
     ConservedQuantitiesNorm& operator+=(const ConservedQuantitiesNorm<T>& rhs) {
-        global_ += rhs.global_;
-        mass_ += rhs.mass_;
-        momentum_x_ += rhs.momentum_x_;
-        momentum_y_ += rhs.momentum_y_;
-        momentum_z_ += rhs.momentum_z_;
-        energy_ += rhs.energy_;
+        for (size_t i = 0; i < 6; i++) {
+            data_[i] += rhs.data_[i];
+        }
         return *this;
     }
 
     friend ConservedQuantitiesNorm operator/(const ConservedQuantitiesNorm<T> num,
                                              const ConservedQuantitiesNorm<T> den) {
         ConservedQuantitiesNorm<T> res{};
-        res.global_ = num.global_ / den.global_;
-        res.mass_ = num.mass_ / den.mass_;
-        res.momentum_x_ = num.momentum_x_ / den.momentum_x_;
-        res.momentum_y_ = num.momentum_y_ / den.momentum_y_;
-        res.momentum_z_ = num.momentum_z_ / den.momentum_z_;
-        res.energy_ = num.energy_ / den.energy_;
+        for (size_t i = 0; i < 6; i++) {
+            res.data_[i] = num.data_[i] / den.data_[i];
+        }
         return res;
     }
 
     KOKKOS_INLINE_FUNCTION
-    T& global() { return global_; }
+    T& global() { return data_[0]; }
 
     KOKKOS_INLINE_FUNCTION
-    T& mass() { return mass_; }
+    T& mass() { return data_[1]; }
 
     KOKKOS_INLINE_FUNCTION
-    T& momentum_x() { return momentum_x_; }
+    T& momentum_x() { return data_[2]; }
 
     KOKKOS_INLINE_FUNCTION
-    T& momentum_y() { return momentum_y_; }
+    T& momentum_y() { return data_[3]; }
 
     KOKKOS_INLINE_FUNCTION
-    T& momentum_z() { return momentum_z_; }
+    T& momentum_z() { return data_[4]; }
 
     KOKKOS_INLINE_FUNCTION
-    T& energy() { return energy_; }
+    T& energy() { return data_[5]; }
 
     void write_to_file(std::ofstream& f, Ibis::real wc, Ibis::real time, size_t step);
 
 private:
-    T global_;
-    T mass_;
-    T momentum_x_;
-    T momentum_y_;
-    T momentum_z_;
-    T energy_;
+    T data_[6]; 
+    // T global_;
+    // T mass_;
+    // T momentum_x_;
+    // T momentum_y_;
+    // T momentum_z_;
+    // T energy_;
 };
 
 // this allows ConservedQuantity to be used as a custom scalar type
@@ -107,13 +93,6 @@ struct reduction_identity<ConservedQuantitiesNorm<T> > {
 }  // namespace Kokkos
 
 #ifdef Ibis_ENABLE_MPI
-// Allow ConservedQuantitiesNorm to be used as a custom scalar type for MPI reductions
-namespace Ibis {
-    template <typename T>
-    struct MpiDataType<ConservedQuantitiesNorm<T>> {
-        static MPI_Datatype value() { return MpiDataType<T>::value(); }  
-    };
-}
 
 // TODO: Custom MPI reductions for conserved quantity norms
 #endif // Ibis_ENABLE_MPI

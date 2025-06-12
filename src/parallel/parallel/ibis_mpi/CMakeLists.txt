@@ -12,6 +12,7 @@ target_link_libraries(
     util
     MPI::MPI_CXX
     parallel
+    finite_volume
 )
 
 target_include_directories(
