@@ -1,7 +1,7 @@
 #ifndef FLUX_H
 #define FLUX_H
 
-#include <finite_volume/conserved_quantities.h>
+#include <util/conserved_quantities.h>
 #include <gas/flow_state.h>
 #include <gas/gas_model.h>
 #include <grid/interface.h>

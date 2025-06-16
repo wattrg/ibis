@@ -1,7 +1,7 @@
 #ifndef STEADY_STATE_SOLVER_H
 #define STEADY_STATE_SOLVER_H
 
-#include <finite_volume/conserved_quantities.h>
+#include <util/conserved_quantities.h>
 #include <gas/flow_state.h>
 #include <io/io.h>
 #include <linear_algebra/linear_system.h>

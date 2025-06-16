@@ -1,7 +1,7 @@
 #ifndef CONSERVED_QUANTITIES_H
 #define CONSERVED_QUANTITIES_H
 
-#include <gas/flow_state.h>
+// #include <gas/flow_state.h>
 #include <util/numeric_types.h>
 #include <util/types.h>
 // #include <ibis_mpi/ibis_mpi.h>

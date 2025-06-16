@@ -1,7 +1,7 @@
 #ifndef VISCOUS_FLUX_H
 #define VISCOUS_FLUX_H
 
-#include <finite_volume/conserved_quantities.h>
+#include <util/conserved_quantities.h>
 #include <gas/flow_state.h>
 #include <gas/gas_model.h>
 #include <gas/transport_properties.h>

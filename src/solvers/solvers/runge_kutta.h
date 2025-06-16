@@ -1,7 +1,7 @@
 #ifndef RUNGE_KUTTA_H
 #define RUNGE_KUTTA_H
 
-#include <finite_volume/conserved_quantities.h>
+#include <util/conserved_quantities.h>
 #include <finite_volume/grid_motion_driver.h>
 #include <gas/flow_state.h>
 #include <gas/transport_properties.h>

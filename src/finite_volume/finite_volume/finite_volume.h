@@ -2,7 +2,7 @@
 #define FINITE_VOLUME_H
 
 #include <finite_volume/boundaries/boundary.h>
-#include <finite_volume/conserved_quantities.h>
+#include <util/conserved_quantities.h>
 #include <finite_volume/convective_flux.h>
 #include <finite_volume/flux_calc.h>
 #include <finite_volume/grid_motion_driver.h>

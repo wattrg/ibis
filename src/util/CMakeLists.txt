@@ -4,7 +4,7 @@ add_library(
     util/vector3.cpp
     util/ragged_array.cpp
     util/cubic_spline.cpp
-)
+    util/conserved_quantities.cpp)
 target_link_libraries(util PUBLIC Kokkos::kokkos doctest parallel)
 target_include_directories(util PUBLIC .)
 

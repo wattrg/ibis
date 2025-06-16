@@ -9,7 +9,7 @@
 #include <ibis_kokkos/ibis_kokkos.h>
 #include <util/types.h>
 #include <util/numeric_types.h>
-#include <finite_volume/conserved_quantities.h>
+#include <util/conserved_quantities.h>
 
 #include <Kokkos_Core.hpp>
 

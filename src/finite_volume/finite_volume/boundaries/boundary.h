@@ -6,7 +6,8 @@
 #include <grid/grid.h>
 #include <util/cubic_spline.h>
 
-#include "finite_volume/conserved_quantities.h"
+// #include "finite_volume/conserved_quantities.h"
+#include <util/conserved_quantities.h>
 
 enum class BoundaryConditions { SupersonicInflow, SlipWall, SupersonicOutflow };
 

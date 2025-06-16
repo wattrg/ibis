@@ -160,7 +160,7 @@ MPI_TEST_CASE("MPI_dual_min", 2) {
 
     Ibis::MpiReducer<Min<Ibis::dual>> mpi_min;
     Ibis::dual min = mpi_min.reduce(x);
-    CHECK(min == Ibis::dual(1.0, 1.0));
+    MPI_CHECK(0, min == Ibis::dual(1.0, 1.0));
 }
 
 MPI_TEST_CASE("MPI_dual_min_array", 2) {
@@ -175,8 +175,8 @@ MPI_TEST_CASE("MPI_dual_min_array", 2) {
     Ibis::MpiReducer<Min<Ibis::dual>> mpi_min;
     std::vector<Ibis::dual> results(2);
     mpi_min.reduce(xs.data(), results.data(), 2);
-    CHECK(results[0] == Ibis::dual(1.0, 1.0));
-    CHECK(results[1] == Ibis::dual(0.1, 1.0));
+    MPI_CHECK(0, results[0] == Ibis::dual(1.0, 1.0));
+    MPI_CHECK(0, results[1] == Ibis::dual(0.1, 1.0));
 }
 
 MPI_TEST_CASE("MPI_dual_max", 2) {
@@ -191,7 +191,7 @@ MPI_TEST_CASE("MPI_dual_max", 2) {
 
     Ibis::MpiReducer<Max<Ibis::dual>> mpi_max;
     Ibis::dual max = mpi_max.reduce(x);
-    CHECK(max == Ibis::dual(2.0, 0.5));
+    MPI_CHECK(0, max == Ibis::dual(2.0, 0.5));
 }
 
 MPI_TEST_CASE("MPI_dual_max_lambda", 2) {
@@ -219,7 +219,8 @@ MPI_TEST_CASE("MPI_dual_sum", 2) {
 
     Ibis::MpiReducer<Sum<Ibis::dual>> mpi_sum;
     Ibis::dual sum = mpi_sum.reduce(x);
-    CHECK(sum == Ibis::dual(3.0, 1.5));
+    MPI_CHECK(0, sum == Ibis::dual(3.0, 1.5));
+    MPI_CHECK(1, sum == Ibis::dual(3.0, 1.5));
 }
 
 MPI_TEST_CASE("MPI_dual_sum_array", 2) {
@@ -234,8 +235,10 @@ MPI_TEST_CASE("MPI_dual_sum_array", 2) {
     Ibis::MpiReducer<Sum<Ibis::dual>> mpi_sum;
     std::vector<Ibis::dual> results(2);
     mpi_sum.reduce(xs.data(), results.data(), 2);
-    CHECK(results[0] == Ibis::dual(3.0, 1.5));
-    CHECK(results[1] == Ibis::dual(0.6, 1.5));
+    MPI_CHECK(0, results[0] == Ibis::dual(3.0, 1.5));
+    MPI_CHECK(0, results[1] == Ibis::dual(0.6, 1.5));
+    MPI_CHECK(1, results[0] == Ibis::dual(3.0, 1.5));
+    MPI_CHECK(1, results[1] == Ibis::dual(0.6, 1.5));
 }
 
 #endif  // DOCTEST_CONFIG_DISABLE

@@ -10,7 +10,6 @@ add_library(
 	  finite_volume/flux_calculators/ldfss2.cpp
 	  finite_volume/flux_calculators/rusanov.cpp
 	  finite_volume/primative_conserved_conversion.cpp
-	  finite_volume/conserved_quantities.cpp
 	  finite_volume/boundaries/boundary.cpp
 	  finite_volume/limiter.cpp
 	  finite_volume/grid_motion_driver.cpp
