@@ -7,7 +7,7 @@ add_library(
 target_link_libraries(
     ibis_mpi
     PUBLIC
-    Kokkos::kokkos
+    # Kokkos::kokkos
     doctest
     util
     MPI::MPI_CXX

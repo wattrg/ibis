@@ -29,9 +29,9 @@ void Ibis::initialise<Mpi>(int argc, char** argv) {
                   1, &Ibis::MPI_dual_sum);
 
     // Create MPI type and operations for conserved quantities norms
-    Ibis::init_mpi_conserved_quantities_norm_sum<Ibis::real>(&MPI_ConservedQuantitiesNorm,
+    Ibis::init_mpi_conserved_quantities_norm_sum<Ibis::real>(&Ibis::MPI_ConservedQuantitiesNorm,
                                            &MPI_ConservedQuantitiesNorm_sum);
-    Ibis::init_mpi_conserved_quantities_norm_sum<Ibis::dual>(&MPI_ConservedQuantitiesNorm,
+    Ibis::init_mpi_conserved_quantities_norm_sum<Ibis::dual>(&Ibis::MPI_ConservedQuantitiesNorm,
                                            &MPI_ConservedQuantitiesNorm_sum);
     
     Ibis::initialise<SharedMem>(argc, argv);
