@@ -20,11 +20,12 @@ int main(int argc, char* argv[]) {
     MPI_Op_create((MPI_User_function*)Ibis::MPI_custom_sum<Ibis::dual>,
                   1, &Ibis::MPI_dual_sum);
     Ibis::init_mpi_conserved_quantities_norm_sum<Ibis::real>(&Ibis::MPI_ConservedQuantitiesNorm,
-                                           &MPI_ConservedQuantitiesNorm_sum);
+                                           &Ibis::MPI_ConservedQuantitiesNorm_sum);
     Ibis::init_mpi_conserved_quantities_norm_sum<Ibis::dual>(&Ibis::MPI_ConservedQuantitiesNorm,
-                                           &MPI_ConservedQuantitiesNorm_sum);
+                                           &Ibis::MPI_ConservedQuantitiesNorm_sum);
 
     doctest::Context ctx;
+    ctx.setOption("reporters", "MpiConsoleReporter");
 
     ctx.applyCommandLine(argc, argv);
     int res = ctx.run();

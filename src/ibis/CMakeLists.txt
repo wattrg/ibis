@@ -22,6 +22,7 @@ target_link_libraries(
 	IO
 	simulation
 	CLI11::CLI11
+	parallel
 )
 
 if (Ibis_ENABLE_DISTRIBUTED_MEMORY)
