@@ -3,7 +3,6 @@
 #include <mpi.h>
 #include <util/numeric_types.h>
 #include <ibis_mpi/ibis_mpi.h>
-#include <doctest/doctest.h>
 #include <doctest/extensions/doctest_mpi.h>
 
 #include <Kokkos_Core.hpp>
