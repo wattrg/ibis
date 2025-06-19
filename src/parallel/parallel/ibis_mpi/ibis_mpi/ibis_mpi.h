@@ -114,23 +114,32 @@ struct MpiReduction<Sum<Dual<T>>> {
 };
 
 // Allow ConservedQuantitiesNorm to be used as a custom scalar type for MPI reductions
-extern MPI_Datatype MPI_ConservedQuantitiesNorm;
-template <typename T>
-struct MpiDataType<ConservedQuantitiesNorm<T>> {
-    static MPI_Datatype value() { return MPI_ConservedQuantitiesNorm; }  
+extern MPI_Datatype MPI_ConservedQuantitiesNorm_real;
+extern MPI_Datatype MPI_ConservedQuantitiesNorm_dual;
+
+template <>
+struct MpiDataType<ConservedQuantitiesNorm<Ibis::real>> {
+    static MPI_Datatype value() { return MPI_ConservedQuantitiesNorm_real; }  
+};
+template <>
+struct MpiDataType<ConservedQuantitiesNorm<Ibis::dual>> {
+    static MPI_Datatype value() { return MPI_ConservedQuantitiesNorm_dual; }  
 };
 
-extern MPI_Op MPI_ConservedQuantitiesNorm_sum;
-template <typename T>
-struct MpiReduction<Sum<ConservedQuantitiesNorm<T>>> {
-    static MPI_Op op() { return MPI_ConservedQuantitiesNorm_sum; }
+extern MPI_Op MPI_ConservedQuantitiesNorm_sum_real;
+extern MPI_Op MPI_ConservedQuantitiesNorm_sum_dual;
+
+template <>
+struct MpiReduction<Sum<ConservedQuantitiesNorm<Ibis::real>>> {
+    static MPI_Op op() { return MPI_ConservedQuantitiesNorm_sum_real; }
+};
+template <>
+struct MpiReduction<Sum<ConservedQuantitiesNorm<Ibis::dual>>> {
+    static MPI_Op op() { return MPI_ConservedQuantitiesNorm_sum_dual; }
 };
 
-template <typename T>
-void init_mpi_conserved_quantities_norm_sum(MPI_Datatype* type, MPI_Op* op) {
-    MPI_Type_contiguous(6, MpiDataType<ConservedQuantitiesNorm<T>>::value(), type);
-    MPI_Op_create((MPI_User_function*)MPI_custom_sum<ConservedQuantitiesNorm<T>>, 1, op);
-}
+void init_mpi_conserved_quantities_norms();
+void init_mpi_dual();
 
 
 // An object to perform MPI reductions with a nicer interfacer

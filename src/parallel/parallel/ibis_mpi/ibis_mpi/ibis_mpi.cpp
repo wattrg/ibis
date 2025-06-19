@@ -1,5 +1,7 @@
+#include "parallel/ibis_mpi/ibis_mpi/ibis_mpi.h"
 #include <doctest/extensions/doctest_mpi.h>
 #include <ibis_mpi/ibis_mpi.h>
+#include <mpi.h>
 #include <parallel/parallel.h>
 #include <util/numeric_types.h>
 
@@ -12,27 +14,18 @@ namespace Ibis {
     MPI_Op MPI_dual_max;
     MPI_Op MPI_dual_sum;
 
-    MPI_Datatype MPI_ConservedQuantitiesNorm;
-    MPI_Op MPI_ConservedQuantitiesNorm_sum;
+    MPI_Datatype MPI_ConservedQuantitiesNorm_real;
+    MPI_Datatype MPI_ConservedQuantitiesNorm_dual;
+    MPI_Op MPI_ConservedQuantitiesNorm_sum_real;
+    MPI_Op MPI_ConservedQuantitiesNorm_sum_dual;
 };
 
 template <>
 void Ibis::initialise<Mpi>(int argc, char** argv) {
     MPI_Init(&argc, &argv);
 
-    // Create MPI operations for dual numbers
-    MPI_Op_create((MPI_User_function*)MPI_custom_max<Ibis::dual>,
-                  1, &Ibis::MPI_dual_max);
-    MPI_Op_create((MPI_User_function*)MPI_custom_min<Ibis::dual>,
-                  1, &Ibis::MPI_dual_min);
-    MPI_Op_create((MPI_User_function*)MPI_custom_sum<Ibis::dual>,
-                  1, &Ibis::MPI_dual_sum);
-
-    // Create MPI type and operations for conserved quantities norms
-    Ibis::init_mpi_conserved_quantities_norm_sum<Ibis::real>(&Ibis::MPI_ConservedQuantitiesNorm,
-                                           &MPI_ConservedQuantitiesNorm_sum);
-    Ibis::init_mpi_conserved_quantities_norm_sum<Ibis::dual>(&Ibis::MPI_ConservedQuantitiesNorm,
-                                           &MPI_ConservedQuantitiesNorm_sum);
+    Ibis::init_mpi_dual();
+    Ibis::init_mpi_conserved_quantities_norms();
     
     Ibis::initialise<SharedMem>(argc, argv);
 }
@@ -43,7 +36,36 @@ void Ibis::finalise<Mpi>() {
     MPI_Finalize();
 }
 
+void Ibis::init_mpi_dual() {
+    // Create MPI operations for dual numbers
+    MPI_Op_create((MPI_User_function*)MPI_custom_max<Ibis::dual>,
+                  1, &Ibis::MPI_dual_max);
+    MPI_Op_create((MPI_User_function*)MPI_custom_min<Ibis::dual>,
+                  1, &Ibis::MPI_dual_min);
+    MPI_Op_create((MPI_User_function*)MPI_custom_sum<Ibis::dual>,
+                  1, &Ibis::MPI_dual_sum);
+}
+
+void Ibis::init_mpi_conserved_quantities_norms() {
+    MPI_Type_contiguous(6, MpiDataType<Ibis::real>::value(),
+                        &MPI_ConservedQuantitiesNorm_real);
+    MPI_Type_commit(&MPI_ConservedQuantitiesNorm_real);
+    MPI_Op_create(
+        (MPI_User_function*)MPI_custom_sum<ConservedQuantitiesNorm<Ibis::real>>,
+        1, &MPI_ConservedQuantitiesNorm_sum_real
+    );
+
+    MPI_Type_contiguous(6, MpiDataType<Ibis::dual>::value(),
+                        &MPI_ConservedQuantitiesNorm_dual);
+    MPI_Type_commit(&MPI_ConservedQuantitiesNorm_dual);
+    MPI_Op_create(
+        (MPI_User_function*)MPI_custom_sum<ConservedQuantitiesNorm<Ibis::dual>>,
+        1, &MPI_ConservedQuantitiesNorm_sum_dual
+    );
+}
+
 #ifndef DOCTEST_CONFIG_DISABLE
+
 // Tests
 // Pure MPI reductions
 MPI_TEST_CASE("MPI_Min_scalar", 2) {
@@ -240,6 +262,71 @@ MPI_TEST_CASE("MPI_dual_sum_array", 2) {
     MPI_CHECK(1, results[0] == Ibis::dual(3.0, 1.5));
     MPI_CHECK(1, results[1] == Ibis::dual(0.6, 1.5));
 }
+
+MPI_TEST_CASE("MPI_conserved_quantities_norm_sum_real", 2) {
+    ConservedQuantitiesNorm<Ibis::real> x;
+    if (test_rank == 0) {
+        x.global() = 1.0;
+        x.mass() = 0.1;
+        x.momentum_x() = 0.2;
+        x.momentum_y() = 0.3;
+        x.momentum_z() = 0.4;
+        x.energy() = 0.5;
+    }
+    else {
+        x.global() = 2.0;
+        x.mass() = 1.1;
+        x.momentum_x() = 1.2;
+        x.momentum_y() = 1.3;
+        x.momentum_z() = 1.4;
+        x.energy() = 1.5;
+    }
+
+    Ibis::MpiReducer<Sum<ConservedQuantitiesNorm<Ibis::real>>> mpi_sum;
+    ConservedQuantitiesNorm<Ibis::real> sum = mpi_sum.reduce(x);
+    CHECK(sum.global() == doctest::Approx(3.0));
+    CHECK(sum.mass() == doctest::Approx(1.2));
+    CHECK(sum.momentum_x() == doctest::Approx(1.4));
+    CHECK(sum.momentum_y() == doctest::Approx(1.6));
+    CHECK(sum.momentum_z() == doctest::Approx(1.8));
+    CHECK(sum.energy() == doctest::Approx(2.0));
+}
+
+MPI_TEST_CASE("MPI_dual_min", 2) {
+    ConservedQuantitiesNorm<Ibis::dual> x;
+    if (test_rank == 0) {
+        x.global() = Ibis::dual(1.0, 1.0);
+        x.mass() = Ibis::dual(0.1, 0.1);
+        x.momentum_x() = Ibis::dual(0.2, 0.2);
+        x.momentum_y() = Ibis::dual(0.3, 0.3);
+        x.momentum_z() = Ibis::dual(0.4, 0.4);
+        x.energy() = Ibis::dual(0.5, 0.5);
+    }
+    else {
+        x.global() = Ibis::dual(2.0, 2.0);
+        x.mass() = Ibis::dual(1.1, 1.1);
+        x.momentum_x() = Ibis::dual(1.2, 1.2);
+        x.momentum_y() = Ibis::dual(1.3, 1.3);
+        x.momentum_z() = Ibis::dual(1.4, 1.4);
+        x.energy() = Ibis::dual(1.5, 1.5);
+    }
+
+    Ibis::MpiReducer<Sum<ConservedQuantitiesNorm<Ibis::dual>>> mpi_sum;
+    ConservedQuantitiesNorm<Ibis::dual> sum = mpi_sum.reduce(x);
+    CHECK(Ibis::real_part(sum.global()) == doctest::Approx(3.0));
+    CHECK(Ibis::dual_part(sum.global()) == doctest::Approx(3.0));
+    CHECK(Ibis::real_part(sum.mass()) == doctest::Approx(1.2));
+    CHECK(Ibis::dual_part(sum.mass()) == doctest::Approx(1.2));
+    CHECK(Ibis::real_part(sum.momentum_x()) == doctest::Approx(1.4));
+    CHECK(Ibis::dual_part(sum.momentum_x()) == doctest::Approx(1.4));
+    CHECK(Ibis::real_part(sum.momentum_y()) == doctest::Approx(1.6));
+    CHECK(Ibis::dual_part(sum.momentum_y()) == doctest::Approx(1.6));
+    CHECK(Ibis::real_part(sum.momentum_z()) == doctest::Approx(1.8));
+    CHECK(Ibis::dual_part(sum.momentum_z()) == doctest::Approx(1.8));
+    CHECK(Ibis::real_part(sum.energy()) == doctest::Approx(2.0));
+    CHECK(Ibis::dual_part(sum.energy()) == doctest::Approx(2.0));
+}
+
 
 #endif  // DOCTEST_CONFIG_DISABLE
 
