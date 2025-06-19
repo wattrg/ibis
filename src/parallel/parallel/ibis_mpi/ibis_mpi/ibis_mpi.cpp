@@ -292,7 +292,7 @@ MPI_TEST_CASE("MPI_conserved_quantities_norm_sum_real", 2) {
     CHECK(sum.energy() == doctest::Approx(2.0));
 }
 
-MPI_TEST_CASE("MPI_dual_min", 2) {
+MPI_TEST_CASE("MPI_CQNorm_sum", 2) {
     ConservedQuantitiesNorm<Ibis::dual> x;
     if (test_rank == 0) {
         x.global() = Ibis::dual(1.0, 1.0);
@@ -325,6 +325,68 @@ MPI_TEST_CASE("MPI_dual_min", 2) {
     CHECK(Ibis::dual_part(sum.momentum_z()) == doctest::Approx(1.8));
     CHECK(Ibis::real_part(sum.energy()) == doctest::Approx(2.0));
     CHECK(Ibis::dual_part(sum.energy()) == doctest::Approx(2.0));
+}
+
+MPI_TEST_CASE("MPI_Sum_dual", 2) {
+    Ibis::dual result = Ibis::parallel_reduce<Sum<Ibis::dual>, Mpi>(
+        "test", 10, KOKKOS_LAMBDA(const int i, Ibis::dual& utd) {
+            utd += Ibis::dual{(double)i + (double)test_rank, double(test_rank)};
+        });
+
+    CHECK(Ibis::real_part(result) == 100.0);
+    CHECK(Ibis::dual_part(result) == 10.0);
+}
+
+MPI_TEST_CASE("MPI_sum_conserved_quantities_norm_dual", 2) {
+    ConservedQuantitiesNorm<Ibis::dual> result = Ibis::parallel_reduce<Sum<ConservedQuantitiesNorm<Ibis::dual>>, Mpi>(
+        "test", 10, KOKKOS_LAMBDA(const int i, ConservedQuantitiesNorm<Ibis::dual>& utd) {
+            double id = (double) i;
+            double rd = (double) test_rank;
+            ConservedQuantitiesNorm<Ibis::dual> x;
+            x.global() = Ibis::dual{id + rd, rd};
+            x.mass() = Ibis::dual{id + rd + 1, rd + 1};
+            x.momentum_x() = Ibis::dual{id + rd + 1, rd + 1};
+            x.momentum_y() = Ibis::dual{id + rd + 2, rd + 2};
+            x.momentum_z() = Ibis::dual{id + rd + 3, rd + 3};
+            x.energy() = Ibis::dual{id + rd + 4, rd + 4};
+            utd += x;
+        });
+
+    CHECK(Ibis::real_part(result.global()) == 100.0);
+    CHECK(Ibis::dual_part(result.global()) == 10.0);
+    CHECK(Ibis::real_part(result.mass()) == 120.0);
+    CHECK(Ibis::dual_part(result.mass()) == 30.0);
+    CHECK(Ibis::real_part(result.momentum_x()) == 120.0);
+    CHECK(Ibis::dual_part(result.momentum_x()) == 30.0);
+    CHECK(Ibis::real_part(result.momentum_y()) == 140.0);
+    CHECK(Ibis::dual_part(result.momentum_y()) == 50.0);
+    CHECK(Ibis::real_part(result.momentum_z()) == 160.0);
+    CHECK(Ibis::dual_part(result.momentum_z()) == 70.0);
+    CHECK(Ibis::real_part(result.energy()) == 180.0);
+    CHECK(Ibis::dual_part(result.energy()) == 90.0);
+}
+
+MPI_TEST_CASE("MPI_sum_conserved_quantities_norm_real", 2) {
+    ConservedQuantitiesNorm<Ibis::real> result = Ibis::parallel_reduce<Sum<ConservedQuantitiesNorm<Ibis::real>>, Mpi>(
+        "test", 10, KOKKOS_LAMBDA(const int i, ConservedQuantitiesNorm<Ibis::real>& utd) {
+            double id = (double) i;
+            double rd = (double) test_rank;
+            ConservedQuantitiesNorm<Ibis::real> x;
+            x.global() = id + rd;
+            x.mass() = id + rd + 1;
+            x.momentum_x() = id + rd + 1;
+            x.momentum_y() = id + rd + 2;
+            x.momentum_z() = id + rd + 3;
+            x.energy() = id + rd + 4;
+            utd += x;
+        });
+
+    CHECK(result.global() == 100.0);
+    CHECK(result.mass() == 120.0);
+    CHECK(result.momentum_x() == 120.0);
+    CHECK(result.momentum_y() == 140.0);
+    CHECK(result.momentum_z() == 160.0);
+    CHECK(result.energy() == 180.0);
 }
 
 
