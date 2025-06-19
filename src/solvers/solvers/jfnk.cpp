@@ -1,7 +1,6 @@
 #include <finite_volume/primative_conserved_conversion.h>
-#include <solvers/jfnk.h>
-
 #include <linear_algebra/gmres.h>
+#include <solvers/jfnk.h>
 
 Jfnk::Jfnk(std::shared_ptr<PseudoTransientLinearSystem> system,
            std::unique_ptr<CflSchedule>&& cfl,

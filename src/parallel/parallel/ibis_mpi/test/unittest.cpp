@@ -1,9 +1,9 @@
 #define DOCTEST_CONFIG_IMPLEMENT
 
+#include <doctest/extensions/doctest_mpi.h>
+#include <ibis_mpi/ibis_mpi.h>
 #include <mpi.h>
 #include <util/numeric_types.h>
-#include <ibis_mpi/ibis_mpi.h>
-#include <doctest/extensions/doctest_mpi.h>
 
 #include <Kokkos_Core.hpp>
 
@@ -14,7 +14,6 @@ int main(int argc, char* argv[]) {
     Ibis::init_mpi_conserved_quantities_norms();
 
     Kokkos::initialize(argc, argv);
-
 
     doctest::Context ctx;
     ctx.setOption("reporters", "MpiConsoleReporter");

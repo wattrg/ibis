@@ -1,6 +1,5 @@
 #include <finite_volume/viscous_flux.h>
 
-
 template <typename T>
 struct ViscousProperties {
     FlowState<T> flow;

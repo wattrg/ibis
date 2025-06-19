@@ -103,9 +103,8 @@ void write_vector3s_ascii(std::ofstream& f,
 void write_int_view_ascii(std::ofstream& f,
                           const Kokkos::View<size_t*, array_layout, host_mem_space>& view,
                           std::string name, std::string type, bool skip_first = false) {
-    f << "<DataArray type='" << type << "' "
-      << "NumberOfComponents='1' "
-      << "Name='" << name << "' format='ascii'>" << std::endl;
+    f << "<DataArray type='" << type << "' " << "NumberOfComponents='1' " << "Name='"
+      << name << "' format='ascii'>" << std::endl;
 
     for (size_t i = 0; i < view.extent(0); i++) {
         if (!(skip_first && i == 0)) {
@@ -217,12 +216,9 @@ void VtkBinaryOutput<T>::write_scalar_field_binary(
     FiniteVolume<T>& fv, const GridBlock<T, host_exec_space, array_layout>& grid,
     std::shared_ptr<ScalarAccessor<T>> accessor, const IdealGas<T>& gas_model,
     std::string name, std::string type, size_t num_values) {
-    f << "<DataArray type='" << type << "' "
-      << "NumberOfComponents='1' "
-      << "Name='" << name << "' "
-      << "format='appended' "
-      << "offset='" << std::distance(packed_data_.begin(), packed_data_.end()) << "'"
-      << ">\n";
+    f << "<DataArray type='" << type << "' " << "NumberOfComponents='1' " << "Name='"
+      << name << "' " << "format='appended' " << "offset='"
+      << std::distance(packed_data_.begin(), packed_data_.end()) << "'" << ">\n";
 
     std::uint32_t num_bytes = num_values * sizeof(T);
 
@@ -252,12 +248,9 @@ void VtkBinaryOutput<T>::write_vector_field_binary(
     FiniteVolume<T>& fv, const GridBlock<T, host_exec_space, array_layout>& grid,
     std::shared_ptr<VectorAccessor<T>> accessor, const IdealGas<T>& gas_model,
     std::string name, std::string type, size_t num_values) {
-    f << "<DataArray type='" << type << "' "
-      << "NumberOfComponents='3' "
-      << "Name='" << name << "' "
-      << "format='appended' "
-      << "offset='" << std::distance(packed_data_.begin(), packed_data_.end()) << "'"
-      << ">\n";
+    f << "<DataArray type='" << type << "' " << "NumberOfComponents='3' " << "Name='"
+      << name << "' " << "format='appended' " << "offset='"
+      << std::distance(packed_data_.begin(), packed_data_.end()) << "'" << ">\n";
 
     std::uint32_t num_bytes = 3 * num_values * sizeof(T);
     packed_data_.reserve(num_bytes + sizeof(num_bytes));
@@ -319,11 +312,9 @@ template <typename T>
 void VtkBinaryOutput<T>::write_int_view_binary(
     std::ofstream& f, const Kokkos::View<size_t*, array_layout, host_mem_space>& view,
     std::string name, std::string type, bool skip_first) {
-    f << "<DataArray type='" << type << "' "
-      << "NumberOfComponents='1' "
-      << "Name='" << name << "' format='appended' "
-      << "offset='" << std::distance(packed_data_.begin(), packed_data_.end()) << "'>"
-      << std::endl;
+    f << "<DataArray type='" << type << "' " << "NumberOfComponents='1' " << "Name='"
+      << name << "' format='appended' " << "offset='"
+      << std::distance(packed_data_.begin(), packed_data_.end()) << "'>" << std::endl;
 
     size_t num_values = (skip_first) ? (view.extent(0) - 1) : view.extent(0);
     std::uint32_t num_bytes = num_values * sizeof(size_t);

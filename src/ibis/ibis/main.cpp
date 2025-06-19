@@ -110,11 +110,9 @@ int cli(int argc, char* argv[]) {
         } else if (post_command->got_subcommand(plot_residuals_command)) {
             return plot_residuals();
         }
-    }
-    else if (ibis.got_subcommand(partition_command)) {
+    } else if (ibis.got_subcommand(partition_command)) {
         return partition_grid(grid_filename, output_dir, n_partitions, argc, argv);
-    }
-    else {
+    } else {
         spdlog::error("Nothing to do. Try `ibis --help`");
     }
     return 1;

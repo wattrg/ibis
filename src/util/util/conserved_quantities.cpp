@@ -1,5 +1,5 @@
-#include <util/conserved_quantities.h>
 #include <parallel/parallel.h>
+#include <util/conserved_quantities.h>
 #include <util/numeric_types.h>
 
 template <typename T>

@@ -1,5 +1,6 @@
-#include <util/cubic_spline.h>
 #include <doctest/doctest.h>
+#include <util/cubic_spline.h>
+
 #include <stdexcept>
 
 // #include "Kokkos_Core_fwd.hpp"
@@ -41,17 +42,18 @@ CubicSpline::CubicSpline(std::vector<Ibis::real> x_vec, std::vector<Ibis::real> 
     // This implementation is from the cubic spline interpolation section of the 3rd
     // edition of Numerical Methods in C (p. 123), using natural boundary conditions.
     for (size_t i = 1; i < n_pts - 1; i++) {
-        Ibis::real sigma = (x(i) - x(i-1)) / (x(i+1) - x(i-1));
+        Ibis::real sigma = (x(i) - x(i - 1)) / (x(i + 1) - x(i - 1));
         Ibis::real p = sigma * y_dash_dash(i - 1) + 2.0;
         y_dash_dash(i) = (sigma - 1) / p;
-        u(i) = (y(i+1) - y(i)) / (x(i+1) - x(i)) - (y(i) - y(i-1)) / (x(i) - x(i-1));
-        u(i) = (6.0 * u(i) / (x(i+1) - x(i-1)) - sigma * u(i-1)) / p;
+        u(i) =
+            (y(i + 1) - y(i)) / (x(i + 1) - x(i)) - (y(i) - y(i - 1)) / (x(i) - x(i - 1));
+        u(i) = (6.0 * u(i) / (x(i + 1) - x(i - 1)) - sigma * u(i - 1)) / p;
     }
 
     // backsubstitution
     y_dash_dash(n_pts - 1) = 0.0;
     for (int k = n_pts - 2; k >= 0; k--) {
-        y_dash_dash(k) = y_dash_dash(k) * y_dash_dash(k+1) + u(k);
+        y_dash_dash(k) = y_dash_dash(k) * y_dash_dash(k + 1) + u(k);
     }
 
     // copy data to the device
