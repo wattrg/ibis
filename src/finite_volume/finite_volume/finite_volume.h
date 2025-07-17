@@ -8,6 +8,7 @@
 #include <finite_volume/grid_motion_driver.h>
 #include <finite_volume/limiter.h>
 #include <finite_volume/viscous_flux.h>
+#include <util/communication.h>
 #include <gas/flow_state.h>
 #include <gas/gas_model.h>
 #include <gas/transport_properties.h>
@@ -25,7 +26,7 @@ using json = nlohmann::json;
  *
  * @tparam T The type of number flow variables are stored with
  */
-template <typename T>
+template <typename T, class MemModel>
 class FiniteVolume {
 public:
     FiniteVolume() {}
@@ -97,6 +98,8 @@ public:
     // Count the number of bad cells in the domain
     size_t count_bad_cells(const FlowStates<T>& fs, const size_t num_cells);
 
+    void transfer_internal_flowstates(FlowStates<T>& fs, const GridBlock<T>& grid);
+
 public:
     // methods for IO
     const Gradients<T>& cell_gradients() const { return cell_grad_; }
@@ -130,6 +133,10 @@ private:
 
     // The interfaces on each boundary
     std::vector<Field<size_t>> bc_interfaces_{};
+
+    // Inter-block communicators
+    std::vector<SymmetricComm<MemModel, T>> flow_state_comm_;
+    std::vector<SymmetricComm<MemModel, T>> gradient_comm_;
 
     // number of spatial dimensions
     size_t dim_;

@@ -42,6 +42,9 @@ inline auto parallel_reduce(const std::string& str, PolicyType policy,
     return reducer.execute(str, policy, functor);
 }
 
+template <class MemModel, typename T, bool gpu_aware = false>
+class SymmetricComm;
+
 }  // namespace Ibis
 
 // Include the headers of the active memory models so that this

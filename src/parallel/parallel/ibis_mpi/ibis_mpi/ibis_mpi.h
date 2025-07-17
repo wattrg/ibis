@@ -210,9 +210,10 @@ struct ReducerMap<ReducerType, Mpi> {
 };
 
 // Message passing communicator
-template <typename T, bool gpu_aware = false, class MemSpace = Ibis::DefaultMemSpace>
-class SymmetricComm {
+template <typename T, bool gpu_aware>
+class SymmetricComm<Mpi> {
 private:
+    using MemSpace = Ibis::DefaultMemSpace;
     using view_type = Kokkos::View<T*, MemSpace>;
     using mirror_view_type = typename view_type::host_mirror_type;
 
@@ -266,8 +267,10 @@ public:
     }
 
     const Kokkos::View<T*, MemSpace>& send_buf() const { return send_buf_; }
+    T& send_buf(size_t i) { return send_buf_(i); }
 
     const Kokkos::View<T*, MemSpace>& recv_buf() const { return recv_buf_; }
+    T& recv_buf(size_t i) { return recv_buf(i); }
 
 private:
     // the send/receive buffers

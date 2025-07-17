@@ -7,9 +7,11 @@
 // #include <finite_volume/grid_motion_driver.h>
 #include <gas/flow_state.h>
 #include <grid/interface.h>
+#include <util/communication.h>
 
 // #include <limits>
 #include <nlohmann/json.hpp>
+#include "parallel/parallel.h"
 
 using json = nlohmann::json;
 
@@ -21,7 +23,7 @@ template <typename T, class ExecSpace, class Layout>
 class WLSGradient;
 
 // The main GridBlock
-template <typename T, class ExecSpace = Kokkos::DefaultExecutionSpace,
+template <class MemModel, typename T, class ExecSpace = Kokkos::DefaultExecutionSpace,
           class Layout = Kokkos::DefaultExecutionSpace::array_layout>
 class GridBlock {
 public:
@@ -133,7 +135,8 @@ public:
         }
 
         std::map<size_t, size_t> ghost_cell_map =
-            setup_boundaries(grid_io, boundaries, cell_vertices, interfaces, cell_shapes);
+            setup_physical_boundaries(grid_io, boundaries, cell_vertices, interfaces, cell_shapes);
+        setup_internal_boundaries(grid_io);
         setup_face_markers(grid_io, interfaces);
 
         interfaces_ = Interfaces<T, execution_space, array_layout>(interface_vertices,
@@ -403,7 +406,58 @@ public:
     }
 
 public:
-    std::map<size_t, size_t> setup_boundaries(
+    // this should be called after setup_physical_boundaries, so that
+    // the ghost cells for internal boundaries appear after the physical
+    // boundaries in the arrays of cells
+    void setup_internal_boundaries(const GridIO& grid_io) {
+        std::vector<CellMapping> internal_boundaries = grid_io.cell_mapping();
+
+        // map for each external block, which cells connect to which cells
+        std::unordered_map<size_t, std::vector<size_t>> local_cells;
+        std::unordered_map<size_t, std::vector<size_t>> external_cells;
+        std::unordered_map<size_t, std::vector<size_t>> ghost_cells;
+        std::unordered_map<size_t, std::vector<size_t>> faces;
+
+        // loop over all the interblock connections, keeping track of
+        // which cells and faces are on the connection
+        num_internal_ghost_cells_ = 0;
+        for (CellMapping& cell_mapping : internal_boundaries) {
+            size_t ghost_cell_id = num_valid_cells_ + num_ghost_cells_;
+            num_internal_ghost_cells_++;
+            num_ghost_cells_++;
+            size_t other_block = cell_mapping.other_block;
+
+            if (local_cells.find(other_block) == local_cells.end()) {
+                // we haven't seen a connection to this block yet, so we'll add it
+                local_cells.insesrt({other_block, {}});
+                external_cells.insert({other_block, {}});
+                ghost_cells.insert({other_block, {}});
+                faces.insert({other_block, {}});
+            }
+
+            local_cells[other_block].push_back(cell_mapping.local_cell);
+            external_cells[other_block].push_back(cell_mapping.other_cell);
+            ghost_cells[other_block].push_back(ghost_cell_id);
+        }
+        
+        for (size_t other_block : local_cells) {
+            internal_boundary_cells_.push_back(
+                Field<size_t, array_layout, memory_space>(
+                    "internal_boundary_cells", local_cells[other_block]));
+            internal_boundary_external_cells_.push_back(
+                Field<size_t, array_layout, memory_space>(
+                    "internal_boundary_external_cells", external_cells[other_block]));
+            internal_boundary_ghost_cells_.push_back(
+                Field<size_t, array_layout, memory_space>(
+                    "internal_boundary_ghost_cells", ghost_cells[other_block]));
+            position_comm_ = Ibis::SymmetricComm<MemModel, T>(other_block,
+                                                     local_cells.size() * dim_);
+            volume_comm_ = Ibis::SymmetricComm<MemModel, T>(other_block,
+                local_cells.size());
+        }
+    }
+
+    std::map<size_t, size_t> setup_physical_boundaries(
         const GridIO& grid_io, json& boundaries,
         std::vector<std::vector<size_t>>& cell_vertices, InterfaceLookup& interfaces,
         std::vector<ElemType> cell_shapes) {
@@ -604,6 +658,8 @@ public:
 
     bool is_initialised() const { return initialised_; }
 
+    void transfer_interblock_cell_centres();
+
 public:
     // The primary grid data structures
     Vertices<T, execution_space, array_layout> vertices_;
@@ -617,12 +673,21 @@ public:
     size_t dim_;
     size_t num_valid_cells_;
     size_t num_ghost_cells_;
+    size_t num_internal_ghost_cells_;
 
-    // information about which faces are on boundaries, and which ghost
+    // information about which faces are on physical boundaries, and which ghost
     // cells belong to which boundary
     std::map<std::string, Field<size_t, array_layout, memory_space>> ghost_cells_;
     std::map<std::string, Field<size_t, array_layout, memory_space>> boundary_faces_;
     std::vector<std::string> boundary_tags_;
+
+    // Interblock communication
+    std::vector<SymmetricComm<MemModel, T>> position_comm_;
+    std::vector<SymmetricComm<MemModel, T>> volume_comm_;
+    std::vector<size_t, Field<size_t, array_layout, memory_space>> internal_boundary_cells_;
+    std::vector<Field<size_t, array_layout, memory_space>> internal_boundary_ghost_cells_;
+    std::vector<Field<size_t, array_layout, memory_space>> internal_boundary_external_cells_;
+    // std::vector<Field<size_t, array_layout, memory_space>> internal_boundary_faces_;
 
     // this contains all marked interfaces. This includes faces on the boundary,
     // and other faces that have been marked for one reason or another (e.g.
