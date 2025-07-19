@@ -101,41 +101,29 @@ public:
         }
         vertices_.deep_copy(host_vertices);
 
-        // some objects to assist in constructing the grid
-        std::vector<std::vector<size_t>> interface_vertices{};
+        // process the cell information
         std::vector<std::vector<size_t>> cell_vertices{};
-        std::vector<std::vector<size_t>> cell_interface_ids{};
-        InterfaceLookup interfaces = InterfaceLookup();
-
-        // begin to assemble the interfaces and cells
-        std::vector<ElemIO> cells = grid_io.cells();
         std::vector<ElemType> cell_shapes{};
-        std::vector<ElemType> interface_shapes{};
+        std::vector<std::vector<size_t>> cell_interface_ids = grid_io.cell_face_ids();
+        std::vector<ElemIO> cells = grid_io.cells();
         num_valid_cells_ = cells.size();
         for (size_t cell_i = 0; cell_i < cells.size(); cell_i++) {
             cell_vertices.push_back(cells[cell_i].vertex_ids());
             cell_shapes.push_back(cells[cell_i].cell_type());
+        }
 
-            std::vector<ElemIO> cell_interfaces = cells[cell_i].interfaces();
-            std::vector<size_t> cell_face_ids{};
-            for (size_t face_i = 0; face_i < cell_interfaces.size(); face_i++) {
-                std::vector<size_t> face_vertices = cell_interfaces[face_i].vertex_ids();
-
-                // if this interface already exists, we use the existing one
-                // if the interface doesn't exist, we make a new one
-                size_t face_id = interfaces.id(face_vertices);
-                if (face_id == std::numeric_limits<size_t>::max()) {
-                    face_id = interfaces.insert(face_vertices);
-                    interface_vertices.push_back(face_vertices);
-                    interface_shapes.push_back(cell_interfaces[face_i].cell_type());
-                }
-                cell_face_ids.push_back(face_id);
-            }
-            cell_interface_ids.push_back(cell_face_ids);
+        // process the interface information
+        std::vector<ElemIO> faces = grid_io.faces();
+        size_t num_faces = faces.size();
+        std::vector<std::vector<size_t>> interface_vertices{};
+        std::vector<ElemType> interface_shapes{};
+        for (size_t face_i = 0; face_i < num_faces; face_i++) {
+            interface_vertices.push_back(faces[face_i].vertex_ids());
+            interface_shapes.push_back(faces[face_i].cell_type());
         }
 
         std::map<size_t, size_t> ghost_cell_map =
-            setup_physical_boundaries(grid_io, boundaries, cell_vertices, interfaces, cell_shapes);
+            setup_physical_boundaries(grid_io, boundaries, cell_vertices, cell_shapes);
         setup_internal_boundaries(grid_io);
         setup_face_markers(grid_io, interfaces);
 
@@ -459,11 +447,12 @@ public:
 
     std::map<size_t, size_t> setup_physical_boundaries(
         const GridIO& grid_io, json& boundaries,
-        std::vector<std::vector<size_t>>& cell_vertices, InterfaceLookup& interfaces,
+        std::vector<std::vector<size_t>>& cell_vertices,
         std::vector<ElemType> cell_shapes) {
         (void)cell_vertices;
         (void)cell_shapes;
         num_ghost_cells_ = 0;
+        InterfaceLookup& interfaces = grid_io.interface_lookup();
         std::map<size_t, size_t> ghost_cell_map;  // face_id -> ghost_cell_id
         for (auto& [bc_label, boundary_config] : boundaries.items()) {
             boundary_tags_.push_back(bc_label);
@@ -496,9 +485,10 @@ public:
         return ghost_cell_map;
     }
 
-    void setup_face_markers(const GridIO& grid_io, InterfaceLookup& interfaces) {
+    void setup_face_markers(const GridIO& grid_io) {
         // setup_face_markers should be called after setup_boundaries,
         // since it checks if markers have already been assigned to boundaries
+        InterfaceLookup& interfaces = grid_io.interface_lookup();
         for (auto& [marker_label, marker] : grid_io.markers()) {
             if (boundary_faces_.find(marker_label) == boundary_faces_.end()) {
                 // this marker is not a boundary, so we'll allocate

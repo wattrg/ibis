@@ -58,6 +58,25 @@ private:
     FaceOrder face_order_;
 };
 
+
+// Efficient look-up of interface ID
+// from the index of the vertices
+// forming the interface
+struct InterfaceLookup {
+public:
+    InterfaceLookup();
+
+    size_t insert(std::vector<size_t> vertex_ids);
+    bool contains(std::vector<size_t> vertex_ids);
+    size_t id(std::vector<size_t> vertex_ids);
+
+private:
+    std::unordered_map<std::string, size_t> hash_map_;
+
+    std::string hash_vertex_ids(std::vector<size_t> vertex_ids);
+    bool contains_hash(std::string hash);
+};
+
 struct CellMapping {
     size_t local_cell;
     size_t other_block;
@@ -98,7 +117,12 @@ public:
 
     std::vector<Vertex<Ibis::real>> vertices() const { return vertices_; }
 
+    std::vector<ElemIO> faces() const { return faces_; }
+    InterfaceLookup& interface_lookup const { return interface_lookup_ }
+    
     std::vector<ElemIO> cells() const { return cells_; }
+
+    std::vector<std::vector<size_t>> cell_face_ids() const { return cell_faces_; }
 
     std::unordered_map<std::string, std::vector<ElemIO>> markers() const {
         return markers_;
@@ -119,9 +143,17 @@ public:
 private:
     std::vector<Vertex<Ibis::real>> vertices_{};
     std::vector<ElemIO> cells_{};
+    std::vector<ElemIO> faces_{};
+
+    std::vector<std::vector<size_t>> cell_faces_; // the ID of the faces of each cell
+    InterfaceLookup interface_lookup_;
+    
     std::unordered_map<std::string, std::vector<ElemIO>> markers_;
     size_t dim_;
     size_t id_ = 0;
+
+    void construct_faces_();
+    
 
     // for partitioned grids, we need to know which cells connect
     // to cells in a different block.

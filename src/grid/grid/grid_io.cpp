@@ -4,6 +4,9 @@
 
 #include <stdexcept>
 #include <string>
+#include <algorithm>
+#include <functional>
+
 
 ElemIO::ElemIO(const ElemIO &other) : vertex_ids_(other.vertex_ids_) {
     // vertex_ids_(other.vertex_ids_};
@@ -132,6 +135,7 @@ GridIO::GridIO(std::string file_name) {
             break;
     }
     grid_file.close();
+    construct_faces_();
 }
 
 GridIO::GridIO(const GridIO &monolithic_grid, const std::vector<size_t> &cells_to_include,
@@ -341,6 +345,7 @@ void GridIO::read_su2_grid(std::istream &grid_file) {
     }
 }
 
+
 void GridIO::write_su2_grid(std::ostream &grid_file) {
     grid_file << "NDIME= " << dim_ << "\n";
 
@@ -366,6 +371,39 @@ void GridIO::write_su2_grid(std::ostream &grid_file) {
         for (const ElemIO &element : elements) {
             grid_file << element << "\n";
         }
+    }
+}
+
+void GridIO::construct_faces_() {
+    // Initialise memory
+    std::vector<std::vector<size_t>> cell_faces_ {};
+    std::vector<ElemIO> faces_ {};
+
+    interface_lookup_ = InterfaceLookup{};
+    for (size_t cell_id = 0; cell_id < cell_.size(); cell_id++) {
+        const ElemIO& cell = cells_[cell_id];
+        std::vector<ElemIO> cell_interfaces = cell.interfaces();
+        std::vector<size_t> this_cell_face_ids{};
+
+        // Add each face of this cell to the list of faces
+        for (size_t face_i = 0; face_i < cell_interfaces.size(); face_i++) {
+            // the ID's of the vertices forming this face
+            ElemIO& cell_interface = cell_interfaces[face_i];
+            std::vector<size_t>& face_vertices = cell_interface.vertex_ids();
+
+            // check if this interface has already been created as part of another cell.
+            // If it hasn't been created, we'll create it here
+            size_t face_id = interface_lookup.id(face_vertices);
+            if (face_id == std::numeric_limit<size_t>::max()) {
+                // This interface hasn't been created yet, so we do that here
+                face_id = interfaces.insert(face_vertices);
+                faces_.push_back(ElemIO(face_vertices,
+                                        cell_interface.cell_type(),
+                                        cell_interface.face_order()));
+            }
+            this_cell_face_ids_.push_back(face_id);
+        }
+        cell_faces_.push_back(this_cell_face_ids_);
     }
 }
 
@@ -689,4 +727,108 @@ TEST_CASE("read_cell_mapping") {
     // CHECK(part0.cell_mapping() == expected_map0);
     // CHECK(part1.cell_mapping() == expected_map1);
 }
+
+
+
+
+InterfaceLookup::InterfaceLookup() {
+    hash_map_ = std::unordered_map<std::string, size_t>{};
+}
+
+size_t InterfaceLookup::insert(std::vector<size_t> vertex_ids) {
+    std::string hash = hash_vertex_ids(vertex_ids);
+    if (contains_hash(hash)) {
+        return hash_map_[hash];
+    }
+    size_t id = hash_map_.size();
+    hash_map_.insert({hash, id});
+    return id;
+}
+
+bool InterfaceLookup::contains(std::vector<size_t> vertex_ids) {
+    std::string hash = hash_vertex_ids(vertex_ids);
+    return contains_hash(hash);
+}
+
+size_t InterfaceLookup::id(std::vector<size_t> vertex_ids) {
+    std::string hash = hash_vertex_ids(vertex_ids);
+    if (contains_hash(hash)) {
+        return hash_map_[hash];
+    }
+    return std::numeric_limits<size_t>::max();
+}
+
+bool InterfaceLookup::contains_hash(std::string hash) {
+    return hash_map_.find(hash) != hash_map_.end();
+}
+
+std::string InterfaceLookup::hash_vertex_ids(std::vector<size_t> vertex_ids) {
+    std::sort(vertex_ids.begin(), vertex_ids.end(), std::greater<size_t>());
+    std::string hash_value = "";
+    for (size_t i = 0; i < vertex_ids.size(); i++) {
+        hash_value.append(std::to_string(vertex_ids[i]));
+        hash_value.append(",");
+    }
+    return hash_value;
+}
+
+TEST_CASE("interface look up contains") {
+    InterfaceLookup x;
+    x.insert(std::vector<size_t>{0, 1});
+    x.insert(std::vector<size_t>{1, 5});
+    x.insert(std::vector<size_t>{5, 4});
+    x.insert(std::vector<size_t>{5, 1});
+
+    CHECK(x.contains(std::vector<size_t>{1, 0}));
+    CHECK(x.contains(std::vector<size_t>{6, 1}) == false);
+}
+
+TEST_CASE("interface look up id 1") {
+    InterfaceLookup x;
+    x.insert(std::vector<size_t>{0, 1});
+    x.insert(std::vector<size_t>{1, 5});
+    x.insert(std::vector<size_t>{5, 4});
+    x.insert(std::vector<size_t>{5, 1});
+
+    CHECK(x.id(std::vector<size_t>{5, 1}) == 1);
+    CHECK(x.id(std::vector<size_t>{1, 5}) == 1);
+}
+
+TEST_CASE("interface look up id 2") {
+    InterfaceLookup x;
+    x.insert(std::vector<size_t>{0, 1});
+    x.insert(std::vector<size_t>{1, 5});
+    x.insert(std::vector<size_t>{5, 4});
+    x.insert(std::vector<size_t>{5, 1});
+
+    CHECK(x.id(std::vector<size_t>{6, 1}) == -1);
+}
+
+TEST_CASE("interface look up") {
+    InterfaceLookup x;
+    x.insert(std::vector<size_t>{0, 1});
+    x.insert(std::vector<size_t>{1, 5});
+    x.insert(std::vector<size_t>{5, 4});
+    x.insert(std::vector<size_t>{4, 0});
+    x.insert(std::vector<size_t>{1, 2});
+    x.insert(std::vector<size_t>{2, 6});
+    x.insert(std::vector<size_t>{6, 5});
+    x.insert(std::vector<size_t>{5, 1});
+    x.insert(std::vector<size_t>{2, 3});
+    x.insert(std::vector<size_t>{3, 7});
+    x.insert(std::vector<size_t>{7, 6});
+    x.insert(std::vector<size_t>{6, 2});
+
+    CHECK(x.id(std::vector<size_t>{0, 1}) == 0);
+    CHECK(x.id(std::vector<size_t>{1, 5}) == 1);
+    CHECK(x.id(std::vector<size_t>{5, 4}) == 2);
+    CHECK(x.id(std::vector<size_t>{4, 0}) == 3);
+    CHECK(x.id(std::vector<size_t>{1, 2}) == 4);
+    CHECK(x.id(std::vector<size_t>{2, 6}) == 5);
+    CHECK(x.id(std::vector<size_t>{6, 5}) == 6);
+    CHECK(x.id(std::vector<size_t>{2, 3}) == 7);
+    CHECK(x.id(std::vector<size_t>{3, 7}) == 8);
+    CHECK(x.id(std::vector<size_t>{7, 6}) == 9);
+}
+
 #endif  // DOCTEST_CONFIG_DISABLE

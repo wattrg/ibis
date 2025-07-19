@@ -344,22 +344,5 @@ public:
     vector_type centre_;
 };
 
-// Efficient look-up of interface ID
-// from the index of the vertices
-// forming the interface
-struct InterfaceLookup {
-public:
-    InterfaceLookup();
-
-    size_t insert(std::vector<size_t> vertex_ids);
-    bool contains(std::vector<size_t> vertex_ids);
-    size_t id(std::vector<size_t> vertex_ids);
-
-private:
-    std::unordered_map<std::string, size_t> hash_map_;
-
-    std::string hash_vertex_ids(std::vector<size_t> vertex_ids);
-    bool contains_hash(std::string hash);
-};
 
 #endif
