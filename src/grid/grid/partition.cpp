@@ -66,6 +66,9 @@ std::vector<GridIO> partition_metis(GridIO& monolithic_grid, size_t n_partitions
     }
 
     // build cell mappings
+    // The approach is to loop through all the cells, and check if its neighbours are in
+    // the same partition as it. If they are not, build the cell mapping.
+    // Later on, the neighbour will be visted, and the symmetric mapping will be built.
     std::vector<std::vector<CellMapping>> cell_mapping(n_partitions);
     for (size_t cell_i = 0; cell_i < monolithic_grid.cells().size(); cell_i++) {
         size_t this_cell_partition = partitions[cell_i];
@@ -78,8 +81,31 @@ std::vector<GridIO> partition_metis(GridIO& monolithic_grid, size_t n_partitions
             if (this_cell_partition != ngbr_partition) {
                 size_t local_cell = global_local_cell_map[this_cell_partition][cell_i];
                 size_t other_cell = global_local_cell_map[ngbr_partition][ngbr_id];
+
+                // find the common interface between the two cells
+                ElemIO& local_cell = monolithic_grid.cell()[cell_i];
+                std::vector<ElemIO> local_faces = local_cell.interfaces();
+                ElemIO& other_cell = monolithic_grid.cell()[ngbr_id];
+                std::vector<ElemIO> other_faces = other_cell.interfaces();
+                InterfaceLookup& face_lookup = monolithic_grid.interface_lookup();
+                size_t common_face_id = std::numeric_limits<size_t>::max();
+                for (const ElemIO& local_face : local_faces) {
+                    size_t local_face_id = face_lookup().id(local_face.vertex_ids());
+                    for (const ElemIO& other_face : other_faces) {
+                        size_t other_face_id = face_lookup().id(other_face.vertex_ids());
+                        if (local_face_id == other_face_id) {
+                            // we've found the face!
+                            common_face_id = local_face_id;
+                        }
+                    }
+                }
+                if (common_face_id == std::numeric_limits<size_t>::max()) {
+                    spdlog::error("Unable to find common interface for Mapped cells");
+                    throw std::runtime_error("Unable to find common interface for Mapped cells");
+                }
+                
                 cell_mapping[this_cell_partition].push_back(
-                    CellMapping{local_cell, ngbr_partition, other_cell});
+                    CellMapping{local_cell, ngbr_partition, other_cell, common_face_id});
             }
         }
     }

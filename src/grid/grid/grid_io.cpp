@@ -115,7 +115,7 @@ std::ostream &operator<<(std::ostream &file, const ElemIO &elem_io) {
 }
 
 std::ostream &operator<<(std::ostream &file, const CellMapping &map) {
-    file << map.local_cell << " " << map.other_block << " " << map.other_cell;
+    file << map.local_cell << " " << map.global_face << " " << map.local_face << " " << map.other_block << " " << map.other_cell ;
     return file;
 }
 
@@ -148,6 +148,7 @@ GridIO::GridIO(const GridIO &monolithic_grid, const std::vector<size_t> &cells_t
 
     // maps global_vertex_id -> local_vertex_id
     std::unordered_map<size_t, size_t> vertex_map;
+    std::unordered_map<size_t, size_t> face_map;
 
     for (size_t local_cell_i = 0; local_cell_i < num_cells; local_cell_i++) {
         // gather the information about the global cell
@@ -155,7 +156,7 @@ GridIO::GridIO(const GridIO &monolithic_grid, const std::vector<size_t> &cells_t
         ElemIO global_elem_io = monolithic_grid.cells()[global_cell_i];
         std::vector<size_t> global_vertex_ids = global_elem_io.vertex_ids();
 
-        // gather the list of local vertices for this cell
+        // gather the list of local vertices and faces for this cell
         std::vector<size_t> local_vertex_ids;
         for (auto &global_vertex : global_vertex_ids) {
             if (vertex_map.find(global_vertex) == vertex_map.end()) {
@@ -170,6 +171,28 @@ GridIO::GridIO(const GridIO &monolithic_grid, const std::vector<size_t> &cells_t
         // At this point, we have the information to build the local cell
         cells_.push_back(ElemIO(local_vertex_ids, global_elem_io.cell_type(),
                                 global_elem_io.face_order()));
+
+        // set up the faces from the global faces
+        std::vector<size_t> local_face_ids;
+        std::vector<ElemIO> global_faces = global_elem_io.faces();
+        InterfaceLookup& global_face_lookup = monolithic_grid.interface_lookup();
+        InterfaceLookup& local_face_lookup;
+        for (auto &global_face : global_faces) {
+            size_t global_face_id = global_face_lookup.id(global_face.vertex_ids());
+            if (face_map.find(global_face_id) == face_map.end()) {
+                // we haven't encountered this face in this partition yet,
+                // so we'll add it now
+                face_map[global_face_id] = face_map.size();
+                faces_.push_back(global_face);
+                local_face_lookup.insert(global_face.vertex_ids());
+            }
+            cell_faces_[local_cell_i].push_back(faces_.size() - 1);
+        }
+    }
+
+    // modify the cell mappings from the global face id to the local face id
+    for (CellingMapping mapping : cell_mapping_) {
+        mapping.local_face = face_map[mapping.global_face];
     }
 
     // setup the local markers for this partition
@@ -419,12 +442,28 @@ void GridIO::read_mapped_cells(std::istream &file) {
     size_t local_cell;
     size_t other_block;
     size_t other_cell;
+    size_t local_face;
+    size_t global_face;
     while (get_next_line(file, line)) {
         trim_whitespace(line);
 
         sep = line.find(" ");
         value = line.substr(0, sep);
         local_cell = std::stoi(value);
+        line = line.substr(sep + 1, std::string::npos);
+        trim_whitespace(line);
+
+        sep = line.find(" ");
+        value = line.substr(0, sep);
+        trim_whitespace(value);
+        global_face = std::stoi(value);
+        line = line.substr(sep + 1, std::string::npos);
+        trim_whitespace(line);
+
+        sep = line.find(" ");
+        value = line.substr(0, sep);
+        trim_whitespace(value);
+        local_face = std::stoi(value);
         line = line.substr(sep + 1, std::string::npos);
         trim_whitespace(line);
 
@@ -440,7 +479,7 @@ void GridIO::read_mapped_cells(std::istream &file) {
         trim_whitespace(value);
         other_cell = std::stoi(value);
 
-        cell_mapping_.push_back(CellMapping(local_cell, other_block, other_cell));
+        cell_mapping_.push_back(CellMapping(local_cell, other_block, other_cell, global_face, local_face));
     }
 }
 

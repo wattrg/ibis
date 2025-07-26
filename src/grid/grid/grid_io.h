@@ -78,16 +78,29 @@ private:
 };
 
 struct CellMapping {
+    // local information
     size_t local_cell;
+
+    // information about the other block
     size_t other_block;
     size_t other_cell;
 
-    CellMapping(size_t local_cell_, size_t other_block_, size_t other_cell_)
-        : local_cell(local_cell_), other_block(other_block_), other_cell(other_cell_) {}
+    // the face between the two cells
+    size_t global_face;
+    size_t local_face = std::numeric_limits<size_t>::max();
+
+    CellMapping(size_t local_cell_, size_t other_block_, size_t other_cell_, size_t face_)
+        : local_cell(local_cell_), other_block(other_block_),
+          other_cell(other_cell_), global_face(face_) {}
+
+    CellMapping(size_t local_cell_, size_t other_block_, size_t other_cell_, size_t global_face_, size_t local_face_)
+        : local_cell(local_cell_), other_block(other_block_),
+          other_cell(other_cell_), global_face(global_face_), local_face(local_face_) {}
 
     bool operator==(const CellMapping &other) const {
-        return (local_cell == other.local_cell) && (other_block == other.other_block) &&
-               (other_cell == other.other_cell);
+        return (local_cell == other.local_cell) && (local_face == other.local_face) &&
+               (other_block == other.other_block) && (other_cell == other.other_cell) &&
+                (global_face == other.global_face) && (local_face == other.local_face);
     }
 
     friend std::ostream &operator<<(std::ostream &file, const CellMapping &map);
