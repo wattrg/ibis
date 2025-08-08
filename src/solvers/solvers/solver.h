@@ -54,8 +54,8 @@ std::unique_ptr<Solver> make_solver(json config, std::string grid_dir,
 template <typename T>
 int read_initial_condition(FlowStates<T>& fs, std::string flow_dir, int num_cells);
 
-template <typename T>
-int write_flow_solution(const FlowStates<T>& fs, const GridBlock<T>& grid,
+template <typename T, class MemModel>
+int write_flow_solution(const FlowStates<T>& fs, const GridBlock<MemModel, T>& grid,
                         const std::string flow_dir, int flow_i);
 
 #endif

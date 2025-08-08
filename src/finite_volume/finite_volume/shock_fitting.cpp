@@ -1,12 +1,12 @@
 #include <finite_volume/shock_fitting.h>
 #include <spdlog/spdlog.h>
 
-template <typename T>
-ShockFitting<T>::ShockFitting(const GridBlock<T>& grid, json config) {
+template <typename T, class MemModel>
+ShockFitting<T, MemModel>::ShockFitting(const GridBlock<MemModel, T>& grid, json config) {
     std::vector<size_t> boundary_vertices;
     for (auto& [marker_label, config] : config.at("boundaries").items()) {
         // build the boundary condition
-        bcs_.push_back(ShockFittingBC<T>(grid, marker_label, config));
+        bcs_.push_back(ShockFittingBC<T, MemModel>(grid, marker_label, config));
 
         // keep track of the points on the boundaries, so that we can
         // interpolate the other points from them
@@ -38,12 +38,12 @@ ShockFitting<T>::ShockFitting(const GridBlock<T>& grid, json config) {
     Field<size_t> sample_points{"ShockFit::sample_points", boundary_vertices};
     Field<size_t> interp_points{"ShockFit::interp_points", internal_vertices};
     Ibis::real power = config.at("interp_power");
-    interp_ = ShockFittingInterpolationAction<T>(sample_points, interp_points, power);
+    interp_ = ShockFittingInterpolationAction<T, MemModel>(sample_points, interp_points, power);
 }
 
-template <typename T>
-void ShockFitting<T>::compute_vertex_velocities(const FlowStates<T>& fs,
-                                                const GridBlock<T>& grid,
+template <typename T, class MemModel>
+void ShockFitting<T, MemModel>::compute_vertex_velocities(const FlowStates<T>& fs,
+                                                const GridBlock<MemModel, T>& grid,
                                                 Vector3s<T> vertex_vel) {
     // Step 1: Compute velocities of vertices which have direct equations
     for (auto& bc : bcs_) {
@@ -63,33 +63,33 @@ void ShockFitting<T>::compute_vertex_velocities(const FlowStates<T>& fs,
     // Step 4: Interpolate the remaining internal velocities
     interp_.apply(grid, vertex_vel);
 }
-template class ShockFitting<Ibis::real>;
-template class ShockFitting<Ibis::dual>;
+template class ShockFitting<Ibis::real, SharedMem>;
+template class ShockFitting<Ibis::dual, SharedMem>;
 
-template <typename T>
-ShockFittingBC<T>::ShockFittingBC(const GridBlock<T>& grid, std::string marker,
+template <typename T, class MemModel>
+ShockFittingBC<T, MemModel>::ShockFittingBC(const GridBlock<MemModel, T>& grid, std::string marker,
                                   json config) {
     json direct_configs = config.at("direct");
     for (json direct_config : direct_configs) {
         direct_actions_.push_back(
-            {marker, make_direct_velocity_action<T>(grid, marker, direct_config)});
+            {marker, make_direct_velocity_action<T, MemModel>(grid, marker, direct_config)});
     }
 
     json interp_configs = config.at("interp");
     for (json interp_config : interp_configs) {
         interp_actions_.push_back(
-            ShockFittingInterpolationAction<T>(grid, marker, interp_config));
+            ShockFittingInterpolationAction<T, MemModel>(grid, marker, interp_config));
     }
 
     json constraint_configs = config.at("constraint");
     for (json constraint_config : constraint_configs) {
-        constraints_.push_back({marker, make_constraint<T>(constraint_config)});
+        constraints_.push_back({marker, make_constraint<T, MemModel>(constraint_config)});
     }
 }
 
-template <typename T>
-void ShockFittingBC<T>::apply_direct_actions(const FlowStates<T>& fs,
-                                             const GridBlock<T>& grid,
+template <typename T, class MemModel>
+void ShockFittingBC<T, MemModel>::apply_direct_actions(const FlowStates<T>& fs,
+                                             const GridBlock<MemModel, T>& grid,
                                              Vector3s<T> vertex_vel) {
     for (auto& [marker, action] : direct_actions_) {
         const Field<size_t>& vertices = grid.marked_vertices(marker);
@@ -97,27 +97,27 @@ void ShockFittingBC<T>::apply_direct_actions(const FlowStates<T>& fs,
     }
 }
 
-template <typename T>
-void ShockFittingBC<T>::apply_interp_actions(const GridBlock<T>& grid,
+template <typename T, class MemModel>
+void ShockFittingBC<T, MemModel>::apply_interp_actions(const GridBlock<MemModel, T>& grid,
                                              Vector3s<T> vertex_vel) {
     for (auto& action : interp_actions_) {
         action.apply(grid, vertex_vel);
     }
 }
 
-template <typename T>
-void ShockFittingBC<T>::apply_constraints(const GridBlock<T>& grid,
+template <typename T, class MemModel>
+void ShockFittingBC<T, MemModel>::apply_constraints(const GridBlock<MemModel, T>& grid,
                                           Vector3s<T> vertex_vel) {
     for (auto& [marker, action] : constraints_) {
         const Field<size_t>& vertices = grid.marked_vertices(marker);
         action->apply(grid, vertex_vel, vertices);
     }
 }
-template class ShockFittingBC<Ibis::real>;
-template class ShockFittingBC<Ibis::dual>;
+template class ShockFittingBC<Ibis::real, SharedMem>;
+template class ShockFittingBC<Ibis::dual, SharedMem>;
 
-template <typename T>
-FixedVelocity<T>::FixedVelocity(json config) {
+template <typename T, class MemModel>
+FixedVelocity<T, MemModel>::FixedVelocity(json config) {
     json velocity = config.at("velocity");
     T x = T(velocity.at("x"));
     T y = T(velocity.at("y"));
@@ -125,8 +125,8 @@ FixedVelocity<T>::FixedVelocity(json config) {
     vel_ = Vector3<T>(x, y, z);
 }
 
-template <typename T>
-void FixedVelocity<T>::apply(const FlowStates<T>& fs, const GridBlock<T>& grid,
+template <typename T, class MemModel>
+void FixedVelocity<T, MemModel>::apply(const FlowStates<T>& fs, const GridBlock<MemModel, T>& grid,
                              Vector3s<T> vertex_vel,
                              const Field<size_t>& boundary_vertices) {
     (void)fs;
@@ -141,15 +141,15 @@ void FixedVelocity<T>::apply(const FlowStates<T>& fs, const GridBlock<T>& grid,
             vertex_vel.z(vertex_i) = T(vel.z);
         });
 }
-template class FixedVelocity<Ibis::real>;
-template class FixedVelocity<Ibis::dual>;
+template class FixedVelocity<Ibis::real, SharedMem>;
+template class FixedVelocity<Ibis::dual, SharedMem>;
 
-template <typename T>
-WaveSpeed<T>::WaveSpeed(const GridBlock<T>& grid, std::string marker, json config) {
+template <typename T, class MemModel>
+WaveSpeed<T, MemModel>::WaveSpeed(const GridBlock<MemModel, T>& grid, std::string marker, json config) {
     scale_ = config.at("scale");
     shock_detection_threshold_ = config.at("shock_detection_threshold");
     shock_detection_width_ = config.at("shock_detection_width");
-    constraint_ = make_constraint<T>(config.at("constraint"));
+    constraint_ = make_constraint<T, MemModel>(config.at("constraint"));
 
     // the position of each marked vertex in the array of marked vertices
     auto marked_vertices = grid.marked_vertices(marker).host_mirror();
@@ -297,8 +297,8 @@ KOKKOS_FUNCTION T mach_weighting(const FlowState<T>& left, const FlowState<T>& r
     return (face_mach + Ibis::abs(face_mach)) / 2;
 }
 
-template <typename T>
-void WaveSpeed<T>::apply(const FlowStates<T>& fs, const GridBlock<T>& grid,
+template <typename T, class MemModel>
+void WaveSpeed<T, MemModel>::apply(const FlowStates<T>& fs, const GridBlock<MemModel, T>& grid,
                          Vector3s<T> vertex_vel, const Field<size_t>& boundary_vertices) {
     (void)fs;
     (void)grid;
@@ -364,11 +364,11 @@ void WaveSpeed<T>::apply(const FlowStates<T>& fs, const GridBlock<T>& grid,
         constraint_->apply(grid, vertex_vel, boundary_vertices);
     }
 }
-template class WaveSpeed<Ibis::real>;
-template class WaveSpeed<Ibis::dual>;
+template class WaveSpeed<Ibis::real, SharedMem>;
+template class WaveSpeed<Ibis::dual, SharedMem>;
 
-template <typename T>
-ConstrainDirection<T>::ConstrainDirection(json config) {
+template <typename T, class MemModel>
+ConstrainDirection<T, MemModel>::ConstrainDirection(json config) {
     json direction = config.at("direction");
     Ibis::real x = direction.at("x");
     Ibis::real y = direction.at("y");
@@ -376,8 +376,8 @@ ConstrainDirection<T>::ConstrainDirection(json config) {
     direction_ = Vector3<T>(x, y, z);
 }
 
-template <typename T>
-void ConstrainDirection<T>::apply(const GridBlock<T>& grid, Vector3s<T> vertex_vel,
+template <typename T, class MemModel>
+void ConstrainDirection<T, MemModel>::apply(const GridBlock<MemModel, T>& grid, Vector3s<T> vertex_vel,
                                   const Field<size_t>& boundary_vertices) {
     (void)grid;
     Vector3<T> dirn = direction_;
@@ -394,11 +394,11 @@ void ConstrainDirection<T>::apply(const GridBlock<T>& grid, Vector3s<T> vertex_v
             vertex_vel.z(vertex_i) = dirn.z * dot;
         });
 }
-template class ConstrainDirection<Ibis::real>;
-template class ConstrainDirection<Ibis::dual>;
+template class ConstrainDirection<Ibis::real, SharedMem>;
+template class ConstrainDirection<Ibis::dual, SharedMem>;
 
-template <typename T>
-RadialConstraint<T>::RadialConstraint(json config) {
+template <typename T, class MemModel>
+RadialConstraint<T, MemModel>::RadialConstraint(json config) {
     json centre = config.at("centre");
     Ibis::real x = centre.at("x");
     Ibis::real y = centre.at("y");
@@ -406,8 +406,8 @@ RadialConstraint<T>::RadialConstraint(json config) {
     centre_ = Vector3<T>{x, y, z};
 }
 
-template <typename T>
-void RadialConstraint<T>::apply(const GridBlock<T>& grid, Vector3s<T> vertex_vel,
+template <typename T, class MemModel>
+void RadialConstraint<T, MemModel>::apply(const GridBlock<MemModel, T>& grid, Vector3s<T> vertex_vel,
                                 const Field<size_t>& boundary_vertices) {
     Vector3<T> centre = centre_;
     Vector3s<T> vertex_pos = grid.vertices().positions();
@@ -431,12 +431,12 @@ void RadialConstraint<T>::apply(const GridBlock<T>& grid, Vector3s<T> vertex_vel
             vertex_vel.z(vertex_i) = dirn.z * speed;
         });
 }
-template class RadialConstraint<Ibis::real>;
-template class RadialConstraint<Ibis::dual>;
+template class RadialConstraint<Ibis::real, SharedMem>;
+template class RadialConstraint<Ibis::dual, SharedMem>;
 
-template <typename T>
-ShockFittingInterpolationAction<T>::ShockFittingInterpolationAction(
-    const GridBlock<T>& grid, std::vector<std::string> sample_markers,
+template <typename T, class MemModel>
+ShockFittingInterpolationAction<T, MemModel>::ShockFittingInterpolationAction(
+    const GridBlock<MemModel, T>& grid, std::vector<std::string> sample_markers,
     std::string interp_marker, Ibis::real power) {
     // get all the indices of the vertices to sample from
     std::vector<size_t> sample_points;
@@ -471,14 +471,14 @@ ShockFittingInterpolationAction<T>::ShockFittingInterpolationAction(
     power_ = power;
 }
 
-template <typename T>
-ShockFittingInterpolationAction<T>::ShockFittingInterpolationAction(
-    const GridBlock<T>& grid, std::string interp_marker, json config)
+template <typename T, class MemModel>
+ShockFittingInterpolationAction<T, MemModel>::ShockFittingInterpolationAction(
+    const GridBlock<MemModel, T>& grid, std::string interp_marker, json config)
     : ShockFittingInterpolationAction(grid, config.at("sample_points"), interp_marker,
                                       config.at("power")) {}
 
-template <typename T>
-void ShockFittingInterpolationAction<T>::apply(const GridBlock<T>& grid,
+template <typename T, class MemModel>
+void ShockFittingInterpolationAction<T, MemModel>::apply(const GridBlock<MemModel, T>& grid,
                                                Vector3s<T> vertex_vel) {
     // Inverse distance weighting as per
     // https://en.wikipedia.org/wiki/Inverse_distance_weighting
@@ -512,42 +512,42 @@ void ShockFittingInterpolationAction<T>::apply(const GridBlock<T>& grid,
         });
 }
 
-template class ShockFittingInterpolationAction<Ibis::real>;
-template class ShockFittingInterpolationAction<Ibis::dual>;
+template class ShockFittingInterpolationAction<Ibis::real, SharedMem>;
+template class ShockFittingInterpolationAction<Ibis::dual, SharedMem>;
 
-template <typename T>
-std::shared_ptr<ShockFittingDirectVelocityAction<T>> make_direct_velocity_action(
-    const GridBlock<T>& grid, std::string marker, json config) {
+template <typename T, class MemModel>
+std::shared_ptr<ShockFittingDirectVelocityAction<T, MemModel>> make_direct_velocity_action(
+    const GridBlock<MemModel, T>& grid, std::string marker, json config) {
     std::string type = config.at("type");
     if (type == "wave_speed") {
-        return std::shared_ptr<ShockFittingDirectVelocityAction<T>>(
-            new WaveSpeed<T>(grid, marker, config));
+        return std::shared_ptr<ShockFittingDirectVelocityAction<T, MemModel>>(
+            new WaveSpeed<T, MemModel>(grid, marker, config));
     } else if (type == "fixed_velocity") {
-        return std::shared_ptr<ShockFittingDirectVelocityAction<T>>(
-            new FixedVelocity<T>(config));
+        return std::shared_ptr<ShockFittingDirectVelocityAction<T, MemModel>>(
+            new FixedVelocity<T, MemModel>(config));
     } else {
         spdlog::error("Unkown grid motion direct velocity action {}", type);
         throw new std::runtime_error("Unkown grid motion direction velocity action");
     }
 }
-template std::shared_ptr<ShockFittingDirectVelocityAction<Ibis::real>>
-make_direct_velocity_action(const GridBlock<Ibis::real>&, std::string, json);
-template std::shared_ptr<ShockFittingDirectVelocityAction<Ibis::dual>>
-make_direct_velocity_action(const GridBlock<Ibis::dual>&, std::string, json);
+template std::shared_ptr<ShockFittingDirectVelocityAction<Ibis::real, SharedMem>>
+make_direct_velocity_action(const GridBlock<SharedMem, Ibis::real>&, std::string, json);
+template std::shared_ptr<ShockFittingDirectVelocityAction<Ibis::dual, SharedMem>>
+make_direct_velocity_action(const GridBlock<SharedMem, Ibis::dual>&, std::string, json);
 
-template <typename T>
-std::shared_ptr<Constraint<T>> make_constraint(json config) {
+template <typename T, class MemModel>
+std::shared_ptr<Constraint<T, MemModel>> make_constraint(json config) {
     std::string type = config.at("type");
     if (type == "direction") {
-        return std::shared_ptr<Constraint<T>>(new ConstrainDirection<T>(config));
+        return std::shared_ptr<Constraint<T, MemModel>>(new ConstrainDirection<T, MemModel>(config));
     } else if (type == "radial") {
-        return std::shared_ptr<Constraint<T>>(new RadialConstraint<T>(config));
+        return std::shared_ptr<Constraint<T, MemModel>>(new RadialConstraint<T, MemModel>(config));
     } else if (type == "none") {
-        return std::shared_ptr<Constraint<T>>();
+        return std::shared_ptr<Constraint<T, MemModel>>();
     } else {
         spdlog::error("Unknown grid motion constraint {}", type);
         throw new std::runtime_error("Unkown grid motion constraint");
     }
 }
-template std::shared_ptr<Constraint<Ibis::real>> make_constraint(json);
-template std::shared_ptr<Constraint<Ibis::dual>> make_constraint(json);
+template std::shared_ptr<Constraint<Ibis::real, SharedMem>> make_constraint(json);
+template std::shared_ptr<Constraint<Ibis::dual, SharedMem>> make_constraint(json);

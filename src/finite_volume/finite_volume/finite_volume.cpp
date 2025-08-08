@@ -7,8 +7,8 @@
 
 #include "gas/transport_properties.h"
 
-template <typename T>
-FiniteVolume<T>::FiniteVolume(GridBlock<T>& grid, json config) {
+template <typename T, class MemModel>
+FiniteVolume<T, MemModel>::FiniteVolume(GridBlock<MemModel, T>& grid, json config) {
     dim_ = grid.dim();
 
     json convective_flux_config = config.at("convective_flux");
@@ -18,13 +18,13 @@ FiniteVolume<T>::FiniteVolume(GridBlock<T>& grid, json config) {
     flux_ = ConservedQuantities<T>(grid.num_interfaces(), grid.dim());
 
     // set up the convective flux
-    convective_flux_ = ConvectiveFlux<T>(grid, convective_flux_config);
+    convective_flux_ = ConvectiveFlux<T, MemModel>(grid, convective_flux_config);
 
     // flow states on the interfaces
     face_fs_ = FlowStates<T>(grid.num_interfaces());
 
     // set up the viscous flux
-    viscous_flux_ = ViscousFlux<T>(grid, face_fs_, viscous_flux_config);
+    viscous_flux_ = ViscousFlux<T, MemModel>(grid, face_fs_, viscous_flux_config);
 
     // allocate memory for gradients
     size_t reconstruction_order = convective_flux_.reconstruction_order();
@@ -42,8 +42,8 @@ FiniteVolume<T>::FiniteVolume(GridBlock<T>& grid, json config) {
     for (size_t bi = 0; bi < boundary_tags.size(); bi++) {
         // build the actual boundary condition
         json boundary_config = boundaries_config.at(boundary_tags[bi]);
-        std::shared_ptr<BoundaryCondition<T>> boundary(
-            new BoundaryCondition<T>(boundary_config));
+        std::shared_ptr<BoundaryCondition<T, MemModel>> boundary(
+            new BoundaryCondition<T, MemModel>(boundary_config));
         bcs_.push_back(boundary);
 
         // the faces associated with this boundary
@@ -51,9 +51,9 @@ FiniteVolume<T>::FiniteVolume(GridBlock<T>& grid, json config) {
     }
 }
 
-template <typename T>
-size_t FiniteVolume<T>::compute_dudt(FlowStates<T>& flow_state, Vector3s<T> vertex_vel,
-                                     const ConservedQuantities<T>& cq, GridBlock<T>& grid,
+template <typename T, class MemModel>
+size_t FiniteVolume<T, MemModel>::compute_dudt(FlowStates<T>& flow_state, Vector3s<T> vertex_vel,
+                                     const ConservedQuantities<T>& cq, GridBlock<MemModel, T>& grid,
                                      ConservedQuantities<T>& dudt, IdealGas<T>& gas_model,
                                      TransportProperties<T>& trans_prop,
                                      bool allow_reconstruction) {
@@ -82,8 +82,8 @@ size_t FiniteVolume<T>::compute_dudt(FlowStates<T>& flow_state, Vector3s<T> vert
     return 0;
 }
 
-template <typename T>
-size_t FiniteVolume<T>::compute_dudt(FlowStates<T>& flow_state, GridBlock<T>& grid,
+template <typename T, class MemModel>
+size_t FiniteVolume<T, MemModel>::compute_dudt(FlowStates<T>& flow_state, GridBlock<MemModel, T>& grid,
                                      ConservedQuantities<T>& dudt, IdealGas<T>& gas_model,
                                      TransportProperties<T>& trans_prop,
                                      bool allow_reconstruction) {
@@ -93,9 +93,9 @@ size_t FiniteVolume<T>::compute_dudt(FlowStates<T>& flow_state, GridBlock<T>& gr
                         trans_prop, allow_reconstruction);
 }
 
-template <typename T>
-void FiniteVolume<T>::apply_geometric_conservation_law(const ConservedQuantities<T>& cq,
-                                                       const GridBlock<T>& grid,
+template <typename T, class MemModel>
+void FiniteVolume<T, MemModel>::apply_geometric_conservation_law(const ConservedQuantities<T>& cq,
+                                                       const GridBlock<MemModel, T>& grid,
                                                        ConservedQuantities<T>& dudt) {
     size_t num_cells = grid.num_cells();
     Cells<T> cells = grid.cells();
@@ -125,9 +125,9 @@ void FiniteVolume<T>::apply_geometric_conservation_law(const ConservedQuantities
         });
 }
 
-template <typename T>
-Ibis::real FiniteVolume<T>::estimate_dt(const FlowStates<T>& flow_state,
-                                        GridBlock<T>& grid, IdealGas<T>& gas_model,
+template <typename T, class MemModel>
+Ibis::real FiniteVolume<T, MemModel>::estimate_dt(const FlowStates<T>& flow_state,
+                                        GridBlock<MemModel, T>& grid, IdealGas<T>& gas_model,
                                         TransportProperties<T>& trans_prop) {
     (void)trans_prop;
     size_t num_cells = grid.num_cells();
@@ -177,42 +177,42 @@ Ibis::real FiniteVolume<T>::estimate_dt(const FlowStates<T>& flow_state,
         });
 }
 
-template <typename T>
-void FiniteVolume<T>::apply_pre_reconstruction_bc(
-    FlowStates<T>& fs, const GridBlock<T>& grid, const IdealGas<T>& gas_model,
+template <typename T, class MemModel>
+void FiniteVolume<T, MemModel>::apply_pre_reconstruction_bc(
+    FlowStates<T>& fs, const GridBlock<MemModel, T>& grid, const IdealGas<T>& gas_model,
     const TransportProperties<T>& trans_prop) {
     for (size_t i = 0; i < bcs_.size(); i++) {
-        std::shared_ptr<BoundaryCondition<T>> bc = bcs_[i];
+        std::shared_ptr<BoundaryCondition<T, MemModel>> bc = bcs_[i];
         Field<size_t> bc_faces = bc_interfaces_[i];
         bc->apply_pre_reconstruction(fs, grid, bc_faces, gas_model, trans_prop);
     }
 }
 
-template <typename T>
-void FiniteVolume<T>::apply_post_convective_flux_bc(
-    const FlowStates<T>& fs, const GridBlock<T>& grid, const IdealGas<T>& gas_model,
+template <typename T, class MemModel>
+void FiniteVolume<T, MemModel>::apply_post_convective_flux_bc(
+    const FlowStates<T>& fs, const GridBlock<MemModel, T>& grid, const IdealGas<T>& gas_model,
     const TransportProperties<T>& trans_prop) {
     for (size_t i = 0; i < bcs_.size(); i++) {
-        std::shared_ptr<BoundaryCondition<T>> bc = bcs_[i];
+        std::shared_ptr<BoundaryCondition<T, MemModel>> bc = bcs_[i];
         Field<size_t> bc_faces = bc_interfaces_[i];
         bc->apply_post_convective_flux_actions(flux_, fs, grid, bc_faces, gas_model,
                                                trans_prop);
     }
 }
 
-template <typename T>
-void FiniteVolume<T>::apply_pre_viscous_grad_bc(
-    FlowStates<T>& fs, const GridBlock<T>& grid, const IdealGas<T>& gas_model,
+template <typename T, class MemModel>
+void FiniteVolume<T, MemModel>::apply_pre_viscous_grad_bc(
+    FlowStates<T>& fs, const GridBlock<MemModel, T>& grid, const IdealGas<T>& gas_model,
     const TransportProperties<T>& trans_prop) {
     for (size_t i = 0; i < bcs_.size(); i++) {
-        std::shared_ptr<BoundaryCondition<T>> bc = bcs_[i];
+        std::shared_ptr<BoundaryCondition<T, MemModel>> bc = bcs_[i];
         Field<size_t> bc_faces = bc_interfaces_[i];
         bc->apply_pre_viscous_grad(fs, grid, bc_faces, gas_model, trans_prop);
     }
 }
 
-template <typename T>
-void FiniteVolume<T>::flux_surface_integral(const GridBlock<T>& grid,
+template <typename T, class MemModel>
+void FiniteVolume<T, MemModel>::flux_surface_integral(const GridBlock<MemModel, T>& grid,
                                             ConservedQuantities<T>& dudt) {
     Cells<T> cells = grid.cells();
     CellFaces<T> cell_faces = grid.cells().faces();
@@ -248,8 +248,8 @@ void FiniteVolume<T>::flux_surface_integral(const GridBlock<T>& grid,
         });
 }
 
-template <typename T>
-size_t FiniteVolume<T>::count_bad_cells(const FlowStates<T>& fs, const size_t num_cells) {
+template <typename T, class MemModel>
+size_t FiniteVolume<T, MemModel>::count_bad_cells(const FlowStates<T>& fs, const size_t num_cells) {
     size_t n_bad_cells = 0;
     Kokkos::parallel_reduce(
         "FiniteVolume::count_bad_cells", num_cells,
@@ -263,9 +263,9 @@ size_t FiniteVolume<T>::count_bad_cells(const FlowStates<T>& fs, const size_t nu
     return n_bad_cells;
 }
 
-template <typename T>
-void FiniteVolume<T>::compute_viscous_gradient(FlowStates<T>& fs,
-                                               const GridBlock<T>& grid,
+template <typename T, class MemModel>
+void FiniteVolume<T, MemModel>::compute_viscous_gradient(FlowStates<T>& fs,
+                                               const GridBlock<MemModel, T>& grid,
                                                const IdealGas<T>& gas_model,
                                                const TransportProperties<T>& trans_prop) {
     apply_pre_reconstruction_bc(fs, grid, gas_model, trans_prop);
@@ -273,13 +273,15 @@ void FiniteVolume<T>::compute_viscous_gradient(FlowStates<T>& fs,
     viscous_flux_.compute_viscous_gradient(fs, grid, cell_grad_, grid.grad_calc());
 }
 
-template <typename T>
-void FiniteVolume<T>::compute_convective_gradient(
-    FlowStates<T>& fs, const GridBlock<T>& grid, const IdealGas<T>& gas_model,
+template <typename T, class MemModel>
+void FiniteVolume<T, MemModel>::compute_convective_gradient(
+    FlowStates<T>& fs, const GridBlock<MemModel, T>& grid, const IdealGas<T>& gas_model,
     const TransportProperties<T>& trans_prop) {
     apply_pre_reconstruction_bc(fs, grid, gas_model, trans_prop);
     convective_flux_.compute_convective_gradient(fs, grid, cell_grad_, grid.grad_calc());
 }
 
-template class FiniteVolume<Ibis::real>;
-template class FiniteVolume<Ibis::dual>;
+template class FiniteVolume<Ibis::real, SharedMem>;
+template class FiniteVolume<Ibis::real, Mpi>;
+template class FiniteVolume<Ibis::dual, SharedMem>;
+template class FiniteVolume<Ibis::dual, Mpi>;

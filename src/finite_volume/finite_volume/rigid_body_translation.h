@@ -3,8 +3,8 @@
 
 #include <finite_volume/grid_motion_driver.h>
 
-template <typename T>
-class RigidBodyTranslation : public GridMotionDriver<T> {
+template <typename T, class MemModel>
+class RigidBodyTranslation : public GridMotionDriver<T, MemModel> {
 public:
     ~RigidBodyTranslation() {}
 
@@ -12,7 +12,7 @@ public:
 
     RigidBodyTranslation(json config);
 
-    void compute_vertex_velocities(const FlowStates<T>& fs, const GridBlock<T>& grid,
+    void compute_vertex_velocities(const FlowStates<T>& fs, const GridBlock<MemModel, T>& grid,
                                    Vector3s<T> vertex_vel);
 
 private:

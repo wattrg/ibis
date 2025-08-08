@@ -45,6 +45,18 @@ inline auto parallel_reduce(const std::string& str, PolicyType policy,
 template <class MemModel, typename T, bool gpu_aware = false>
 class SymmetricComm;
 
+template <typename T, bool gpu_aware>
+class SymmetricComm<SharedMem, T, gpu_aware> {
+// public:
+    // SymmetricComm(int other_rank, size_t buf_size);
+    // SymmetricComm(int other_rank);
+    // void expect_receive();
+    // void send();
+    // int receive();
+    // void resize_buffers(size_t new_size);
+    // const Kokkos::View<T*, MemSpace>
+};
+
 }  // namespace Ibis
 
 // Include the headers of the active memory models so that this

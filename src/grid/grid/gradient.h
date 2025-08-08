@@ -42,7 +42,7 @@ struct Gradients {
     Vector3s<T, Layout, Space> vz;
 };
 
-template <typename T, class ExecSpace = Kokkos::DefaultExecutionSpace,
+template <typename T, class MemModel, class ExecSpace = Kokkos::DefaultExecutionSpace,
           class Layout = Kokkos::DefaultExecutionSpace::array_layout>
 class WLSGradient {
 public:
@@ -53,7 +53,7 @@ public:
 public:
     WLSGradient() {}
 
-    WLSGradient(const GridBlock<T, ExecSpace, Layout>& block) {
+    WLSGradient(const GridBlock<MemModel, T, ExecSpace, Layout>& block) {
         int num_cells = block.num_cells();
         int num_rs = block.dim() == 2 ? 3 : 6;
         r_ = Kokkos::View<T**, Layout, memory_space>("WLSGradient::r", num_cells, num_rs);
@@ -63,7 +63,7 @@ public:
     WLSGradient(view_type rs) : r_(rs) {}
 
     template <class SubView>
-    void compute_gradients(const GridBlock<T, ExecSpace, Layout>& block,
+    void compute_gradients(const GridBlock<MemModel, T, ExecSpace, Layout>& block,
                            const SubView values, Vector3s<T, Layout, memory_space> grad) {
         auto cells = block.cells();
         int dim = block.dim();
@@ -116,7 +116,7 @@ public:
     }
 
 public:
-    void compute_weights(const GridBlock<T, ExecSpace, Layout>& block) {
+    void compute_weights(const GridBlock<MemModel, T, ExecSpace, Layout>& block) {
         auto cells = block.cells();
         int dim = block.dim();
         Kokkos::parallel_for(

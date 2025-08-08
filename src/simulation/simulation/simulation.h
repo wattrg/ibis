@@ -10,14 +10,14 @@
 
 using json = nlohmann::json;
 
-template <typename T>
+template <typename T, class MemModel>
 struct Sim {
     Sim() {}
 
-    Sim(GridBlock<T> grid, json config);
+    Sim(GridBlock<MemModel, T> grid, json config);
 
     FiniteVolume<T> fv;
-    GridBlock<T> grid;
+    GridBlock<MemModel, T> grid;
     IdealGas<T> gas_model;
     TransportProperties<T> trans_prop;
 };

@@ -28,7 +28,7 @@ json build_gradient_config() {
 
 TEST_CASE("gradient") {
     json config = build_gradient_config();
-    GridBlock<Ibis::real> block_dev("../../../src/grid/test/grid.su2", config);
+    GridBlock<SharedMem, Ibis::real> block_dev("../../../src/grid/test/grid.su2", config);
     auto block_host = block_dev.host_mirror();
     block_host.deep_copy(block_dev);
     WLSGradient<Ibis::real> wls_gradient(block_dev);

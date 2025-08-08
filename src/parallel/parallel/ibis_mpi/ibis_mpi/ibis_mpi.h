@@ -211,7 +211,7 @@ struct ReducerMap<ReducerType, Mpi> {
 
 // Message passing communicator
 template <typename T, bool gpu_aware>
-class SymmetricComm<Mpi> {
+class SymmetricComm<Mpi, T, gpu_aware> {
 private:
     using MemSpace = Ibis::DefaultMemSpace;
     using view_type = Kokkos::View<T*, MemSpace>;

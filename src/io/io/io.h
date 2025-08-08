@@ -18,12 +18,12 @@ enum class FlowFormat { NativeText, NativeBinary, VtkText, VtkBinary };
 
 FlowFormat string_to_flow_format(std::string format);
 
-template <typename T>
+template <typename T, class MemModel>
 class FVInput {
 public:
     virtual ~FVInput() {}
 
-    virtual int read(typename FlowStates<T>::mirror_type& fs, GridBlock<T>& grid,
+    virtual int read(typename FlowStates<T>::mirror_type& fs, GridBlock<MemModel, T>& grid,
                      const IdealGas<T>& gas_model,
                      const TransportProperties<T>& trans_prop, std::string dir,
                      json& meta_data) = 0;
@@ -31,13 +31,13 @@ public:
     virtual bool combined_grid_and_flow() const = 0;
 };
 
-template <typename T>
+template <typename T, class MemModel>
 class FVOutput {
 public:
     virtual ~FVOutput() {}
 
-    virtual int write(const typename FlowStates<T>::mirror_type& fs, FiniteVolume<T>& fv,
-                      const GridBlock<T>& grid, const IdealGas<T>& gas_model,
+    virtual int write(const typename FlowStates<T>::mirror_type& fs, FiniteVolume<T, MemModel>& fv,
+                      const GridBlock<MemModel, T>& grid, const IdealGas<T>& gas_model,
                       const TransportProperties<T>& trans_prop, std::string plot_dir,
                       std::string time_dir, Ibis::real time) = 0;
 
@@ -52,7 +52,7 @@ protected:
     std::map<std::string, std::shared_ptr<VectorAccessor<T>>> m_vector_accessors;
 };
 
-template <typename T>
+template <typename T, class MemModel>
 class FVIO {
 public:
     // constructors
@@ -64,13 +64,13 @@ public:
     FVIO();
 
     // read a flow state
-    int read(FlowStates<T>& fs, GridBlock<T>& grid, const IdealGas<T>& gas_model,
+    int read(FlowStates<T>& fs, GridBlock<MemModel, T>& grid, const IdealGas<T>& gas_model,
              const TransportProperties<T>& trans_prop, json& config, json& meta_data,
              int time_idx);
 
     // write a flow state
-    int write(const FlowStates<T>& flow_state, FiniteVolume<T>& fv,
-              const GridBlock<T>& grid, const IdealGas<T>& gas_model,
+    int write(const FlowStates<T>& flow_state, FiniteVolume<T, MemModel>& fv,
+              const GridBlock<MemModel, T>& grid, const IdealGas<T>& gas_model,
               const TransportProperties<T>& trans_prop, Ibis::real time);
 
     void add_output_variable(std::string name) { output_->add_variable(name); }
@@ -78,8 +78,8 @@ public:
     void write_coordinating_file();
 
 private:
-    std::unique_ptr<FVInput<T>> input_;
-    std::unique_ptr<FVOutput<T>> output_;
+    std::unique_ptr<FVInput<T, MemModel>> input_;
+    std::unique_ptr<FVOutput<T, MemModel>> output_;
     bool moving_grid_;
     int time_index_;
     std::string input_dir_;

@@ -28,18 +28,18 @@ struct RequiredGradients {
     bool rho = false;
 };
 
-template <typename T>
+template <typename T, class MemModel>
 class ConvectiveFlux {
 public:
     ConvectiveFlux() {}
 
-    ConvectiveFlux(const GridBlock<T>& grid, json config);
+    ConvectiveFlux(const GridBlock<MemModel, T>& grid, json config);
 
     // Compute the convective fluxes. Includes gradient calculation,
     // but not boundary conditions
-    void compute_convective_flux(const FlowStates<T>& flow_states, GridBlock<T>& grid,
+    void compute_convective_flux(const FlowStates<T>& flow_states, GridBlock<MemModel, T>& grid,
                                  IdealGas<T>& gas_model, Gradients<T>& cell_grad,
-                                 WLSGradient<T>& grad_calc, ConservedQuantities<T>& flux,
+                                 WLSGradient<T, MemModel>& grad_calc, ConservedQuantities<T>& flux,
                                  bool allow_reconstruction);
 
     // Compute the convective gradients. This could be private,
@@ -47,16 +47,16 @@ public:
     // the gradients in post without computing the actual flux
     // values afterwards.
     void compute_convective_gradient(const FlowStates<T>& flow_states,
-                                     const GridBlock<T>& grid, Gradients<T>& cell_grad,
-                                     WLSGradient<T>& grad_calc);
+                                     const GridBlock<MemModel, T>& grid, Gradients<T>& cell_grad,
+                                     WLSGradient<T, MemModel>& grad_calc);
 
-    void copy_reconstruct(const FlowStates<T>& flow_states, const GridBlock<T>& grid);
+    void copy_reconstruct(const FlowStates<T>& flow_states, const GridBlock<MemModel, T>& grid);
 
-    void linear_reconstruct(const FlowStates<T>& flow_states, const GridBlock<T>& grid,
-                            Gradients<T>& cell_grad, WLSGradient<T>& grad_calc,
+    void linear_reconstruct(const FlowStates<T>& flow_states, const GridBlock<MemModel, T>& grid,
+                            Gradients<T>& cell_grad, WLSGradient<T, MemModel>& grad_calc,
                             IdealGas<T>& gas_model);
 
-    void compute_limiters(const FlowStates<T>& flow_states, const GridBlock<T>& grid,
+    void compute_limiters(const FlowStates<T>& flow_states, const GridBlock<MemModel, T>& grid,
                           Gradients<T>& cell_grad);
 
     size_t reconstruction_order() const { return reconstruction_order_; }

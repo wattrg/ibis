@@ -6,13 +6,13 @@
 
 #include <Kokkos_Core.hpp>
 
-template <typename T>
-FlowStateCopy<T>::FlowStateCopy(json flow_state) {
+template <typename T, class MemModel>
+FlowStateCopy<T, MemModel>::FlowStateCopy(json flow_state) {
     fs_ = FlowState<T>(flow_state);
 }
 
-template <typename T>
-void FlowStateCopy<T>::apply(FlowStates<T>& fs, const GridBlock<T>& grid,
+template <typename T, class MemModel>
+void FlowStateCopy<T, MemModel>::apply(FlowStates<T>& fs, const GridBlock<MemModel, T>& grid,
                              const Field<size_t>& boundary_faces,
                              const IdealGas<T>& gas_model,
                              const TransportProperties<T>& trans_prop) {
@@ -44,11 +44,13 @@ void FlowStateCopy<T>::apply(FlowStates<T>& fs, const GridBlock<T>& grid,
             fs.vel.z(ghost_cell) = this_fs.velocity.z;
         });
 }
-template class FlowStateCopy<Ibis::real>;
-template class FlowStateCopy<Ibis::dual>;
+template class FlowStateCopy<Ibis::real, SharedMem>;
+template class FlowStateCopy<Ibis::real, Mpi>;
+template class FlowStateCopy<Ibis::dual, SharedMem>;
+template class FlowStateCopy<Ibis::dual, Mpi>;
 
-template <typename T>
-BoundaryLayerProfile<T>::BoundaryLayerProfile(json config) {
+template <typename T, class MemModel>
+BoundaryLayerProfile<T, MemModel>::BoundaryLayerProfile(json config) {
     std::vector<Ibis::real> x = config.at("height");
     std::vector<Ibis::real> v = config.at("v");
     std::vector<Ibis::real> temp = config.at("T");
@@ -57,8 +59,8 @@ BoundaryLayerProfile<T>::BoundaryLayerProfile(json config) {
     p_ = config.at("p");
 }
 
-template <typename T>
-void BoundaryLayerProfile<T>::apply(FlowStates<T>& fs, const GridBlock<T>& grid,
+template <typename T, class MemModel>
+void BoundaryLayerProfile<T, MemModel>::apply(FlowStates<T>& fs, const GridBlock<MemModel, T>& grid,
                                     const Field<size_t>& boundary_faces,
                                     const IdealGas<T>& gas_model,
                                     const TransportProperties<T>& trans_prop) {
@@ -93,11 +95,13 @@ void BoundaryLayerProfile<T>::apply(FlowStates<T>& fs, const GridBlock<T>& grid,
             fs.vel.z(ghost_cell) = 0.0;
         });
 }
-template class BoundaryLayerProfile<Ibis::real>;
-template class BoundaryLayerProfile<Ibis::dual>;
+template class BoundaryLayerProfile<Ibis::real, SharedMem>;
+template class BoundaryLayerProfile<Ibis::real, Mpi>;
+template class BoundaryLayerProfile<Ibis::dual, SharedMem>;
+template class BoundaryLayerProfile<Ibis::dual, Mpi>;
 
-template <typename T>
-void InternalCopy<T>::apply(FlowStates<T>& fs, const GridBlock<T>& grid,
+template <typename T, class MemModel>
+void InternalCopy<T, MemModel>::apply(FlowStates<T>& fs, const GridBlock<MemModel, T>& grid,
                             const Field<size_t>& boundary_faces,
                             const IdealGas<T>& gas_model,
                             const TransportProperties<T>& trans_prop) {
@@ -135,11 +139,13 @@ void InternalCopy<T>::apply(FlowStates<T>& fs, const GridBlock<T>& grid,
             fs.vel.z(ghost_cell) = fs.vel.z(valid_cell);
         });
 }
-template class InternalCopy<Ibis::real>;
-template class InternalCopy<Ibis::dual>;
+template class InternalCopy<Ibis::real, SharedMem>;
+template class InternalCopy<Ibis::real, Mpi>;
+template class InternalCopy<Ibis::dual, SharedMem>;
+template class InternalCopy<Ibis::dual, Mpi>;
 
-template <typename T>
-void InternalCopyReflectNormal<T>::apply(FlowStates<T>& fs, const GridBlock<T>& grid,
+template <typename T, class MemModel>
+void InternalCopyReflectNormal<T, MemModel>::apply(FlowStates<T>& fs, const GridBlock<MemModel, T>& grid,
                                          const Field<size_t>& boundary_faces,
                                          const IdealGas<T>& gas_model,
                                          const TransportProperties<T>& trans_prop) {
@@ -205,8 +211,8 @@ void InternalCopyReflectNormal<T>::apply(FlowStates<T>& fs, const GridBlock<T>& 
         });
 }
 
-template <typename T>
-void InternalVelCopyReflect<T>::apply(FlowStates<T>& fs, const GridBlock<T>& grid,
+template <typename T, class MemModel>
+void InternalVelCopyReflect<T, MemModel>::apply(FlowStates<T>& fs, const GridBlock<MemModel, T>& grid,
                                       const Field<size_t>& boundary_faces,
                                       const IdealGas<T>& gas_model,
                                       const TransportProperties<T>& trans_prop) {
@@ -240,8 +246,8 @@ void InternalVelCopyReflect<T>::apply(FlowStates<T>& fs, const GridBlock<T>& gri
         });
 }
 
-template <typename T>
-void FixTemperature<T>::apply(FlowStates<T>& fs, const GridBlock<T>& grid,
+template <typename T, class MemModel>
+void FixTemperature<T, MemModel>::apply(FlowStates<T>& fs, const GridBlock<MemModel, T>& grid,
                               const Field<size_t>& boundary_faces,
                               const IdealGas<T>& gas_model,
                               const TransportProperties<T>& trans_prop) {
@@ -276,14 +282,14 @@ void FixTemperature<T>::apply(FlowStates<T>& fs, const GridBlock<T>& grid,
         });
 }
 
-template <typename T>
-SubsonicInflow<T>::SubsonicInflow(json flow_state) {
+template <typename T, class MemModel>
+SubsonicInflow<T, MemModel>::SubsonicInflow(json flow_state) {
     inflow_state_ = FlowState<T>(flow_state);
 }
 
 // the implementation for the subsonic inflow is from Blazek's book
-template <typename T>
-void SubsonicInflow<T>::apply(FlowStates<T>& fs, const GridBlock<T>& grid,
+template <typename T, class MemModel>
+void SubsonicInflow<T, MemModel>::apply(FlowStates<T>& fs, const GridBlock<MemModel, T>& grid,
                               const Field<size_t>& boundary_faces,
                               const IdealGas<T>& gas_model,
                               const TransportProperties<T>& trans_prop) {
@@ -341,11 +347,13 @@ void SubsonicInflow<T>::apply(FlowStates<T>& fs, const GridBlock<T>& grid,
             fs.vel.z(ghost_cell) = 2 * vz_face - fs.vel.z(valid_cell);
         });
 }
-template class SubsonicInflow<Ibis::real>;
-template class SubsonicInflow<Ibis::dual>;
+template class SubsonicInflow<Ibis::real, SharedMem>;
+template class SubsonicInflow<Ibis::real, Mpi>;
+template class SubsonicInflow<Ibis::dual, SharedMem>;
+template class SubsonicInflow<Ibis::dual, Mpi>;
 
-template <typename T>
-void SubsonicOutflow<T>::apply(FlowStates<T>& fs, const GridBlock<T>& grid,
+template <typename T, class MemModel>
+void SubsonicOutflow<T, MemModel>::apply(FlowStates<T>& fs, const GridBlock<MemModel, T>& grid,
                                const Field<size_t>& boundary_faces,
                                const IdealGas<T>& gas_model,
                                const TransportProperties<T>& trans_prop) {
@@ -398,12 +406,14 @@ void SubsonicOutflow<T>::apply(FlowStates<T>& fs, const GridBlock<T>& grid,
             fs.vel.z(ghost_cell) = 2 * vz_face - fs.vel.z(valid_cell);
         });
 }
-template class SubsonicOutflow<Ibis::real>;
-template class SubsonicOutflow<Ibis::dual>;
+template class SubsonicOutflow<Ibis::real, SharedMem>;
+template class SubsonicOutflow<Ibis::real, Mpi>;
+template class SubsonicOutflow<Ibis::dual, SharedMem>;
+template class SubsonicOutflow<Ibis::dual, Mpi>;
 
-template <typename T>
-void ConstantFlux<T>::apply(ConservedQuantities<T>& flux,
-                            const FlowStates<T>& flow_states, const GridBlock<T>& grid,
+template <typename T, class MemModel>
+void ConstantFlux<T, MemModel>::apply(ConservedQuantities<T>& flux,
+                            const FlowStates<T>& flow_states, const GridBlock<MemModel, T>& grid,
                             const Field<size_t>& boundary_faces,
                             const IdealGas<T>& gas_model,
                             const TransportProperties<T>& trans_prop) {
@@ -442,35 +452,37 @@ void ConstantFlux<T>::apply(ConservedQuantities<T>& flux,
                 p * (fs.velocity.x * n.x + fs.velocity.y * n.x + fs.velocity.z * n.z);
         });
 }
-template class ConstantFlux<Ibis::real>;
-template class ConstantFlux<Ibis::dual>;
+template class ConstantFlux<Ibis::real, SharedMem>;
+template class ConstantFlux<Ibis::real, Mpi>;
+template class ConstantFlux<Ibis::dual, SharedMem>;
+template class ConstantFlux<Ibis::dual, Mpi>;
 
-template <typename T>
-std::shared_ptr<GhostCellAction<T>> build_boundary_action(json config) {
+template <typename T, class MemModel>
+std::shared_ptr<GhostCellAction<T, MemModel>> build_boundary_action(json config) {
     std::string type = config.at("type");
-    std::shared_ptr<GhostCellAction<T>> action;
+    std::shared_ptr<GhostCellAction<T, MemModel>> action;
     if (type == "flow_state_copy") {
         json flow_state = config.at("flow_state");
-        action = std::shared_ptr<GhostCellAction<T>>(new FlowStateCopy<T>(flow_state));
+        action = std::shared_ptr<GhostCellAction<T, MemModel>>(new FlowStateCopy<T, MemModel>(flow_state));
     } else if (type == "boundary_layer_profile") {
         json profile = config.at("profile");
         action =
-            std::shared_ptr<GhostCellAction<T>>(new BoundaryLayerProfile<T>(profile));
+            std::shared_ptr<GhostCellAction<T, MemModel>>(new BoundaryLayerProfile<T, MemModel>(profile));
     } else if (type == "internal_copy") {
-        action = std::shared_ptr<GhostCellAction<T>>(new InternalCopy<T>());
+        action = std::shared_ptr<GhostCellAction<T, MemModel>>(new InternalCopy<T, MemModel>());
     } else if (type == "internal_copy_reflect_normal") {
-        action = std::shared_ptr<GhostCellAction<T>>(new InternalCopyReflectNormal<T>());
+        action = std::shared_ptr<GhostCellAction<T, MemModel>>(new InternalCopyReflectNormal<T, MemModel>());
     } else if (type == "internal_vel_copy_reflect") {
-        action = std::shared_ptr<GhostCellAction<T>>(new InternalVelCopyReflect<T>());
+        action = std::shared_ptr<GhostCellAction<T, MemModel>>(new InternalVelCopyReflect<T, MemModel>());
     } else if (type == "fix_temperature") {
         T temperature = T(config.at("temperature"));
-        action = std::shared_ptr<GhostCellAction<T>>(new FixTemperature<T>(temperature));
+        action = std::shared_ptr<GhostCellAction<T, MemModel>>(new FixTemperature<T, MemModel>(temperature));
     } else if (type == "subsonic_inflow") {
         json flow_state = config.at("flow_state");
-        action = std::shared_ptr<GhostCellAction<T>>(new SubsonicInflow<T>(flow_state));
+        action = std::shared_ptr<GhostCellAction<T, MemModel>>(new SubsonicInflow<T, MemModel>(flow_state));
     } else if (type == "subsonic_outflow") {
         T pressure = T(config.at("pressure"));
-        action = std::shared_ptr<GhostCellAction<T>>(new SubsonicOutflow<T>(pressure));
+        action = std::shared_ptr<GhostCellAction<T, MemModel>>(new SubsonicOutflow<T, MemModel>(pressure));
     } else {
         spdlog::error("Unknown boundary action {}", type);
         throw std::runtime_error("Unknown boundary action");
@@ -478,12 +490,12 @@ std::shared_ptr<GhostCellAction<T>> build_boundary_action(json config) {
     return action;
 }
 
-template <typename T>
-std::shared_ptr<FluxAction<T>> build_flux_action(json config) {
+template <typename T, class MemModel>
+std::shared_ptr<FluxAction<T, MemModel>> build_flux_action(json config) {
     std::string type = config.at("type");
-    std::shared_ptr<FluxAction<T>> action;
+    std::shared_ptr<FluxAction<T, MemModel>> action;
     if (type == "constant_flux") {
-        action = std::shared_ptr<FluxAction<T>>(new ConstantFlux<T>(config));
+        action = std::shared_ptr<FluxAction<T, MemModel>>(new ConstantFlux<T, MemModel>(config));
     } else {
         spdlog::error("Unknown flux action {}", type);
         throw std::runtime_error("Unknown flux action");
@@ -491,41 +503,41 @@ std::shared_ptr<FluxAction<T>> build_flux_action(json config) {
     return action;
 }
 
-template <typename T>
-BoundaryCondition<T>::BoundaryCondition(json config) {
+template <typename T, class MemModel>
+BoundaryCondition<T, MemModel>::BoundaryCondition(json config) {
     std::vector<json> pre_reco = config.at("pre_reconstruction");
     for (size_t i = 0; i < pre_reco.size(); i++) {
-        std::shared_ptr<GhostCellAction<T>> action =
-            build_boundary_action<T>(pre_reco[i]);
+        std::shared_ptr<GhostCellAction<T, MemModel>> action =
+            build_boundary_action<T, MemModel>(pre_reco[i]);
         pre_reconstruction_.push_back(action);
     }
 
     std::vector<json> post_convective_flux = config.at("post_convective_flux");
     for (json config : post_convective_flux) {
-        std::shared_ptr<FluxAction<T>> action = build_flux_action<T>(config);
+        std::shared_ptr<FluxAction<T, MemModel>> action = build_flux_action<T, MemModel>(config);
         post_convective_flux_actions_.push_back(action);
     }
 
     std::vector<json> pre_viscous_grad = config.at("pre_viscous_grad");
     for (size_t i = 0; i < pre_viscous_grad.size(); i++) {
-        std::shared_ptr<GhostCellAction<T>> action =
-            build_boundary_action<T>(pre_viscous_grad[i]);
+        std::shared_ptr<GhostCellAction<T, MemModel>> action =
+            build_boundary_action<T, MemModel>(pre_viscous_grad[i]);
         pre_viscous_grad_.push_back(action);
     }
 }
 
-template <typename T>
-void BoundaryCondition<T>::apply_pre_reconstruction(
-    FlowStates<T>& fs, const GridBlock<T>& grid, const Field<size_t>& boundary_faces,
+template <typename T, class MemModel>
+void BoundaryCondition<T, MemModel>::apply_pre_reconstruction(
+    FlowStates<T>& fs, const GridBlock<MemModel, T>& grid, const Field<size_t>& boundary_faces,
     const IdealGas<T>& gas_model, const TransportProperties<T>& trans_prop) {
     for (size_t i = 0; i < pre_reconstruction_.size(); i++) {
         pre_reconstruction_[i]->apply(fs, grid, boundary_faces, gas_model, trans_prop);
     }
 }
 
-template <typename T>
-void BoundaryCondition<T>::apply_post_convective_flux_actions(
-    ConservedQuantities<T>& flux, const FlowStates<T>& fs, const GridBlock<T>& grid,
+template <typename T, class MemModel>
+void BoundaryCondition<T, MemModel>::apply_post_convective_flux_actions(
+    ConservedQuantities<T>& flux, const FlowStates<T>& fs, const GridBlock<MemModel, T>& grid,
     const Field<size_t>& boundary_faces, const IdealGas<T>& gas_model,
     const TransportProperties<T>& trans_prop) {
     for (auto flux_action : post_convective_flux_actions_) {
@@ -533,13 +545,15 @@ void BoundaryCondition<T>::apply_post_convective_flux_actions(
     }
 }
 
-template <typename T>
-void BoundaryCondition<T>::apply_pre_viscous_grad(
-    FlowStates<T>& fs, const GridBlock<T>& grid, const Field<size_t>& boundary_faces,
+template <typename T, class MemModel>
+void BoundaryCondition<T, MemModel>::apply_pre_viscous_grad(
+    FlowStates<T>& fs, const GridBlock<MemModel, T>& grid, const Field<size_t>& boundary_faces,
     const IdealGas<T>& gas_model, const TransportProperties<T>& trans_prop) {
     for (size_t i = 0; i < pre_viscous_grad_.size(); i++) {
         pre_viscous_grad_[i]->apply(fs, grid, boundary_faces, gas_model, trans_prop);
     }
 }
-template class BoundaryCondition<Ibis::real>;
-template class BoundaryCondition<Ibis::dual>;
+template class BoundaryCondition<Ibis::real, SharedMem>;
+template class BoundaryCondition<Ibis::real, Mpi>;
+template class BoundaryCondition<Ibis::dual, SharedMem>;
+template class BoundaryCondition<Ibis::dual, Mpi>;

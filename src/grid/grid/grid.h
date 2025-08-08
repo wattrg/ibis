@@ -7,7 +7,7 @@
 // #include <finite_volume/grid_motion_driver.h>
 #include <gas/flow_state.h>
 #include <grid/interface.h>
-#include <util/communication.h>
+// #include <util/communication.h>
 
 // #include <limits>
 #include <nlohmann/json.hpp>
@@ -16,10 +16,10 @@
 using json = nlohmann::json;
 
 // forward declarations
-template <typename T>
+template <typename T, class MemModel>
 class GridMotionDriver;
 
-template <typename T, class ExecSpace, class Layout>
+template <typename T, class MemSpace, class ExecSpace, class Layout>
 class WLSGradient;
 
 // The main GridBlock
@@ -32,7 +32,7 @@ public:
     using array_layout = Layout;
     using host_execution_space = Kokkos::DefaultHostExecutionSpace;
     using host_mirror_mem_space = host_execution_space::memory_space;
-    using mirror_type = GridBlock<T, host_execution_space, array_layout>;
+    using mirror_type = GridBlock<MemModel, T, host_execution_space, array_layout>;
 
 public:
     GridBlock() {}
@@ -243,7 +243,7 @@ public:
     }
 
     template <class OtherSpace>
-    void deep_copy(const GridBlock<T, OtherSpace, Layout>& other) {
+    void deep_copy(const GridBlock<MemModel, T, OtherSpace, Layout>& other) {
         vertices_.deep_copy(other.vertices_);
         interfaces_.deep_copy(other.interfaces_);
         cells_.deep_copy(other.cells_);
@@ -417,7 +417,7 @@ public:
 
             if (local_cells.find(other_block) == local_cells.end()) {
                 // we haven't seen a connection to this block yet, so we'll add it
-                local_cells.insesrt({other_block, {}});
+                local_cells.insert({other_block, {}});
                 external_cells.insert({other_block, {}});
                 ghost_cells.insert({other_block, {}});
                 faces.insert({other_block, {}});
@@ -541,14 +541,14 @@ public:
     }
 
     void allocate_gradient_weights() {
-        grad_calc_ = std::shared_ptr<WLSGradient<T, ExecSpace, Layout>>(
-            new WLSGradient<T, ExecSpace, Layout>(*this));
+        grad_calc_ = std::shared_ptr<WLSGradient<T, MemModel, ExecSpace, Layout>>(
+            new WLSGradient<T, MemModel, ExecSpace, Layout>(*this));
         grad_calc_->compute_weights(*this);
     }
 
     void compute_gradient_weights() { grad_calc_->compute_weights(*this); }
 
-    WLSGradient<T, ExecSpace, Layout>& grad_calc() const { return *grad_calc_; }
+    WLSGradient<T, MemModel, ExecSpace, Layout>& grad_calc() const { return *grad_calc_; }
 
     GridIO to_grid_io() const {
         auto host_grid = host_mirror();
@@ -608,7 +608,7 @@ public:
         compute_face_vel(vertex_vel);
     }
 
-    void set_motion_driver(std::shared_ptr<GridMotionDriver<T>>& driver) {
+    void set_motion_driver(std::shared_ptr<GridMotionDriver<T, MemModel>>& driver) {
         motion_driver_ = driver;
     }
 
@@ -657,7 +657,7 @@ public:
     Cells<T, execution_space, array_layout> cells_;
 
     // gradients
-    std::shared_ptr<WLSGradient<T, ExecSpace, Layout>> grad_calc_;
+    std::shared_ptr<WLSGradient<T, MemModel, ExecSpace, Layout>> grad_calc_;
 
     // Some information about the grid
     size_t dim_;
@@ -672,9 +672,9 @@ public:
     std::vector<std::string> boundary_tags_;
 
     // Interblock communication
-    std::vector<SymmetricComm<MemModel, T>> position_comm_;
-    std::vector<SymmetricComm<MemModel, T>> volume_comm_;
-    std::vector<size_t, Field<size_t, array_layout, memory_space>> internal_boundary_cells_;
+    std::vector<Ibis::SymmetricComm<MemModel, T>> position_comm_;
+    std::vector<Ibis::SymmetricComm<MemModel, T>> volume_comm_;
+    std::unordered_map<size_t, Field<size_t, array_layout, memory_space>> internal_boundary_cells_;
     std::vector<Field<size_t, array_layout, memory_space>> internal_boundary_ghost_cells_;
     std::vector<Field<size_t, array_layout, memory_space>> internal_boundary_external_cells_;
     // std::vector<Field<size_t, array_layout, memory_space>> internal_boundary_faces_;
@@ -691,7 +691,7 @@ public:
     // GridMotion<T, execution_space, array_layout> motion_;
     bool moving_grid_;
     Vector3s<T, Layout, memory_space> face_vel_;
-    std::shared_ptr<GridMotionDriver<T>> motion_driver_;
+    std::shared_ptr<GridMotionDriver<T, MemModel>> motion_driver_;
 
     bool initialised_ = false;
 };

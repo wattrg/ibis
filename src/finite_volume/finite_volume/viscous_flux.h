@@ -11,23 +11,23 @@
 
 using json = nlohmann::json;
 
-template <typename T>
+template <typename T, class MemModel>
 class ViscousFlux {
 public:
     ViscousFlux() {}
 
-    ViscousFlux(const GridBlock<T>& grid, FlowStates<T> fs, json config);
+    ViscousFlux(const GridBlock<MemModel, T>& grid, FlowStates<T> fs, json config);
 
     bool enabled() const { return enabled_; }
 
     void compute_viscous_gradient(const FlowStates<T>& flow_states,
-                                  const GridBlock<T>& grid, Gradients<T>& cell_grad,
-                                  WLSGradient<T>& grad_calc);
+                                  const GridBlock<MemModel, T>& grid, Gradients<T>& cell_grad,
+                                  WLSGradient<T, MemModel>& grad_calc);
 
-    void compute_viscous_flux(const FlowStates<T>& flow_states, const GridBlock<T>& grid,
+    void compute_viscous_flux(const FlowStates<T>& flow_states, const GridBlock<MemModel, T>& grid,
                               const IdealGas<T>& gas_model,
                               const TransportProperties<T>& trans_prop,
-                              Gradients<T>& cell_grad, WLSGradient<T>& grad_calc,
+                              Gradients<T>& cell_grad, WLSGradient<T, MemModel>& grad_calc,
                               ConservedQuantities<T>& flux);
 
     // void compute_viscous_properties_at_faces(const FlowStates<T>& flow_states,

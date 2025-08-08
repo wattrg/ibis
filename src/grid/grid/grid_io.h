@@ -67,8 +67,8 @@ public:
     InterfaceLookup();
 
     size_t insert(std::vector<size_t> vertex_ids);
-    bool contains(std::vector<size_t> vertex_ids);
-    size_t id(std::vector<size_t> vertex_ids);
+    bool contains(std::vector<size_t> vertex_ids) const;
+    size_t id(std::vector<size_t> vertex_ids) const;
 
 private:
     std::unordered_map<std::string, size_t> hash_map_;
@@ -131,7 +131,7 @@ public:
     std::vector<Vertex<Ibis::real>> vertices() const { return vertices_; }
 
     std::vector<ElemIO> faces() const { return faces_; }
-    InterfaceLookup& interface_lookup const { return interface_lookup_ }
+    const InterfaceLookup& interface_lookup() const { return interface_lookup_; }
     
     std::vector<ElemIO> cells() const { return cells_; }
 

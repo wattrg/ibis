@@ -103,8 +103,8 @@ KOKKOS_FUNCTION ViscousProperties<T> compute_viscous_properties_at_faces(
     return props;
 }
 
-template <typename T>
-ViscousFlux<T>::ViscousFlux(const GridBlock<T>& grid, FlowStates<T> face_fs,
+template <typename T, class MemModel>
+ViscousFlux<T, MemModel>::ViscousFlux(const GridBlock<MemModel, T>& grid, FlowStates<T> face_fs,
                             json config) {
     enabled_ = config.at("enabled");
     signal_factor_ = config.at("signal_factor");
@@ -115,22 +115,22 @@ ViscousFlux<T>::ViscousFlux(const GridBlock<T>& grid, FlowStates<T> face_fs,
     }
 }
 
-template <typename T>
-void ViscousFlux<T>::compute_viscous_gradient(const FlowStates<T>& flow_states,
-                                              const GridBlock<T>& grid,
+template <typename T, class MemModel>
+void ViscousFlux<T, MemModel>::compute_viscous_gradient(const FlowStates<T>& flow_states,
+                                              const GridBlock<MemModel, T>& grid,
                                               Gradients<T>& cell_grad,
-                                              WLSGradient<T>& grad_calc) {
+                                              WLSGradient<T, MemModel>& grad_calc) {
     grad_calc.compute_gradients(grid, flow_states.gas.temp(), cell_grad.temp);
     grad_calc.compute_gradients(grid, flow_states.vel.x(), cell_grad.vx);
     grad_calc.compute_gradients(grid, flow_states.vel.y(), cell_grad.vy);
     grad_calc.compute_gradients(grid, flow_states.vel.z(), cell_grad.vz);
 }
 
-template <typename T>
-void ViscousFlux<T>::compute_viscous_flux(
-    const FlowStates<T>& flow_states, const GridBlock<T>& grid,
+template <typename T, class MemModel>
+void ViscousFlux<T, MemModel>::compute_viscous_flux(
+    const FlowStates<T>& flow_states, const GridBlock<MemModel, T>& grid,
     const IdealGas<T>& gas_model, const TransportProperties<T>& trans_prop,
-    Gradients<T>& cell_grad, WLSGradient<T>& grad_calc, ConservedQuantities<T>& flux) {
+    Gradients<T>& cell_grad, WLSGradient<T, MemModel>& grad_calc, ConservedQuantities<T>& flux) {
     compute_viscous_gradient(flow_states, grid, cell_grad, grad_calc);
 
     size_t num_faces = grid.num_interfaces();
@@ -180,5 +180,7 @@ void ViscousFlux<T>::compute_viscous_flux(
         });
 }
 
-template class ViscousFlux<Ibis::real>;
-template class ViscousFlux<Ibis::dual>;
+template class ViscousFlux<Ibis::real, SharedMem>;
+template class ViscousFlux<Ibis::real, Mpi>;
+template class ViscousFlux<Ibis::dual, SharedMem>;
+template class ViscousFlux<Ibis::dual, Mpi>;

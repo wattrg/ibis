@@ -7,13 +7,13 @@
 #include "finite_volume/finite_volume.h"
 #include "gas/transport_properties.h"
 
-template <typename T>
-class VtkTextOutput : public FVOutput<T> {
+template <typename T, class MemModel>
+class VtkTextOutput : public FVOutput<T, MemModel> {
 public:
     VtkTextOutput();
 
-    int write(const typename FlowStates<T>::mirror_type& fs, FiniteVolume<T>& fv,
-              const GridBlock<T>& grid, const IdealGas<T>& gas_model,
+    int write(const typename FlowStates<T>::mirror_type& fs, FiniteVolume<T, MemModel>& fv,
+              const GridBlock<MemModel, T>& grid, const IdealGas<T>& gas_model,
               const TransportProperties<T>& trans_prop, std::string plot_dir,
               std::string time_dir, Ibis::real time);
 
@@ -26,13 +26,13 @@ private:
     std::vector<std::string> dirs_;
 };
 
-template <typename T>
-class VtkBinaryOutput : public FVOutput<T> {
+template <typename T, class MemModel>
+class VtkBinaryOutput : public FVOutput<T, MemModel> {
 public:
     VtkBinaryOutput();
 
-    int write(const typename FlowStates<T>::mirror_type& fs, FiniteVolume<T>& fv,
-              const GridBlock<T>& grid, const IdealGas<T>& gas_model,
+    int write(const typename FlowStates<T>::mirror_type& fs, FiniteVolume<T, MemModel>& fv,
+              const GridBlock<MemModel, T>& grid, const IdealGas<T>& gas_model,
               const TransportProperties<T>& trans_prop, std::string plot_dir,
               std::string time_dir, Ibis::real time);
 

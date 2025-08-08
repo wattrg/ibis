@@ -127,7 +127,7 @@ json build_3D_config() {
 TEST_CASE("grid vertices") {
     GridInfo expected = build_test_grid();
     json config = build_config();
-    GridBlock<Ibis::real> block_dev("../../../src/grid/test/grid.su2", config);
+    GridBlock<SharedMem, Ibis::real> block_dev("../../../src/grid/test/grid.su2", config);
     auto block = block_dev.host_mirror();
     block.deep_copy(block_dev);
     auto expected_vertices = expected.vertices;
@@ -137,7 +137,7 @@ TEST_CASE("grid vertices") {
 TEST_CASE("grid interfaces") {
     GridInfo expected = build_test_grid();
     json config = build_config();
-    GridBlock<Ibis::real> block_dev("../../../src/grid/test/grid.su2", config);
+    GridBlock<SharedMem, Ibis::real> block_dev("../../../src/grid/test/grid.su2", config);
     auto block = block_dev.host_mirror();
     block.deep_copy(block_dev);
     CHECK(block.interfaces() == expected.faces);
@@ -145,7 +145,7 @@ TEST_CASE("grid interfaces") {
 
 TEST_CASE("3D cell volumes") {
     json config = build_3D_config();
-    GridBlock<Ibis::real> block_dev("../../../src/grid/test/cube.su2", config);
+    GridBlock<SharedMem, Ibis::real> block_dev("../../../src/grid/test/cube.su2", config);
     auto block = block_dev.host_mirror();
     block.deep_copy(block_dev);
     size_t n_cells = block.num_cells();
@@ -157,7 +157,7 @@ TEST_CASE("3D cell volumes") {
 
 TEST_CASE("3D interface orientation lengths") {
     json config = build_3D_config();
-    GridBlock<Ibis::real> block_dev("../../../src/grid/test/cube.su2", config);
+    GridBlock<SharedMem, Ibis::real> block_dev("../../../src/grid/test/cube.su2", config);
     auto block = block_dev.host_mirror();
     block.deep_copy(block_dev);
     size_t n_faces = block.num_interfaces();
@@ -185,7 +185,7 @@ TEST_CASE("3D interface orientation lengths") {
 TEST_CASE("grid cell faces") {
     GridInfo expected = build_test_grid();
     json config = build_config();
-    GridBlock<Ibis::real> block_dev("../../../src/grid/test/grid.su2", config);
+    GridBlock<SharedMem, Ibis::real> block_dev("../../../src/grid/test/grid.su2", config);
     auto block = block_dev.host_mirror();
     block.deep_copy(block_dev);
     CHECK(block.cells().num_valid_cells() == expected.cells.num_valid_cells());
@@ -199,7 +199,7 @@ TEST_CASE("grid cell faces") {
 
 TEST_CASE("grid cell faces 2") {
     json config = build_config();
-    GridBlock<Ibis::real> block_dev("../../../src/grid/test/grid.su2", config);
+    GridBlock<SharedMem, Ibis::real> block_dev("../../../src/grid/test/grid.su2", config);
     auto block = block_dev.host_mirror();
     block.deep_copy(block_dev);
     std::vector<std::vector<size_t>> face_ids = {
@@ -218,7 +218,7 @@ TEST_CASE("grid cell faces 2") {
 TEST_CASE("grid cell outsigns") {
     GridInfo expected = build_test_grid();
     json config = build_config();
-    GridBlock<Ibis::real> block_dev("../../../src/grid/test/grid.su2", config);
+    GridBlock<SharedMem, Ibis::real> block_dev("../../../src/grid/test/grid.su2", config);
     auto block = block_dev.host_mirror();
     block.deep_copy(block_dev);
     CHECK(block.cells().num_valid_cells() == expected.cells.num_valid_cells());
@@ -234,7 +234,7 @@ TEST_CASE("grid cell outsigns") {
 
 TEST_CASE("cell neighbours") {
     json config = build_config();
-    GridBlock<Ibis::real> block_dev("../../../src/grid/test/grid.su2", config);
+    GridBlock<SharedMem, Ibis::real> block_dev("../../../src/grid/test/grid.su2", config);
     auto block_host = block_dev.host_mirror();
     block_host.deep_copy(block_dev);
 
@@ -246,7 +246,7 @@ TEST_CASE("cell neighbours") {
 
 TEST_CASE("ghost cell centres") {
     json config = build_config();
-    GridBlock<Ibis::real> block_dev("../../../src/grid/test/grid.su2", config);
+    GridBlock<SharedMem, Ibis::real> block_dev("../../../src/grid/test/grid.su2", config);
     auto block_host = block_dev.host_mirror();
     block_host.deep_copy(block_dev);
 

@@ -3,8 +3,8 @@
 #include <finite_volume/shock_fitting.h>
 #include <spdlog/spdlog.h>
 
-template <typename T>
-std::shared_ptr<GridMotionDriver<T>> build_grid_motion_driver(const GridBlock<T>& grid,
+template <typename T, class MemModel>
+std::shared_ptr<GridMotionDriver<T, MemModel>> build_grid_motion_driver(const GridBlock<MemModel, T>& grid,
                                                               json config) {
     if (!config.at("enabled")) {
         spdlog::error(
@@ -15,16 +15,16 @@ std::shared_ptr<GridMotionDriver<T>> build_grid_motion_driver(const GridBlock<T>
 
     std::string type = config.at("type");
     if (type == "rigid_body_translation") {
-        return std::shared_ptr<GridMotionDriver<T>>(new RigidBodyTranslation<T>(config));
+        return std::shared_ptr<GridMotionDriver<T, MemModel>>(new RigidBodyTranslation<T, MemModel>(config));
     } else if (type == "boundary_interpolation") {
-        return std::shared_ptr<GridMotionDriver<T>>(new ShockFitting<T>(grid, config));
+        return std::shared_ptr<GridMotionDriver<T, MemModel>>(new ShockFitting<T, MemModel>(grid, config));
     } else {
         spdlog::error("Unknown grid motion driver {}", type);
         throw new std::runtime_error("Unkown grid motion driver");
     }
 }
 
-template std::shared_ptr<GridMotionDriver<Ibis::real>>
-build_grid_motion_driver<Ibis::real>(const GridBlock<Ibis::real>&, json);
-template std::shared_ptr<GridMotionDriver<Ibis::dual>>
-build_grid_motion_driver<Ibis::dual>(const GridBlock<Ibis::dual>&, json config);
+template std::shared_ptr<GridMotionDriver<Ibis::real, SharedMem>>
+build_grid_motion_driver<Ibis::real, SharedMem>(const GridBlock<SharedMem, Ibis::real>&, json);
+template std::shared_ptr<GridMotionDriver<Ibis::dual, SharedMem>>
+build_grid_motion_driver<Ibis::dual, SharedMem>(const GridBlock<SharedMem, Ibis::dual>&, json config);

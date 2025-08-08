@@ -784,12 +784,12 @@ size_t InterfaceLookup::insert(std::vector<size_t> vertex_ids) {
     return id;
 }
 
-bool InterfaceLookup::contains(std::vector<size_t> vertex_ids) {
+bool InterfaceLookup::contains(std::vector<size_t> vertex_ids) const {
     std::string hash = hash_vertex_ids(vertex_ids);
     return contains_hash(hash);
 }
 
-size_t InterfaceLookup::id(std::vector<size_t> vertex_ids) {
+size_t InterfaceLookup::id(std::vector<size_t> vertex_ids) const {
     std::string hash = hash_vertex_ids(vertex_ids);
     if (contains_hash(hash)) {
         return hash_map_[hash];

@@ -142,7 +142,7 @@ MPI_TEST_CASE("MPI_Max_scalar", 2) {
 // Message passing tests
 MPI_TEST_CASE("MPI_comm", 2) {
     int other_rank = (test_rank == 0) ? 1 : 0;
-    Ibis::SymmetricComm<double, Mpi> comm(other_rank, 10);
+    Ibis::SymmetricComm<Mpi, double, false> comm(other_rank, 10);
 
     comm.expect_receive();
 

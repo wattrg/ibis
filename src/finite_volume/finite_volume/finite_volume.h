@@ -8,7 +8,7 @@
 #include <finite_volume/grid_motion_driver.h>
 #include <finite_volume/limiter.h>
 #include <finite_volume/viscous_flux.h>
-#include <util/communication.h>
+// #include <util/communication.h>
 #include <gas/flow_state.h>
 #include <gas/gas_model.h>
 #include <gas/transport_properties.h>
@@ -31,7 +31,7 @@ class FiniteVolume {
 public:
     FiniteVolume() {}
 
-    FiniteVolume(GridBlock<T>& grid, json config);
+    FiniteVolume(GridBlock<MemModel, T>& grid, json config);
 
     /**
      * Compute the time derivative of a particular flow state
@@ -42,13 +42,13 @@ public:
      * @param[in] gas_model The gas model
      * @param[in] trans_prop The transport properties
      */
-    size_t compute_dudt(FlowStates<T>& flow_state, GridBlock<T>& grid,
+    size_t compute_dudt(FlowStates<T>& flow_state, GridBlock<MemModel, T>& grid,
                         ConservedQuantities<T>& dudt, IdealGas<T>& gas_model,
                         TransportProperties<T>& trans_prop,
                         bool allow_reconstruction = true);
 
     size_t compute_dudt(FlowStates<T>& flow_state, Vector3s<T> vertex_vel,
-                        const ConservedQuantities<T>& cq, GridBlock<T>& grid,
+                        const ConservedQuantities<T>& cq, GridBlock<MemModel, T>& grid,
                         ConservedQuantities<T>& dudt, IdealGas<T>& gas_model,
                         TransportProperties<T>& trans_prop,
                         bool allow_reconstruction = true);
@@ -64,7 +64,7 @@ public:
      * @param trans_prop The transport properties
      * @return the size of the time step
      */
-    Ibis::real estimate_dt(const FlowStates<T>& flow_state, GridBlock<T>& grid,
+    Ibis::real estimate_dt(const FlowStates<T>& flow_state, GridBlock<MemModel, T>& grid,
                            IdealGas<T>& gas_model, TransportProperties<T>& trans_prop);
 
     // methods
@@ -73,44 +73,44 @@ public:
     // post-processing will call them.
 
     // Apply pre-reconstruction boundary conditions
-    void apply_pre_reconstruction_bc(FlowStates<T>& fs, const GridBlock<T>& grid,
+    void apply_pre_reconstruction_bc(FlowStates<T>& fs, const GridBlock<MemModel, T>& grid,
                                      const IdealGas<T>& gas_model,
                                      const TransportProperties<T>& trans_prop);
 
     // Apply post-convective-flux boundary conditions
-    void apply_post_convective_flux_bc(const FlowStates<T>& fs, const GridBlock<T>& grid,
+    void apply_post_convective_flux_bc(const FlowStates<T>& fs, const GridBlock<MemModel, T>& grid,
                                        const IdealGas<T>& gas_model,
                                        const TransportProperties<T>& trans_prop);
 
     // Apply pre-reconstruction boundary conditions
-    void apply_pre_viscous_grad_bc(FlowStates<T>& fs, const GridBlock<T>& grid,
+    void apply_pre_viscous_grad_bc(FlowStates<T>& fs, const GridBlock<MemModel, T>& grid,
                                    const IdealGas<T>& gas_model,
                                    const TransportProperties<T>& trans_prop);
 
     // Adjust fluxes to obey the geometric conservation law
     void apply_geometric_conservation_law(const ConservedQuantities<T>& cq,
-                                          const GridBlock<T>& grid,
+                                          const GridBlock<MemModel, T>& grid,
                                           ConservedQuantities<T>& dudt);
 
     // Perform the surface integral of fluxes over the cells
-    void flux_surface_integral(const GridBlock<T>& grid, ConservedQuantities<T>& dudt);
+    void flux_surface_integral(const GridBlock<MemModel, T>& grid, ConservedQuantities<T>& dudt);
 
     // Count the number of bad cells in the domain
     size_t count_bad_cells(const FlowStates<T>& fs, const size_t num_cells);
 
-    void transfer_internal_flowstates(FlowStates<T>& fs, const GridBlock<T>& grid);
+    void transfer_internal_flowstates(FlowStates<T>& fs, const GridBlock<MemModel, T>& grid);
 
 public:
     // methods for IO
     const Gradients<T>& cell_gradients() const { return cell_grad_; }
 
     // viscous gradients for post-processing
-    void compute_viscous_gradient(FlowStates<T>& fs, const GridBlock<T>& grid,
+    void compute_viscous_gradient(FlowStates<T>& fs, const GridBlock<MemModel, T>& grid,
                                   const IdealGas<T>& gas_model,
                                   const TransportProperties<T>& trans_prop);
 
     // convective gradients for post-processing
-    void compute_convective_gradient(FlowStates<T>& fs, const GridBlock<T>& grid,
+    void compute_convective_gradient(FlowStates<T>& fs, const GridBlock<MemModel, T>& grid,
                                      const IdealGas<T>& gas_model,
                                      const TransportProperties<T>& trans_prop);
 
@@ -119,24 +119,24 @@ private:
     ConservedQuantities<T> flux_;
 
     // The convective flux calculator
-    ConvectiveFlux<T> convective_flux_;
+    ConvectiveFlux<T, MemModel> convective_flux_;
 
     // The viscous flux calculator
-    ViscousFlux<T> viscous_flux_;
+    ViscousFlux<T, MemModel> viscous_flux_;
 
     // Flow states on the interfaces (used for time step calculation
     // and viscous fluxes)
     FlowStates<T> face_fs_;
 
     // boundary conditions
-    std::vector<std::shared_ptr<BoundaryCondition<T>>> bcs_{};
+    std::vector<std::shared_ptr<BoundaryCondition<T, MemModel>>> bcs_{};
 
     // The interfaces on each boundary
     std::vector<Field<size_t>> bc_interfaces_{};
 
     // Inter-block communicators
-    std::vector<SymmetricComm<MemModel, T>> flow_state_comm_;
-    std::vector<SymmetricComm<MemModel, T>> gradient_comm_;
+    std::vector<Ibis::SymmetricComm<MemModel, T>> flow_state_comm_;
+    std::vector<Ibis::SymmetricComm<MemModel, T>> gradient_comm_;
 
     // number of spatial dimensions
     size_t dim_;

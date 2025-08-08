@@ -60,7 +60,7 @@ void plot_vtk(json directories, std::vector<std::string> extra_vars) {
         io.add_output_variable(extra_var);
     }
 
-    GridBlock<T> grid(grid_dir + "/0000/block_0000.su2", config.at("grid"));
+    GridBlock<SharedMem, T> grid(grid_dir + "/0000/block_0000.su2", config.at("grid"));
     // GridBlock<T> grid;
     json grid_config = config.at("grid");
     FiniteVolume<T> fv(grid, config);
