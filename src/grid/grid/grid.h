@@ -125,7 +125,7 @@ public:
         std::map<size_t, size_t> ghost_cell_map =
             setup_physical_boundaries(grid_io, boundaries, cell_vertices, cell_shapes);
         setup_internal_boundaries(grid_io);
-        setup_face_markers(grid_io, interfaces);
+        setup_face_markers(grid_io);
 
         interfaces_ = Interfaces<T, execution_space, array_layout>(interface_vertices,
                                                                    interface_shapes);
@@ -428,7 +428,8 @@ public:
             ghost_cells[other_block].push_back(ghost_cell_id);
         }
         
-        for (size_t other_block : local_cells) {
+        // for (size_t other_block : local_cells) {
+        for (auto& [other_block, cells] : local_cells) {
             internal_boundary_cells_.push_back(
                 Field<size_t, array_layout, memory_space>(
                     "internal_boundary_cells", local_cells[other_block]));
@@ -452,7 +453,7 @@ public:
         (void)cell_vertices;
         (void)cell_shapes;
         num_ghost_cells_ = 0;
-        InterfaceLookup& interfaces = grid_io.interface_lookup();
+        const InterfaceLookup& interfaces = grid_io.interface_lookup();
         std::map<size_t, size_t> ghost_cell_map;  // face_id -> ghost_cell_id
         for (auto& [bc_label, boundary_config] : boundaries.items()) {
             boundary_tags_.push_back(bc_label);
@@ -488,7 +489,7 @@ public:
     void setup_face_markers(const GridIO& grid_io) {
         // setup_face_markers should be called after setup_boundaries,
         // since it checks if markers have already been assigned to boundaries
-        InterfaceLookup& interfaces = grid_io.interface_lookup();
+        const InterfaceLookup& interfaces = grid_io.interface_lookup();
         for (auto& [marker_label, marker] : grid_io.markers()) {
             if (boundary_faces_.find(marker_label) == boundary_faces_.end()) {
                 // this marker is not a boundary, so we'll allocate

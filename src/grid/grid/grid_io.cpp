@@ -174,9 +174,9 @@ GridIO::GridIO(const GridIO &monolithic_grid, const std::vector<size_t> &cells_t
 
         // set up the faces from the global faces
         std::vector<size_t> local_face_ids;
-        std::vector<ElemIO> global_faces = global_elem_io.faces();
-        InterfaceLookup& global_face_lookup = monolithic_grid.interface_lookup();
-        InterfaceLookup& local_face_lookup;
+        std::vector<ElemIO> global_faces = global_elem_io.interfaces();
+        const InterfaceLookup& global_face_lookup = monolithic_grid.interface_lookup();
+        InterfaceLookup local_face_lookup;
         for (auto &global_face : global_faces) {
             size_t global_face_id = global_face_lookup.id(global_face.vertex_ids());
             if (face_map.find(global_face_id) == face_map.end()) {
@@ -191,7 +191,7 @@ GridIO::GridIO(const GridIO &monolithic_grid, const std::vector<size_t> &cells_t
     }
 
     // modify the cell mappings from the global face id to the local face id
-    for (CellingMapping mapping : cell_mapping_) {
+    for (CellMapping mapping : cell_mapping_) {
         mapping.local_face = face_map[mapping.global_face];
     }
 
@@ -403,7 +403,7 @@ void GridIO::construct_faces_() {
     std::vector<ElemIO> faces_ {};
 
     interface_lookup_ = InterfaceLookup{};
-    for (size_t cell_id = 0; cell_id < cell_.size(); cell_id++) {
+    for (size_t cell_id = 0; cell_id < cells_.size(); cell_id++) {
         const ElemIO& cell = cells_[cell_id];
         std::vector<ElemIO> cell_interfaces = cell.interfaces();
         std::vector<size_t> this_cell_face_ids{};
@@ -412,21 +412,21 @@ void GridIO::construct_faces_() {
         for (size_t face_i = 0; face_i < cell_interfaces.size(); face_i++) {
             // the ID's of the vertices forming this face
             ElemIO& cell_interface = cell_interfaces[face_i];
-            std::vector<size_t>& face_vertices = cell_interface.vertex_ids();
+            std::vector<size_t> face_vertices = cell_interface.vertex_ids();
 
             // check if this interface has already been created as part of another cell.
             // If it hasn't been created, we'll create it here
-            size_t face_id = interface_lookup.id(face_vertices);
-            if (face_id == std::numeric_limit<size_t>::max()) {
+            size_t face_id = interface_lookup_.id(face_vertices);
+            if (face_id == std::numeric_limits<size_t>::max()) {
                 // This interface hasn't been created yet, so we do that here
-                face_id = interfaces.insert(face_vertices);
+                face_id = interface_lookup_.insert(face_vertices);
                 faces_.push_back(ElemIO(face_vertices,
                                         cell_interface.cell_type(),
                                         cell_interface.face_order()));
             }
-            this_cell_face_ids_.push_back(face_id);
+            this_cell_face_ids.push_back(face_id);
         }
-        cell_faces_.push_back(this_cell_face_ids_);
+        cell_faces_.push_back(this_cell_face_ids);
     }
 }
 
@@ -487,6 +487,10 @@ void GridIO::write_mapped_cells(std::ostream &file) {
     file << cell_mapping_.size() << "\n";
     for (const CellMapping &map : cell_mapping_) {
         file << map.local_cell;
+        file << " ";
+        file << map.global_face;
+        file << " ";
+        file << map.local_face;
         file << " ";
         file << map.other_block;
         file << " ";
