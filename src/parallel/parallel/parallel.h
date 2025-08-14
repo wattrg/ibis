@@ -3,6 +3,7 @@
 
 #include <parallel/parallel_fwd.h>
 #include <parallel/reductions.h>
+#include <util/types.h>
 
 namespace Ibis {
 
@@ -47,14 +48,20 @@ class SymmetricComm;
 
 template <typename T, bool gpu_aware>
 class SymmetricComm<SharedMem, T, gpu_aware> {
-// public:
-    // SymmetricComm(int other_rank, size_t buf_size);
-    // SymmetricComm(int other_rank);
-    // void expect_receive();
-    // void send();
-    // int receive();
-    // void resize_buffers(size_t new_size);
-    // const Kokkos::View<T*, MemSpace>
+private:
+    using MemSpace = Ibis::DefaultMemSpace;
+
+public:
+    SymmetricComm() {}
+    SymmetricComm(int other_rank, size_t buf_size) {(void)other_rank; (void)buf_size; throw std::runtime_error("Not implemented");}
+    SymmetricComm(int other_rank) {(void)other_rank; throw std::runtime_error("Not implemented");}
+    SymmetricComm(const SymmetricComm& other) {(void)other; throw std::runtime_error("not implemented");}
+    void expect_receive() {throw std::runtime_error("Not implemented");}
+    void send() {throw std::runtime_error("Not implemented");}
+    int receive() {throw std::runtime_error("Not implemented");}
+    void resize_buffers(size_t new_size) {throw std::runtime_error("Not implemented");}
+    const Kokkos::View<T*, MemSpace>& send_buf() const {throw std::runtime_error("Not implemented");}
+    const Kokkos::View<T*, MemSpace>& recv_buf() const {throw std::runtime_error("Not implemented");}
 };
 
 }  // namespace Ibis

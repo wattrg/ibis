@@ -430,19 +430,19 @@ public:
         
         // for (size_t other_block : local_cells) {
         for (auto& [other_block, cells] : local_cells) {
-            internal_boundary_cells_.push_back(
+            internal_boundary_cells_.insert({other_block, 
                 Field<size_t, array_layout, memory_space>(
-                    "internal_boundary_cells", local_cells[other_block]));
+                    "internal_boundary_cells", local_cells[other_block])});
             internal_boundary_external_cells_.push_back(
                 Field<size_t, array_layout, memory_space>(
                     "internal_boundary_external_cells", external_cells[other_block]));
             internal_boundary_ghost_cells_.push_back(
                 Field<size_t, array_layout, memory_space>(
                     "internal_boundary_ghost_cells", ghost_cells[other_block]));
-            position_comm_ = Ibis::SymmetricComm<MemModel, T>(other_block,
-                                                     local_cells.size() * dim_);
-            volume_comm_ = Ibis::SymmetricComm<MemModel, T>(other_block,
-                local_cells.size());
+            position_comm_.push_back(Ibis::SymmetricComm<MemModel, T>(other_block,
+                                                     local_cells.size() * dim_));
+            volume_comm_.push_back(Ibis::SymmetricComm<MemModel, T>(other_block,
+                local_cells.size()));
         }
     }
 

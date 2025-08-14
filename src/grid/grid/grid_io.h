@@ -73,8 +73,8 @@ public:
 private:
     std::unordered_map<std::string, size_t> hash_map_;
 
-    std::string hash_vertex_ids(std::vector<size_t> vertex_ids);
-    bool contains_hash(std::string hash);
+    std::string hash_vertex_ids(std::vector<size_t> vertex_ids) const;
+    bool contains_hash(std::string hash) const;
 };
 
 struct CellMapping {
@@ -93,7 +93,7 @@ struct CellMapping {
         : local_cell(local_cell_), other_block(other_block_),
           other_cell(other_cell_), global_face(face_) {}
 
-    CellMapping(size_t local_cell_, size_t other_block_, size_t other_cell_, size_t global_face_, size_t local_face_)
+    CellMapping(size_t local_cell_, size_t local_face_, size_t global_face_, size_t other_block_, size_t other_cell_)
         : local_cell(local_cell_), other_block(other_block_),
           other_cell(other_cell_), global_face(global_face_), local_face(local_face_) {}
 

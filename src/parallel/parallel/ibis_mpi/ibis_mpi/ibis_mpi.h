@@ -218,6 +218,8 @@ private:
     using mirror_view_type = typename view_type::host_mirror_type;
 
 public:
+    SymmetricComm() {}
+
     SymmetricComm(int other_rank, size_t buf_size)
         : other_rank_(other_rank), mpi_comm_(MPI_COMM_WORLD) {
         send_buf_ = view_type("send_buf", buf_size);
@@ -230,6 +232,16 @@ public:
     }
 
     SymmetricComm(int other_rank) : other_rank_(other_rank), mpi_comm_(MPI_COMM_WORLD) {}
+
+    SymmetricComm(const SymmetricComm& other) : other_rank_(other.other_rank_), mpi_comm_(other.mpi_comm_) {
+        send_buf_ = view_type("send_buf", other.send_buf_.size());
+        recv_buf_ = view_type("recv_buf", other.recv_buf_.size());
+
+        if constexpr (!gpu_aware) {
+            host_send_buf_ = Kokkos::create_mirror_view(send_buf_);
+            host_recv_buf_ = Kokkos::create_mirror_view(recv_buf_);
+        }
+    }
 
     void expect_receive() {
         if (gpu_aware) {

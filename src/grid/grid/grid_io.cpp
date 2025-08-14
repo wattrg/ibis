@@ -456,14 +456,14 @@ void GridIO::read_mapped_cells(std::istream &file) {
         sep = line.find(" ");
         value = line.substr(0, sep);
         trim_whitespace(value);
-        global_face = std::stoi(value);
+        local_face = std::stoi(value);
         line = line.substr(sep + 1, std::string::npos);
         trim_whitespace(line);
 
         sep = line.find(" ");
         value = line.substr(0, sep);
         trim_whitespace(value);
-        local_face = std::stoi(value);
+        global_face = std::stoi(value);
         line = line.substr(sep + 1, std::string::npos);
         trim_whitespace(line);
 
@@ -488,9 +488,9 @@ void GridIO::write_mapped_cells(std::ostream &file) {
     for (const CellMapping &map : cell_mapping_) {
         file << map.local_cell;
         file << " ";
-        file << map.global_face;
-        file << " ";
         file << map.local_face;
+        file << " ";
+        file << map.global_face;
         file << " ";
         file << map.other_block;
         file << " ";
@@ -744,13 +744,13 @@ TEST_CASE("read_cell_mapping") {
     part1.read_mapped_cells(mapping1_file);
 
     std::vector<CellMapping> expected_map0{
-        CellMapping(1, 1, 1), CellMapping(1, 1, 5), CellMapping(2, 1, 2),
-        CellMapping(2, 1, 4), CellMapping(3, 1, 5), CellMapping(4, 1, 4),
+        CellMapping(0, 0, 2, 1, 0), CellMapping(0, 2, 13, 1, 4), CellMapping(1, 4, 6, 1, 1),
+        CellMapping(1, 5, 13, 1, 3), CellMapping(2, 9, 17, 1, 4), CellMapping(3, 10, 16, 1, 3),
     };
 
     std::vector<CellMapping> expected_map1{
-        CellMapping(1, 0, 1), CellMapping(2, 0, 2), CellMapping(4, 0, 2),
-        CellMapping(4, 0, 4), CellMapping(5, 0, 1), CellMapping(5, 0, 3),
+        CellMapping(0, 2, 2, 0, 0), CellMapping(1, 6, 6, 0, 1), CellMapping(3, 12, 13, 0, 1),
+        CellMapping(3, 11, 6, 0 ,3), CellMapping(4, 13, 11, 0, 0), CellMapping(4, 14, 17, 0, 2)
     };
 
     CHECK(part0.cell_mapping()[0] == expected_map0[0]);
@@ -796,16 +796,16 @@ bool InterfaceLookup::contains(std::vector<size_t> vertex_ids) const {
 size_t InterfaceLookup::id(std::vector<size_t> vertex_ids) const {
     std::string hash = hash_vertex_ids(vertex_ids);
     if (contains_hash(hash)) {
-        return hash_map_[hash];
+        return hash_map_.at(hash);
     }
     return std::numeric_limits<size_t>::max();
 }
 
-bool InterfaceLookup::contains_hash(std::string hash) {
+bool InterfaceLookup::contains_hash(std::string hash) const {
     return hash_map_.find(hash) != hash_map_.end();
 }
 
-std::string InterfaceLookup::hash_vertex_ids(std::vector<size_t> vertex_ids) {
+std::string InterfaceLookup::hash_vertex_ids(std::vector<size_t> vertex_ids) const {
     std::sort(vertex_ids.begin(), vertex_ids.end(), std::greater<size_t>());
     std::string hash_value = "";
     for (size_t i = 0; i < vertex_ids.size(); i++) {
