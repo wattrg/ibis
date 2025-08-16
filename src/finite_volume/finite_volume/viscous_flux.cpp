@@ -104,8 +104,8 @@ KOKKOS_FUNCTION ViscousProperties<T> compute_viscous_properties_at_faces(
 }
 
 template <typename T, class MemModel>
-ViscousFlux<T, MemModel>::ViscousFlux(const GridBlock<MemModel, T>& grid, FlowStates<T> face_fs,
-                            json config) {
+ViscousFlux<T, MemModel>::ViscousFlux(const GridBlock<MemModel, T>& grid,
+                                      FlowStates<T> face_fs, json config) {
     enabled_ = config.at("enabled");
     signal_factor_ = config.at("signal_factor");
     (void)grid;
@@ -116,10 +116,9 @@ ViscousFlux<T, MemModel>::ViscousFlux(const GridBlock<MemModel, T>& grid, FlowSt
 }
 
 template <typename T, class MemModel>
-void ViscousFlux<T, MemModel>::compute_viscous_gradient(const FlowStates<T>& flow_states,
-                                              const GridBlock<MemModel, T>& grid,
-                                              Gradients<T>& cell_grad,
-                                              WLSGradient<T, MemModel>& grad_calc) {
+void ViscousFlux<T, MemModel>::compute_viscous_gradient(
+    const FlowStates<T>& flow_states, const GridBlock<MemModel, T>& grid,
+    Gradients<T>& cell_grad, WLSGradient<T, MemModel>& grad_calc) {
     grad_calc.compute_gradients(grid, flow_states.gas.temp(), cell_grad.temp);
     grad_calc.compute_gradients(grid, flow_states.vel.x(), cell_grad.vx);
     grad_calc.compute_gradients(grid, flow_states.vel.y(), cell_grad.vy);
@@ -130,7 +129,8 @@ template <typename T, class MemModel>
 void ViscousFlux<T, MemModel>::compute_viscous_flux(
     const FlowStates<T>& flow_states, const GridBlock<MemModel, T>& grid,
     const IdealGas<T>& gas_model, const TransportProperties<T>& trans_prop,
-    Gradients<T>& cell_grad, WLSGradient<T, MemModel>& grad_calc, ConservedQuantities<T>& flux) {
+    Gradients<T>& cell_grad, WLSGradient<T, MemModel>& grad_calc,
+    ConservedQuantities<T>& flux) {
     compute_viscous_gradient(flow_states, grid, cell_grad, grad_calc);
 
     size_t num_faces = grid.num_interfaces();

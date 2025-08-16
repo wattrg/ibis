@@ -18,8 +18,7 @@ size_t ButcherTableau::num_stages() { return num_stages_; }
 
 template <class MemModel>
 RungeKutta<MemModel>::RungeKutta(json config, GridBlock<MemModel, Ibis::real> grid,
-                                 std::string grid_dir,
-                                 std::string flow_dir)
+                                 std::string grid_dir, std::string flow_dir)
     : Solver(grid_dir, flow_dir) {
     // configuration
     json solver_config = config.at("solver");
@@ -105,7 +104,9 @@ int RungeKutta<MemModel>::initialise() {
 }
 
 template <class MemModel>
-int RungeKutta<MemModel>::finalise() { return 0; }
+int RungeKutta<MemModel>::finalise() {
+    return 0;
+}
 
 template <class MemModel>
 void RungeKutta<MemModel>::estimate_dt() {
@@ -123,7 +124,8 @@ void RungeKutta<MemModel>::estimate_dt() {
 
 template <class MemModel>
 void RungeKutta<MemModel>::function_eval_(FlowStates<Ibis::real> fs,
-                                ConservedQuantities<Ibis::real>& cq, size_t index) {
+                                          ConservedQuantities<Ibis::real>& cq,
+                                          size_t index) {
     if (grid_.moving()) {
         fv_.compute_dudt(fs, vertex_vel_[index], cq, grid_, k_[index], gas_model_,
                          trans_prop_);
@@ -276,7 +278,9 @@ bool RungeKutta<MemModel>::stop_now(unsigned int step) {
 }
 
 template <class MemModel>
-ConservedQuantitiesNorm<Ibis::real> RungeKutta<MemModel>::L2_norms() { return k_[0].L2_norms(); }
+ConservedQuantitiesNorm<Ibis::real> RungeKutta<MemModel>::L2_norms() {
+    return k_[0].L2_norms();
+}
 
 template class RungeKutta<SharedMem>;
 template class RungeKutta<Mpi>;

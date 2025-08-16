@@ -1,11 +1,11 @@
 #ifndef VISCOUS_FLUX_H
 #define VISCOUS_FLUX_H
 
-#include <util/conserved_quantities.h>
 #include <gas/flow_state.h>
 #include <gas/gas_model.h>
 #include <gas/transport_properties.h>
 #include <grid/gradient.h>
+#include <util/conserved_quantities.h>
 
 #include <nlohmann/json.hpp>
 
@@ -21,13 +21,16 @@ public:
     bool enabled() const { return enabled_; }
 
     void compute_viscous_gradient(const FlowStates<T>& flow_states,
-                                  const GridBlock<MemModel, T>& grid, Gradients<T>& cell_grad,
+                                  const GridBlock<MemModel, T>& grid,
+                                  Gradients<T>& cell_grad,
                                   WLSGradient<T, MemModel>& grad_calc);
 
-    void compute_viscous_flux(const FlowStates<T>& flow_states, const GridBlock<MemModel, T>& grid,
+    void compute_viscous_flux(const FlowStates<T>& flow_states,
+                              const GridBlock<MemModel, T>& grid,
                               const IdealGas<T>& gas_model,
                               const TransportProperties<T>& trans_prop,
-                              Gradients<T>& cell_grad, WLSGradient<T, MemModel>& grad_calc,
+                              Gradients<T>& cell_grad,
+                              WLSGradient<T, MemModel>& grad_calc,
                               ConservedQuantities<T>& flux);
 
     // void compute_viscous_properties_at_faces(const FlowStates<T>& flow_states,

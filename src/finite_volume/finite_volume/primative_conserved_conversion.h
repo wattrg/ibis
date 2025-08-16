@@ -1,9 +1,9 @@
 #ifndef PRIMATIVE_CONSERVED_CONVSERION_H
 #define PRIMATIVE_CONSERVED_CONVSERION_H
 
-#include <util/conserved_quantities.h>
-#include <gas/gas_model.h>
 #include <gas/flow_state.h>
+#include <gas/gas_model.h>
+#include <util/conserved_quantities.h>
 
 template <typename T>
 int conserved_to_primatives(ConservedQuantities<T>& cq, FlowStates<T>& fs,

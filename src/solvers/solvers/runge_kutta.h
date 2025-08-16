@@ -1,16 +1,16 @@
 #ifndef RUNGE_KUTTA_H
 #define RUNGE_KUTTA_H
 
-#include <util/conserved_quantities.h>
 #include <finite_volume/grid_motion_driver.h>
 #include <gas/flow_state.h>
 #include <gas/transport_properties.h>
 #include <grid/grid.h>
 #include <io/io.h>
+#include <parallel/parallel.h>
 #include <solvers/cfl.h>
 #include <solvers/solver.h>
+#include <util/conserved_quantities.h>
 #include <util/numeric_types.h>
-#include <parallel/parallel.h>
 
 #include <memory>
 
@@ -38,7 +38,6 @@ private:
     std::vector<Ibis::real> c_;
     size_t num_stages_;
 };
-
 
 template <class MemModel>
 class RungeKutta : public Solver {

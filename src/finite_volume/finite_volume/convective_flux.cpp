@@ -58,7 +58,8 @@ const RequiredGradients ConvectiveFlux<T, MemModel>::required_gradients() const 
 }
 
 template <typename T, class MemModel>
-ConvectiveFlux<T, MemModel>::ConvectiveFlux(const GridBlock<MemModel, T>& grid, json config) {
+ConvectiveFlux<T, MemModel>::ConvectiveFlux(const GridBlock<MemModel, T>& grid,
+                                            json config) {
     // allocate memory for the reconstructed states to the left and
     // right of the interfaces
     left_ = FlowStates<T>(grid.num_interfaces());
@@ -83,9 +84,9 @@ ConvectiveFlux<T, MemModel>::ConvectiveFlux(const GridBlock<MemModel, T>& grid, 
 
 template <typename T, class MemModel>
 void ConvectiveFlux<T, MemModel>::compute_convective_flux(
-    const FlowStates<T>& flow_states, GridBlock<MemModel, T>& grid, IdealGas<T>& gas_model,
-    Gradients<T>& cell_grad, WLSGradient<T, MemModel>& grad_calc, ConservedQuantities<T>& flux,
-    bool allow_reconstruction) {
+    const FlowStates<T>& flow_states, GridBlock<MemModel, T>& grid,
+    IdealGas<T>& gas_model, Gradients<T>& cell_grad, WLSGradient<T, MemModel>& grad_calc,
+    ConservedQuantities<T>& flux, bool allow_reconstruction) {
     // reconstruct
     int reconstruction_order = (allow_reconstruction) ? reconstruction_order_ : 1;
     switch (reconstruction_order) {
@@ -178,10 +179,9 @@ void ConvectiveFlux<T, MemModel>::compute_convective_flux(
 }
 
 template <typename T, class MemModel>
-void ConvectiveFlux<T, MemModel>::compute_convective_gradient(const FlowStates<T>& flow_states,
-                                                    const GridBlock<MemModel, T>& grid,
-                                                    Gradients<T>& cell_grad,
-                                                    WLSGradient<T, MemModel>& grad_calc) {
+void ConvectiveFlux<T, MemModel>::compute_convective_gradient(
+    const FlowStates<T>& flow_states, const GridBlock<MemModel, T>& grid,
+    Gradients<T>& cell_grad, WLSGradient<T, MemModel>& grad_calc) {
     switch (reconstruction_vars_) {
         case ThermoReconstructionVars::rho_p:
             grad_calc.compute_gradients(grid, flow_states.gas.pressure(), cell_grad.p);
@@ -210,7 +210,7 @@ void ConvectiveFlux<T, MemModel>::compute_convective_gradient(const FlowStates<T
 
 template <typename T, class MemModel>
 void ConvectiveFlux<T, MemModel>::copy_reconstruct(const FlowStates<T>& flow_states,
-                                         const GridBlock<MemModel, T>& grid) {
+                                                   const GridBlock<MemModel, T>& grid) {
     size_t n_faces = grid.num_interfaces();
     FlowStates<T> this_left = left_;
     FlowStates<T> this_right = right_;
@@ -256,10 +256,10 @@ KOKKOS_INLINE_FUNCTION T linear_interpolate(T value, Vector3s<T> grad, T dx, T d
 
 template <typename T, class MemModel>
 void ConvectiveFlux<T, MemModel>::linear_reconstruct(const FlowStates<T>& flow_states,
-                                           const GridBlock<MemModel, T>& grid,
-                                           Gradients<T>& cell_grad,
-                                           WLSGradient<T, MemModel>& grad_calc,
-                                           IdealGas<T>& gas_model) {
+                                                     const GridBlock<MemModel, T>& grid,
+                                                     Gradients<T>& cell_grad,
+                                                     WLSGradient<T, MemModel>& grad_calc,
+                                                     IdealGas<T>& gas_model) {
     compute_convective_gradient(flow_states, grid, cell_grad, grad_calc);
     compute_limiters(flow_states, grid, cell_grad);
 
@@ -421,8 +421,8 @@ void ConvectiveFlux<T, MemModel>::linear_reconstruct(const FlowStates<T>& flow_s
 
 template <typename T, class MemModel>
 void ConvectiveFlux<T, MemModel>::compute_limiters(const FlowStates<T>& flow_states,
-                                         const GridBlock<MemModel, T>& grid,
-                                         Gradients<T>& cell_grad) {
+                                                   const GridBlock<MemModel, T>& grid,
+                                                   Gradients<T>& cell_grad) {
     if (limiter_->enabled()) {
         auto cells = grid.cells();
         auto faces = grid.interfaces();

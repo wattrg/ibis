@@ -55,57 +55,65 @@ public:
         (void)trans_prop;
     }
 
-    virtual Vector3<T> access(const FlowStates<T, array_layout, host_mem_space>& fs,
-                              FiniteVolume<T, MemModel>& fv,
-                              const GridBlock<MemModel, T, host_exec_space, array_layout>& grid,
-                              const IdealGas<T>& gas_model, const int i) = 0;
+    virtual Vector3<T> access(
+        const FlowStates<T, array_layout, host_mem_space>& fs,
+        FiniteVolume<T, MemModel>& fv,
+        const GridBlock<MemModel, T, host_exec_space, array_layout>& grid,
+        const IdealGas<T>& gas_model, const int i) = 0;
 };
 
 template <typename T, class MemModel>
 class PressureAccess : public ScalarAccessor<T, MemModel> {
-    T access(const FlowStates<T, array_layout, host_mem_space>& fs, FiniteVolume<T, MemModel>& fv,
+    T access(const FlowStates<T, array_layout, host_mem_space>& fs,
+             FiniteVolume<T, MemModel>& fv,
              const GridBlock<MemModel, T, host_exec_space, array_layout>& grid,
              const IdealGas<T>& gas_model, const int i);
 };
 
 template <typename T, class MemModel>
 class TemperatureAccess : public ScalarAccessor<T, MemModel> {
-    T access(const FlowStates<T, array_layout, host_mem_space>& fs, FiniteVolume<T, MemModel>& fv,
+    T access(const FlowStates<T, array_layout, host_mem_space>& fs,
+             FiniteVolume<T, MemModel>& fv,
              const GridBlock<MemModel, T, host_exec_space, array_layout>& grid,
              const IdealGas<T>& gas_model, const int i);
 };
 
 template <typename T, class MemModel>
 class DensityAccess : public ScalarAccessor<T, MemModel> {
-    T access(const FlowStates<T, array_layout, host_mem_space>& fs, FiniteVolume<T, MemModel>& fv,
+    T access(const FlowStates<T, array_layout, host_mem_space>& fs,
+             FiniteVolume<T, MemModel>& fv,
              const GridBlock<MemModel, T, host_exec_space, array_layout>& grid,
              const IdealGas<T>& gas_model, const int i);
 };
 
 template <typename T, class MemModel>
 class InternalEnergyAccess : public ScalarAccessor<T, MemModel> {
-    T access(const FlowStates<T, array_layout, host_mem_space>& fs, FiniteVolume<T, MemModel>& fv,
+    T access(const FlowStates<T, array_layout, host_mem_space>& fs,
+             FiniteVolume<T, MemModel>& fv,
              const GridBlock<MemModel, T, host_exec_space, array_layout>& grid,
              const IdealGas<T>& gas_model, const int i);
 };
 
 template <typename T, class MemModel>
 class SpeedOfSoundAccess : public ScalarAccessor<T, MemModel> {
-    T access(const FlowStates<T, array_layout, host_mem_space>& fs, FiniteVolume<T, MemModel>& fv,
+    T access(const FlowStates<T, array_layout, host_mem_space>& fs,
+             FiniteVolume<T, MemModel>& fv,
              const GridBlock<MemModel, T, host_exec_space, array_layout>& grid,
              const IdealGas<T>& gas_model, const int i);
 };
 
 template <typename T, class MemModel>
 class MachNumberAccess : public ScalarAccessor<T, MemModel> {
-    T access(const FlowStates<T, array_layout, host_mem_space>& fs, FiniteVolume<T, MemModel>& fv,
+    T access(const FlowStates<T, array_layout, host_mem_space>& fs,
+             FiniteVolume<T, MemModel>& fv,
              const GridBlock<MemModel, T, host_exec_space, array_layout>& grid,
              const IdealGas<T>& gas_model, const int i);
 };
 
 template <typename T, class MemModel>
 class VolumeAccess : public ScalarAccessor<T, MemModel> {
-    T access(const FlowStates<T, array_layout, host_mem_space>& fs, FiniteVolume<T, MemModel>& fv,
+    T access(const FlowStates<T, array_layout, host_mem_space>& fs,
+             FiniteVolume<T, MemModel>& fv,
              const GridBlock<MemModel, T, host_exec_space, array_layout>& grid,
              const IdealGas<T>& gas_model, const int i);
 };
@@ -122,8 +130,9 @@ class VelocityAccess : public VectorAccessor<T, MemModel> {
 template <typename T, class MemModel>
 class ViscousGradVxAccess : public VectorAccessor<T, MemModel> {
 public:
-    void init(const FlowStates<T, array_layout, host_mem_space>& fs, FiniteVolume<T, MemModel>& fv,
-              const GridBlock<MemModel, T>& grid, const IdealGas<T>& gas_model,
+    void init(const FlowStates<T, array_layout, host_mem_space>& fs,
+              FiniteVolume<T, MemModel>& fv, const GridBlock<MemModel, T>& grid,
+              const IdealGas<T>& gas_model,
               const TransportProperties<T>& trans_prop) override;
 
     Vector3<T> access(const FlowStates<T, array_layout, host_mem_space>& fs,
@@ -138,8 +147,9 @@ private:
 template <typename T, class MemModel>
 class ViscousGradVyAccess : public VectorAccessor<T, MemModel> {
 public:
-    void init(const FlowStates<T, array_layout, host_mem_space>& fs, FiniteVolume<T, MemModel>& fv,
-              const GridBlock<MemModel, T>& grid, const IdealGas<T>& gas_model,
+    void init(const FlowStates<T, array_layout, host_mem_space>& fs,
+              FiniteVolume<T, MemModel>& fv, const GridBlock<MemModel, T>& grid,
+              const IdealGas<T>& gas_model,
               const TransportProperties<T>& trans_prop) override;
 
     Vector3<T> access(const FlowStates<T, array_layout, host_mem_space>& fs,
@@ -154,8 +164,9 @@ private:
 template <typename T, class MemModel>
 class ViscousGradVzAccess : public VectorAccessor<T, MemModel> {
 public:
-    void init(const FlowStates<T, array_layout, host_mem_space>& fs, FiniteVolume<T, MemModel>& fv,
-              const GridBlock<MemModel, T>& grid, const IdealGas<T>& gas_model,
+    void init(const FlowStates<T, array_layout, host_mem_space>& fs,
+              FiniteVolume<T, MemModel>& fv, const GridBlock<MemModel, T>& grid,
+              const IdealGas<T>& gas_model,
               const TransportProperties<T>& trans_prop) override;
 
     Vector3<T> access(const FlowStates<T, array_layout, host_mem_space>& fs,
@@ -171,8 +182,9 @@ private:
 template <typename T, class MemModel>
 class ConvectiveGradVxAccess : public VectorAccessor<T, MemModel> {
 public:
-    void init(const FlowStates<T, array_layout, host_mem_space>& fs, FiniteVolume<T, MemModel>& fv,
-              const GridBlock<MemModel, T>& grid, const IdealGas<T>& gas_model,
+    void init(const FlowStates<T, array_layout, host_mem_space>& fs,
+              FiniteVolume<T, MemModel>& fv, const GridBlock<MemModel, T>& grid,
+              const IdealGas<T>& gas_model,
               const TransportProperties<T>& trans_prop) override;
 
     Vector3<T> access(const FlowStates<T, array_layout, host_mem_space>& fs,
@@ -187,8 +199,9 @@ private:
 template <typename T, class MemModel>
 class ConvectiveGradVyAccess : public VectorAccessor<T, MemModel> {
 public:
-    void init(const FlowStates<T, array_layout, host_mem_space>& fs, FiniteVolume<T, MemModel>& fv,
-              const GridBlock<MemModel, T>& grid, const IdealGas<T>& gas_model,
+    void init(const FlowStates<T, array_layout, host_mem_space>& fs,
+              FiniteVolume<T, MemModel>& fv, const GridBlock<MemModel, T>& grid,
+              const IdealGas<T>& gas_model,
               const TransportProperties<T>& trans_prop) override;
 
     Vector3<T> access(const FlowStates<T, array_layout, host_mem_space>& fs,
@@ -203,8 +216,9 @@ private:
 template <typename T, class MemModel>
 class ConvectiveGradVzAccess : public VectorAccessor<T, MemModel> {
 public:
-    void init(const FlowStates<T, array_layout, host_mem_space>& fs, FiniteVolume<T, MemModel>& fv,
-              const GridBlock<MemModel, T>& grid, const IdealGas<T>& gas_model,
+    void init(const FlowStates<T, array_layout, host_mem_space>& fs,
+              FiniteVolume<T, MemModel>& fv, const GridBlock<MemModel, T>& grid,
+              const IdealGas<T>& gas_model,
               const TransportProperties<T>& trans_prop) override;
 
     Vector3<T> access(const FlowStates<T, array_layout, host_mem_space>& fs,
@@ -226,9 +240,11 @@ public:
 };
 
 template <typename T, class MemModel>
-std::map<std::string, std::shared_ptr<ScalarAccessor<T, MemModel>>> get_scalar_accessors();
+std::map<std::string, std::shared_ptr<ScalarAccessor<T, MemModel>>>
+get_scalar_accessors();
 
 template <typename T, class MemModel>
-std::map<std::string, std::shared_ptr<VectorAccessor<T, MemModel>>> get_vector_accessors();
+std::map<std::string, std::shared_ptr<VectorAccessor<T, MemModel>>>
+get_vector_accessors();
 
 #endif

@@ -2,12 +2,12 @@
 #define FINITE_VOLUME_H
 
 #include <finite_volume/boundaries/boundary.h>
-#include <util/conserved_quantities.h>
 #include <finite_volume/convective_flux.h>
 #include <finite_volume/flux_calc.h>
 #include <finite_volume/grid_motion_driver.h>
 #include <finite_volume/limiter.h>
 #include <finite_volume/viscous_flux.h>
+#include <util/conserved_quantities.h>
 // #include <util/communication.h>
 #include <gas/flow_state.h>
 #include <gas/gas_model.h>
@@ -73,12 +73,14 @@ public:
     // post-processing will call them.
 
     // Apply pre-reconstruction boundary conditions
-    void apply_pre_reconstruction_bc(FlowStates<T>& fs, const GridBlock<MemModel, T>& grid,
+    void apply_pre_reconstruction_bc(FlowStates<T>& fs,
+                                     const GridBlock<MemModel, T>& grid,
                                      const IdealGas<T>& gas_model,
                                      const TransportProperties<T>& trans_prop);
 
     // Apply post-convective-flux boundary conditions
-    void apply_post_convective_flux_bc(const FlowStates<T>& fs, const GridBlock<MemModel, T>& grid,
+    void apply_post_convective_flux_bc(const FlowStates<T>& fs,
+                                       const GridBlock<MemModel, T>& grid,
                                        const IdealGas<T>& gas_model,
                                        const TransportProperties<T>& trans_prop);
 
@@ -93,12 +95,14 @@ public:
                                           ConservedQuantities<T>& dudt);
 
     // Perform the surface integral of fluxes over the cells
-    void flux_surface_integral(const GridBlock<MemModel, T>& grid, ConservedQuantities<T>& dudt);
+    void flux_surface_integral(const GridBlock<MemModel, T>& grid,
+                               ConservedQuantities<T>& dudt);
 
     // Count the number of bad cells in the domain
     size_t count_bad_cells(const FlowStates<T>& fs, const size_t num_cells);
 
-    void transfer_internal_flowstates(FlowStates<T>& fs, const GridBlock<MemModel, T>& grid);
+    void transfer_internal_flowstates(FlowStates<T>& fs,
+                                      const GridBlock<MemModel, T>& grid);
 
 public:
     // methods for IO
@@ -110,7 +114,8 @@ public:
                                   const TransportProperties<T>& trans_prop);
 
     // convective gradients for post-processing
-    void compute_convective_gradient(FlowStates<T>& fs, const GridBlock<MemModel, T>& grid,
+    void compute_convective_gradient(FlowStates<T>& fs,
+                                     const GridBlock<MemModel, T>& grid,
                                      const IdealGas<T>& gas_model,
                                      const TransportProperties<T>& trans_prop);
 

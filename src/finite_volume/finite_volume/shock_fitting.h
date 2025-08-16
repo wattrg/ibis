@@ -66,8 +66,8 @@ public:
 
     WaveSpeed(const GridBlock<MemModel, T>& grid, std::string marker, json config);
 
-    void apply(const FlowStates<T>& fs, const GridBlock<MemModel, T>& grid, Vector3s<T> vertex_vel,
-               const Field<size_t>& boundary_vertices);
+    void apply(const FlowStates<T>& fs, const GridBlock<MemModel, T>& grid,
+               Vector3s<T> vertex_vel, const Field<size_t>& boundary_vertices);
 
 private:
     Ibis::real scale_;
@@ -89,8 +89,8 @@ public:
 
     FixedVelocity(json config);
 
-    void apply(const FlowStates<T>& fs, const GridBlock<MemModel, T>& grid, Vector3s<T> vertex_vel,
-               const Field<size_t>& boundary_vertices);
+    void apply(const FlowStates<T>& fs, const GridBlock<MemModel, T>& grid,
+               Vector3s<T> vertex_vel, const Field<size_t>& boundary_vertices);
 
 private:
     Vector3<T> vel_;
@@ -111,8 +111,8 @@ public:
                                     std::vector<std::string> sample_markers,
                                     std::string interp_marker, Ibis::real power);
 
-    ShockFittingInterpolationAction(const GridBlock<MemModel, T>& grid, std::string interp_marker,
-                                    json config);
+    ShockFittingInterpolationAction(const GridBlock<MemModel, T>& grid,
+                                    std::string interp_marker, json config);
 
     void apply(const GridBlock<MemModel, T>& grid, Vector3s<T> vertex_vel);
 
@@ -137,16 +137,18 @@ public:
     void apply_constraints(const GridBlock<MemModel, T>& grid, Vector3s<T> vertex_vel);
 
 private:
-    std::vector<
-        std::pair<std::string, std::shared_ptr<ShockFittingDirectVelocityAction<T, MemModel>>>>
+    std::vector<std::pair<std::string,
+                          std::shared_ptr<ShockFittingDirectVelocityAction<T, MemModel>>>>
         direct_actions_;
     std::vector<ShockFittingInterpolationAction<T, MemModel>> interp_actions_;
-    std::vector<std::pair<std::string, std::shared_ptr<Constraint<T, MemModel>>>> constraints_;
+    std::vector<std::pair<std::string, std::shared_ptr<Constraint<T, MemModel>>>>
+        constraints_;
 };
 
 template <typename T, class MemModel>
-std::shared_ptr<ShockFittingDirectVelocityAction<T, MemModel>> make_direct_velocity_action(
-    const GridBlock<MemModel, T>& grid, std::string marker, json config);
+std::shared_ptr<ShockFittingDirectVelocityAction<T, MemModel>>
+make_direct_velocity_action(const GridBlock<MemModel, T>& grid, std::string marker,
+                            json config);
 
 template <typename T, class MemModel>
 std::shared_ptr<Constraint<T, MemModel>> make_constraint(json config);
@@ -160,10 +162,12 @@ public:
 
     ShockFitting(const GridBlock<MemModel, T>& grid, json config);
 
-    void compute_vertex_velocities(const FlowStates<T>& fs, const GridBlock<MemModel, T>& grid,
+    void compute_vertex_velocities(const FlowStates<T>& fs,
+                                   const GridBlock<MemModel, T>& grid,
                                    Vector3s<T> vertex_vel);
 
-    void compute_boundary_velocities(const FlowStates<T>& fs, const GridBlock<MemModel, T>& grid,
+    void compute_boundary_velocities(const FlowStates<T>& fs,
+                                     const GridBlock<MemModel, T>& grid,
                                      Vector3s<T> vertex_vel);
 
     void interpolate_internal_velocities(const GridBlock<MemModel, T>& grid,

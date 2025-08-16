@@ -22,10 +22,10 @@ class NativeTextOutput : public FVOutput<T, MemModel> {
 public:
     NativeTextOutput() {}
 
-    int write(const typename FlowStates<T>::mirror_type& fs, FiniteVolume<T, MemModel>& fv,
-              const GridBlock<MemModel, T>& grid, const IdealGas<T>& gas_model,
-              const TransportProperties<T>& trans_prop, std::string plot_dir,
-              std::string time_dir, Ibis::real time);
+    int write(const typename FlowStates<T>::mirror_type& fs,
+              FiniteVolume<T, MemModel>& fv, const GridBlock<MemModel, T>& grid,
+              const IdealGas<T>& gas_model, const TransportProperties<T>& trans_prop,
+              std::string plot_dir, std::string time_dir, Ibis::real time);
 
     void write_coordinating_file(std::string plot_dir) { (void)plot_dir; }
 
@@ -49,10 +49,10 @@ class NativeBinaryOutput : public FVOutput<T, MemModel> {
 public:
     NativeBinaryOutput() {}
 
-    int write(const typename FlowStates<T>::mirror_type& fs, FiniteVolume<T, MemModel>& fv,
-              const GridBlock<MemModel, T>& grid, const IdealGas<T>& gas_model,
-              const TransportProperties<T>& trans_prop, std::string plot_dir,
-              std::string time_dir, Ibis::real time);
+    int write(const typename FlowStates<T>::mirror_type& fs,
+              FiniteVolume<T, MemModel>& fv, const GridBlock<MemModel, T>& grid,
+              const IdealGas<T>& gas_model, const TransportProperties<T>& trans_prop,
+              std::string plot_dir, std::string time_dir, Ibis::real time);
 
     void write_coordinating_file(std::string plot_dir) { (void)plot_dir; }
 

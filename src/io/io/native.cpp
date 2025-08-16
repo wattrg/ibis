@@ -6,11 +6,12 @@
 
 template <typename T, class MemModel>
 int NativeTextOutput<T, MemModel>::write(const typename FlowStates<T>::mirror_type& fs,
-                               FiniteVolume<T, MemModel>& fv, const GridBlock<MemModel, T>& grid,
-                               const IdealGas<T>& gas_model,
-                               const TransportProperties<T>& trans_prop,
-                               std::string plot_dir, std::string time_dir,
-                               Ibis::real time) {
+                                         FiniteVolume<T, MemModel>& fv,
+                                         const GridBlock<MemModel, T>& grid,
+                                         const IdealGas<T>& gas_model,
+                                         const TransportProperties<T>& trans_prop,
+                                         std::string plot_dir, std::string time_dir,
+                                         Ibis::real time) {
     (void)gas_model;
     (void)trans_prop;
     (void)fv;
@@ -90,10 +91,11 @@ template class NativeTextOutput<Ibis::dual, SharedMem>;
 template class NativeTextOutput<Ibis::dual, Mpi>;
 
 template <typename T, class MemModel>
-int NativeTextInput<T, MemModel>::read(typename FlowStates<T>::mirror_type& fs, GridBlock<MemModel, T>& grid,
-                             const IdealGas<T>& gas_model,
-                             const TransportProperties<T>& trans_prop, std::string dir,
-                             json& meta_data) {
+int NativeTextInput<T, MemModel>::read(typename FlowStates<T>::mirror_type& fs,
+                                       GridBlock<MemModel, T>& grid,
+                                       const IdealGas<T>& gas_model,
+                                       const TransportProperties<T>& trans_prop,
+                                       std::string dir, json& meta_data) {
     (void)trans_prop;
     size_t num_cells = grid.num_cells();
     std::ifstream meta_f(dir + "/meta_data.json");
@@ -188,11 +190,12 @@ template class NativeTextInput<Ibis::dual, Mpi>;
 
 template <typename T, class MemModel>
 int NativeBinaryOutput<T, MemModel>::write(const typename FlowStates<T>::mirror_type& fs,
-                                 FiniteVolume<T, MemModel>& fv, const GridBlock<MemModel, T>& grid,
-                                 const IdealGas<T>& gas_model,
-                                 const TransportProperties<T>& trans_prop,
-                                 std::string plot_dir, std::string time_dir,
-                                 Ibis::real time) {
+                                           FiniteVolume<T, MemModel>& fv,
+                                           const GridBlock<MemModel, T>& grid,
+                                           const IdealGas<T>& gas_model,
+                                           const TransportProperties<T>& trans_prop,
+                                           std::string plot_dir, std::string time_dir,
+                                           Ibis::real time) {
     (void)gas_model;
     (void)trans_prop;
     (void)fv;
@@ -268,9 +271,10 @@ template class NativeBinaryOutput<Ibis::dual, Mpi>;
 
 template <typename T, class MemModel>
 int NativeBinaryInput<T, MemModel>::read(typename FlowStates<T>::mirror_type& fs,
-                               GridBlock<MemModel, T>& grid, const IdealGas<T>& gas_model,
-                               const TransportProperties<T>& trans_prop, std::string dir,
-                               json& meta_data) {
+                                         GridBlock<MemModel, T>& grid,
+                                         const IdealGas<T>& gas_model,
+                                         const TransportProperties<T>& trans_prop,
+                                         std::string dir, json& meta_data) {
     (void)trans_prop;
 
     size_t num_cells = grid.num_cells();

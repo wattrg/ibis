@@ -73,7 +73,7 @@ public:
     void write_to_file(std::ofstream& f, Ibis::real wc, Ibis::real time, size_t step);
 
 private:
-    T data_[6]; 
+    T data_[6];
     // T global_;
     // T mass_;
     // T momentum_x_;
@@ -95,7 +95,7 @@ struct reduction_identity<ConservedQuantitiesNorm<T> > {
 #ifdef Ibis_ENABLE_MPI
 
 // TODO: Custom MPI reductions for conserved quantity norms
-#endif // Ibis_ENABLE_MPI
+#endif  // Ibis_ENABLE_MPI
 
 template <typename T>
 class ConservedQuantities {

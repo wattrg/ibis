@@ -12,10 +12,10 @@ class VtkTextOutput : public FVOutput<T, MemModel> {
 public:
     VtkTextOutput();
 
-    int write(const typename FlowStates<T>::mirror_type& fs, FiniteVolume<T, MemModel>& fv,
-              const GridBlock<MemModel, T>& grid, const IdealGas<T>& gas_model,
-              const TransportProperties<T>& trans_prop, std::string plot_dir,
-              std::string time_dir, Ibis::real time);
+    int write(const typename FlowStates<T>::mirror_type& fs,
+              FiniteVolume<T, MemModel>& fv, const GridBlock<MemModel, T>& grid,
+              const IdealGas<T>& gas_model, const TransportProperties<T>& trans_prop,
+              std::string plot_dir, std::string time_dir, Ibis::real time);
 
     void write_coordinating_file(std::string plot_dir);
 
@@ -31,10 +31,10 @@ class VtkBinaryOutput : public FVOutput<T, MemModel> {
 public:
     VtkBinaryOutput();
 
-    int write(const typename FlowStates<T>::mirror_type& fs, FiniteVolume<T, MemModel>& fv,
-              const GridBlock<MemModel, T>& grid, const IdealGas<T>& gas_model,
-              const TransportProperties<T>& trans_prop, std::string plot_dir,
-              std::string time_dir, Ibis::real time);
+    int write(const typename FlowStates<T>::mirror_type& fs,
+              FiniteVolume<T, MemModel>& fv, const GridBlock<MemModel, T>& grid,
+              const IdealGas<T>& gas_model, const TransportProperties<T>& trans_prop,
+              std::string plot_dir, std::string time_dir, Ibis::real time);
 
     void write_coordinating_file(std::string plot_dir);
 
@@ -49,15 +49,19 @@ private:
 private:
     void write_scalar_field_binary(
         std::ofstream& f, const FlowStates<T, array_layout, host_mem_space> fs,
-        FiniteVolume<T, MemModel>& fv, const GridBlock<MemModel, T, host_exec_space, array_layout>& grid,
-        std::shared_ptr<ScalarAccessor<T, MemModel>> accessor, const IdealGas<T>& gas_model,
-        std::string name, std::string type, size_t num_values);
+        FiniteVolume<T, MemModel>& fv,
+        const GridBlock<MemModel, T, host_exec_space, array_layout>& grid,
+        std::shared_ptr<ScalarAccessor<T, MemModel>> accessor,
+        const IdealGas<T>& gas_model, std::string name, std::string type,
+        size_t num_values);
 
     void write_vector_field_binary(
         std::ofstream& f, const FlowStates<T, array_layout, host_mem_space> fs,
-        FiniteVolume<T, MemModel>& fv, const GridBlock<MemModel, T, host_exec_space, array_layout>& grid,
-        std::shared_ptr<VectorAccessor<T, MemModel>> accessor, const IdealGas<T>& gas_model,
-        std::string name, std::string type, size_t num_values);
+        FiniteVolume<T, MemModel>& fv,
+        const GridBlock<MemModel, T, host_exec_space, array_layout>& grid,
+        std::shared_ptr<VectorAccessor<T, MemModel>> accessor,
+        const IdealGas<T>& gas_model, std::string name, std::string type,
+        size_t num_values);
 
     void write_int_view_binary(
         std::ofstream& f, const Kokkos::View<size_t*, array_layout, host_mem_space>& view,

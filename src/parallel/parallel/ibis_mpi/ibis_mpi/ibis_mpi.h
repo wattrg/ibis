@@ -3,13 +3,12 @@
 
 #ifdef Ibis_ENABLE_MPI
 
+#include <ibis_kokkos/ibis_kokkos.h>
 #include <mpi.h>
 #include <parallel/parallel.h>
-#include <ibis_kokkos/ibis_kokkos.h>
-#include <util/types.h>
-#include <util/numeric_types.h>
 #include <util/conserved_quantities.h>
-
+#include <util/numeric_types.h>
+#include <util/types.h>
 
 namespace Ibis {
 
@@ -28,12 +27,12 @@ struct MpiDataType;
 
 template <>
 struct MpiDataType<Dual<double>> {
-    static MPI_Datatype value() { return MPI_2DOUBLE_PRECISION; }  
+    static MPI_Datatype value() { return MPI_2DOUBLE_PRECISION; }
 };
 
 template <>
 struct MpiDataType<Dual<float>> {
-    static MPI_Datatype value() { return MPI_2REAL; }  
+    static MPI_Datatype value() { return MPI_2REAL; }
 };
 
 MpiTypeMapping(short int, MPI_SHORT)                                // NOLINT
@@ -50,32 +49,31 @@ MpiTypeMapping(short int, MPI_SHORT)                                // NOLINT
     MpiTypeMapping(long double, MPI_LONG_DOUBLE)                    // NOLINT
     MpiTypeMapping(char, MPI_CHAR)                                  // NOLINT
 
-// Custom MPI operations of standard overloaded operators
-template <typename T>
-void MPI_custom_sum(T* invec, T* inoutvec, int* len, MPI_Datatype* datatype) {
-    (void) datatype;
-    for(int i = 0; i < *len; i++) {
+    // Custom MPI operations of standard overloaded operators
+    template <typename T>
+    void MPI_custom_sum(T* invec, T* inoutvec, int* len, MPI_Datatype* datatype) {
+    (void)datatype;
+    for (int i = 0; i < *len; i++) {
         inoutvec[i] += invec[i];
     }
 }
 
 template <typename T>
 void MPI_custom_max(T* invec, T* inoutvec, int* len, MPI_Datatype* datatype) {
-    (void) datatype;
-    for(int i = 0; i < *len; i++) {
+    (void)datatype;
+    for (int i = 0; i < *len; i++) {
         inoutvec[i] = max(invec[i], inoutvec[i]);
     }
 }
 
 template <typename T>
 void MPI_custom_min(T* invec, T* inoutvec, int* len, MPI_Datatype* datatype) {
-    (void) datatype;
-    for(int i = 0; i < *len; i++) {
+    (void)datatype;
+    for (int i = 0; i < *len; i++) {
         inoutvec[i] = min(invec[i], inoutvec[i]);
     }
 }
-    
- 
+
 // Map between Ibis reduction types and MPI reduction types
 template <typename Reduction>
 struct MpiReduction;
@@ -96,19 +94,19 @@ struct MpiReduction<Sum<T>> {
 };
 
 extern MPI_Op MPI_dual_min;
-template<typename T>
+template <typename T>
 struct MpiReduction<Min<Dual<T>>> {
     static MPI_Op op() { return MPI_dual_min; }
 };
 
 extern MPI_Op MPI_dual_max;
-template<typename T>
+template <typename T>
 struct MpiReduction<Max<Dual<T>>> {
     static MPI_Op op() { return MPI_dual_max; }
 };
 
 extern MPI_Op MPI_dual_sum;
-template<typename T>
+template <typename T>
 struct MpiReduction<Sum<Dual<T>>> {
     static MPI_Op op() { return MPI_dual_sum; }
 };
@@ -119,11 +117,11 @@ extern MPI_Datatype MPI_ConservedQuantitiesNorm_dual;
 
 template <>
 struct MpiDataType<ConservedQuantitiesNorm<Ibis::real>> {
-    static MPI_Datatype value() { return MPI_ConservedQuantitiesNorm_real; }  
+    static MPI_Datatype value() { return MPI_ConservedQuantitiesNorm_real; }
 };
 template <>
 struct MpiDataType<ConservedQuantitiesNorm<Ibis::dual>> {
-    static MPI_Datatype value() { return MPI_ConservedQuantitiesNorm_dual; }  
+    static MPI_Datatype value() { return MPI_ConservedQuantitiesNorm_dual; }
 };
 
 extern MPI_Op MPI_ConservedQuantitiesNorm_sum_real;
@@ -140,7 +138,6 @@ struct MpiReduction<Sum<ConservedQuantitiesNorm<Ibis::dual>>> {
 
 void init_mpi_conserved_quantities_norms();
 void init_mpi_dual();
-
 
 // An object to perform MPI reductions with a nicer interfacer
 template <class Reduction>
@@ -233,7 +230,8 @@ public:
 
     SymmetricComm(int other_rank) : other_rank_(other_rank), mpi_comm_(MPI_COMM_WORLD) {}
 
-    SymmetricComm(const SymmetricComm& other) : other_rank_(other.other_rank_), mpi_comm_(other.mpi_comm_) {
+    SymmetricComm(const SymmetricComm& other)
+        : other_rank_(other.other_rank_), mpi_comm_(other.mpi_comm_) {
         send_buf_ = view_type("send_buf", other.send_buf_.size());
         recv_buf_ = view_type("recv_buf", other.recv_buf_.size());
 

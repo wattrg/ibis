@@ -44,8 +44,8 @@ public:
     }
 
     template <class PolicyType, class FunctorType>
-    inline auto execute(const std::string& str, PolicyType& policy, FunctorType functor)
-        -> typename ReducerType::scalar_type {
+    inline auto execute(const std::string& str, PolicyType& policy,
+                        FunctorType functor) -> typename ReducerType::scalar_type {
         using scalar_type = typename ReducerType::scalar_type;
         using reduction = ReducerType;
         using shared_reducer = typename SharedReducerMapping<reduction>::value;

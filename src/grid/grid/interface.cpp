@@ -1,7 +1,6 @@
 #include <doctest/doctest.h>
 #include <grid/interface.h>
 
-
 Interfaces<Ibis::real> generate_interfaces() {
     Vertices<Ibis::real> vertices(16);
     auto vertices_host = vertices.host_mirror();

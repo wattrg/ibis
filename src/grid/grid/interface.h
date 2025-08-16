@@ -344,5 +344,4 @@ public:
     vector_type centre_;
 };
 
-
 #endif

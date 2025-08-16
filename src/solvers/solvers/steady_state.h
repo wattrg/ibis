@@ -1,7 +1,6 @@
 #ifndef STEADY_STATE_SOLVER_H
 #define STEADY_STATE_SOLVER_H
 
-#include <util/conserved_quantities.h>
 #include <gas/flow_state.h>
 #include <io/io.h>
 #include <linear_algebra/linear_system.h>
@@ -10,6 +9,7 @@
 #include <solvers/jfnk.h>
 #include <solvers/solver.h>
 #include <solvers/transient_linear_system.h>
+#include <util/conserved_quantities.h>
 
 #include "finite_volume/grid_motion_driver.h"
 
@@ -80,7 +80,6 @@ private:
     // the simulation
     std::shared_ptr<Sim<Ibis::dual, MemModel>> sim_;
 };
-
 
 template <class MemModel>
 class SteadyState : public Solver {

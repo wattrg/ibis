@@ -1,10 +1,10 @@
 #ifndef FLUX_H
 #define FLUX_H
 
-#include <util/conserved_quantities.h>
 #include <gas/flow_state.h>
 #include <gas/gas_model.h>
 #include <grid/interface.h>
+#include <util/conserved_quantities.h>
 
 #include <nlohmann/json.hpp>
 

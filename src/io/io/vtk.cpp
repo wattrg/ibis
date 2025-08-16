@@ -41,13 +41,12 @@ void write_vtk_coordinating_file(std::string plot_dir, std::vector<Ibis::real> t
 }
 
 template <typename T, class MemModel>
-void write_scalar_field_ascii(std::ofstream& f,
-                              const FlowStates<T, array_layout, host_mem_space> fs,
-                              FiniteVolume<T, MemModel>& fv,
-                              const GridBlock<MemModel, T, host_exec_space, array_layout>& grid,
-                              std::shared_ptr<ScalarAccessor<T, MemModel>> accessor,
-                              const IdealGas<T>& gas_model, std::string name,
-                              std::string type, size_t num_values) {
+void write_scalar_field_ascii(
+    std::ofstream& f, const FlowStates<T, array_layout, host_mem_space> fs,
+    FiniteVolume<T, MemModel>& fv,
+    const GridBlock<MemModel, T, host_exec_space, array_layout>& grid,
+    std::shared_ptr<ScalarAccessor<T, MemModel>> accessor, const IdealGas<T>& gas_model,
+    std::string name, std::string type, size_t num_values) {
     f << "<DataArray type='" << type << "' ";
     f << "NumberOfComponents='1' ";
     f << "Name='" << name << "' ";
@@ -62,13 +61,12 @@ void write_scalar_field_ascii(std::ofstream& f,
 }
 
 template <typename T, class MemModel>
-void write_vector_field_ascii(std::ofstream& f,
-                              const FlowStates<T, array_layout, host_mem_space>& fs,
-                              FiniteVolume<T, MemModel>& fv,
-                              const GridBlock<MemModel, T, host_exec_space, array_layout>& grid,
-                              std::shared_ptr<VectorAccessor<T, MemModel>> accessor,
-                              const IdealGas<T>& gas_model, std::string name,
-                              std::string type, size_t num_values) {
+void write_vector_field_ascii(
+    std::ofstream& f, const FlowStates<T, array_layout, host_mem_space>& fs,
+    FiniteVolume<T, MemModel>& fv,
+    const GridBlock<MemModel, T, host_exec_space, array_layout>& grid,
+    std::shared_ptr<VectorAccessor<T, MemModel>> accessor, const IdealGas<T>& gas_model,
+    std::string name, std::string type, size_t num_values) {
     f << "<DataArray type='" << type << "' ";
     f << "NumberOfComponents='3' ";
     f << "Name='" << name << "' ";
@@ -136,10 +134,12 @@ VtkTextOutput<T, MemModel>::VtkTextOutput() {
 
 template <typename T, class MemModel>
 int VtkTextOutput<T, MemModel>::write(const typename FlowStates<T>::mirror_type& fs,
-                            FiniteVolume<T, MemModel>& fv, const GridBlock<MemModel, T>& grid,
-                            const IdealGas<T>& gas_model,
-                            const TransportProperties<T>& trans_prop,
-                            std::string plot_dir, std::string time_dir, Ibis::real time) {
+                                      FiniteVolume<T, MemModel>& fv,
+                                      const GridBlock<MemModel, T>& grid,
+                                      const IdealGas<T>& gas_model,
+                                      const TransportProperties<T>& trans_prop,
+                                      std::string plot_dir, std::string time_dir,
+                                      Ibis::real time) {
     auto grid_host = grid.host_mirror();
     grid_host.deep_copy(grid);
 
@@ -215,7 +215,8 @@ VtkBinaryOutput<T, MemModel>::VtkBinaryOutput() {
 template <typename T, class MemModel>
 void VtkBinaryOutput<T, MemModel>::write_scalar_field_binary(
     std::ofstream& f, const FlowStates<T, array_layout, host_mem_space> fs,
-    FiniteVolume<T, MemModel>& fv, const GridBlock<MemModel, T, host_exec_space, array_layout>& grid,
+    FiniteVolume<T, MemModel>& fv,
+    const GridBlock<MemModel, T, host_exec_space, array_layout>& grid,
     std::shared_ptr<ScalarAccessor<T, MemModel>> accessor, const IdealGas<T>& gas_model,
     std::string name, std::string type, size_t num_values) {
     f << "<DataArray type='" << type << "' " << "NumberOfComponents='1' " << "Name='"
@@ -247,7 +248,8 @@ void VtkBinaryOutput<T, MemModel>::write_scalar_field_binary(
 template <typename T, class MemModel>
 void VtkBinaryOutput<T, MemModel>::write_vector_field_binary(
     std::ofstream& f, const FlowStates<T, array_layout, host_mem_space> fs,
-    FiniteVolume<T, MemModel>& fv, const GridBlock<MemModel, T, host_exec_space, array_layout>& grid,
+    FiniteVolume<T, MemModel>& fv,
+    const GridBlock<MemModel, T, host_exec_space, array_layout>& grid,
     std::shared_ptr<VectorAccessor<T, MemModel>> accessor, const IdealGas<T>& gas_model,
     std::string name, std::string type, size_t num_values) {
     f << "<DataArray type='" << type << "' " << "NumberOfComponents='3' " << "Name='"
@@ -374,11 +376,12 @@ void VtkBinaryOutput<T, MemModel>::write_appended_data(std::ofstream& f) {
 
 template <typename T, class MemModel>
 int VtkBinaryOutput<T, MemModel>::write(const typename FlowStates<T>::mirror_type& fs,
-                              FiniteVolume<T, MemModel>& fv, const GridBlock<MemModel, T>& grid,
-                              const IdealGas<T>& gas_model,
-                              const TransportProperties<T>& trans_prop,
-                              std::string plot_dir, std::string time_dir,
-                              Ibis::real time) {
+                                        FiniteVolume<T, MemModel>& fv,
+                                        const GridBlock<MemModel, T>& grid,
+                                        const IdealGas<T>& gas_model,
+                                        const TransportProperties<T>& trans_prop,
+                                        std::string plot_dir, std::string time_dir,
+                                        Ibis::real time) {
     auto grid_host = grid.host_mirror();
     grid_host.deep_copy(grid);
 

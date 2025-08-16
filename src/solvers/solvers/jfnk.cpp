@@ -4,8 +4,9 @@
 
 template <class MemModel>
 Jfnk<MemModel>::Jfnk(std::shared_ptr<PseudoTransientLinearSystem> system,
-           std::unique_ptr<CflSchedule>&& cfl,
-           std::shared_ptr<ConservedQuantities<Ibis::dual>> residuals, json config) {
+                     std::unique_ptr<CflSchedule>&& cfl,
+                     std::shared_ptr<ConservedQuantities<Ibis::dual>> residuals,
+                     json config) {
     max_steps_ = config.at("max_steps");
     tolerance_ = config.at("tolerance");
 
@@ -39,8 +40,8 @@ void Jfnk<MemModel>::set_pseudo_time_step_size(Ibis::real dt_star) {
 
 template <class MemModel>
 LinearSolveResult Jfnk<MemModel>::step(std::shared_ptr<Sim<Ibis::dual, MemModel>>& sim,
-                             ConservedQuantities<Ibis::dual>& cq,
-                             FlowStates<Ibis::dual>& fs, size_t step) {
+                                       ConservedQuantities<Ibis::dual>& cq,
+                                       FlowStates<Ibis::dual>& fs, size_t step) {
     // dU is the change in the solution for the step,
     // our initial guess for it is zero
     dU_.zero();
@@ -64,8 +65,8 @@ LinearSolveResult Jfnk<MemModel>::step(std::shared_ptr<Sim<Ibis::dual, MemModel>
 
 template <class MemModel>
 void Jfnk<MemModel>::apply_update_(std::shared_ptr<Sim<Ibis::dual, MemModel>>& sim,
-                         ConservedQuantities<Ibis::dual>& cq,
-                         FlowStates<Ibis::dual>& fs) {
+                                   ConservedQuantities<Ibis::dual>& cq,
+                                   FlowStates<Ibis::dual>& fs) {
     auto dU = dU_;
     size_t n_cells = sim->grid.num_cells();
     size_t n_cons = cq.n_conserved();

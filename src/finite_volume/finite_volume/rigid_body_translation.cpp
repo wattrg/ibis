@@ -10,9 +10,8 @@ RigidBodyTranslation<T, MemModel>::RigidBodyTranslation(json config) {
 }
 
 template <typename T, class MemModel>
-void RigidBodyTranslation<T, MemModel>::compute_vertex_velocities(const FlowStates<T>& fs,
-                                                        const GridBlock<MemModel, T>& grid,
-                                                        Vector3s<T> vertex_vel) {
+void RigidBodyTranslation<T, MemModel>::compute_vertex_velocities(
+    const FlowStates<T>& fs, const GridBlock<MemModel, T>& grid, Vector3s<T> vertex_vel) {
     (void)fs;
     (void)grid;
     Vector3<T> vel = vel_;

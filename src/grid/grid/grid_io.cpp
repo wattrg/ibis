@@ -2,11 +2,10 @@
 #include <grid/grid_io.h>
 #include <spdlog/spdlog.h>
 
-#include <stdexcept>
-#include <string>
 #include <algorithm>
 #include <functional>
-
+#include <stdexcept>
+#include <string>
 
 ElemIO::ElemIO(const ElemIO &other) : vertex_ids_(other.vertex_ids_) {
     // vertex_ids_(other.vertex_ids_};
@@ -115,7 +114,8 @@ std::ostream &operator<<(std::ostream &file, const ElemIO &elem_io) {
 }
 
 std::ostream &operator<<(std::ostream &file, const CellMapping &map) {
-    file << map.local_cell << " " << map.global_face << " " << map.local_face << " " << map.other_block << " " << map.other_cell ;
+    file << map.local_cell << " " << map.global_face << " " << map.local_face << " "
+         << map.other_block << " " << map.other_cell;
     return file;
 }
 
@@ -175,7 +175,7 @@ GridIO::GridIO(const GridIO &monolithic_grid, const std::vector<size_t> &cells_t
         // set up the faces from the global faces
         std::vector<size_t> local_face_ids;
         std::vector<ElemIO> global_faces = global_elem_io.interfaces();
-        const InterfaceLookup& global_face_lookup = monolithic_grid.interface_lookup();
+        const InterfaceLookup &global_face_lookup = monolithic_grid.interface_lookup();
         InterfaceLookup local_face_lookup;
         for (auto &global_face : global_faces) {
             size_t global_face_id = global_face_lookup.id(global_face.vertex_ids());
@@ -368,7 +368,6 @@ void GridIO::read_su2_grid(std::istream &grid_file) {
     }
 }
 
-
 void GridIO::write_su2_grid(std::ostream &grid_file) {
     grid_file << "NDIME= " << dim_ << "\n";
 
@@ -399,19 +398,19 @@ void GridIO::write_su2_grid(std::ostream &grid_file) {
 
 void GridIO::construct_faces_() {
     // Initialise memory
-    std::vector<std::vector<size_t>> cell_faces_ {};
-    std::vector<ElemIO> faces_ {};
+    std::vector<std::vector<size_t>> cell_faces_{};
+    std::vector<ElemIO> faces_{};
 
     interface_lookup_ = InterfaceLookup{};
     for (size_t cell_id = 0; cell_id < cells_.size(); cell_id++) {
-        const ElemIO& cell = cells_[cell_id];
+        const ElemIO &cell = cells_[cell_id];
         std::vector<ElemIO> cell_interfaces = cell.interfaces();
         std::vector<size_t> this_cell_face_ids{};
 
         // Add each face of this cell to the list of faces
         for (size_t face_i = 0; face_i < cell_interfaces.size(); face_i++) {
             // the ID's of the vertices forming this face
-            ElemIO& cell_interface = cell_interfaces[face_i];
+            ElemIO &cell_interface = cell_interfaces[face_i];
             std::vector<size_t> face_vertices = cell_interface.vertex_ids();
 
             // check if this interface has already been created as part of another cell.
@@ -420,8 +419,7 @@ void GridIO::construct_faces_() {
             if (face_id == std::numeric_limits<size_t>::max()) {
                 // This interface hasn't been created yet, so we do that here
                 face_id = interface_lookup_.insert(face_vertices);
-                faces_.push_back(ElemIO(face_vertices,
-                                        cell_interface.cell_type(),
+                faces_.push_back(ElemIO(face_vertices, cell_interface.cell_type(),
                                         cell_interface.face_order()));
             }
             this_cell_face_ids.push_back(face_id);
@@ -479,7 +477,8 @@ void GridIO::read_mapped_cells(std::istream &file) {
         trim_whitespace(value);
         other_cell = std::stoi(value);
 
-        cell_mapping_.push_back(CellMapping(local_cell, other_block, other_cell, global_face, local_face));
+        cell_mapping_.push_back(
+            CellMapping(local_cell, other_block, other_cell, global_face, local_face));
     }
 }
 
@@ -744,14 +743,15 @@ TEST_CASE("read_cell_mapping") {
     part1.read_mapped_cells(mapping1_file);
 
     std::vector<CellMapping> expected_map0{
-        CellMapping(0, 0, 2, 1, 0), CellMapping(0, 2, 13, 1, 4), CellMapping(1, 4, 6, 1, 1),
-        CellMapping(1, 5, 13, 1, 3), CellMapping(2, 9, 17, 1, 4), CellMapping(3, 10, 16, 1, 3),
+        CellMapping(0, 0, 2, 1, 0),  CellMapping(0, 2, 13, 1, 4),
+        CellMapping(1, 4, 6, 1, 1),  CellMapping(1, 5, 13, 1, 3),
+        CellMapping(2, 9, 17, 1, 4), CellMapping(3, 10, 16, 1, 3),
     };
 
     std::vector<CellMapping> expected_map1{
-        CellMapping(0, 2, 2, 0, 0), CellMapping(1, 6, 6, 0, 1), CellMapping(3, 12, 13, 0, 1),
-        CellMapping(3, 11, 6, 0 ,3), CellMapping(4, 13, 11, 0, 0), CellMapping(4, 14, 17, 0, 2)
-    };
+        CellMapping(0, 2, 2, 0, 0),   CellMapping(1, 6, 6, 0, 1),
+        CellMapping(3, 12, 13, 0, 1), CellMapping(3, 11, 6, 0, 3),
+        CellMapping(4, 13, 11, 0, 0), CellMapping(4, 14, 17, 0, 2)};
 
     CHECK(part0.cell_mapping()[0] == expected_map0[0]);
     CHECK(part0.cell_mapping()[1] == expected_map0[1]);
@@ -770,9 +770,6 @@ TEST_CASE("read_cell_mapping") {
     // CHECK(part0.cell_mapping() == expected_map0);
     // CHECK(part1.cell_mapping() == expected_map1);
 }
-
-
-
 
 InterfaceLookup::InterfaceLookup() {
     hash_map_ = std::unordered_map<std::string, size_t>{};

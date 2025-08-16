@@ -48,7 +48,8 @@ class WLSGradient {
 public:
     using memory_space = typename ExecSpace::memory_space;
     using view_type = Kokkos::View<T**, Layout, memory_space>;
-    using HostMirror = WLSGradient<T, MemModel, Kokkos::DefaultHostExecutionSpace, Layout>;
+    using HostMirror =
+        WLSGradient<T, MemModel, Kokkos::DefaultHostExecutionSpace, Layout>;
 
 public:
     WLSGradient() {}

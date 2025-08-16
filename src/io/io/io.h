@@ -23,8 +23,8 @@ class FVInput {
 public:
     virtual ~FVInput() {}
 
-    virtual int read(typename FlowStates<T>::mirror_type& fs, GridBlock<MemModel, T>& grid,
-                     const IdealGas<T>& gas_model,
+    virtual int read(typename FlowStates<T>::mirror_type& fs,
+                     GridBlock<MemModel, T>& grid, const IdealGas<T>& gas_model,
                      const TransportProperties<T>& trans_prop, std::string dir,
                      json& meta_data) = 0;
 
@@ -36,8 +36,9 @@ class FVOutput {
 public:
     virtual ~FVOutput() {}
 
-    virtual int write(const typename FlowStates<T>::mirror_type& fs, FiniteVolume<T, MemModel>& fv,
-                      const GridBlock<MemModel, T>& grid, const IdealGas<T>& gas_model,
+    virtual int write(const typename FlowStates<T>::mirror_type& fs,
+                      FiniteVolume<T, MemModel>& fv, const GridBlock<MemModel, T>& grid,
+                      const IdealGas<T>& gas_model,
                       const TransportProperties<T>& trans_prop, std::string plot_dir,
                       std::string time_dir, Ibis::real time) = 0;
 
@@ -48,8 +49,10 @@ public:
     virtual bool combined_grid_and_flow() const = 0;
 
 protected:
-    std::map<std::string, std::shared_ptr<ScalarAccessor<T, MemModel>>> m_scalar_accessors;
-    std::map<std::string, std::shared_ptr<VectorAccessor<T, MemModel>>> m_vector_accessors;
+    std::map<std::string, std::shared_ptr<ScalarAccessor<T, MemModel>>>
+        m_scalar_accessors;
+    std::map<std::string, std::shared_ptr<VectorAccessor<T, MemModel>>>
+        m_vector_accessors;
 };
 
 template <typename T, class MemModel>
@@ -64,9 +67,9 @@ public:
     FVIO();
 
     // read a flow state
-    int read(FlowStates<T>& fs, GridBlock<MemModel, T>& grid, const IdealGas<T>& gas_model,
-             const TransportProperties<T>& trans_prop, json& config, json& meta_data,
-             int time_idx);
+    int read(FlowStates<T>& fs, GridBlock<MemModel, T>& grid,
+             const IdealGas<T>& gas_model, const TransportProperties<T>& trans_prop,
+             json& config, json& meta_data, int time_idx);
 
     // write a flow state
     int write(const FlowStates<T>& flow_state, FiniteVolume<T, MemModel>& fv,

@@ -4,8 +4,9 @@
 #include <util/real.h>
 // #include <parallel/parallel.h>
 
-#include <Kokkos_Core.hpp>
 #include <parallel/reductions.h>
+
+#include <Kokkos_Core.hpp>
 
 namespace Ibis {
 
@@ -345,7 +346,6 @@ KOKKOS_INLINE_FUNCTION T& dual_part(Dual<T>& d) {
     return d.dual();
 }
 
-
 typedef Dual<real> dual;
 }  // namespace Ibis
 
@@ -355,38 +355,42 @@ namespace Kokkos {
 template <typename T>
 struct reduction_identity<Ibis::Dual<T>> {
     KOKKOS_FORCEINLINE_FUNCTION
-    static Ibis::Dual<T> sum() { return Ibis::Dual<T> {Kokkos::reduction_identity<T>::sum(), T(0.0)}; }   
+    static Ibis::Dual<T> sum() {
+        return Ibis::Dual<T>{Kokkos::reduction_identity<T>::sum(), T(0.0)};
+    }
 
     KOKKOS_FORCEINLINE_FUNCTION
-    static Ibis::Dual<T> min() { return Ibis::Dual<T> {Kokkos::reduction_identity<T>::min(), T(0.0)}; }   
+    static Ibis::Dual<T> min() {
+        return Ibis::Dual<T>{Kokkos::reduction_identity<T>::min(), T(0.0)};
+    }
 
     KOKKOS_FORCEINLINE_FUNCTION
-    static Ibis::Dual<T> max() { return Ibis::Dual<T> {Kokkos::reduction_identity<T>::max(), T(0.0)}; }   
+    static Ibis::Dual<T> max() {
+        return Ibis::Dual<T>{Kokkos::reduction_identity<T>::max(), T(0.0)};
+    }
 };
 
-}
+}  // namespace Kokkos
 
 template <typename T>
 struct ReductionIdentity<Min<Ibis::Dual<T>>> {
     constexpr static Ibis::Dual<T> identity() {
-        return Ibis::Dual<T> { ReductionIdentity<T>::identity(), T(0.0) };
+        return Ibis::Dual<T>{ReductionIdentity<T>::identity(), T(0.0)};
     }
 };
 
 template <typename T>
 struct ReductionIdentity<Max<Ibis::Dual<T>>> {
     constexpr static Ibis::Dual<T> identity() {
-        return Ibis::Dual<T> { ReductionIdentity<T>::identity(), T(0.0) };
+        return Ibis::Dual<T>{ReductionIdentity<T>::identity(), T(0.0)};
     }
 };
 
 template <typename T>
 struct ReductionIdentity<Sum<Ibis::Dual<T>>> {
     constexpr static Ibis::Dual<T> identity() {
-        return Ibis::Dual<T> { ReductionIdentity<T>::identity(), T(0.0) };
+        return Ibis::Dual<T>{ReductionIdentity<T>::identity(), T(0.0)};
     }
 };
-
-
 
 #endif

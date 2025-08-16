@@ -3,10 +3,10 @@
 #include <io/accessor.h>
 
 template <typename T, class MemModel>
-T PressureAccess<T, MemModel>::access(const FlowStates<T, array_layout, host_mem_space>& fs,
-                            FiniteVolume<T, MemModel>& fv,
-                            const GridBlock<MemModel, T, host_exec_space, array_layout>& grid,
-                            const IdealGas<T>& gas_model, const int i) {
+T PressureAccess<T, MemModel>::access(
+    const FlowStates<T, array_layout, host_mem_space>& fs, FiniteVolume<T, MemModel>& fv,
+    const GridBlock<MemModel, T, host_exec_space, array_layout>& grid,
+    const IdealGas<T>& gas_model, const int i) {
     (void)gas_model;
     (void)fv;
     (void)grid;
@@ -18,10 +18,10 @@ template class PressureAccess<Ibis::dual, SharedMem>;
 template class PressureAccess<Ibis::dual, Mpi>;
 
 template <typename T, class MemModel>
-T TemperatureAccess<T, MemModel>::access(const FlowStates<T, array_layout, host_mem_space>& fs,
-                               FiniteVolume<T, MemModel>& fv,
-                               const GridBlock<MemModel, T, host_exec_space, array_layout>& grid,
-                               const IdealGas<T>& gas_model, const int i) {
+T TemperatureAccess<T, MemModel>::access(
+    const FlowStates<T, array_layout, host_mem_space>& fs, FiniteVolume<T, MemModel>& fv,
+    const GridBlock<MemModel, T, host_exec_space, array_layout>& grid,
+    const IdealGas<T>& gas_model, const int i) {
     (void)gas_model;
     (void)fv;
     (void)grid;
@@ -33,10 +33,10 @@ template class TemperatureAccess<Ibis::dual, SharedMem>;
 template class TemperatureAccess<Ibis::dual, Mpi>;
 
 template <typename T, class MemModel>
-T DensityAccess<T, MemModel>::access(const FlowStates<T, array_layout, host_mem_space>& fs,
-                           FiniteVolume<T, MemModel>& fv,
-                           const GridBlock<MemModel, T, host_exec_space, array_layout>& grid,
-                           const IdealGas<T>& gas_model, const int i) {
+T DensityAccess<T, MemModel>::access(
+    const FlowStates<T, array_layout, host_mem_space>& fs, FiniteVolume<T, MemModel>& fv,
+    const GridBlock<MemModel, T, host_exec_space, array_layout>& grid,
+    const IdealGas<T>& gas_model, const int i) {
     (void)gas_model;
     (void)fv;
     (void)grid;
@@ -48,10 +48,10 @@ template class DensityAccess<Ibis::dual, SharedMem>;
 template class DensityAccess<Ibis::dual, Mpi>;
 
 template <typename T, class MemModel>
-T InternalEnergyAccess<T, MemModel>::access(const FlowStates<T, array_layout, host_mem_space>& fs,
-                                  FiniteVolume<T, MemModel>& fv,
-                                  const GridBlock<MemModel, T, host_exec_space, array_layout>& grid,
-                                  const IdealGas<T>& gas_model, const int i) {
+T InternalEnergyAccess<T, MemModel>::access(
+    const FlowStates<T, array_layout, host_mem_space>& fs, FiniteVolume<T, MemModel>& fv,
+    const GridBlock<MemModel, T, host_exec_space, array_layout>& grid,
+    const IdealGas<T>& gas_model, const int i) {
     (void)gas_model;
     (void)fv;
     (void)grid;
@@ -63,10 +63,10 @@ template class InternalEnergyAccess<Ibis::dual, SharedMem>;
 template class InternalEnergyAccess<Ibis::dual, Mpi>;
 
 template <typename T, class MemModel>
-T SpeedOfSoundAccess<T, MemModel>::access(const FlowStates<T, array_layout, host_mem_space>& fs,
-                                FiniteVolume<T, MemModel>& fv,
-                                const GridBlock<MemModel, T, host_exec_space, array_layout>& grid,
-                                const IdealGas<T>& gas_model, const int i) {
+T SpeedOfSoundAccess<T, MemModel>::access(
+    const FlowStates<T, array_layout, host_mem_space>& fs, FiniteVolume<T, MemModel>& fv,
+    const GridBlock<MemModel, T, host_exec_space, array_layout>& grid,
+    const IdealGas<T>& gas_model, const int i) {
     (void)fv;
     (void)grid;
     return gas_model.speed_of_sound(fs.gas, i);
@@ -77,10 +77,10 @@ template class SpeedOfSoundAccess<Ibis::dual, SharedMem>;
 template class SpeedOfSoundAccess<Ibis::dual, Mpi>;
 
 template <typename T, class MemModel>
-T MachNumberAccess<T, MemModel>::access(const FlowStates<T, array_layout, host_mem_space>& fs,
-                              FiniteVolume<T, MemModel>& fv,
-                              const GridBlock<MemModel, T, host_exec_space, array_layout>& grid,
-                              const IdealGas<T>& gas_model, const int i) {
+T MachNumberAccess<T, MemModel>::access(
+    const FlowStates<T, array_layout, host_mem_space>& fs, FiniteVolume<T, MemModel>& fv,
+    const GridBlock<MemModel, T, host_exec_space, array_layout>& grid,
+    const IdealGas<T>& gas_model, const int i) {
     (void)fv;
     (void)grid;
     T a = gas_model.speed_of_sound(fs.gas, i);
@@ -96,10 +96,10 @@ template class MachNumberAccess<Ibis::dual, SharedMem>;
 template class MachNumberAccess<Ibis::dual, Mpi>;
 
 template <typename T, class MemModel>
-T VolumeAccess<T, MemModel>::access(const FlowStates<T, array_layout, host_mem_space>& fs,
-                          FiniteVolume<T, MemModel>& fv,
-                          const GridBlock<MemModel, T, host_exec_space, array_layout>& grid,
-                          const IdealGas<T>& gas_model, const int i) {
+T VolumeAccess<T, MemModel>::access(
+    const FlowStates<T, array_layout, host_mem_space>& fs, FiniteVolume<T, MemModel>& fv,
+    const GridBlock<MemModel, T, host_exec_space, array_layout>& grid,
+    const IdealGas<T>& gas_model, const int i) {
     (void)fv;
     (void)fs;
     (void)gas_model;
@@ -113,8 +113,8 @@ template class VolumeAccess<Ibis::dual, Mpi>;
 template <typename T, class MemModel>
 Vector3<T> VelocityAccess<T, MemModel>::access(
     const FlowStates<T, array_layout, host_mem_space>& fs, FiniteVolume<T, MemModel>& fv,
-    const GridBlock<MemModel, T, host_exec_space, array_layout>& grid, const IdealGas<T>& gas_model,
-    const int i) {
+    const GridBlock<MemModel, T, host_exec_space, array_layout>& grid,
+    const IdealGas<T>& gas_model, const int i) {
     (void)gas_model;
     (void)grid;
     (void)fv;
@@ -129,10 +129,10 @@ template class VelocityAccess<Ibis::dual, SharedMem>;
 template class VelocityAccess<Ibis::dual, Mpi>;
 
 template <typename T, class MemModel>
-void ViscousGradVxAccess<T, MemModel>::init(const FlowStates<T, array_layout, host_mem_space>& fs,
-                                  FiniteVolume<T, MemModel>& fv, const GridBlock<MemModel, T>& grid,
-                                  const IdealGas<T>& gas_model,
-                                  const TransportProperties<T>& trans_prop) {
+void ViscousGradVxAccess<T, MemModel>::init(
+    const FlowStates<T, array_layout, host_mem_space>& fs, FiniteVolume<T, MemModel>& fv,
+    const GridBlock<MemModel, T>& grid, const IdealGas<T>& gas_model,
+    const TransportProperties<T>& trans_prop) {
     (void)gas_model;
     (void)grid;
     FlowStates<T> fs_dev = FlowStates<T>(fs.number_flow_states());
@@ -145,8 +145,8 @@ void ViscousGradVxAccess<T, MemModel>::init(const FlowStates<T, array_layout, ho
 template <typename T, class MemModel>
 Vector3<T> ViscousGradVxAccess<T, MemModel>::access(
     const FlowStates<T, array_layout, host_mem_space>& fs, FiniteVolume<T, MemModel>& fv,
-    const GridBlock<MemModel, T, host_exec_space, array_layout>& grid, const IdealGas<T>& gas_model,
-    const int i) {
+    const GridBlock<MemModel, T, host_exec_space, array_layout>& grid,
+    const IdealGas<T>& gas_model, const int i) {
     (void)gas_model;
     (void)grid;
     (void)fs;
@@ -162,10 +162,10 @@ template class ViscousGradVxAccess<Ibis::dual, SharedMem>;
 template class ViscousGradVxAccess<Ibis::dual, Mpi>;
 
 template <typename T, class MemModel>
-void ViscousGradVyAccess<T, MemModel>::init(const FlowStates<T, array_layout, host_mem_space>& fs,
-                                  FiniteVolume<T, MemModel>& fv, const GridBlock<MemModel, T>& grid,
-                                  const IdealGas<T>& gas_model,
-                                  const TransportProperties<T>& trans_prop) {
+void ViscousGradVyAccess<T, MemModel>::init(
+    const FlowStates<T, array_layout, host_mem_space>& fs, FiniteVolume<T, MemModel>& fv,
+    const GridBlock<MemModel, T>& grid, const IdealGas<T>& gas_model,
+    const TransportProperties<T>& trans_prop) {
     (void)gas_model;
     (void)grid;
     FlowStates<T> fs_dev = FlowStates<T>(fs.number_flow_states());
@@ -178,8 +178,8 @@ void ViscousGradVyAccess<T, MemModel>::init(const FlowStates<T, array_layout, ho
 template <typename T, class MemModel>
 Vector3<T> ViscousGradVyAccess<T, MemModel>::access(
     const FlowStates<T, array_layout, host_mem_space>& fs, FiniteVolume<T, MemModel>& fv,
-    const GridBlock<MemModel, T, host_exec_space, array_layout>& grid, const IdealGas<T>& gas_model,
-    const int i) {
+    const GridBlock<MemModel, T, host_exec_space, array_layout>& grid,
+    const IdealGas<T>& gas_model, const int i) {
     (void)gas_model;
     (void)fs;
     (void)fv;
@@ -195,10 +195,10 @@ template class ViscousGradVyAccess<Ibis::dual, SharedMem>;
 template class ViscousGradVyAccess<Ibis::dual, Mpi>;
 
 template <typename T, class MemModel>
-void ViscousGradVzAccess<T, MemModel>::init(const FlowStates<T, array_layout, host_mem_space>& fs,
-                                  FiniteVolume<T, MemModel>& fv, const GridBlock<MemModel, T>& grid,
-                                  const IdealGas<T>& gas_model,
-                                  const TransportProperties<T>& trans_prop) {
+void ViscousGradVzAccess<T, MemModel>::init(
+    const FlowStates<T, array_layout, host_mem_space>& fs, FiniteVolume<T, MemModel>& fv,
+    const GridBlock<MemModel, T>& grid, const IdealGas<T>& gas_model,
+    const TransportProperties<T>& trans_prop) {
     (void)gas_model;
     (void)grid;
     FlowStates<T> fs_dev = FlowStates<T>(fs.number_flow_states());
@@ -211,8 +211,8 @@ void ViscousGradVzAccess<T, MemModel>::init(const FlowStates<T, array_layout, ho
 template <typename T, class MemModel>
 Vector3<T> ViscousGradVzAccess<T, MemModel>::access(
     const FlowStates<T, array_layout, host_mem_space>& fs, FiniteVolume<T, MemModel>& fv,
-    const GridBlock<MemModel, T, host_exec_space, array_layout>& grid, const IdealGas<T>& gas_model,
-    const int i) {
+    const GridBlock<MemModel, T, host_exec_space, array_layout>& grid,
+    const IdealGas<T>& gas_model, const int i) {
     (void)gas_model;
     (void)fs;
     (void)grid;
@@ -244,8 +244,8 @@ void ConvectiveGradVxAccess<T, MemModel>::init(
 template <typename T, class MemModel>
 Vector3<T> ConvectiveGradVxAccess<T, MemModel>::access(
     const FlowStates<T, array_layout, host_mem_space>& fs, FiniteVolume<T, MemModel>& fv,
-    const GridBlock<MemModel, T, host_exec_space, array_layout>& grid, const IdealGas<T>& gas_model,
-    const int i) {
+    const GridBlock<MemModel, T, host_exec_space, array_layout>& grid,
+    const IdealGas<T>& gas_model, const int i) {
     (void)gas_model;
     (void)fs;
     (void)fv;
@@ -277,8 +277,8 @@ void ConvectiveGradVyAccess<T, MemModel>::init(
 template <typename T, class MemModel>
 Vector3<T> ConvectiveGradVyAccess<T, MemModel>::access(
     const FlowStates<T, array_layout, host_mem_space>& fs, FiniteVolume<T, MemModel>& fv,
-    const GridBlock<MemModel, T, host_exec_space, array_layout>& grid, const IdealGas<T>& gas_model,
-    const int i) {
+    const GridBlock<MemModel, T, host_exec_space, array_layout>& grid,
+    const IdealGas<T>& gas_model, const int i) {
     (void)gas_model;
     (void)grid;
     (void)fs;
@@ -310,8 +310,8 @@ void ConvectiveGradVzAccess<T, MemModel>::init(
 template <typename T, class MemModel>
 Vector3<T> ConvectiveGradVzAccess<T, MemModel>::access(
     const FlowStates<T, array_layout, host_mem_space>& fs, FiniteVolume<T, MemModel>& fv,
-    const GridBlock<MemModel, T, host_exec_space, array_layout>& grid, const IdealGas<T>& gas_model,
-    const int i) {
+    const GridBlock<MemModel, T, host_exec_space, array_layout>& grid,
+    const IdealGas<T>& gas_model, const int i) {
     (void)grid;
     (void)grid;
     (void)gas_model;
@@ -330,8 +330,8 @@ template class ConvectiveGradVzAccess<Ibis::dual, Mpi>;
 template <typename T, class MemModel>
 Vector3<T> CellCentreAccess<T, MemModel>::access(
     const FlowStates<T, array_layout, host_mem_space>& fs, FiniteVolume<T, MemModel>& fv,
-    const GridBlock<MemModel, T, host_exec_space, array_layout>& grid, const IdealGas<T>& gas_model,
-    const int i) {
+    const GridBlock<MemModel, T, host_exec_space, array_layout>& grid,
+    const IdealGas<T>& gas_model, const int i) {
     (void)gas_model;
     (void)grid;
     (void)fs;
@@ -347,14 +347,21 @@ template class CellCentreAccess<Ibis::dual, SharedMem>;
 template class CellCentreAccess<Ibis::dual, Mpi>;
 
 template <typename T, class MemModel>
-std::map<std::string, std::shared_ptr<ScalarAccessor<T, MemModel>>> get_scalar_accessors() {
+std::map<std::string, std::shared_ptr<ScalarAccessor<T, MemModel>>>
+get_scalar_accessors() {
     return {
-        {"pressure", std::shared_ptr<ScalarAccessor<T, MemModel>>(new PressureAccess<T, MemModel>())},
-        {"temperature", std::shared_ptr<ScalarAccessor<T, MemModel>>(new TemperatureAccess<T, MemModel>())},
-        {"density", std::shared_ptr<ScalarAccessor<T, MemModel>>(new DensityAccess<T, MemModel>())},
-        {"energy", std::shared_ptr<ScalarAccessor<T, MemModel>>(new InternalEnergyAccess<T, MemModel>())},
-        {"a", std::shared_ptr<ScalarAccessor<T, MemModel>>(new SpeedOfSoundAccess<T, MemModel>())},
-        {"Mach", std::shared_ptr<ScalarAccessor<T, MemModel>>(new MachNumberAccess<T, MemModel>())}};
+        {"pressure",
+         std::shared_ptr<ScalarAccessor<T, MemModel>>(new PressureAccess<T, MemModel>())},
+        {"temperature", std::shared_ptr<ScalarAccessor<T, MemModel>>(
+                            new TemperatureAccess<T, MemModel>())},
+        {"density",
+         std::shared_ptr<ScalarAccessor<T, MemModel>>(new DensityAccess<T, MemModel>())},
+        {"energy", std::shared_ptr<ScalarAccessor<T, MemModel>>(
+                       new InternalEnergyAccess<T, MemModel>())},
+        {"a", std::shared_ptr<ScalarAccessor<T, MemModel>>(
+                  new SpeedOfSoundAccess<T, MemModel>())},
+        {"Mach", std::shared_ptr<ScalarAccessor<T, MemModel>>(
+                     new MachNumberAccess<T, MemModel>())}};
 }
 template std::map<std::string, std::shared_ptr<ScalarAccessor<Ibis::real, SharedMem>>>
 get_scalar_accessors();
@@ -366,8 +373,10 @@ template std::map<std::string, std::shared_ptr<ScalarAccessor<Ibis::dual, Mpi>>>
 get_scalar_accessors();
 
 template <typename T, class MemModel>
-std::map<std::string, std::shared_ptr<VectorAccessor<T, MemModel>>> get_vector_accessors() {
-    return {{"velocity", std::shared_ptr<VectorAccessor<T, MemModel>>(new VelocityAccess<T, MemModel>())}};
+std::map<std::string, std::shared_ptr<VectorAccessor<T, MemModel>>>
+get_vector_accessors() {
+    return {{"velocity", std::shared_ptr<VectorAccessor<T, MemModel>>(
+                             new VelocityAccess<T, MemModel>())}};
 }
 
 template std::map<std::string, std::shared_ptr<VectorAccessor<Ibis::real, SharedMem>>>

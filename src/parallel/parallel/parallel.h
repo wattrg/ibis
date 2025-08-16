@@ -20,15 +20,13 @@ inline void parallel_for(const std::string& str, const size_t work_count,
 }
 
 template <class FunctorType, class PolicyType>
-inline void parallel_for(const std::string& str, PolicyType policy,
-                         FunctorType functor) {
+inline void parallel_for(const std::string& str, PolicyType policy, FunctorType functor) {
     Kokkos::parallel_for(str, policy, functor);
 }
 
 template <class ReducerType, class MemModel, class FunctorType>
-inline auto parallel_reduce(const std::string& str,
-                            const size_t work_count, FunctorType functor)
-    -> typename ReducerType::scalar {
+inline auto parallel_reduce(const std::string& str, const size_t work_count,
+                            FunctorType functor) -> typename ReducerType::scalar {
     using reducer_type = typename ReducerMap<ReducerType, MemModel>::reducer_type;
     reducer_type reducer;
     return reducer.execute(str, work_count, functor);
@@ -36,8 +34,7 @@ inline auto parallel_reduce(const std::string& str,
 
 template <class ReducerType, class MemModel, class FunctorType, class PolicyType>
 inline auto parallel_reduce(const std::string& str, PolicyType policy,
-                            FunctorType functor) ->
-    typename ReducerType::scalar_type {
+                            FunctorType functor) -> typename ReducerType::scalar_type {
     using reducer_type = typename ReducerMap<ReducerType, MemModel>::reducer_type;
     reducer_type reducer;
     return reducer.execute(str, policy, functor);
@@ -53,15 +50,29 @@ private:
 
 public:
     SymmetricComm() {}
-    SymmetricComm(int other_rank, size_t buf_size) {(void)other_rank; (void)buf_size; throw std::runtime_error("Not implemented");}
-    SymmetricComm(int other_rank) {(void)other_rank; throw std::runtime_error("Not implemented");}
-    SymmetricComm(const SymmetricComm& other) {(void)other; throw std::runtime_error("not implemented");}
-    void expect_receive() {throw std::runtime_error("Not implemented");}
-    void send() {throw std::runtime_error("Not implemented");}
-    int receive() {throw std::runtime_error("Not implemented");}
-    void resize_buffers(size_t new_size) {throw std::runtime_error("Not implemented");}
-    const Kokkos::View<T*, MemSpace>& send_buf() const {throw std::runtime_error("Not implemented");}
-    const Kokkos::View<T*, MemSpace>& recv_buf() const {throw std::runtime_error("Not implemented");}
+    SymmetricComm(int other_rank, size_t buf_size) {
+        (void)other_rank;
+        (void)buf_size;
+        throw std::runtime_error("Not implemented");
+    }
+    SymmetricComm(int other_rank) {
+        (void)other_rank;
+        throw std::runtime_error("Not implemented");
+    }
+    SymmetricComm(const SymmetricComm& other) {
+        (void)other;
+        throw std::runtime_error("not implemented");
+    }
+    void expect_receive() { throw std::runtime_error("Not implemented"); }
+    void send() { throw std::runtime_error("Not implemented"); }
+    int receive() { throw std::runtime_error("Not implemented"); }
+    void resize_buffers(size_t new_size) { throw std::runtime_error("Not implemented"); }
+    const Kokkos::View<T*, MemSpace>& send_buf() const {
+        throw std::runtime_error("Not implemented");
+    }
+    const Kokkos::View<T*, MemSpace>& recv_buf() const {
+        throw std::runtime_error("Not implemented");
+    }
 };
 
 }  // namespace Ibis

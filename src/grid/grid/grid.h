@@ -11,6 +11,7 @@
 
 // #include <limits>
 #include <nlohmann/json.hpp>
+
 #include "parallel/parallel.h"
 
 using json = nlohmann::json;
@@ -427,22 +428,22 @@ public:
             external_cells[other_block].push_back(cell_mapping.other_cell);
             ghost_cells[other_block].push_back(ghost_cell_id);
         }
-        
+
         // for (size_t other_block : local_cells) {
         for (auto& [other_block, cells] : local_cells) {
-            internal_boundary_cells_.insert({other_block, 
-                Field<size_t, array_layout, memory_space>(
-                    "internal_boundary_cells", local_cells[other_block])});
+            internal_boundary_cells_.insert(
+                {other_block, Field<size_t, array_layout, memory_space>(
+                                  "internal_boundary_cells", local_cells[other_block])});
             internal_boundary_external_cells_.push_back(
                 Field<size_t, array_layout, memory_space>(
                     "internal_boundary_external_cells", external_cells[other_block]));
             internal_boundary_ghost_cells_.push_back(
-                Field<size_t, array_layout, memory_space>(
-                    "internal_boundary_ghost_cells", ghost_cells[other_block]));
-            position_comm_.push_back(Ibis::SymmetricComm<MemModel, T>(other_block,
-                                                     local_cells.size() * dim_));
-            volume_comm_.push_back(Ibis::SymmetricComm<MemModel, T>(other_block,
-                local_cells.size()));
+                Field<size_t, array_layout, memory_space>("internal_boundary_ghost_cells",
+                                                          ghost_cells[other_block]));
+            position_comm_.push_back(
+                Ibis::SymmetricComm<MemModel, T>(other_block, local_cells.size() * dim_));
+            volume_comm_.push_back(
+                Ibis::SymmetricComm<MemModel, T>(other_block, local_cells.size()));
         }
     }
 
@@ -675,9 +676,11 @@ public:
     // Interblock communication
     std::vector<Ibis::SymmetricComm<MemModel, T>> position_comm_;
     std::vector<Ibis::SymmetricComm<MemModel, T>> volume_comm_;
-    std::unordered_map<size_t, Field<size_t, array_layout, memory_space>> internal_boundary_cells_;
+    std::unordered_map<size_t, Field<size_t, array_layout, memory_space>>
+        internal_boundary_cells_;
     std::vector<Field<size_t, array_layout, memory_space>> internal_boundary_ghost_cells_;
-    std::vector<Field<size_t, array_layout, memory_space>> internal_boundary_external_cells_;
+    std::vector<Field<size_t, array_layout, memory_space>>
+        internal_boundary_external_cells_;
     // std::vector<Field<size_t, array_layout, memory_space>> internal_boundary_faces_;
 
     // this contains all marked interfaces. This includes faces on the boundary,

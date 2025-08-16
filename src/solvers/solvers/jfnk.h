@@ -1,7 +1,6 @@
 #ifndef JFNK_H
 #define JFNK_H
 
-#include <util/conserved_quantities.h>
 #include <gas/flow_state.h>
 #include <gas/transport_properties.h>
 #include <io/io.h>
@@ -9,6 +8,7 @@
 #include <linear_algebra/linear_system.h>
 #include <solvers/cfl.h>
 #include <solvers/transient_linear_system.h>
+#include <util/conserved_quantities.h>
 #include <util/numeric_types.h>
 
 #include <memory>

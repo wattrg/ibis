@@ -52,11 +52,10 @@ FiniteVolume<T, MemModel>::FiniteVolume(GridBlock<MemModel, T>& grid, json confi
 }
 
 template <typename T, class MemModel>
-size_t FiniteVolume<T, MemModel>::compute_dudt(FlowStates<T>& flow_state, Vector3s<T> vertex_vel,
-                                     const ConservedQuantities<T>& cq, GridBlock<MemModel, T>& grid,
-                                     ConservedQuantities<T>& dudt, IdealGas<T>& gas_model,
-                                     TransportProperties<T>& trans_prop,
-                                     bool allow_reconstruction) {
+size_t FiniteVolume<T, MemModel>::compute_dudt(
+    FlowStates<T>& flow_state, Vector3s<T> vertex_vel, const ConservedQuantities<T>& cq,
+    GridBlock<MemModel, T>& grid, ConservedQuantities<T>& dudt, IdealGas<T>& gas_model,
+    TransportProperties<T>& trans_prop, bool allow_reconstruction) {
     apply_pre_reconstruction_bc(flow_state, grid, gas_model, trans_prop);
     if (grid.moving()) {
         grid.compute_grid_motion(flow_state, vertex_vel);
@@ -83,10 +82,12 @@ size_t FiniteVolume<T, MemModel>::compute_dudt(FlowStates<T>& flow_state, Vector
 }
 
 template <typename T, class MemModel>
-size_t FiniteVolume<T, MemModel>::compute_dudt(FlowStates<T>& flow_state, GridBlock<MemModel, T>& grid,
-                                     ConservedQuantities<T>& dudt, IdealGas<T>& gas_model,
-                                     TransportProperties<T>& trans_prop,
-                                     bool allow_reconstruction) {
+size_t FiniteVolume<T, MemModel>::compute_dudt(FlowStates<T>& flow_state,
+                                               GridBlock<MemModel, T>& grid,
+                                               ConservedQuantities<T>& dudt,
+                                               IdealGas<T>& gas_model,
+                                               TransportProperties<T>& trans_prop,
+                                               bool allow_reconstruction) {
     Vector3s<T> vertex_vel_temp;
     const ConservedQuantities<T> cq_temp;
     return compute_dudt(flow_state, vertex_vel_temp, cq_temp, grid, dudt, gas_model,
@@ -94,9 +95,9 @@ size_t FiniteVolume<T, MemModel>::compute_dudt(FlowStates<T>& flow_state, GridBl
 }
 
 template <typename T, class MemModel>
-void FiniteVolume<T, MemModel>::apply_geometric_conservation_law(const ConservedQuantities<T>& cq,
-                                                       const GridBlock<MemModel, T>& grid,
-                                                       ConservedQuantities<T>& dudt) {
+void FiniteVolume<T, MemModel>::apply_geometric_conservation_law(
+    const ConservedQuantities<T>& cq, const GridBlock<MemModel, T>& grid,
+    ConservedQuantities<T>& dudt) {
     size_t num_cells = grid.num_cells();
     Cells<T> cells = grid.cells();
     CellFaces<T> cell_faces = grid.cells().faces();
@@ -127,8 +128,9 @@ void FiniteVolume<T, MemModel>::apply_geometric_conservation_law(const Conserved
 
 template <typename T, class MemModel>
 Ibis::real FiniteVolume<T, MemModel>::estimate_dt(const FlowStates<T>& flow_state,
-                                        GridBlock<MemModel, T>& grid, IdealGas<T>& gas_model,
-                                        TransportProperties<T>& trans_prop) {
+                                                  GridBlock<MemModel, T>& grid,
+                                                  IdealGas<T>& gas_model,
+                                                  TransportProperties<T>& trans_prop) {
     (void)trans_prop;
     size_t num_cells = grid.num_cells();
     CellFaces<T> cell_interfaces = grid.cells().faces();
@@ -190,8 +192,8 @@ void FiniteVolume<T, MemModel>::apply_pre_reconstruction_bc(
 
 template <typename T, class MemModel>
 void FiniteVolume<T, MemModel>::apply_post_convective_flux_bc(
-    const FlowStates<T>& fs, const GridBlock<MemModel, T>& grid, const IdealGas<T>& gas_model,
-    const TransportProperties<T>& trans_prop) {
+    const FlowStates<T>& fs, const GridBlock<MemModel, T>& grid,
+    const IdealGas<T>& gas_model, const TransportProperties<T>& trans_prop) {
     for (size_t i = 0; i < bcs_.size(); i++) {
         std::shared_ptr<BoundaryCondition<T, MemModel>> bc = bcs_[i];
         Field<size_t> bc_faces = bc_interfaces_[i];
@@ -213,7 +215,7 @@ void FiniteVolume<T, MemModel>::apply_pre_viscous_grad_bc(
 
 template <typename T, class MemModel>
 void FiniteVolume<T, MemModel>::flux_surface_integral(const GridBlock<MemModel, T>& grid,
-                                            ConservedQuantities<T>& dudt) {
+                                                      ConservedQuantities<T>& dudt) {
     Cells<T> cells = grid.cells();
     CellFaces<T> cell_faces = grid.cells().faces();
     Interfaces<T> faces = grid.interfaces();
@@ -249,7 +251,8 @@ void FiniteVolume<T, MemModel>::flux_surface_integral(const GridBlock<MemModel, 
 }
 
 template <typename T, class MemModel>
-size_t FiniteVolume<T, MemModel>::count_bad_cells(const FlowStates<T>& fs, const size_t num_cells) {
+size_t FiniteVolume<T, MemModel>::count_bad_cells(const FlowStates<T>& fs,
+                                                  const size_t num_cells) {
     size_t n_bad_cells = 0;
     Kokkos::parallel_reduce(
         "FiniteVolume::count_bad_cells", num_cells,
@@ -264,10 +267,9 @@ size_t FiniteVolume<T, MemModel>::count_bad_cells(const FlowStates<T>& fs, const
 }
 
 template <typename T, class MemModel>
-void FiniteVolume<T, MemModel>::compute_viscous_gradient(FlowStates<T>& fs,
-                                               const GridBlock<MemModel, T>& grid,
-                                               const IdealGas<T>& gas_model,
-                                               const TransportProperties<T>& trans_prop) {
+void FiniteVolume<T, MemModel>::compute_viscous_gradient(
+    FlowStates<T>& fs, const GridBlock<MemModel, T>& grid, const IdealGas<T>& gas_model,
+    const TransportProperties<T>& trans_prop) {
     apply_pre_reconstruction_bc(fs, grid, gas_model, trans_prop);
     apply_pre_viscous_grad_bc(fs, grid, gas_model, trans_prop);
     viscous_flux_.compute_viscous_gradient(fs, grid, cell_grad_, grid.grad_calc());

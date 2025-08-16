@@ -101,11 +101,12 @@ std::vector<GridIO> partition_metis(GridIO& monolithic_grid, size_t n_partitions
                 }
                 if (common_face_id == std::numeric_limits<size_t>::max()) {
                     spdlog::error("Unable to find common interface for Mapped cells");
-                    throw std::runtime_error("Unable to find common interface for Mapped cells");
+                    throw std::runtime_error(
+                        "Unable to find common interface for Mapped cells");
                 }
-                
-                cell_mapping[this_cell_partition].push_back(
-                    CellMapping(local_cell_id, ngbr_partition, other_cell_id, common_face_id));
+
+                cell_mapping[this_cell_partition].push_back(CellMapping(
+                    local_cell_id, ngbr_partition, other_cell_id, common_face_id));
             }
         }
     }

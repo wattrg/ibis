@@ -2,11 +2,11 @@
 #include <finite_volume/primative_conserved_conversion.h>
 #include <gas/flow_state.h>
 #include <gas/transport_properties.h>
+#include <parallel/parallel.h>
 #include <simulation/simulation.h>
 #include <solvers/cfl.h>
 #include <solvers/steady_state.h>
 #include <solvers/transient_linear_system.h>
-#include <parallel/parallel.h>
 
 #include "finite_volume/grid_motion_driver.h"
 
@@ -47,13 +47,13 @@ SteadyStateLinearisation<MemModel>::SteadyStateLinearisation(
 
 template <class MemModel>
 std::unique_ptr<LinearSystem> SteadyStateLinearisation<MemModel>::preconditioner() {
-    return std::unique_ptr<LinearSystem>(
-        new SteadyStateLinearisation<MemModel>(sim_, residuals_, cq_, fs_, vertex_vel_, false));
+    return std::unique_ptr<LinearSystem>(new SteadyStateLinearisation<MemModel>(
+        sim_, residuals_, cq_, fs_, vertex_vel_, false));
 }
 
 template <class MemModel>
-void SteadyStateLinearisation<MemModel>::matrix_vector_product(Ibis::Vector<Ibis::real>& vec,
-                                                     Ibis::Vector<Ibis::real>& result) {
+void SteadyStateLinearisation<MemModel>::matrix_vector_product(
+    Ibis::Vector<Ibis::real>& vec, Ibis::Vector<Ibis::real>& result) {
     // set the dual components of the conserved quantities
     size_t n_cons = n_cons_;
     auto residuals = *residuals_;
@@ -183,11 +183,12 @@ template class SteadyStateLinearisation<SharedMem>;
 template class SteadyStateLinearisation<Mpi>;
 
 template <class MemModel>
-SteadyState<MemModel>::SteadyState(json config, GridBlock<MemModel, Ibis::dual> grid, std::string grid_dir,
-                         std::string flow_dir)
+SteadyState<MemModel>::SteadyState(json config, GridBlock<MemModel, Ibis::dual> grid,
+                                   std::string grid_dir, std::string flow_dir)
     : Solver(grid_dir, flow_dir) {
     json solver_config = config.at("solver");
-    sim_ = std::shared_ptr<Sim<Ibis::dual, MemModel>>{new Sim<Ibis::dual, MemModel>(grid, config)};
+    sim_ = std::shared_ptr<Sim<Ibis::dual, MemModel>>{
+        new Sim<Ibis::dual, MemModel>(grid, config)};
 
     size_t n_total_cells = sim_->grid.num_total_cells();
     // size_t n_cells = sim_->grid.num_cells();
@@ -216,7 +217,8 @@ SteadyState<MemModel>::SteadyState(json config, GridBlock<MemModel, Ibis::dual> 
     auto cfl = make_cfl_schedule(solver_config.at("cfl"));
     std::unique_ptr<PseudoTransientLinearSystem> system =
         std::unique_ptr<PseudoTransientLinearSystem>(
-            new SteadyStateLinearisation<MemModel>(sim_, residuals_, cq_, fs_, vertex_vel_));
+            new SteadyStateLinearisation<MemModel>(sim_, residuals_, cq_, fs_,
+                                                   vertex_vel_));
     jfnk_ = Jfnk<MemModel>(std::move(system), std::move(cfl), residuals_, solver_config);
 
     // configuration
@@ -265,7 +267,9 @@ int SteadyState<MemModel>::initialise() {
 }
 
 template <class MemModel>
-int SteadyState<MemModel>::finalise() { return 0; }
+int SteadyState<MemModel>::finalise() {
+    return 0;
+}
 
 template <class MemModel>
 int SteadyState<MemModel>::take_step(size_t step) {

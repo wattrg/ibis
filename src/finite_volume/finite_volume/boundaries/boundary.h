@@ -138,8 +138,8 @@ public:
     virtual ~FluxAction() {}
 
     virtual void apply(ConservedQuantities<T>& flux, const FlowStates<T>& fs,
-                       const GridBlock<MemModel, T>& grid, const Field<size_t>& boundary_faces,
-                       const IdealGas<T>& gas_model,
+                       const GridBlock<MemModel, T>& grid,
+                       const Field<size_t>& boundary_faces, const IdealGas<T>& gas_model,
                        const TransportProperties<T>& trans_prop) = 0;
 };
 

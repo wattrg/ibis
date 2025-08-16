@@ -58,7 +58,6 @@ private:
     FaceOrder face_order_;
 };
 
-
 // Efficient look-up of interface ID
 // from the index of the vertices
 // forming the interface
@@ -90,17 +89,23 @@ struct CellMapping {
     size_t local_face = std::numeric_limits<size_t>::max();
 
     CellMapping(size_t local_cell_, size_t other_block_, size_t other_cell_, size_t face_)
-        : local_cell(local_cell_), other_block(other_block_),
-          other_cell(other_cell_), global_face(face_) {}
+        : local_cell(local_cell_),
+          other_block(other_block_),
+          other_cell(other_cell_),
+          global_face(face_) {}
 
-    CellMapping(size_t local_cell_, size_t local_face_, size_t global_face_, size_t other_block_, size_t other_cell_)
-        : local_cell(local_cell_), other_block(other_block_),
-          other_cell(other_cell_), global_face(global_face_), local_face(local_face_) {}
+    CellMapping(size_t local_cell_, size_t local_face_, size_t global_face_,
+                size_t other_block_, size_t other_cell_)
+        : local_cell(local_cell_),
+          other_block(other_block_),
+          other_cell(other_cell_),
+          global_face(global_face_),
+          local_face(local_face_) {}
 
     bool operator==(const CellMapping &other) const {
         return (local_cell == other.local_cell) && (local_face == other.local_face) &&
                (other_block == other.other_block) && (other_cell == other.other_cell) &&
-                (global_face == other.global_face) && (local_face == other.local_face);
+               (global_face == other.global_face) && (local_face == other.local_face);
     }
 
     friend std::ostream &operator<<(std::ostream &file, const CellMapping &map);
@@ -131,8 +136,8 @@ public:
     std::vector<Vertex<Ibis::real>> vertices() const { return vertices_; }
 
     std::vector<ElemIO> faces() const { return faces_; }
-    const InterfaceLookup& interface_lookup() const { return interface_lookup_; }
-    
+    const InterfaceLookup &interface_lookup() const { return interface_lookup_; }
+
     std::vector<ElemIO> cells() const { return cells_; }
 
     std::vector<std::vector<size_t>> cell_face_ids() const { return cell_faces_; }
@@ -158,15 +163,14 @@ private:
     std::vector<ElemIO> cells_{};
     std::vector<ElemIO> faces_{};
 
-    std::vector<std::vector<size_t>> cell_faces_; // the ID of the faces of each cell
+    std::vector<std::vector<size_t>> cell_faces_;  // the ID of the faces of each cell
     InterfaceLookup interface_lookup_;
-    
+
     std::unordered_map<std::string, std::vector<ElemIO>> markers_;
     size_t dim_;
     size_t id_ = 0;
 
     void construct_faces_();
-    
 
     // for partitioned grids, we need to know which cells connect
     // to cells in a different block.
