@@ -10,6 +10,7 @@
 #include <solvers/cfl.h>
 #include <solvers/solver.h>
 #include <util/numeric_types.h>
+#include <parallel/parallel.h>
 
 #include <memory>
 
@@ -38,9 +39,11 @@ private:
     size_t num_stages_;
 };
 
+
+template <class MemModel>
 class RungeKutta : public Solver {
 public:
-    RungeKutta(json config, GridBlock<Ibis::real> grid, std::string grid_dir,
+    RungeKutta(json config, GridBlock<MemModel, Ibis::real> grid, std::string grid_dir,
                std::string flow_dir);
 
     ~RungeKutta() {}
@@ -70,7 +73,7 @@ private:
 
 private:
     // input/output
-    FVIO<Ibis::real> io_;
+    FVIO<Ibis::real, MemModel> io_;
 
 private:
     // implementation
@@ -118,8 +121,8 @@ private:
 
 private:
     // spatial discretisation
-    GridBlock<Ibis::real> grid_;
-    FiniteVolume<Ibis::real> fv_;
+    GridBlock<MemModel, Ibis::real> grid_;
+    FiniteVolume<Ibis::real, MemModel> fv_;
 
 private:
     IdealGas<Ibis::real> gas_model_;

@@ -42,18 +42,18 @@ int run(int argc, char* argv[]) {
 
     std::string grid_dir = directories.at("grid_dir");
     std::string flow_dir = directories.at("flow_dir");
-    Ibis::initialise<SharedMem>(argc, argv);
+    Ibis::initialise<MemModel>(argc, argv);
     int result;
 
     {
         // we need to make the solver (and thus allocate all the kokkos memory)
         // inside a block, so that the solver (and thus all kokkos managed
         // memory) is removed before Kokkos::finalise is called
-        std::unique_ptr<Solver> solver = make_solver(config, grid_dir, flow_dir);
+        std::unique_ptr<Solver> solver = make_solver<MemModel>(config, grid_dir, flow_dir);
         result = solver->solve();
     }
 
-    Ibis::finalise<SharedMem>();
+    Ibis::finalise<MemModel>();
 
     if (result != 0) {
         spdlog::error("run failed");

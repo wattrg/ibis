@@ -13,10 +13,11 @@
 
 #include "finite_volume/grid_motion_driver.h"
 
+template <class MemModel>
 class SteadyStateLinearisation : public PseudoTransientLinearSystem {
 public:
     // Construction / destruction
-    SteadyStateLinearisation(std::shared_ptr<Sim<Ibis::dual>> sim,
+    SteadyStateLinearisation(std::shared_ptr<Sim<Ibis::dual, MemModel>> sim,
                              std::shared_ptr<ConservedQuantities<Ibis::dual>> residuals,
                              std::shared_ptr<ConservedQuantities<Ibis::dual>> cq,
                              std::shared_ptr<FlowStates<Ibis::dual>> fs,
@@ -77,12 +78,14 @@ private:
     Vector3s<Ibis::dual> vertex_pos_tmp_;     // storage for perturbed vertex pos
 
     // the simulation
-    std::shared_ptr<Sim<Ibis::dual>> sim_;
+    std::shared_ptr<Sim<Ibis::dual, MemModel>> sim_;
 };
 
+
+template <class MemModel>
 class SteadyState : public Solver {
 public:
-    SteadyState(json config, GridBlock<Ibis::dual> grid, std::string grid_dir,
+    SteadyState(json config, GridBlock<MemModel, Ibis::dual> grid, std::string grid_dir,
                 std::string flow_dir);
 
     ~SteadyState() {}
@@ -91,7 +94,7 @@ public:
 
 private:
     // The Jfnk solver
-    Jfnk jfnk_;
+    Jfnk<MemModel> jfnk_;
 
     // configuration
     unsigned int print_frequency_;
@@ -104,7 +107,7 @@ private:
     // Ibis::real dt_star_;
 
     // input/output
-    FVIO<Ibis::dual> io_;
+    FVIO<Ibis::dual, MemModel> io_;
 
     // implementation
     int initialise();
@@ -134,7 +137,7 @@ private:
     std::shared_ptr<Vector3s<Ibis::dual>> vertex_vel_;
 
     // the core simulation
-    std::shared_ptr<Sim<Ibis::dual>> sim_;
+    std::shared_ptr<Sim<Ibis::dual, MemModel>> sim_;
 };
 
 #endif

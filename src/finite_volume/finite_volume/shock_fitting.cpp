@@ -64,7 +64,9 @@ void ShockFitting<T, MemModel>::compute_vertex_velocities(const FlowStates<T>& f
     interp_.apply(grid, vertex_vel);
 }
 template class ShockFitting<Ibis::real, SharedMem>;
+template class ShockFitting<Ibis::real, Mpi>;
 template class ShockFitting<Ibis::dual, SharedMem>;
+template class ShockFitting<Ibis::dual, Mpi>;
 
 template <typename T, class MemModel>
 ShockFittingBC<T, MemModel>::ShockFittingBC(const GridBlock<MemModel, T>& grid, std::string marker,
@@ -142,7 +144,9 @@ void FixedVelocity<T, MemModel>::apply(const FlowStates<T>& fs, const GridBlock<
         });
 }
 template class FixedVelocity<Ibis::real, SharedMem>;
+template class FixedVelocity<Ibis::real, Mpi>;
 template class FixedVelocity<Ibis::dual, SharedMem>;
+template class FixedVelocity<Ibis::dual, Mpi>;
 
 template <typename T, class MemModel>
 WaveSpeed<T, MemModel>::WaveSpeed(const GridBlock<MemModel, T>& grid, std::string marker, json config) {
@@ -365,7 +369,9 @@ void WaveSpeed<T, MemModel>::apply(const FlowStates<T>& fs, const GridBlock<MemM
     }
 }
 template class WaveSpeed<Ibis::real, SharedMem>;
+template class WaveSpeed<Ibis::real, Mpi>;
 template class WaveSpeed<Ibis::dual, SharedMem>;
+template class WaveSpeed<Ibis::dual, Mpi>;
 
 template <typename T, class MemModel>
 ConstrainDirection<T, MemModel>::ConstrainDirection(json config) {
@@ -395,7 +401,9 @@ void ConstrainDirection<T, MemModel>::apply(const GridBlock<MemModel, T>& grid, 
         });
 }
 template class ConstrainDirection<Ibis::real, SharedMem>;
+template class ConstrainDirection<Ibis::real, Mpi>;
 template class ConstrainDirection<Ibis::dual, SharedMem>;
+template class ConstrainDirection<Ibis::dual, Mpi>;
 
 template <typename T, class MemModel>
 RadialConstraint<T, MemModel>::RadialConstraint(json config) {
@@ -432,7 +440,9 @@ void RadialConstraint<T, MemModel>::apply(const GridBlock<MemModel, T>& grid, Ve
         });
 }
 template class RadialConstraint<Ibis::real, SharedMem>;
+template class RadialConstraint<Ibis::real, Mpi>;
 template class RadialConstraint<Ibis::dual, SharedMem>;
+template class RadialConstraint<Ibis::dual, Mpi>;
 
 template <typename T, class MemModel>
 ShockFittingInterpolationAction<T, MemModel>::ShockFittingInterpolationAction(
@@ -513,7 +523,9 @@ void ShockFittingInterpolationAction<T, MemModel>::apply(const GridBlock<MemMode
 }
 
 template class ShockFittingInterpolationAction<Ibis::real, SharedMem>;
+template class ShockFittingInterpolationAction<Ibis::real, Mpi>;
 template class ShockFittingInterpolationAction<Ibis::dual, SharedMem>;
+template class ShockFittingInterpolationAction<Ibis::dual, Mpi>;
 
 template <typename T, class MemModel>
 std::shared_ptr<ShockFittingDirectVelocityAction<T, MemModel>> make_direct_velocity_action(
@@ -532,8 +544,13 @@ std::shared_ptr<ShockFittingDirectVelocityAction<T, MemModel>> make_direct_veloc
 }
 template std::shared_ptr<ShockFittingDirectVelocityAction<Ibis::real, SharedMem>>
 make_direct_velocity_action(const GridBlock<SharedMem, Ibis::real>&, std::string, json);
+template std::shared_ptr<ShockFittingDirectVelocityAction<Ibis::real, Mpi>>
+make_direct_velocity_action(const GridBlock<Mpi, Ibis::real>&, std::string, json);
+
 template std::shared_ptr<ShockFittingDirectVelocityAction<Ibis::dual, SharedMem>>
 make_direct_velocity_action(const GridBlock<SharedMem, Ibis::dual>&, std::string, json);
+template std::shared_ptr<ShockFittingDirectVelocityAction<Ibis::dual, Mpi>>
+make_direct_velocity_action(const GridBlock<Mpi, Ibis::dual>&, std::string, json);
 
 template <typename T, class MemModel>
 std::shared_ptr<Constraint<T, MemModel>> make_constraint(json config) {
@@ -549,5 +566,8 @@ std::shared_ptr<Constraint<T, MemModel>> make_constraint(json config) {
         throw new std::runtime_error("Unkown grid motion constraint");
     }
 }
+
 template std::shared_ptr<Constraint<Ibis::real, SharedMem>> make_constraint(json);
+template std::shared_ptr<Constraint<Ibis::real, Mpi>> make_constraint(json);
 template std::shared_ptr<Constraint<Ibis::dual, SharedMem>> make_constraint(json);
+template std::shared_ptr<Constraint<Ibis::dual, Mpi>> make_constraint(json);

@@ -36,13 +36,13 @@ std::string pad_time_index(int time_idx, unsigned long len) {
     return padded_str + time_index;
 }
 
-template <typename T>
-std::unique_ptr<FVInput<T>> make_fv_input(FlowFormat format) {
+template <typename T, class MemModel>
+std::unique_ptr<FVInput<T, MemModel>> make_fv_input(FlowFormat format) {
     switch (format) {
         case FlowFormat::NativeText:
-            return std::unique_ptr<FVInput<T>>(new NativeTextInput<T>());
+            return std::unique_ptr<FVInput<T, MemModel>>(new NativeTextInput<T, MemModel>());
         case FlowFormat::NativeBinary:
-            return std::unique_ptr<FVInput<T>>(new NativeBinaryInput<T>());
+            return std::unique_ptr<FVInput<T, MemModel>>(new NativeBinaryInput<T, MemModel>());
         case FlowFormat::VtkText:
         case FlowFormat::VtkBinary:
             spdlog::error("Reading VTK files not supported");
@@ -52,27 +52,27 @@ std::unique_ptr<FVInput<T>> make_fv_input(FlowFormat format) {
     }
 }
 
-template <typename T>
-std::unique_ptr<FVOutput<T>> make_fv_output(FlowFormat format) {
+template <typename T, class MemModel>
+std::unique_ptr<FVOutput<T, MemModel>> make_fv_output(FlowFormat format) {
     switch (format) {
         case FlowFormat::NativeText:
-            return std::unique_ptr<FVOutput<T>>(new NativeTextOutput<T>());
+            return std::unique_ptr<FVOutput<T, MemModel>>(new NativeTextOutput<T, MemModel>());
         case FlowFormat::NativeBinary:
-            return std::unique_ptr<FVOutput<T>>(new NativeBinaryOutput<T>());
+            return std::unique_ptr<FVOutput<T, MemModel>>(new NativeBinaryOutput<T, MemModel>());
         case FlowFormat::VtkText:
-            return std::unique_ptr<FVOutput<T>>(new VtkTextOutput<T>());
+            return std::unique_ptr<FVOutput<T, MemModel>>(new VtkTextOutput<T, MemModel>());
         case FlowFormat::VtkBinary:
-            return std::unique_ptr<FVOutput<T>>(new VtkBinaryOutput<T>());
+            return std::unique_ptr<FVOutput<T, MemModel>>(new VtkBinaryOutput<T, MemModel>());
         default:
             throw std::runtime_error("Unreachable");
     }
 }
 
-template <typename T>
-FVIO<T>::FVIO(FlowFormat input_format, FlowFormat output_format, bool moving_grid,
+template <typename T, class MemModel>
+FVIO<T, MemModel>::FVIO(FlowFormat input_format, FlowFormat output_format, bool moving_grid,
               int time_index) {
-    input_ = make_fv_input<T>(input_format);
-    output_ = make_fv_output<T>(output_format);
+    input_ = make_fv_input<T, MemModel>(input_format);
+    output_ = make_fv_output<T, MemModel>(output_format);
     moving_grid_ = moving_grid;
     time_index_ = time_index;
     input_dir_ = "io/flow";
@@ -88,14 +88,14 @@ FVIO<T>::FVIO(FlowFormat input_format, FlowFormat output_format, bool moving_gri
     }
 }
 
-template <typename T>
-FVIO<T>::FVIO() : FVIO(FlowFormat::NativeBinary, FlowFormat::NativeBinary, false, 0) {}
+template <typename T, class MemModel>
+FVIO<T, MemModel>::FVIO() : FVIO(FlowFormat::NativeBinary, FlowFormat::NativeBinary, false, 0) {}
 
-template <typename T>
-FVIO<T>::FVIO(json config, int time_index) {
+template <typename T, class MemModel>
+FVIO<T, MemModel>::FVIO(json config, int time_index) {
     FlowFormat format = string_to_flow_format(config.at("io").at("flow_format"));
-    input_ = make_fv_input<T>(format);
-    output_ = make_fv_output<T>(format);
+    input_ = make_fv_input<T, MemModel>(format);
+    output_ = make_fv_output<T, MemModel>(format);
     moving_grid_ = config.at("grid").at("motion").at("enabled");
     time_index_ = time_index;
 
@@ -103,8 +103,9 @@ FVIO<T>::FVIO(json config, int time_index) {
     output_dir_ = "io/flow";
 }
 
-template <typename T>
-int FVIO<T>::write(const FlowStates<T>& fs, FiniteVolume<T>& fv, const GridBlock<T>& grid,
+template <typename T, class MemModel>
+int FVIO<T, MemModel>::write(const FlowStates<T>& fs, FiniteVolume<T, MemModel>& fv,
+                             const GridBlock<MemModel ,T>& grid,
                    const IdealGas<T>& gas_model, const TransportProperties<T>& trans_prop,
                    Ibis::real time) {
     // get a copy of the flow states on the CPU
@@ -128,19 +129,21 @@ int FVIO<T>::write(const FlowStates<T>& fs, FiniteVolume<T>& fv, const GridBlock
     return result;
 }
 
-template <typename T>
-int FVIO<T>::read(FlowStates<T>& fs, GridBlock<T>& grid, const IdealGas<T>& gas_model,
-                  const TransportProperties<T>& trans_prop, json& config, json& meta_data,
-                  int time_idx) {
+template <typename T, class MemModel>
+int FVIO<T, MemModel>::read(FlowStates<T>& fs, GridBlock<MemModel, T>& grid,
+                            const IdealGas<T>& gas_model,
+                            const TransportProperties<T>& trans_prop, json& config,
+                            json& meta_data,
+                            int time_idx) {
     // auto grid_host = grid.host_mirror();
     auto fs_host = fs.host_mirror();
     std::string time_index = pad_time_index(time_idx, 4);
     std::string directory_name = input_dir_ + "/" + time_index;
     if (moving_grid_ && time_idx != 0) {
-        grid = GridBlock<T>("io/grid/" + time_index + "/block_0000.su2", config);
+        grid = GridBlock<MemModel, T>("io/grid/" + time_index + "/block_0000.su2", config);
     } else if (!grid.is_initialised()) {
         grid =
-            GridBlock<T>("io/grid/" + pad_time_index(0, 4) + "/block_0000.su2", config);
+            GridBlock<MemModel, T>("io/grid/" + pad_time_index(0, 4) + "/block_0000.su2", config);
     }
     int result =
         input_->read(fs_host, grid, gas_model, trans_prop, directory_name, meta_data);
@@ -148,63 +151,65 @@ int FVIO<T>::read(FlowStates<T>& fs, GridBlock<T>& grid, const IdealGas<T>& gas_
     return result;
 }
 
-template <typename T>
-void FVIO<T>::write_coordinating_file() {
+template <typename T, class MemModel>
+void FVIO<T, MemModel>::write_coordinating_file() {
     output_->write_coordinating_file(output_dir_);
 }
 
-template <typename T>
-void FVOutput<T>::add_variable(std::string name) {
+template <typename T, class MemModel>
+void FVOutput<T, MemModel>::add_variable(std::string name) {
     if (name == "viscous_grad_vx") {
         this->m_vector_accessors.insert(
-            {name, std::shared_ptr<VectorAccessor<T>>(new ViscousGradVxAccess<T>())});
+            {name, std::shared_ptr<VectorAccessor<T, MemModel>>(new ViscousGradVxAccess<T, MemModel>())});
     } else if (name == "viscous_grad_vy") {
         this->m_vector_accessors.insert(
-            {name, std::shared_ptr<VectorAccessor<T>>(new ViscousGradVyAccess<T>())});
+            {name, std::shared_ptr<VectorAccessor<T, MemModel>>(new ViscousGradVyAccess<T, MemModel>())});
     } else if (name == "viscous_grad_vz") {
         this->m_vector_accessors.insert(
-            {name, std::shared_ptr<VectorAccessor<T>>(new ViscousGradVzAccess<T>())});
+            {name, std::shared_ptr<VectorAccessor<T, MemModel>>(new ViscousGradVzAccess<T, MemModel>())});
     } else if (name == "convective_grad_vx") {
         this->m_vector_accessors.insert(
-            {name, std::shared_ptr<VectorAccessor<T>>(new ConvectiveGradVxAccess<T>())});
+            {name, std::shared_ptr<VectorAccessor<T, MemModel>>(new ConvectiveGradVxAccess<T, MemModel>())});
     } else if (name == "convective_grad_vy") {
         this->m_vector_accessors.insert(
-            {name, std::shared_ptr<VectorAccessor<T>>(new ConvectiveGradVyAccess<T>())});
+            {name, std::shared_ptr<VectorAccessor<T, MemModel>>(new ConvectiveGradVyAccess<T, MemModel>())});
     } else if (name == "convective_grad_vz") {
         this->m_vector_accessors.insert(
-            {name, std::shared_ptr<VectorAccessor<T>>(new ConvectiveGradVzAccess<T>())});
+            {name, std::shared_ptr<VectorAccessor<T, MemModel>>(new ConvectiveGradVzAccess<T, MemModel>())});
     } else if (name == "viscous_grad_v") {
         this->m_vector_accessors.insert(
             {"viscous_grad_vx",
-             std::shared_ptr<VectorAccessor<T>>(new ViscousGradVxAccess<T>())});
+             std::shared_ptr<VectorAccessor<T, MemModel>>(new ViscousGradVxAccess<T, MemModel>())});
         this->m_vector_accessors.insert(
             {"viscous_grad_vy",
-             std::shared_ptr<VectorAccessor<T>>(new ViscousGradVyAccess<T>())});
+             std::shared_ptr<VectorAccessor<T, MemModel>>(new ViscousGradVyAccess<T, MemModel>())});
         this->m_vector_accessors.insert(
             {"viscous_grad_vz",
-             std::shared_ptr<VectorAccessor<T>>(new ViscousGradVzAccess<T>())});
+             std::shared_ptr<VectorAccessor<T, MemModel>>(new ViscousGradVzAccess<T, MemModel>())});
     } else if (name == "convective_grad_v") {
         this->m_vector_accessors.insert(
             {"convective_grad_vx",
-             std::shared_ptr<VectorAccessor<T>>(new ConvectiveGradVxAccess<T>())});
+             std::shared_ptr<VectorAccessor<T, MemModel>>(new ConvectiveGradVxAccess<T, MemModel>())});
         this->m_vector_accessors.insert(
             {"convective_grad_vy",
-             std::shared_ptr<VectorAccessor<T>>(new ConvectiveGradVyAccess<T>())});
+             std::shared_ptr<VectorAccessor<T, MemModel>>(new ConvectiveGradVyAccess<T, MemModel>())});
         this->m_vector_accessors.insert(
             {"convective_grad_vz",
-             std::shared_ptr<VectorAccessor<T>>(new ConvectiveGradVzAccess<T>())});
+             std::shared_ptr<VectorAccessor<T, MemModel>>(new ConvectiveGradVzAccess<T, MemModel>())});
     } else if (name == "cell_centre") {
         this->m_vector_accessors.insert(
             {"cell_centre",
-             std::shared_ptr<CellCentreAccess<T>>(new CellCentreAccess<T>())});
+             std::shared_ptr<CellCentreAccess<T, MemModel>>(new CellCentreAccess<T, MemModel>())});
     } else if (name == "volume") {
         this->m_scalar_accessors.insert(
-            {"volume", std::shared_ptr<VolumeAccess<T>>(new VolumeAccess<T>())});
+            {"volume", std::shared_ptr<VolumeAccess<T, MemModel>>(new VolumeAccess<T, MemModel>())});
     } else {
         spdlog::error("Unknown post-processing variable {}", name);
         throw std::runtime_error("Unknown post-process variable");
     }
 }
 
-template class FVIO<Ibis::real>;
-template class FVIO<Ibis::dual>;
+template class FVIO<Ibis::real, SharedMem>;
+template class FVIO<Ibis::real, Mpi>;
+template class FVIO<Ibis::dual, SharedMem>;
+template class FVIO<Ibis::dual, Mpi>;

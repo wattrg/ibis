@@ -6,11 +6,13 @@
 #include <solvers/cfl.h>
 #include <solvers/steady_state.h>
 #include <solvers/transient_linear_system.h>
+#include <parallel/parallel.h>
 
 #include "finite_volume/grid_motion_driver.h"
 
-SteadyStateLinearisation::SteadyStateLinearisation(
-    std::shared_ptr<Sim<Ibis::dual>> sim,
+template <class MemModel>
+SteadyStateLinearisation<MemModel>::SteadyStateLinearisation(
+    std::shared_ptr<Sim<Ibis::dual, MemModel>> sim,
     std::shared_ptr<ConservedQuantities<Ibis::dual>> residuals,
     std::shared_ptr<ConservedQuantities<Ibis::dual>> cq,
     std::shared_ptr<FlowStates<Ibis::dual>> fs,
@@ -43,12 +45,14 @@ SteadyStateLinearisation::SteadyStateLinearisation(
     }
 }
 
-std::unique_ptr<LinearSystem> SteadyStateLinearisation::preconditioner() {
+template <class MemModel>
+std::unique_ptr<LinearSystem> SteadyStateLinearisation<MemModel>::preconditioner() {
     return std::unique_ptr<LinearSystem>(
-        new SteadyStateLinearisation(sim_, residuals_, cq_, fs_, vertex_vel_, false));
+        new SteadyStateLinearisation<MemModel>(sim_, residuals_, cq_, fs_, vertex_vel_, false));
 }
 
-void SteadyStateLinearisation::matrix_vector_product(Ibis::Vector<Ibis::real>& vec,
+template <class MemModel>
+void SteadyStateLinearisation<MemModel>::matrix_vector_product(Ibis::Vector<Ibis::real>& vec,
                                                      Ibis::Vector<Ibis::real>& result) {
     // set the dual components of the conserved quantities
     size_t n_cons = n_cons_;
@@ -56,7 +60,7 @@ void SteadyStateLinearisation::matrix_vector_product(Ibis::Vector<Ibis::real>& v
     Ibis::real dt_star = dt_star_;
     auto cq_tmp = cq_tmp_;
     auto cq = *cq_;
-    Kokkos::parallel_for(
+    Ibis::parallel_for(
         "SteadyStateLinearisation::set_dual", n_cells_,
         KOKKOS_LAMBDA(const size_t cell_i) {
             const int vector_idx = cell_i * n_cons;
@@ -71,7 +75,7 @@ void SteadyStateLinearisation::matrix_vector_product(Ibis::Vector<Ibis::real>& v
         int dim = sim_->grid.dim();
         auto vertex_pos = sim_->grid.vertices().positions();
         size_t n_cells = n_cells_;
-        Kokkos::parallel_for(
+        Ibis::parallel_for(
             "SteadyStateLinearisation::set_dual_grid", sim_->grid.num_vertices(),
             KOKKOS_LAMBDA(const size_t vertex_i) {
                 const size_t vector_idx = n_cells * n_cons + vertex_i * dim;
@@ -98,7 +102,7 @@ void SteadyStateLinearisation::matrix_vector_product(Ibis::Vector<Ibis::real>& v
     }
 
     // set the components of vec to the dual component of dudt
-    Kokkos::parallel_for(
+    Ibis::parallel_for(
         "SteadyStateLinearisation::set_vector", n_cells_,
         KOKKOS_LAMBDA(const size_t cell_i) {
             const size_t vector_idx = cell_i * n_cons;
@@ -113,7 +117,7 @@ void SteadyStateLinearisation::matrix_vector_product(Ibis::Vector<Ibis::real>& v
         auto vertex_vel = *vertex_vel_;
         size_t n_cells = n_cells_;
         int dim = sim_->grid.dim();
-        Kokkos::parallel_for(
+        Ibis::parallel_for(
             "SteadyStateLinearisation::set_vector::grid", num_vertices,
             KOKKOS_LAMBDA(const size_t vertex_i) {
                 const size_t vector_idx = n_cells * n_cons + vertex_i * dim;
@@ -126,7 +130,8 @@ void SteadyStateLinearisation::matrix_vector_product(Ibis::Vector<Ibis::real>& v
     }
 }
 
-void SteadyStateLinearisation::eval_rhs() {
+template <class MemModel>
+void SteadyStateLinearisation<MemModel>::eval_rhs() {
     if (sim_->grid.moving()) {
         sim_->fv.compute_dudt(*fs_, *vertex_vel_, *cq_, sim_->grid, *residuals_,
                               sim_->gas_model, sim_->trans_prop, allow_reconstruction_);
@@ -138,7 +143,7 @@ void SteadyStateLinearisation::eval_rhs() {
     size_t n_cons = n_cons_;
     auto rhs = rhs_;
     auto residuals = *residuals_;
-    Kokkos::parallel_for(
+    Ibis::parallel_for(
         "SteadyStateLinearisation::eval_rhs", n_cells_, KOKKOS_LAMBDA(const int cell_i) {
             const size_t vector_idx = cell_i * n_cons;
             for (size_t cons_i = 0; cons_i < n_cons; cons_i++) {
@@ -151,7 +156,7 @@ void SteadyStateLinearisation::eval_rhs() {
         size_t num_vertices = sim_->grid.num_vertices();
         int dim = sim_->grid.dim();
         auto vertex_vel = *vertex_vel_;
-        Kokkos::parallel_for(
+        Ibis::parallel_for(
             "SteadyStateLinearisation::eval_rhs::grid", num_vertices,
             KOKKOS_LAMBDA(const size_t vertex_i) {
                 const size_t vector_idx = n_cells * n_cons + vertex_i * dim;
@@ -163,20 +168,26 @@ void SteadyStateLinearisation::eval_rhs() {
     }
 }
 
-void SteadyStateLinearisation::set_rhs(Ibis::Vector<Ibis::real>& rhs) {
+template <class MemModel>
+void SteadyStateLinearisation<MemModel>::set_rhs(Ibis::Vector<Ibis::real>& rhs) {
     // rhs_.deep_copy_space(rhs);
     rhs_ = rhs;
 }
 
-void SteadyStateLinearisation::set_pseudo_time_step(Ibis::real dt_star) {
+template <class MemModel>
+void SteadyStateLinearisation<MemModel>::set_pseudo_time_step(Ibis::real dt_star) {
     dt_star_ = dt_star;
 }
 
-SteadyState::SteadyState(json config, GridBlock<Ibis::dual> grid, std::string grid_dir,
+template class SteadyStateLinearisation<SharedMem>;
+template class SteadyStateLinearisation<Mpi>;
+
+template <class MemModel>
+SteadyState<MemModel>::SteadyState(json config, GridBlock<MemModel, Ibis::dual> grid, std::string grid_dir,
                          std::string flow_dir)
     : Solver(grid_dir, flow_dir) {
     json solver_config = config.at("solver");
-    sim_ = std::shared_ptr<Sim<Ibis::dual>>{new Sim<Ibis::dual>(grid, config)};
+    sim_ = std::shared_ptr<Sim<Ibis::dual, MemModel>>{new Sim<Ibis::dual, MemModel>(grid, config)};
 
     size_t n_total_cells = sim_->grid.num_total_cells();
     // size_t n_cells = sim_->grid.num_cells();
@@ -205,8 +216,8 @@ SteadyState::SteadyState(json config, GridBlock<Ibis::dual> grid, std::string gr
     auto cfl = make_cfl_schedule(solver_config.at("cfl"));
     std::unique_ptr<PseudoTransientLinearSystem> system =
         std::unique_ptr<PseudoTransientLinearSystem>(
-            new SteadyStateLinearisation(sim_, residuals_, cq_, fs_, vertex_vel_));
-    jfnk_ = Jfnk(std::move(system), std::move(cfl), residuals_, solver_config);
+            new SteadyStateLinearisation<MemModel>(sim_, residuals_, cq_, fs_, vertex_vel_));
+    jfnk_ = Jfnk<MemModel>(std::move(system), std::move(cfl), residuals_, solver_config);
 
     // configuration
     print_frequency_ = solver_config.at("print_frequency");
@@ -214,12 +225,13 @@ SteadyState::SteadyState(json config, GridBlock<Ibis::dual> grid, std::string gr
     diagnostics_frequency_ = solver_config.at("diagnostics_frequency");
 
     // I/O
-    io_ = FVIO<Ibis::dual>(config, 1);
+    io_ = FVIO<Ibis::dual, MemModel>(config, 1);
 
     config_ = config;
 }
 
-int SteadyState::initialise() {
+template <class MemModel>
+int SteadyState<MemModel>::initialise() {
     // read grid and initial condition
     json meta_data{};
     json grid_config = config_.at("grid");
@@ -252,27 +264,33 @@ int SteadyState::initialise() {
     return ic_result + conversion_result + jfnk_init;
 }
 
-int SteadyState::finalise() { return 0; }
+template <class MemModel>
+int SteadyState<MemModel>::finalise() { return 0; }
 
-int SteadyState::take_step(size_t step) {
+template <class MemModel>
+int SteadyState<MemModel>::take_step(size_t step) {
     jfnk_.step(sim_, *cq_, *fs_, step);
     return 0;
 }
 
-bool SteadyState::print_this_step(unsigned int step) {
+template <class MemModel>
+bool SteadyState<MemModel>::print_this_step(unsigned int step) {
     return (step != 0 && step % print_frequency_ == 0);
 }
 
-bool SteadyState::residuals_this_step(unsigned int step) {
+template <class MemModel>
+bool SteadyState<MemModel>::residuals_this_step(unsigned int step) {
     return ((diagnostics_frequency_ > 0) && (step != 0) &&
             (step % diagnostics_frequency_ == 0));
 }
 
-bool SteadyState::plot_this_step(unsigned int step) {
+template <class MemModel>
+bool SteadyState<MemModel>::plot_this_step(unsigned int step) {
     return (step != 0 && step % plot_frequency_ == 0);
 }
 
-int SteadyState::plot_solution(unsigned int step) {
+template <class MemModel>
+int SteadyState<MemModel>::plot_solution(unsigned int step) {
     Ibis::real t = (Ibis::real)step;
     int result =
         io_.write(*fs_, sim_->fv, sim_->grid, sim_->gas_model, sim_->trans_prop, t);
@@ -280,7 +298,8 @@ int SteadyState::plot_solution(unsigned int step) {
     return result;
 }
 
-void SteadyState::print_progress(unsigned int step, Ibis::real wc) {
+template <class MemModel>
+void SteadyState<MemModel>::print_progress(unsigned int step, Ibis::real wc) {
     Ibis::real relative_global_residual = jfnk_.relative_residual_norms().global().real();
     Ibis::real cfl = jfnk_.calculate_cfl(step);
     spdlog::info(
@@ -288,13 +307,15 @@ void SteadyState::print_progress(unsigned int step, Ibis::real wc) {
         step, relative_global_residual, cfl, wc);
 }
 
-bool SteadyState::stop_now(unsigned int step) {
+template <class MemModel>
+bool SteadyState<MemModel>::stop_now(unsigned int step) {
     if (step >= max_step() - 1) return true;
     if (jfnk_.relative_residual_norms().global() < jfnk_.target_residual()) return true;
     return false;
 }
 
-std::string SteadyState::stop_reason(unsigned int step) {
+template <class MemModel>
+std::string SteadyState<MemModel>::stop_reason(unsigned int step) {
     if (step >= max_step() - 1) return "reached max_step";
     if (jfnk_.relative_residual_norms().global() < jfnk_.target_residual()) {
         return "reached target residual";
@@ -302,7 +323,8 @@ std::string SteadyState::stop_reason(unsigned int step) {
     return "Shouldn't reach here";
 }
 
-bool SteadyState::write_residuals(unsigned int step, Ibis::real wc) {
+template <class MemModel>
+bool SteadyState<MemModel>::write_residuals(unsigned int step, Ibis::real wc) {
     spdlog::debug("Writing residuals at step {}", step);
 
     // the absolute residuals
@@ -323,3 +345,6 @@ bool SteadyState::write_residuals(unsigned int step, Ibis::real wc) {
                       << gmres_result.n_iters << std::endl;
     return true;
 }
+
+template class SteadyState<SharedMem>;
+template class SteadyState<Mpi>;

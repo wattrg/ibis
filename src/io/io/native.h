@@ -45,7 +45,7 @@ public:
 };
 
 template <typename T, class MemModel>
-class NativeBinaryOutput : public FVOutput<T: MemModel> {
+class NativeBinaryOutput : public FVOutput<T, MemModel> {
 public:
     NativeBinaryOutput() {}
 

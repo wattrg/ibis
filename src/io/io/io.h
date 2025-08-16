@@ -48,8 +48,8 @@ public:
     virtual bool combined_grid_and_flow() const = 0;
 
 protected:
-    std::map<std::string, std::shared_ptr<ScalarAccessor<T>>> m_scalar_accessors;
-    std::map<std::string, std::shared_ptr<VectorAccessor<T>>> m_vector_accessors;
+    std::map<std::string, std::shared_ptr<ScalarAccessor<T, MemModel>>> m_scalar_accessors;
+    std::map<std::string, std::shared_ptr<VectorAccessor<T, MemModel>>> m_vector_accessors;
 };
 
 template <typename T, class MemModel>

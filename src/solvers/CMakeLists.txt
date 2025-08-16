@@ -24,6 +24,7 @@ target_link_libraries(
 	solver
 	spdlog::spdlog
 	IO
+	parallel
 )
 target_link_libraries(
 	jfnk 

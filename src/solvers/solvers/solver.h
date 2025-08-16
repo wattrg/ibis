@@ -48,6 +48,7 @@ protected:
     std::string flow_dir_;
 };
 
+template <class MemModel>
 std::unique_ptr<Solver> make_solver(json config, std::string grid_dir,
                                     std::string flow_dir);
 

@@ -31,7 +31,7 @@ TEST_CASE("gradient") {
     GridBlock<SharedMem, Ibis::real> block_dev("../../../src/grid/test/grid.su2", config);
     auto block_host = block_dev.host_mirror();
     block_host.deep_copy(block_dev);
-    WLSGradient<Ibis::real> wls_gradient(block_dev);
+    WLSGradient<Ibis::real, SharedMem> wls_gradient(block_dev);
 
     // check host mirror compiles
     auto gradient_host = wls_gradient.host_mirror();

@@ -16,8 +16,10 @@ Ibis::real ButcherTableau::b(size_t i) { return b_[i]; }
 Ibis::real ButcherTableau::c(size_t i) { return c_[i - 1]; }
 size_t ButcherTableau::num_stages() { return num_stages_; }
 
-RungeKutta::RungeKutta(json config, GridBlock<Ibis::real> grid, std::string grid_dir,
-                       std::string flow_dir)
+template <class MemModel>
+RungeKutta<MemModel>::RungeKutta(json config, GridBlock<MemModel, Ibis::real> grid,
+                                 std::string grid_dir,
+                                 std::string flow_dir)
     : Solver(grid_dir, flow_dir) {
     // configuration
     json solver_config = config.at("solver");
@@ -50,7 +52,7 @@ RungeKutta::RungeKutta(json config, GridBlock<Ibis::real> grid, std::string grid
         k_tmp_ = ConservedQuantities<Ibis::real>(number_cells, dim);
         flow_tmp_ = FlowStates<Ibis::real>(number_cells);
     }
-    fv_ = FiniteVolume<Ibis::real>(grid_, config);
+    fv_ = FiniteVolume<Ibis::real, MemModel>(grid_, config);
 
     // grid motion
     moving_grid_ = grid_.moving();
@@ -72,12 +74,13 @@ RungeKutta::RungeKutta(json config, GridBlock<Ibis::real> grid, std::string grid
     t_ = 0.0;
 
     // input/output
-    io_ = FVIO<Ibis::real>(config, 1);
+    io_ = FVIO<Ibis::real, MemModel>(config, 1);
 
     config_ = config;
 }
 
-int RungeKutta::initialise() {
+template <class MemModel>
+int RungeKutta<MemModel>::initialise() {
     // read the grid and initial flow
     json meta_data;
     json grid_config = config_.at("grid");
@@ -101,9 +104,11 @@ int RungeKutta::initialise() {
     return ic_result + conversion_result;
 }
 
-int RungeKutta::finalise() { return 0; }
+template <class MemModel>
+int RungeKutta<MemModel>::finalise() { return 0; }
 
-void RungeKutta::estimate_dt() {
+template <class MemModel>
+void RungeKutta<MemModel>::estimate_dt() {
     // choose the size of time step to take. We take the smallest of
     //   1. The stable timestep
     //   2. 1.5 x the previous time step
@@ -116,7 +121,8 @@ void RungeKutta::estimate_dt() {
     }
 }
 
-void RungeKutta::function_eval_(FlowStates<Ibis::real> fs,
+template <class MemModel>
+void RungeKutta<MemModel>::function_eval_(FlowStates<Ibis::real> fs,
                                 ConservedQuantities<Ibis::real>& cq, size_t index) {
     if (grid_.moving()) {
         fv_.compute_dudt(fs, vertex_vel_[index], cq, grid_, k_[index], gas_model_,
@@ -126,7 +132,8 @@ void RungeKutta::function_eval_(FlowStates<Ibis::real> fs,
     }
 }
 
-int RungeKutta::take_step(size_t step) {
+template <class MemModel>
+int RungeKutta<MemModel>::take_step(size_t step) {
     (void)step;
 
     // if (moving_grid_ && tableau_.num_stages() > 1) {
@@ -200,12 +207,14 @@ int RungeKutta::take_step(size_t step) {
     return 0;
 }
 
-bool RungeKutta::print_this_step(unsigned int step) {
+template <class MemModel>
+bool RungeKutta<MemModel>::print_this_step(unsigned int step) {
     if (step != 0 && step % print_frequency_ == 0) return true;
     return false;
 }
 
-bool RungeKutta::residuals_this_step(unsigned int step) {
+template <class MemModel>
+bool RungeKutta<MemModel>::residuals_this_step(unsigned int step) {
     if ((residuals_every_n_steps_ > 0) &&
         (step != 0 || (step % residuals_every_n_steps_ == 0)))
         return true;
@@ -215,7 +224,8 @@ bool RungeKutta::residuals_this_step(unsigned int step) {
     return false;
 }
 
-bool RungeKutta::write_residuals(unsigned int step, Ibis::real wc) {
+template <class MemModel>
+bool RungeKutta<MemModel>::write_residuals(unsigned int step, Ibis::real wc) {
     spdlog::debug("Writing residuals at step {}", step);
     ConservedQuantitiesNorm<Ibis::real> norms = L2_norms();
     std::ofstream residual_file("log/residuals.dat", std::ios_base::app);
@@ -224,7 +234,8 @@ bool RungeKutta::write_residuals(unsigned int step, Ibis::real wc) {
     return true;
 }
 
-bool RungeKutta::plot_this_step(unsigned int step) {
+template <class MemModel>
+bool RungeKutta<MemModel>::plot_this_step(unsigned int step) {
     if (plot_every_n_steps_ > 0 && step != 0 && step % plot_every_n_steps_ == 0)
         return true;
 
@@ -233,30 +244,39 @@ bool RungeKutta::plot_this_step(unsigned int step) {
     return false;
 }
 
-int RungeKutta::plot_solution(unsigned int step) {
+template <class MemModel>
+int RungeKutta<MemModel>::plot_solution(unsigned int step) {
     int result = io_.write(flow_, fv_, grid_, gas_model_, trans_prop_, t_);
     time_since_last_plot_ = 0.0;
     spdlog::info("  written flow solution: step {}, time {:.6e}", step, t_);
     return result;
 }
 
-void RungeKutta::print_progress(unsigned int step, Ibis::real wc) {
+template <class MemModel>
+void RungeKutta<MemModel>::print_progress(unsigned int step, Ibis::real wc) {
     spdlog::info(
         "  step: {:>8}, t = {:.6e} ({:.1f}%), dt = {:.6e} (cfl={:.1f}), wc = "
         "{:.1f}s",
         step, t_, t_ / max_time_ * 100, dt_, dt_ / stable_dt_, wc);
 }
-std::string RungeKutta::stop_reason(unsigned int step) {
+template <class MemModel>
+std::string RungeKutta<MemModel>::stop_reason(unsigned int step) {
     if (t_ >= max_time_ - 1e-15)
         return "reached max time";  // subtract small amount to avoid round off
                                     // error
     if (step >= max_step_ - 1) return "reached max step";
     return "Shouldn't reach here";
 }
-bool RungeKutta::stop_now(unsigned int step) {
+
+template <class MemModel>
+bool RungeKutta<MemModel>::stop_now(unsigned int step) {
     if (step >= max_step_ - 1) return true;
     if (t_ >= max_time_) return true;
     return false;
 }
 
-ConservedQuantitiesNorm<Ibis::real> RungeKutta::L2_norms() { return k_[0].L2_norms(); }
+template <class MemModel>
+ConservedQuantitiesNorm<Ibis::real> RungeKutta<MemModel>::L2_norms() { return k_[0].L2_norms(); }
+
+template class RungeKutta<SharedMem>;
+template class RungeKutta<Mpi>;

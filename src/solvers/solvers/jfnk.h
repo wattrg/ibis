@@ -16,6 +16,7 @@
 
 using json = nlohmann::json;
 
+template <class MemModel>
 class Jfnk {
 public:
     Jfnk() {}
@@ -26,11 +27,11 @@ public:
 
     int initialise();
 
-    LinearSolveResult step(std::shared_ptr<Sim<Ibis::dual>>& sim,
+    LinearSolveResult step(std::shared_ptr<Sim<Ibis::dual, MemModel>>& sim,
                            ConservedQuantities<Ibis::dual>& cq,
                            FlowStates<Ibis::dual>& fs, size_t step);
 
-    void solve(std::shared_ptr<Sim<Ibis::dual>>& sim);
+    void solve(std::shared_ptr<Sim<Ibis::dual, MemModel>>& sim);
 
     size_t max_steps() const { return max_steps_; }
 
@@ -76,7 +77,7 @@ private:
     void set_pseudo_time_step_size(Ibis::real dt_star);
 
 public:  // this is public to appease NVCC
-    void apply_update_(std::shared_ptr<Sim<Ibis::dual>>& sim,
+    void apply_update_(std::shared_ptr<Sim<Ibis::dual, MemModel>>& sim,
                        ConservedQuantities<Ibis::dual>& cq, FlowStates<Ibis::dual>& fs);
 };
 

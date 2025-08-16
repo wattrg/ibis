@@ -63,6 +63,7 @@ int Solver::solve() {
     return 0;
 }
 
+template <class MemModel>
 std::unique_ptr<Solver> make_solver(json config, std::string grid_dir,
                                     std::string flow_dir) {
     std::string grid_file = grid_dir + "/0000/block_0000.su2";
@@ -70,16 +71,19 @@ std::unique_ptr<Solver> make_solver(json config, std::string grid_dir,
     json grid_config = config.at("grid");
     std::string solver_name = solver_config.at("name");
     if (solver_name == "runge_kutta") {
-        GridBlock<Ibis::real> grid(grid_file, grid_config);
+        GridBlock<MemModel, Ibis::real> grid(grid_file, grid_config);
         return std::unique_ptr<Solver>(
-            new RungeKutta(config, std::move(grid), grid_dir, flow_dir));
+            new RungeKutta<MemModel>(config, std::move(grid), grid_dir, flow_dir));
     } else if (solver_name == "steady_state") {
-        GridBlock<Ibis::dual> grid(grid_file, grid_config);
+        GridBlock<MemModel, Ibis::dual> grid(grid_file, grid_config);
         return std::unique_ptr<Solver>(
-            new SteadyState(config, std::move(grid), grid_dir, flow_dir));
+            new SteadyState<MemModel>(config, std::move(grid), grid_dir, flow_dir));
     } else {
         spdlog::error("Unknown solver {}", solver_name);
         throw new std::runtime_error("Unknown solver");
     }
     return NULL;
 }
+
+template std::unique_ptr<Solver> make_solver<SharedMem>(json, std::string, std::string);
+template std::unique_ptr<Solver> make_solver<Mpi>(json, std::string, std::string);

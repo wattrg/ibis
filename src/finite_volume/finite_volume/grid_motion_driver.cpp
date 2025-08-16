@@ -26,5 +26,12 @@ std::shared_ptr<GridMotionDriver<T, MemModel>> build_grid_motion_driver(const Gr
 
 template std::shared_ptr<GridMotionDriver<Ibis::real, SharedMem>>
 build_grid_motion_driver<Ibis::real, SharedMem>(const GridBlock<SharedMem, Ibis::real>&, json);
+
+template std::shared_ptr<GridMotionDriver<Ibis::real, Mpi>>
+build_grid_motion_driver<Ibis::real, Mpi>(const GridBlock<Mpi, Ibis::real>&, json);
+
 template std::shared_ptr<GridMotionDriver<Ibis::dual, SharedMem>>
 build_grid_motion_driver<Ibis::dual, SharedMem>(const GridBlock<SharedMem, Ibis::dual>&, json config);
+
+template std::shared_ptr<GridMotionDriver<Ibis::dual, Mpi>>
+build_grid_motion_driver<Ibis::dual, Mpi>(const GridBlock<Mpi, Ibis::dual>&, json config);

@@ -2,7 +2,8 @@
 #include <linear_algebra/gmres.h>
 #include <solvers/jfnk.h>
 
-Jfnk::Jfnk(std::shared_ptr<PseudoTransientLinearSystem> system,
+template <class MemModel>
+Jfnk<MemModel>::Jfnk(std::shared_ptr<PseudoTransientLinearSystem> system,
            std::unique_ptr<CflSchedule>&& cfl,
            std::shared_ptr<ConservedQuantities<Ibis::dual>> residuals, json config) {
     max_steps_ = config.at("max_steps");
@@ -20,21 +21,24 @@ Jfnk::Jfnk(std::shared_ptr<PseudoTransientLinearSystem> system,
     residuals_ = residuals;
 }
 
-int Jfnk::initialise() {
+template <class MemModel>
+int Jfnk<MemModel>::initialise() {
     system_->eval_rhs();
     residual_norms_ = residuals_->L2_norms();
     initial_residual_norms_ = residual_norms_;
     return 0;
 }
 
-void Jfnk::set_pseudo_time_step_size(Ibis::real dt_star) {
+template <class MemModel>
+void Jfnk<MemModel>::set_pseudo_time_step_size(Ibis::real dt_star) {
     system_->set_pseudo_time_step(dt_star);
     if (preconditioner_) {
         preconditioner_->set_pseudo_time_step(dt_star);
     }
 }
 
-LinearSolveResult Jfnk::step(std::shared_ptr<Sim<Ibis::dual>>& sim,
+template <class MemModel>
+LinearSolveResult Jfnk<MemModel>::step(std::shared_ptr<Sim<Ibis::dual, MemModel>>& sim,
                              ConservedQuantities<Ibis::dual>& cq,
                              FlowStates<Ibis::dual>& fs, size_t step) {
     // dU is the change in the solution for the step,
@@ -58,7 +62,8 @@ LinearSolveResult Jfnk::step(std::shared_ptr<Sim<Ibis::dual>>& sim,
     return last_gmres_result_;
 }
 
-void Jfnk::apply_update_(std::shared_ptr<Sim<Ibis::dual>>& sim,
+template <class MemModel>
+void Jfnk<MemModel>::apply_update_(std::shared_ptr<Sim<Ibis::dual, MemModel>>& sim,
                          ConservedQuantities<Ibis::dual>& cq,
                          FlowStates<Ibis::dual>& fs) {
     auto dU = dU_;
@@ -89,3 +94,6 @@ void Jfnk::apply_update_(std::shared_ptr<Sim<Ibis::dual>>& sim,
 
     conserved_to_primatives(cq, fs, sim->gas_model);
 }
+
+template class Jfnk<SharedMem>;
+template class Jfnk<Mpi>;

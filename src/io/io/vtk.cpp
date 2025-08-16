@@ -43,9 +43,9 @@ void write_vtk_coordinating_file(std::string plot_dir, std::vector<Ibis::real> t
 template <typename T, class MemModel>
 void write_scalar_field_ascii(std::ofstream& f,
                               const FlowStates<T, array_layout, host_mem_space> fs,
-                              FiniteVolume<T>& fv,
+                              FiniteVolume<T, MemModel>& fv,
                               const GridBlock<MemModel, T, host_exec_space, array_layout>& grid,
-                              std::shared_ptr<ScalarAccessor<T>> accessor,
+                              std::shared_ptr<ScalarAccessor<T, MemModel>> accessor,
                               const IdealGas<T>& gas_model, std::string name,
                               std::string type, size_t num_values) {
     f << "<DataArray type='" << type << "' ";
@@ -64,9 +64,9 @@ void write_scalar_field_ascii(std::ofstream& f,
 template <typename T, class MemModel>
 void write_vector_field_ascii(std::ofstream& f,
                               const FlowStates<T, array_layout, host_mem_space>& fs,
-                              FiniteVolume<T>& fv,
+                              FiniteVolume<T, MemModel>& fv,
                               const GridBlock<MemModel, T, host_exec_space, array_layout>& grid,
-                              std::shared_ptr<VectorAccessor<T>> accessor,
+                              std::shared_ptr<VectorAccessor<T, MemModel>> accessor,
                               const IdealGas<T>& gas_model, std::string name,
                               std::string type, size_t num_values) {
     f << "<DataArray type='" << type << "' ";
@@ -130,8 +130,8 @@ void write_elem_type_ascii(std::ofstream& f,
 
 template <typename T, class MemModel>
 VtkTextOutput<T, MemModel>::VtkTextOutput() {
-    this->m_scalar_accessors = get_scalar_accessors<T>();
-    this->m_vector_accessors = get_vector_accessors<T>();
+    this->m_scalar_accessors = get_scalar_accessors<T, MemModel>();
+    this->m_vector_accessors = get_vector_accessors<T, MemModel>();
 }
 
 template <typename T, class MemModel>
@@ -167,7 +167,7 @@ int VtkTextOutput<T, MemModel>::write(const typename FlowStates<T>::mirror_type&
     f << "<CellData>" << std::endl;
     for (auto& key_value : this->m_scalar_accessors) {
         std::string name = key_value.first;
-        std::shared_ptr<ScalarAccessor<T>> accessor = key_value.second;
+        std::shared_ptr<ScalarAccessor<T, MemModel>> accessor = key_value.second;
         accessor->init(fs, fv, grid, gas_model, trans_prop);
         write_scalar_field_ascii<T>(f, fs, fv, grid_host, accessor, gas_model, name,
                                     "Float64", grid.num_cells());
@@ -175,7 +175,7 @@ int VtkTextOutput<T, MemModel>::write(const typename FlowStates<T>::mirror_type&
 
     for (auto& key_value : this->m_vector_accessors) {
         std::string name = key_value.first;
-        std::shared_ptr<VectorAccessor<T>> accessor = key_value.second;
+        std::shared_ptr<VectorAccessor<T, MemModel>> accessor = key_value.second;
         accessor->init(fs, fv, grid, gas_model, trans_prop);
         write_vector_field_ascii<T>(f, fs, fv, grid_host, accessor, gas_model, name,
                                     "Float64", grid.num_cells());
@@ -200,12 +200,14 @@ void VtkTextOutput<T, MemModel>::write_coordinating_file(std::string plot_dir) {
 }
 
 template class VtkTextOutput<Ibis::real, SharedMem>;
+template class VtkTextOutput<Ibis::real, Mpi>;
 template class VtkTextOutput<Ibis::dual, SharedMem>;
+template class VtkTextOutput<Ibis::dual, Mpi>;
 
 template <typename T, class MemModel>
 VtkBinaryOutput<T, MemModel>::VtkBinaryOutput() {
-    this->m_scalar_accessors = get_scalar_accessors<T>();
-    this->m_vector_accessors = get_vector_accessors<T>();
+    this->m_scalar_accessors = get_scalar_accessors<T, MemModel>();
+    this->m_vector_accessors = get_vector_accessors<T, MemModel>();
 
     this->packed_data_ = std::vector<std::byte>{};
 }
@@ -214,7 +216,7 @@ template <typename T, class MemModel>
 void VtkBinaryOutput<T, MemModel>::write_scalar_field_binary(
     std::ofstream& f, const FlowStates<T, array_layout, host_mem_space> fs,
     FiniteVolume<T, MemModel>& fv, const GridBlock<MemModel, T, host_exec_space, array_layout>& grid,
-    std::shared_ptr<ScalarAccessor<T>> accessor, const IdealGas<T>& gas_model,
+    std::shared_ptr<ScalarAccessor<T, MemModel>> accessor, const IdealGas<T>& gas_model,
     std::string name, std::string type, size_t num_values) {
     f << "<DataArray type='" << type << "' " << "NumberOfComponents='1' " << "Name='"
       << name << "' " << "format='appended' " << "offset='"
@@ -246,7 +248,7 @@ template <typename T, class MemModel>
 void VtkBinaryOutput<T, MemModel>::write_vector_field_binary(
     std::ofstream& f, const FlowStates<T, array_layout, host_mem_space> fs,
     FiniteVolume<T, MemModel>& fv, const GridBlock<MemModel, T, host_exec_space, array_layout>& grid,
-    std::shared_ptr<VectorAccessor<T>> accessor, const IdealGas<T>& gas_model,
+    std::shared_ptr<VectorAccessor<T, MemModel>> accessor, const IdealGas<T>& gas_model,
     std::string name, std::string type, size_t num_values) {
     f << "<DataArray type='" << type << "' " << "NumberOfComponents='3' " << "Name='"
       << name << "' " << "format='appended' " << "offset='"
@@ -275,8 +277,8 @@ void VtkBinaryOutput<T, MemModel>::write_vector_field_binary(
     f << "</DataArray>\n";
 }
 
-template <typename T>
-void VtkBinaryOutput<T>::write_vector3s_binary(
+template <typename T, class MemModel>
+void VtkBinaryOutput<T, MemModel>::write_vector3s_binary(
     std::ofstream& f, const Vector3s<T, array_layout, host_mem_space>& vec,
     std::string name, std::string type, size_t num_values) {
     f << "<DataArray type='" << type << "' ";
@@ -308,8 +310,8 @@ void VtkBinaryOutput<T>::write_vector3s_binary(
     f << "</DataArray>" << std::endl;
 }
 
-template <typename T>
-void VtkBinaryOutput<T>::write_int_view_binary(
+template <typename T, class MemModel>
+void VtkBinaryOutput<T, MemModel>::write_int_view_binary(
     std::ofstream& f, const Kokkos::View<size_t*, array_layout, host_mem_space>& view,
     std::string name, std::string type, bool skip_first) {
     f << "<DataArray type='" << type << "' " << "NumberOfComponents='1' " << "Name='"
@@ -335,8 +337,8 @@ void VtkBinaryOutput<T>::write_int_view_binary(
     f << "</DataArray>" << std::endl;
 }
 
-template <typename T>
-void VtkBinaryOutput<T>::write_elem_type_binary(
+template <typename T, class MemModel>
+void VtkBinaryOutput<T, MemModel>::write_elem_type_binary(
     std::ofstream& f, const Field<ElemType, array_layout, host_mem_space>& types) {
     f << "<DataArray type='UInt8' NumberOfComponents='1' Name='types' "
          "format='appended' "
@@ -359,8 +361,8 @@ void VtkBinaryOutput<T>::write_elem_type_binary(
     f << "</DataArray>" << std::endl;
 }
 
-template <typename T>
-void VtkBinaryOutput<T>::write_appended_data(std::ofstream& f) {
+template <typename T, class MemModel>
+void VtkBinaryOutput<T, MemModel>::write_appended_data(std::ofstream& f) {
     f << "<AppendedData encoding='raw'>\n";
     f << "_";
 
@@ -371,7 +373,7 @@ void VtkBinaryOutput<T>::write_appended_data(std::ofstream& f) {
 }
 
 template <typename T, class MemModel>
-int VtkBinaryOutput<T>::write(const typename FlowStates<T>::mirror_type& fs,
+int VtkBinaryOutput<T, MemModel>::write(const typename FlowStates<T>::mirror_type& fs,
                               FiniteVolume<T, MemModel>& fv, const GridBlock<MemModel, T>& grid,
                               const IdealGas<T>& gas_model,
                               const TransportProperties<T>& trans_prop,
@@ -406,7 +408,7 @@ int VtkBinaryOutput<T>::write(const typename FlowStates<T>::mirror_type& fs,
     f << "<CellData>" << std::endl;
     for (auto& key_value : this->m_scalar_accessors) {
         std::string name = key_value.first;
-        std::shared_ptr<ScalarAccessor<T>> accessor = key_value.second;
+        std::shared_ptr<ScalarAccessor<T, MemModel>> accessor = key_value.second;
         accessor->init(fs, fv, grid, gas_model, trans_prop);
         write_scalar_field_binary(f, fs, fv, grid_host, accessor, gas_model, name,
                                   "Float64", grid.num_cells());
@@ -414,7 +416,7 @@ int VtkBinaryOutput<T>::write(const typename FlowStates<T>::mirror_type& fs,
 
     for (auto& key_value : this->m_vector_accessors) {
         std::string name = key_value.first;
-        std::shared_ptr<VectorAccessor<T>> accessor = key_value.second;
+        std::shared_ptr<VectorAccessor<T, MemModel>> accessor = key_value.second;
         accessor->init(fs, fv, grid, gas_model, trans_prop);
         write_vector_field_binary(f, fs, fv, grid_host, accessor, gas_model, name,
                                   "Float64", grid.num_cells());
@@ -436,10 +438,12 @@ int VtkBinaryOutput<T>::write(const typename FlowStates<T>::mirror_type& fs,
     return 0;
 }
 
-template <typename T>
-void VtkBinaryOutput<T>::write_coordinating_file(std::string plot_dir) {
+template <typename T, class MemModel>
+void VtkBinaryOutput<T, MemModel>::write_coordinating_file(std::string plot_dir) {
     write_vtk_coordinating_file<T>(plot_dir, times_, dirs_);
 }
 
 template class VtkBinaryOutput<Ibis::real, SharedMem>;
+template class VtkBinaryOutput<Ibis::real, Mpi>;
 template class VtkBinaryOutput<Ibis::dual, SharedMem>;
+template class VtkBinaryOutput<Ibis::dual, Mpi>;

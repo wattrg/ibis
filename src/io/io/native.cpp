@@ -4,9 +4,9 @@
 
 #include "gas/transport_properties.h"
 
-template <typename T>
-int NativeTextOutput<T>::write(const typename FlowStates<T>::mirror_type& fs,
-                               FiniteVolume<T>& fv, const GridBlock<T>& grid,
+template <typename T, class MemModel>
+int NativeTextOutput<T, MemModel>::write(const typename FlowStates<T>::mirror_type& fs,
+                               FiniteVolume<T, MemModel>& fv, const GridBlock<MemModel, T>& grid,
                                const IdealGas<T>& gas_model,
                                const TransportProperties<T>& trans_prop,
                                std::string plot_dir, std::string time_dir,
@@ -84,11 +84,13 @@ int NativeTextOutput<T>::write(const typename FlowStates<T>::mirror_type& fs,
 
     return 0;
 }
-template class NativeTextOutput<Ibis::real>;
-template class NativeTextOutput<Ibis::dual>;
+template class NativeTextOutput<Ibis::real, SharedMem>;
+template class NativeTextOutput<Ibis::real, Mpi>;
+template class NativeTextOutput<Ibis::dual, SharedMem>;
+template class NativeTextOutput<Ibis::dual, Mpi>;
 
-template <typename T>
-int NativeTextInput<T>::read(typename FlowStates<T>::mirror_type& fs, GridBlock<T>& grid,
+template <typename T, class MemModel>
+int NativeTextInput<T, MemModel>::read(typename FlowStates<T>::mirror_type& fs, GridBlock<MemModel, T>& grid,
                              const IdealGas<T>& gas_model,
                              const TransportProperties<T>& trans_prop, std::string dir,
                              json& meta_data) {
@@ -179,12 +181,14 @@ int NativeTextInput<T>::read(typename FlowStates<T>::mirror_type& fs, GridBlock<
 
     return 0;
 }
-template class NativeTextInput<Ibis::real>;
-template class NativeTextInput<Ibis::dual>;
+template class NativeTextInput<Ibis::real, SharedMem>;
+template class NativeTextInput<Ibis::real, Mpi>;
+template class NativeTextInput<Ibis::dual, SharedMem>;
+template class NativeTextInput<Ibis::dual, Mpi>;
 
-template <typename T>
-int NativeBinaryOutput<T>::write(const typename FlowStates<T>::mirror_type& fs,
-                                 FiniteVolume<T>& fv, const GridBlock<T>& grid,
+template <typename T, class MemModel>
+int NativeBinaryOutput<T, MemModel>::write(const typename FlowStates<T>::mirror_type& fs,
+                                 FiniteVolume<T, MemModel>& fv, const GridBlock<MemModel, T>& grid,
                                  const IdealGas<T>& gas_model,
                                  const TransportProperties<T>& trans_prop,
                                  std::string plot_dir, std::string time_dir,
@@ -257,12 +261,14 @@ int NativeBinaryOutput<T>::write(const typename FlowStates<T>::mirror_type& fs,
 
     return 0;
 }
-template class NativeBinaryOutput<Ibis::real>;
-template class NativeBinaryOutput<Ibis::dual>;
+template class NativeBinaryOutput<Ibis::real, SharedMem>;
+template class NativeBinaryOutput<Ibis::real, Mpi>;
+template class NativeBinaryOutput<Ibis::dual, SharedMem>;
+template class NativeBinaryOutput<Ibis::dual, Mpi>;
 
-template <typename T>
-int NativeBinaryInput<T>::read(typename FlowStates<T>::mirror_type& fs,
-                               GridBlock<T>& grid, const IdealGas<T>& gas_model,
+template <typename T, class MemModel>
+int NativeBinaryInput<T, MemModel>::read(typename FlowStates<T>::mirror_type& fs,
+                               GridBlock<MemModel, T>& grid, const IdealGas<T>& gas_model,
                                const TransportProperties<T>& trans_prop, std::string dir,
                                json& meta_data) {
     (void)trans_prop;
@@ -337,5 +343,7 @@ int NativeBinaryInput<T>::read(typename FlowStates<T>::mirror_type& fs,
 
     return 0;
 }
-template class NativeBinaryInput<Ibis::real>;
-template class NativeBinaryInput<Ibis::dual>;
+template class NativeBinaryInput<Ibis::real, SharedMem>;
+template class NativeBinaryInput<Ibis::real, Mpi>;
+template class NativeBinaryInput<Ibis::dual, SharedMem>;
+template class NativeBinaryInput<Ibis::dual, Mpi>;

@@ -5,7 +5,7 @@
 #include <util/numeric_types.h>
 
 template <typename T, class MemModel>
-Sim<T>::Sim(GridBlock<MemModel, T> grid_, json config) : grid(grid_) {
+Sim<T, MemModel>::Sim(GridBlock<MemModel, T> grid_, json config) : grid(grid_) {
     fv = FiniteVolume<T, MemModel>(grid, config);
     gas_model = IdealGas<T>(config.at("gas_model"));
     trans_prop = TransportProperties<T>(config.at("transport_properties"));

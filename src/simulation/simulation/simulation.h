@@ -16,7 +16,7 @@ struct Sim {
 
     Sim(GridBlock<MemModel, T> grid, json config);
 
-    FiniteVolume<T> fv;
+    FiniteVolume<T, MemModel> fv;
     GridBlock<MemModel, T> grid;
     IdealGas<T> gas_model;
     TransportProperties<T> trans_prop;

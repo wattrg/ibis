@@ -79,20 +79,20 @@ std::vector<GridIO> partition_metis(GridIO& monolithic_grid, size_t n_partitions
             size_t ngbr_id = adjncy[ngbr_idx_start + ngbr_i];
             size_t ngbr_partition = partitions[ngbr_id];
             if (this_cell_partition != ngbr_partition) {
-                size_t local_cell = global_local_cell_map[this_cell_partition][cell_i];
-                size_t other_cell = global_local_cell_map[ngbr_partition][ngbr_id];
+                size_t local_cell_id = global_local_cell_map[this_cell_partition][cell_i];
+                size_t other_cell_id = global_local_cell_map[ngbr_partition][ngbr_id];
 
                 // find the common interface between the two cells
-                ElemIO& local_cell = monolithic_grid.cell()[cell_i];
+                ElemIO& local_cell = monolithic_grid.cells()[cell_i];
                 std::vector<ElemIO> local_faces = local_cell.interfaces();
-                ElemIO& other_cell = monolithic_grid.cell()[ngbr_id];
+                ElemIO& other_cell = monolithic_grid.cells()[ngbr_id];
                 std::vector<ElemIO> other_faces = other_cell.interfaces();
-                InterfaceLookup& face_lookup = monolithic_grid.interface_lookup();
+                const InterfaceLookup& face_lookup = monolithic_grid.interface_lookup();
                 size_t common_face_id = std::numeric_limits<size_t>::max();
                 for (const ElemIO& local_face : local_faces) {
-                    size_t local_face_id = face_lookup().id(local_face.vertex_ids());
+                    size_t local_face_id = face_lookup.id(local_face.vertex_ids());
                     for (const ElemIO& other_face : other_faces) {
-                        size_t other_face_id = face_lookup().id(other_face.vertex_ids());
+                        size_t other_face_id = face_lookup.id(other_face.vertex_ids());
                         if (local_face_id == other_face_id) {
                             // we've found the face!
                             common_face_id = local_face_id;
@@ -105,7 +105,7 @@ std::vector<GridIO> partition_metis(GridIO& monolithic_grid, size_t n_partitions
                 }
                 
                 cell_mapping[this_cell_partition].push_back(
-                    CellMapping{local_cell, ngbr_partition, other_cell, common_face_id});
+                    CellMapping(local_cell_id, ngbr_partition, other_cell_id, common_face_id));
             }
         }
     }

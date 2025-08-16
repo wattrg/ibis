@@ -24,4 +24,6 @@ void RigidBodyTranslation<T, MemModel>::compute_vertex_velocities(const FlowStat
         });
 }
 template class RigidBodyTranslation<Ibis::real, SharedMem>;
+template class RigidBodyTranslation<Ibis::real, Mpi>;
 template class RigidBodyTranslation<Ibis::dual, SharedMem>;
+template class RigidBodyTranslation<Ibis::dual, Mpi>;
