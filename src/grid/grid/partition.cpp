@@ -62,7 +62,7 @@ std::vector<GridIO> partition_metis(GridIO& monolithic_grid, size_t n_partitions
         size_t cell_i_partition = partitions[cell_i];
         cells_in_partition[cell_i_partition].push_back(cell_i);
         global_local_cell_map[cell_i_partition][cell_i] =
-            cells_in_partition[cell_i_partition].size();
+            cells_in_partition[cell_i_partition].size() - 1;
     }
 
     // build cell mappings
@@ -79,14 +79,17 @@ std::vector<GridIO> partition_metis(GridIO& monolithic_grid, size_t n_partitions
             size_t ngbr_id = adjncy[ngbr_idx_start + ngbr_i];
             size_t ngbr_partition = partitions[ngbr_id];
             if (this_cell_partition != ngbr_partition) {
+                // The ids of the two cells in their local block
                 size_t local_cell_id = global_local_cell_map[this_cell_partition][cell_i];
                 size_t other_cell_id = global_local_cell_map[ngbr_partition][ngbr_id];
 
                 // find the common interface between the two cells
-                ElemIO& local_cell = monolithic_grid.cells()[cell_i];
-                std::vector<ElemIO> local_faces = local_cell.interfaces();
-                ElemIO& other_cell = monolithic_grid.cells()[ngbr_id];
-                std::vector<ElemIO> other_faces = other_cell.interfaces();
+                // const ElemIO& local_cell = monolithic_grid.cells()[cell_i];
+                // const ElemIO& other_cell = monolithic_grid.cells()[ngbr_id];
+                // std::vector<ElemIO> other_faces = other_cell.interfaces();
+                std::vector<ElemIO> local_faces = monolithic_grid.cells()[cell_i].interfaces();
+                std::vector<ElemIO> other_faces = monolithic_grid.cells()[ngbr_id].interfaces();
+
                 const InterfaceLookup& face_lookup = monolithic_grid.interface_lookup();
                 size_t common_face_id = std::numeric_limits<size_t>::max();
                 for (const ElemIO& local_face : local_faces) {

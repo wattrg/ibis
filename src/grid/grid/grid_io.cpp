@@ -8,7 +8,7 @@
 #include <string>
 
 ElemIO::ElemIO(const ElemIO &other) : vertex_ids_(other.vertex_ids_) {
-    // vertex_ids_(other.vertex_ids_};
+    // vertex_ids_(other.vertex_ids_);
     cell_type_ = other.cell_type_;
     face_order_ = other.face_order_;
 }
@@ -157,7 +157,7 @@ GridIO::GridIO(const GridIO &monolithic_grid, const std::vector<size_t> &cells_t
         std::vector<size_t> global_vertex_ids = global_elem_io.vertex_ids();
 
         // gather the list of local vertices and faces for this cell
-        std::vector<size_t> local_vertex_ids;
+        std::vector<size_t> local_vertex_ids{};
         for (auto &global_vertex : global_vertex_ids) {
             if (vertex_map.find(global_vertex) == vertex_map.end()) {
                 // we haven't encountered this vertex in this partition yet,
@@ -173,8 +173,9 @@ GridIO::GridIO(const GridIO &monolithic_grid, const std::vector<size_t> &cells_t
                                 global_elem_io.face_order()));
 
         // set up the faces from the global faces
-        std::vector<size_t> local_face_ids;
+        std::vector<size_t> local_face_ids{};
         std::vector<ElemIO> global_faces = global_elem_io.interfaces();
+        cell_faces_ = std::vector<std::vector<size_t>> {num_cells};
         const InterfaceLookup &global_face_lookup = monolithic_grid.interface_lookup();
         InterfaceLookup local_face_lookup;
         for (auto &global_face : global_faces) {
@@ -186,6 +187,7 @@ GridIO::GridIO(const GridIO &monolithic_grid, const std::vector<size_t> &cells_t
                 faces_.push_back(global_face);
                 local_face_lookup.insert(global_face.vertex_ids());
             }
+            // std::cout << local_cell_i << " " << cell_faces_
             cell_faces_[local_cell_i].push_back(faces_.size() - 1);
         }
     }
@@ -397,11 +399,6 @@ void GridIO::write_su2_grid(std::ostream &grid_file) {
 }
 
 void GridIO::construct_faces_() {
-    // Initialise memory
-    std::vector<std::vector<size_t>> cell_faces_{};
-    std::vector<ElemIO> faces_{};
-
-    interface_lookup_ = InterfaceLookup{};
     for (size_t cell_id = 0; cell_id < cells_.size(); cell_id++) {
         const ElemIO &cell = cells_[cell_id];
         std::vector<ElemIO> cell_interfaces = cell.interfaces();
@@ -478,7 +475,7 @@ void GridIO::read_mapped_cells(std::istream &file) {
         other_cell = std::stoi(value);
 
         cell_mapping_.push_back(
-            CellMapping(local_cell, other_block, other_cell, global_face, local_face));
+            CellMapping(local_cell, local_face, global_face, other_block, other_cell));
     }
 }
 
@@ -552,8 +549,9 @@ std::vector<ElemIO> vtk_face_order(std::vector<size_t> ids, ElemType type) {
 
 std::vector<ElemIO> ElemIO::interfaces() const {
     switch (face_order_) {
-        case FaceOrder::Vtk:
+        case FaceOrder::Vtk: {
             return vtk_face_order(vertex_ids_, cell_type_);
+        }
         default:
             throw new std::runtime_error("Unreachable");
     }
@@ -750,7 +748,7 @@ TEST_CASE("read_cell_mapping") {
 
     std::vector<CellMapping> expected_map1{
         CellMapping(0, 2, 2, 0, 0),   CellMapping(1, 6, 6, 0, 1),
-        CellMapping(3, 12, 13, 0, 1), CellMapping(3, 11, 6, 0, 3),
+        CellMapping(3, 12, 13, 0, 1), CellMapping(3, 11, 16, 0, 3),
         CellMapping(4, 13, 11, 0, 0), CellMapping(4, 14, 17, 0, 2)};
 
     CHECK(part0.cell_mapping()[0] == expected_map0[0]);

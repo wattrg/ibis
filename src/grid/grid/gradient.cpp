@@ -68,9 +68,9 @@ TEST_CASE("gradient") {
 
     Kokkos::deep_copy(values, values_host);
 
-    Kokkos::View<Ibis::real*> grad_x("grad_x", 9);
-    Kokkos::View<Ibis::real*> grad_y("grad_y", 9);
-    Kokkos::View<Ibis::real*> grad_z("grad_z", 9);
+    // Kokkos::View<Ibis::real*> grad_x("grad_x", 9);
+    // Kokkos::View<Ibis::real*> grad_y("grad_y", 9);
+    // Kokkos::View<Ibis::real*> grad_z("grad_z", 9);
     Vector3s<Ibis::real> grad(9);
     wls_gradient.compute_gradients(block_dev, values, grad);
     auto grad_host = grad.host_mirror();

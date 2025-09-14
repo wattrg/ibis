@@ -138,9 +138,9 @@ public:
     std::vector<ElemIO> faces() const { return faces_; }
     const InterfaceLookup &interface_lookup() const { return interface_lookup_; }
 
-    std::vector<ElemIO> cells() const { return cells_; }
+    const std::vector<ElemIO>& cells() const { return cells_; }
 
-    std::vector<std::vector<size_t>> cell_face_ids() const { return cell_faces_; }
+    const std::vector<std::vector<size_t>>& cell_face_ids() const { return cell_faces_; }
 
     std::unordered_map<std::string, std::vector<ElemIO>> markers() const {
         return markers_;

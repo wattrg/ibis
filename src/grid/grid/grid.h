@@ -204,7 +204,6 @@ public:
                     }
                 }
             });
-
         // TODO: loop through the ghost cells and attach them to
         // the other side of the interface.
         // Think about how to do this on the GPU
