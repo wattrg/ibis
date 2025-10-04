@@ -87,8 +87,10 @@ std::vector<GridIO> partition_metis(GridIO& monolithic_grid, size_t n_partitions
                 // const ElemIO& local_cell = monolithic_grid.cells()[cell_i];
                 // const ElemIO& other_cell = monolithic_grid.cells()[ngbr_id];
                 // std::vector<ElemIO> other_faces = other_cell.interfaces();
-                std::vector<ElemIO> local_faces = monolithic_grid.cells()[cell_i].interfaces();
-                std::vector<ElemIO> other_faces = monolithic_grid.cells()[ngbr_id].interfaces();
+                std::vector<ElemIO> local_faces =
+                    monolithic_grid.cells()[cell_i].interfaces();
+                std::vector<ElemIO> other_faces =
+                    monolithic_grid.cells()[ngbr_id].interfaces();
 
                 const InterfaceLookup& face_lookup = monolithic_grid.interface_lookup();
                 size_t common_face_id = std::numeric_limits<size_t>::max();

@@ -175,7 +175,7 @@ GridIO::GridIO(const GridIO &monolithic_grid, const std::vector<size_t> &cells_t
         // set up the faces from the global faces
         std::vector<size_t> local_face_ids{};
         std::vector<ElemIO> global_faces = global_elem_io.interfaces();
-        cell_faces_ = std::vector<std::vector<size_t>> {num_cells};
+        cell_faces_ = std::vector<std::vector<size_t>>{num_cells};
         const InterfaceLookup &global_face_lookup = monolithic_grid.interface_lookup();
         InterfaceLookup local_face_lookup;
         for (auto &global_face : global_faces) {
