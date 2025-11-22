@@ -1,7 +1,7 @@
 import math
 gas_model = IdealGas(species="air")
 gas_state = GasState()
-gas_state.p = 1.0e3
+gas_state.p = 500
 gas_state.T = 300.0
 gas_model.update_thermo_from_pT(gas_state)
 v = 5 * gas_model.speed_of_sound(gas_state)
@@ -15,15 +15,15 @@ config.convective_flux = ConvectiveFlux(
     # limiter = Unlimited(),
 )
 
-config.viscous_flux = ViscousFlux(enabled = False)
+config.viscous_flux = ViscousFlux(enabled = True)
 
 config.gas_model = gas_model
 
 config.solver = SteadyState(
-    cfl=ResidualBasedCfl(growth_threshold=0.9, power=1.0, start_cfl=0.5),
+    cfl=ResidualBasedCfl(growth_threshold=0.99, power=1.0, start_cfl=1.0),
     max_steps=10000,
     plot_frequency=1000,
-    print_frequency=20,
+    print_frequency=100,
     diagnostics_frequency=1,
     tolerance=1e-6,
     linear_solver=FGmres(
@@ -38,7 +38,8 @@ config.grid = Block(
     file_name="grid.su2",
     initial_condition=initial,
     boundaries = {
-        "capsule": slip_wall(), # wall
+        # "capsule": slip_wall(), # wall
+        "capsule": fixed_temperature_no_slip_wall(temperature=1000),
         "inflow": supersonic_inflow(inflow), # inflow,
         "outflow": supersonic_outflow(),
     }
