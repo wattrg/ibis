@@ -405,6 +405,7 @@ public:
         std::unordered_map<size_t, std::vector<size_t>> external_cells;
         std::unordered_map<size_t, std::vector<size_t>> ghost_cells;
         std::unordered_map<size_t, std::vector<size_t>> faces;
+        std::vector<size_t> other_blocks;
 
         // loop over all the interblock connections, keeping track of
         // which cells and faces are on the connection
@@ -421,30 +422,61 @@ public:
                 external_cells.insert({other_block, {}});
                 ghost_cells.insert({other_block, {}});
                 faces.insert({other_block, {}});
+                other_blocks.push_back(other_block);
             }
 
             local_cells[other_block].push_back(cell_mapping.local_cell);
             external_cells[other_block].push_back(cell_mapping.other_cell);
             ghost_cells[other_block].push_back(ghost_cell_id);
         }
+        other_blocks_ =
+            Field<size_t, array_layout, memory_space>("other_blocks", other_blocks);
 
         // for (size_t other_block : local_cells) {
         for (auto& [other_block, cells] : local_cells) {
             internal_boundary_cells_.insert(
                 {other_block, Field<size_t, array_layout, memory_space>(
                                   "internal_boundary_cells", local_cells[other_block])});
-            internal_boundary_external_cells_.push_back(
-                Field<size_t, array_layout, memory_space>(
-                    "internal_boundary_external_cells", external_cells[other_block]));
-            internal_boundary_ghost_cells_.push_back(
-                Field<size_t, array_layout, memory_space>("internal_boundary_ghost_cells",
-                                                          ghost_cells[other_block]));
+            internal_boundary_external_cells_.insert(
+                {other_block,
+                 Field<size_t, array_layout, memory_space>(
+                     "internal_boundary_external_cells", external_cells[other_block])});
+            internal_boundary_ghost_cells_.insert(
+                {other_block,
+                 Field<size_t, array_layout, memory_space>(
+                     "internal_boundary_ghost_cells", ghost_cells[other_block])});
             position_comm_.push_back(
                 Ibis::SymmetricComm<MemModel, T>(other_block, local_cells.size() * dim_));
             volume_comm_.push_back(
                 Ibis::SymmetricComm<MemModel, T>(other_block, local_cells.size()));
         }
     }
+
+    // Get the IDs of the ghost cells in the current block along a boundary with
+    // other_block
+    Field<size_t, array_layout, memory_space> internal_boundary_ghost_cells(
+        size_t other_block) {
+        return internal_boundary_ghost_cells_[other_block];
+    }
+
+    // Get the IDs of the valid cells in the current block along a boundary with
+    // other_block
+    Field<size_t, array_layout, memory_space> internal_boundary_cells(
+        size_t other_block) {
+        return internal_boundary_cells_[other_block];
+    }
+
+    // Get the IDs of the valid cells in other_block along a boundary with this block
+    Field<size_t, array_layout, memory_space> internal_boundary_external_cells(
+        size_t other_block) {
+        return internal_boundary_external_cells_[other_block];
+    }
+
+    // Get the IDs of the other block connected to this block
+    Field<size_t, array_layout, memory_space> other_blocks() { return other_blocks_; }
+
+    // Get the IDs of the other block connected to this block
+    size_t other_block(size_t i) { return other_blocks_(i); }
 
     std::map<size_t, size_t> setup_physical_boundaries(
         const GridIO& grid_io, json& boundaries,
@@ -677,9 +709,11 @@ public:
     std::vector<Ibis::SymmetricComm<MemModel, T>> volume_comm_;
     std::unordered_map<size_t, Field<size_t, array_layout, memory_space>>
         internal_boundary_cells_;
-    std::vector<Field<size_t, array_layout, memory_space>> internal_boundary_ghost_cells_;
-    std::vector<Field<size_t, array_layout, memory_space>>
+    std::unordered_map<size_t, Field<size_t, array_layout, memory_space>>
+        internal_boundary_ghost_cells_;
+    std::unordered_map<size_t, Field<size_t, array_layout, memory_space>>
         internal_boundary_external_cells_;
+    Field<size_t, array_layout, memory_space> other_blocks_;
     // std::vector<Field<size_t, array_layout, memory_space>> internal_boundary_faces_;
 
     // this contains all marked interfaces. This includes faces on the boundary,

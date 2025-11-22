@@ -36,7 +36,7 @@ FiniteVolume<T, MemModel>::FiniteVolume(GridBlock<MemModel, T>& grid, json confi
                                   grads.rho, viscous);
     }
 
-    // set up boundary conditions
+    // set up physical boundary conditions
     std::vector<std::string> boundary_tags = grid.boundary_tags();
     json boundaries_config = config.at("grid").at("boundaries");
     for (size_t bi = 0; bi < boundary_tags.size(); bi++) {
@@ -48,6 +48,20 @@ FiniteVolume<T, MemModel>::FiniteVolume(GridBlock<MemModel, T>& grid, json confi
 
         // the faces associated with this boundary
         bc_interfaces_.push_back(grid.boundary_faces(boundary_tags[bi]));
+    }
+
+    // setup internal boundaries
+    // need to set up flow_state_comm_ and gradient_comm_
+    size_t num_flow_vars = (grid.dim() == 3) ? 5 : 4;
+    size_t num_grads = cell_grad_.num_grads();
+    for (size_t block_i = 0; block_i < grid.other_blocks().size(); block_i++) {
+        size_t other_block = grid.other_block(block_i);
+        size_t num_cells_on_boundary =
+            grid.internal_boundary_ghost_cells(other_block).size();
+        flow_state_comm_.push_back(Ibis::SymmetricComm<MemModel, T>(
+            other_block, num_cells_on_boundary * num_flow_vars));
+        gradient_comm_.push_back(Ibis::SymmetricComm<MemModel, T>(
+            other_block, num_cells_on_boundary * num_grads));
     }
 }
 

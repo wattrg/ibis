@@ -13,25 +13,33 @@ struct Gradients {
 
     Gradients(int num_cells, bool need_pressure, bool need_temp, bool need_u,
               bool need_rho, bool viscous) {
+        num_grads_ = 0;
         bool high_order = (need_pressure || need_temp || need_u || need_rho);
         if (high_order || viscous) {
             vx = Vector3s<T, Layout, Space>("Gradients::vx", num_cells);
             vy = Vector3s<T, Layout, Space>("Gradients::vy", num_cells);
             vz = Vector3s<T, Layout, Space>("Gradients::vz", num_cells);
+            num_grads_ += 3;
         }
         if (need_pressure) {
             p = Vector3s<T, Layout, Space>("Gradients::p", num_cells);
+            num_grads_ += 1;
         }
         if (need_u) {
             u = Vector3s<T, Layout, Space>("Gradients::u", num_cells);
+            num_grads_ += 1;
         }
         if (need_rho) {
             rho = Vector3s<T, Layout, Space>("Gradients::rho", num_cells);
+            num_grads_ += 1;
         }
         if (need_temp || viscous) {
             temp = Vector3s<T, Layout, Space>("Gradients::T", num_cells);
+            num_grads_ += 1;
         }
     }
+
+    size_t num_grads() const { return num_grads_; }
 
     Vector3s<T, Layout, Space> p;
     Vector3s<T, Layout, Space> rho;
@@ -40,6 +48,7 @@ struct Gradients {
     Vector3s<T, Layout, Space> vx;
     Vector3s<T, Layout, Space> vy;
     Vector3s<T, Layout, Space> vz;
+    size_t num_grads_;
 };
 
 template <typename T, class MemModel, class ExecSpace = Kokkos::DefaultExecutionSpace,
