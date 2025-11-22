@@ -25,7 +25,7 @@ endif()
 set(CMAKE_INSTALL_PREFIX "${CMAKE_SOURCE_DIR}/inst")
 
 # Use c++ 17
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 
 # to build the python bindings, we need to make position independent code
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
