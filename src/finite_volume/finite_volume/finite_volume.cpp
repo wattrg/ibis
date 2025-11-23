@@ -51,7 +51,6 @@ FiniteVolume<T, MemModel>::FiniteVolume(GridBlock<MemModel, T>& grid, json confi
     }
 
     // setup internal boundaries
-    // need to set up flow_state_comm_ and gradient_comm_
     size_t num_flow_vars = (grid.dim() == 3) ? 5 : 4;
     size_t num_grads = cell_grad_.num_grads();
     for (size_t block_i = 0; block_i < grid.other_blocks().size(); block_i++) {
@@ -70,6 +69,9 @@ size_t FiniteVolume<T, MemModel>::compute_dudt(
     FlowStates<T>& flow_state, Vector3s<T> vertex_vel, const ConservedQuantities<T>& cq,
     GridBlock<MemModel, T>& grid, ConservedQuantities<T>& dudt, IdealGas<T>& gas_model,
     TransportProperties<T>& trans_prop, bool allow_reconstruction) {
+    if constexpr (std::is_same<MemModel, Mpi>::value) {
+        transfer_internal_flowstates(flow_state, grid, gas_model);
+    }
     apply_pre_reconstruction_bc(flow_state, grid, gas_model, trans_prop);
     if (grid.moving()) {
         grid.compute_grid_motion(flow_state, vertex_vel);
@@ -93,6 +95,71 @@ size_t FiniteVolume<T, MemModel>::compute_dudt(
         apply_geometric_conservation_law(cq, grid, dudt);
     }
     return 0;
+}
+
+template <typename T, class MemModel>
+void FiniteVolume<T, MemModel>::transfer_internal_flowstates(
+    FlowStates<T>& fs, const GridBlock<MemModel, T>& grid, const IdealGas<T>& gas_model) {
+    (void)gas_model;
+    size_t num_vars = (grid.dim() == 3) ? 5 : 4;
+    size_t dim = grid.dim();
+
+    // Step 0: Post a receive so that we can wait for incoming data
+    for (auto& comm : flow_state_comm_) {
+        comm.expect_receive();
+    }
+    
+    // Step 1: pack send buffers
+    for (size_t boundary_i = 0; boundary_i < grid.other_blocks().size(); boundary_i++) {
+        size_t other_block = grid.other_block(boundary_i);
+        Ibis::SymmetricComm<MemModel, T> comm = flow_state_comm_[boundary_i];
+        auto cells_to_pack = grid.internal_boundary_cells(other_block);
+        auto buffer = comm.send_buf();
+
+        // the parallel work of packing the data
+        Ibis::parallel_for(
+            "FV::pack_send_buffer", cells_to_pack.size(),
+            KOKKOS_LAMBDA(const size_t cell_i) {
+                size_t cell_to_pack = cells_to_pack(cell_i);
+                size_t start_index = cell_i * num_vars;
+                buffer(start_index + 0) = fs.gas.rho(cell_to_pack);
+                buffer(start_index + 1) = fs.gas.pressure(cell_to_pack);
+                buffer(start_index + 2) = fs.vel.x(cell_to_pack);
+                buffer(start_index + 3) = fs.vel.y(cell_to_pack);
+                if (dim == 3) {
+                    buffer(start_index + 4) = fs.vel.z(cell_to_pack);
+                }
+            });
+    }
+
+    // Step 2: transfer data
+    for (auto& comm : flow_state_comm_) {
+        comm.send();
+        comm.receive();
+    }
+
+    // Step 3: unpack receive buffers
+    for (size_t boundary_i = 0; boundary_i < grid.other_blocks().size(); boundary_i++) {
+        size_t other_block = grid.other_block(boundary_i);
+        Ibis::SymmetricComm<MemModel, T> comm = flow_state_comm_[boundary_i];
+        auto cells_to_unpack_to = grid.internal_boundary_ghost_cells(other_block);
+        auto buffer = comm.recv_buf();
+
+        // unpack the buffer
+        Ibis::parallel_for(
+            "FV::unpack_recv_buffer", cells_to_unpack_to.size(), KOKKOS_LAMBDA(const size_t cell_i) {
+                size_t cell_to_unpack_to = cells_to_unpack_to(cell_i);
+                size_t start_index = cell_i * num_vars;
+                fs.gas.rho(cell_to_unpack_to) = buffer(start_index + 0);
+                fs.gas.pressure(cell_to_unpack_to) = buffer(start_index + 1);
+                fs.vel.x(cell_to_unpack_to) = buffer(start_index + 2);
+                fs.vel.y(cell_to_unpack_to) = buffer(start_index + 3);
+                if (dim == 3) {
+                    fs.vel.z(cell_to_unpack_to) = buffer(start_index + 4);
+                }
+            }  
+        );
+    }
 }
 
 template <typename T, class MemModel>

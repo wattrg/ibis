@@ -102,7 +102,8 @@ public:
     size_t count_bad_cells(const FlowStates<T>& fs, const size_t num_cells);
 
     void transfer_internal_flowstates(FlowStates<T>& fs,
-                                      const GridBlock<MemModel, T>& grid);
+                                      const GridBlock<MemModel, T>& grid,
+                                      const IdealGas<T>& gas_model);
 
 public:
     // methods for IO

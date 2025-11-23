@@ -454,29 +454,31 @@ public:
 
     // Get the IDs of the ghost cells in the current block along a boundary with
     // other_block
-    Field<size_t, array_layout, memory_space> internal_boundary_ghost_cells(
-        size_t other_block) {
-        return internal_boundary_ghost_cells_[other_block];
+    const Field<size_t, array_layout, memory_space> internal_boundary_ghost_cells(
+        size_t other_block) const {
+        return internal_boundary_ghost_cells_.at(other_block);
     }
 
     // Get the IDs of the valid cells in the current block along a boundary with
     // other_block
-    Field<size_t, array_layout, memory_space> internal_boundary_cells(
-        size_t other_block) {
-        return internal_boundary_cells_[other_block];
+    const Field<size_t, array_layout, memory_space> internal_boundary_cells(
+        size_t other_block) const {
+        return internal_boundary_cells_.at(other_block);
     }
 
     // Get the IDs of the valid cells in other_block along a boundary with this block
-    Field<size_t, array_layout, memory_space> internal_boundary_external_cells(
-        size_t other_block) {
-        return internal_boundary_external_cells_[other_block];
+    const Field<size_t, array_layout, memory_space> internal_boundary_external_cells(
+        size_t other_block) const {
+        return internal_boundary_external_cells_.at(other_block);
     }
 
     // Get the IDs of the other block connected to this block
-    Field<size_t, array_layout, memory_space> other_blocks() { return other_blocks_; }
+    const Field<size_t, array_layout, memory_space> other_blocks() const {
+        return other_blocks_;
+    }
 
     // Get the IDs of the other block connected to this block
-    size_t other_block(size_t i) { return other_blocks_(i); }
+    size_t other_block(size_t i) const { return other_blocks_(i); }
 
     std::map<size_t, size_t> setup_physical_boundaries(
         const GridIO& grid_io, json& boundaries,

@@ -261,6 +261,9 @@ void ConvectiveFlux<T, MemModel>::linear_reconstruct(const FlowStates<T>& flow_s
                                                      WLSGradient<T, MemModel>& grad_calc,
                                                      IdealGas<T>& gas_model) {
     compute_convective_gradient(flow_states, grid, cell_grad, grad_calc);
+    if constexpr (std::is_same<MemModel, Mpi>::value) {
+        // TODO: gradient communication
+    }
     compute_limiters(flow_states, grid, cell_grad);
 
     auto limiters = limiters_;
