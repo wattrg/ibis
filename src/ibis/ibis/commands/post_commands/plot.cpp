@@ -34,12 +34,12 @@ int plot(FlowFormat format, std::vector<std::string> extras, int argc, char* arg
 
 template <typename T, bool binary>
 void plot_vtk(json directories, std::vector<std::string> extra_vars) {
-    std::string flow_dir = directories.at("flow_dir");
-    std::string grid_dir = directories.at("grid_dir");
-    std::string plot_dir = directories.at("plot_dir");
+    std::filesystem::path flow_dir = directories.at("flow_dir");
+    std::filesystem::path grid_dir = directories.at("grid_dir");
+    std::filesystem::path plot_dir = directories.at("plot_dir");
 
     // read the flows file to figure out what flow files exist
-    std::ifstream flows(flow_dir + "/flows");
+    std::ifstream flows(flow_dir / "flows");
     std::vector<std::string> dirs;
     std::string line;
     while (std::getline(flows, line)) {
@@ -60,16 +60,17 @@ void plot_vtk(json directories, std::vector<std::string> extra_vars) {
         io.add_output_variable(extra_var);
     }
 
-    json grid_config = config.at("grids")[0];
-    GridBlock<SharedMem, T> grid(grid_dir + "/0000/block_0000.su2", grid_config);
-    // GridBlock<T> grid;
-    FiniteVolume<T, SharedMem> fv(grid, config);
-    FlowStates<T> fs(grid.num_total_cells());
-    for (unsigned int time_idx = 0; time_idx < dirs.size(); time_idx++) {
-        json meta_data;
-        io.read(fs, grid, gas_model, trans_prop, grid_config, meta_data, time_idx);
-        io.write(fs, fv, grid, gas_model, trans_prop, meta_data.at("time"));
-        spdlog::info("Written VTK file at time index {}", time_idx);
+    for (size_t block_i = 0; block_i < config.at("grids").size(); block_i++) {
+        json grid_config = config.at("grids")[block_i];
+        GridBlock<SharedMem, T> grid(grid_dir / "0000" / std::format("block_{:04}.su2", block_i), grid_config, block_i);
+        FiniteVolume<T, SharedMem> fv(grid, config);
+        FlowStates<T> fs(grid.num_total_cells());
+        for (unsigned int time_idx = 0; time_idx < dirs.size(); time_idx++) {
+            json meta_data;
+            io.read(fs, grid, gas_model, trans_prop, grid_config, meta_data, time_idx);
+            io.write(fs, fv, grid, gas_model, trans_prop, meta_data.at("time"));
+            spdlog::info("Written VTK file at time index {}", time_idx);
+        }
     }
     io.write_coordinating_file();
 }
