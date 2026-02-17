@@ -24,7 +24,7 @@ endif()
 # root of the repository
 set(CMAKE_INSTALL_PREFIX "${CMAKE_SOURCE_DIR}/inst")
 
-# Use c++ 17
+# Use c++ 20
 set(CMAKE_CXX_STANDARD 20)
 
 # to build the python bindings, we need to make position independent code

@@ -103,7 +103,9 @@ FVIO<T, MemModel>::FVIO(json config, int time_index) {
     FlowFormat format = string_to_flow_format(config.at("io").at("flow_format"));
     input_ = make_fv_input<T, MemModel>(format);
     output_ = make_fv_output<T, MemModel>(format);
-    moving_grid_ = config.at("grid").at("motion").at("enabled");
+
+    // assume all grids have motion enabled/disabled
+    moving_grid_ = config.at("grids")[0].at("motion").at("enabled");
     time_index_ = time_index;
 
     input_dir_ = "io/flow";
@@ -120,15 +122,18 @@ int FVIO<T, MemModel>::write(const FlowStates<T>& fs, FiniteVolume<T, MemModel>&
     fs_host.deep_copy(fs);
 
     std::string time_index = pad_time_index(time_index_, 4);
-    std::string directory_name = output_dir_ + "/" + time_index;
+    std::string time_directory_name = output_dir_ + "/" + time_index;
+    int grid_id = Ibis::get_world_rank<MemModel>();
+    std::string grid_name = std::format("block_{:04}.su2", grid_id);
+    std::string flow_dir = std::format("{}/block_{:04}", output_dir_, grid_id);
     std::filesystem::create_directory(output_dir_);
-    std::filesystem::create_directory(directory_name);
+    std::filesystem::create_directory(time_directory_name);
     int result = output_->write(fs_host, fv, grid, gas_model, trans_prop, output_dir_,
                                 time_index, time);
     if (moving_grid_) {
         GridIO grid_io = grid.to_grid_io();
         std::filesystem::create_directory("io/grid/" + time_index);
-        std::ofstream grid_file("io/grid/" + time_index + "/block_0000.su2");
+        std::ofstream grid_file("io/grid/" + time_index + grid_name);
         grid_io.write_su2_grid(grid_file);
     }
 
@@ -145,12 +150,14 @@ int FVIO<T, MemModel>::read(FlowStates<T>& fs, GridBlock<MemModel, T>& grid,
     auto fs_host = fs.host_mirror();
     std::string time_index = pad_time_index(time_idx, 4);
     std::string directory_name = input_dir_ + "/" + time_index;
+    int block_id = Ibis::get_world_rank<MemModel>();
+    std::string block_name = std::format("/block_{:04}.su2", block_id);
     if (moving_grid_ && time_idx != 0) {
         grid =
-            GridBlock<MemModel, T>("io/grid/" + time_index + "/block_0000.su2", config);
+            GridBlock<MemModel, T>("io/grid/" + time_index + block_name, config);
     } else if (!grid.is_initialised()) {
         grid = GridBlock<MemModel, T>(
-            "io/grid/" + pad_time_index(0, 4) + "/block_0000.su2", config);
+            "io/grid/" + pad_time_index(0, 4) + block_name, config);
     }
     int result =
         input_->read(fs_host, grid, gas_model, trans_prop, directory_name, meta_data);

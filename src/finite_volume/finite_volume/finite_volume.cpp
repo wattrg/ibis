@@ -38,7 +38,7 @@ FiniteVolume<T, MemModel>::FiniteVolume(GridBlock<MemModel, T>& grid, json confi
 
     // set up physical boundary conditions
     std::vector<std::string> boundary_tags = grid.boundary_tags();
-    json boundaries_config = config.at("grid").at("boundaries");
+    json boundaries_config = config.at("grids")[grid.id()].at("boundaries");
     for (size_t bi = 0; bi < boundary_tags.size(); bi++) {
         // build the actual boundary condition
         json boundary_config = boundaries_config.at(boundary_tags[bi]);
@@ -52,7 +52,7 @@ FiniteVolume<T, MemModel>::FiniteVolume(GridBlock<MemModel, T>& grid, json confi
 
     // setup internal boundaries
     size_t num_flow_vars = (grid.dim() == 3) ? 5 : 4;
-    size_t num_grads = cell_grad_.num_grads();
+    size_t num_grads = cell_grad_.num_grads() * grid.dim();
     for (size_t block_i = 0; block_i < grid.other_blocks().size(); block_i++) {
         size_t other_block = grid.other_block(block_i);
         size_t num_cells_on_boundary =

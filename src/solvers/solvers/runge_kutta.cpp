@@ -56,7 +56,7 @@ RungeKutta<MemModel>::RungeKutta(json config, GridBlock<MemModel, Ibis::real> gr
     // grid motion
     moving_grid_ = grid_.moving();
     if (moving_grid_) {
-        json grid_config = config.at("grid");
+        json grid_config = config.at("grids")[grid_.id()];
         json grid_motion_config = grid_config.at("motion");
         auto grid_driver = build_grid_motion_driver<Ibis::real>(grid, grid_motion_config);
         grid_.set_motion_driver(grid_driver);
@@ -82,7 +82,7 @@ template <class MemModel>
 int RungeKutta<MemModel>::initialise() {
     // read the grid and initial flow
     json meta_data;
-    json grid_config = config_.at("grid");
+    json grid_config = config_.at("grids")[grid_.id()];
     int ic_result =
         io_.read(flow_, grid_, gas_model_, trans_prop_, grid_config, meta_data, 0);
     int conversion_result =

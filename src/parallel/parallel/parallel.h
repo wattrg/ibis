@@ -13,6 +13,9 @@ void initialise(int argc, char** argv);
 template <class MemModel>
 void finalise();
 
+template <class MemModel>
+int get_world_rank();
+
 template <class FunctorType>
 inline void parallel_for(const std::string& str, const size_t work_count,
                          FunctorType functor) {

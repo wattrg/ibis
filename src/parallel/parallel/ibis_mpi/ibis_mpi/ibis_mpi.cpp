@@ -37,6 +37,13 @@ void Ibis::finalise<Mpi>() {
     MPI_Finalize();
 }
 
+template <>
+int Ibis::get_world_rank<Mpi>() {
+    int rank;
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+    return rank;
+}
+
 void Ibis::init_mpi_dual() {
     // Create MPI operations for dual numbers
     MPI_Op_create((MPI_User_function*)MPI_custom_max<Ibis::dual>, 1, &Ibis::MPI_dual_max);

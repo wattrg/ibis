@@ -15,20 +15,26 @@ int NativeTextOutput<T, MemModel>::write(const typename FlowStates<T>::mirror_ty
     (void)gas_model;
     (void)trans_prop;
     (void)fv;
-    std::string dir = plot_dir + "/" + time_dir;
-    std::ofstream meta_f(dir + "/meta_data.json");
+
+    int block_id = grid.id();
+    std::filesystem::path base_dir = std::filesystem::path(plot_dir);
+    std::filesystem::path time_directory = base_dir / time_dir;
+    std::filesystem::path dir = time_directory / std::format("block_{:04}", block_id);
+    std::filesystem::create_directories(dir);
+
+    std::ofstream meta_f(time_directory / "meta_data.json");
     json meta;
     meta["time"] = time;
     meta_f << meta.dump(4);
     meta_f.close();
 
-    std::ofstream flows(plot_dir + "/flows", std::ios_base::app);
+    std::ofstream flows(base_dir / "flows", std::ios_base::app);
     flows << time_dir << std::endl;
     flows.close();
 
-    std::ofstream temp(dir + "/T");
+    std::ofstream temp(dir / "T");
     if (!temp) {
-        spdlog::error("failed to open {}", dir + "/T");
+        spdlog::error("failed to open {}", (dir / "T").string());
         return 1;
     }
     temp << std::fixed << std::setprecision(16);
@@ -37,9 +43,9 @@ int NativeTextOutput<T, MemModel>::write(const typename FlowStates<T>::mirror_ty
     }
     temp.close();
 
-    std::ofstream pressure(dir + "/p");
+    std::ofstream pressure(dir / "p");
     if (!pressure) {
-        spdlog::error("failed to open {}", dir + "/p");
+        spdlog::error("failed to open {}", (dir / "p").string());
         return 1;
     }
     pressure << std::fixed << std::setprecision(16);
@@ -48,9 +54,9 @@ int NativeTextOutput<T, MemModel>::write(const typename FlowStates<T>::mirror_ty
     }
     pressure.close();
 
-    std::ofstream vx(dir + "/vx");
+    std::ofstream vx(dir / "vx");
     if (!vx) {
-        spdlog::error("failed to open {}", dir + "/vx");
+        spdlog::error("failed to open {}", (dir / "vx").string());
         return 1;
     }
     vx << std::fixed << std::setprecision(16);
@@ -59,9 +65,9 @@ int NativeTextOutput<T, MemModel>::write(const typename FlowStates<T>::mirror_ty
     }
     vx.close();
 
-    std::ofstream vy(dir + "/vy");
+    std::ofstream vy(dir / "vy");
     if (!vy) {
-        spdlog::error("failed to open {}", dir + "/vy");
+        spdlog::error("failed to open {}", (dir / "vy").string());
         return 1;
     }
     vy << std::fixed << std::setprecision(16);
@@ -71,9 +77,9 @@ int NativeTextOutput<T, MemModel>::write(const typename FlowStates<T>::mirror_ty
     vy.close();
 
     if (grid.dim() == 3) {
-        std::ofstream vz(dir + "/vz");
+        std::ofstream vz(dir / "vz");
         if (!vz) {
-            spdlog::error("failed to open {}", dir + "/vz");
+            spdlog::error("failed to open {}", (dir / "vz").string());
             return 1;
         }
         vz << std::fixed << std::setprecision(16);
@@ -98,18 +104,23 @@ int NativeTextInput<T, MemModel>::read(typename FlowStates<T>::mirror_type& fs,
                                        std::string dir, json& meta_data) {
     (void)trans_prop;
     size_t num_cells = grid.num_cells();
-    std::ifstream meta_f(dir + "/meta_data.json");
+    int block_id = grid.id();
+
+    std::filesystem::path time_directory = dir;
+    std::filesystem::path block_dir = time_directory / std::format("block_{:04}", block_id);
+
+    std::ifstream meta_f(time_directory / "meta_data.json");
     if (!meta_f) {
-        spdlog::error("Unable to load {}", dir + "/meta_data.json");
+        spdlog::error("Unable to load {}", (time_directory / "meta_data.json").string());
         return 1;
     }
     meta_data = json::parse(meta_f);
     meta_f.close();
 
     std::string line;
-    std::ifstream temp(dir + "/T");
+    std::ifstream temp(block_dir / "T");
     if (!temp) {
-        spdlog::error("Unable to load {}", dir + "/T");
+        spdlog::error("Unable to load {}", (block_dir / "T").string());
         return 1;
     }
     size_t cell_i = 0;
@@ -124,9 +135,9 @@ int NativeTextInput<T, MemModel>::read(typename FlowStates<T>::mirror_type& fs,
             num_cells, cell_i);
     }
 
-    std::ifstream pressure(dir + "/p");
+    std::ifstream pressure(block_dir / "p");
     if (!pressure) {
-        spdlog::error("Unable to load {}", dir + "/p");
+        spdlog::error("Unable to load {}", (block_dir / "p").string());
         return 1;
     }
     cell_i = 0;
@@ -136,9 +147,9 @@ int NativeTextInput<T, MemModel>::read(typename FlowStates<T>::mirror_type& fs,
     }
     pressure.close();
 
-    std::ifstream vx(dir + "/vx");
+    std::ifstream vx(block_dir / "vx");
     if (!vx) {
-        spdlog::error("Unable to load {}", dir + "/vx");
+        spdlog::error("Unable to load {}", (block_dir / "vx").string());
         return 1;
     }
     cell_i = 0;
@@ -148,9 +159,9 @@ int NativeTextInput<T, MemModel>::read(typename FlowStates<T>::mirror_type& fs,
     }
     vx.close();
 
-    std::ifstream vy(dir + "/vy");
+    std::ifstream vy(block_dir / "vy");
     if (!vy) {
-        spdlog::error("Unable to load {}", dir + "/vy");
+        spdlog::error("Unable to load {}", (block_dir / "vy").string());
         return 1;
     }
     cell_i = 0;
@@ -161,9 +172,9 @@ int NativeTextInput<T, MemModel>::read(typename FlowStates<T>::mirror_type& fs,
     vy.close();
 
     if (grid.dim() == 3) {
-        std::ifstream vz(dir + "/vz");
+        std::ifstream vz(block_dir / "vz");
         if (!vz) {
-            spdlog::error("Unable to load {}", dir + "/vz");
+            spdlog::error("Unable to load {}", (block_dir / "vz").string());
             return 1;
         }
 
@@ -199,20 +210,26 @@ int NativeBinaryOutput<T, MemModel>::write(const typename FlowStates<T>::mirror_
     (void)gas_model;
     (void)trans_prop;
     (void)fv;
-    std::string dir = plot_dir + "/" + time_dir;
-    std::ofstream meta_f(dir + "/meta_data.json");
+
+    int block_id = grid.id();
+    std::filesystem::path base_dir = std::filesystem::path(plot_dir);
+    std::filesystem::path time_directory = base_dir / time_dir;
+    std::filesystem::path dir = time_directory / std::format("block_{:04}", block_id);
+    std::filesystem::create_directories(dir);
+
+    std::ofstream meta_f(time_directory / "meta_data.json");
     json meta;
     meta["time"] = time;
     meta_f << meta.dump(4);
     meta_f.close();
 
-    std::ofstream flows(plot_dir + "/flows", std::ios_base::app);
+    std::ofstream flows(base_dir / "flows", std::ios_base::app);
     flows << time_dir << std::endl;
     flows.close();
 
-    std::ofstream temp(dir + "/T", std::ios::binary);
+    std::ofstream temp(dir / "T", std::ios::binary);
     if (!temp) {
-        spdlog::error("failed to open {}", dir + "/T");
+        spdlog::error("failed to open {}", (dir / "T").string());
         return 1;
     }
     for (size_t cell_i = 0; cell_i < grid.num_cells(); cell_i++) {
@@ -220,9 +237,9 @@ int NativeBinaryOutput<T, MemModel>::write(const typename FlowStates<T>::mirror_
     }
     temp.close();
 
-    std::ofstream pressure(dir + "/p", std::ios::binary);
+    std::ofstream pressure(dir / "p", std::ios::binary);
     if (!pressure) {
-        spdlog::error("failed to open {}", dir + "/p");
+        spdlog::error("failed to open {}", (dir / "p").string());
         return 1;
     }
     for (size_t cell_i = 0; cell_i < grid.num_cells(); cell_i++) {
@@ -230,9 +247,9 @@ int NativeBinaryOutput<T, MemModel>::write(const typename FlowStates<T>::mirror_
     }
     pressure.close();
 
-    std::ofstream vx(dir + "/vx", std::ios::binary);
+    std::ofstream vx(dir / "vx", std::ios::binary);
     if (!vx) {
-        spdlog::error("failed to open {}", dir + "/vx");
+        spdlog::error("failed to open {}", (dir / "vx").string());
         return 1;
     }
     for (size_t cell_i = 0; cell_i < grid.num_cells(); cell_i++) {
@@ -240,9 +257,9 @@ int NativeBinaryOutput<T, MemModel>::write(const typename FlowStates<T>::mirror_
     }
     vx.close();
 
-    std::ofstream vy(dir + "/vy", std::ios::binary);
+    std::ofstream vy(dir / "vy", std::ios::binary);
     if (!vy) {
-        spdlog::error("failed to open {}", dir + "/vy");
+        spdlog::error("failed to open {}", (dir / "vy").string());
         return 1;
     }
     for (size_t cell_i = 0; cell_i < grid.num_cells(); cell_i++) {
@@ -251,9 +268,9 @@ int NativeBinaryOutput<T, MemModel>::write(const typename FlowStates<T>::mirror_
     vy.close();
 
     if (grid.dim() == 3) {
-        std::ofstream vz(dir + "/vz", std::ios::binary);
+        std::ofstream vz(dir / "vz", std::ios::binary);
         if (!vz) {
-            spdlog::error("failed to open {}", dir + "/vz");
+            spdlog::error("failed to open {}", (dir / "vz").string());
             return 1;
         }
         for (size_t cell_i = 0; cell_i < grid.num_cells(); cell_i++) {
@@ -277,28 +294,33 @@ int NativeBinaryInput<T, MemModel>::read(typename FlowStates<T>::mirror_type& fs
                                          std::string dir, json& meta_data) {
     (void)trans_prop;
 
+    int block_id = grid.id();
+    std::filesystem::path time_directory = std::filesystem::path(dir);
+    std::filesystem::path block_dir = time_directory / std::format("block_{:04}", block_id);
+
     size_t num_cells = grid.num_cells();
-    std::ifstream meta_f(dir + "/meta_data.json");
+    std::ifstream meta_f(time_directory / "meta_data.json");
     if (!meta_f) {
-        spdlog::error("Unable to load {}", dir + "/meta_dta.json");
+        spdlog::error("Unable to load {}", (time_directory / "meta_dta.json").string());
         return 1;
     }
     meta_data = json::parse(meta_f);
     meta_f.close();
 
     std::string line;
-    std::ifstream temp(dir + "/T", std::ios::binary);
+    std::ifstream temp(block_dir / "T", std::ios::binary);
     if (!temp) {
-        spdlog::error("Unable to load {}", dir + "/T");
+        spdlog::error("Unable to load {}", (block_dir / "T").string());
         return 1;
     }
     for (size_t cell_i = 0; cell_i < num_cells; cell_i++) {
         read_binary<Ibis::real>(temp, Ibis::real_part(fs.gas.temp(cell_i)));
     }
+    temp.close();
 
-    std::ifstream pressure(dir + "/p", std::ios::binary);
+    std::ifstream pressure(block_dir / "p", std::ios::binary);
     if (!pressure) {
-        spdlog::error("Unable to load {}", dir + "/p");
+        spdlog::error("Unable to load {}", (block_dir / "p").string());
         return 1;
     }
     for (size_t cell_i = 0; cell_i < num_cells; cell_i++) {
@@ -306,9 +328,9 @@ int NativeBinaryInput<T, MemModel>::read(typename FlowStates<T>::mirror_type& fs
     }
     pressure.close();
 
-    std::ifstream vx(dir + "/vx", std::ios::binary);
+    std::ifstream vx(block_dir / "vx", std::ios::binary);
     if (!vx) {
-        spdlog::error("Unable to load {}", dir + "/vx");
+        spdlog::error("Unable to load {}", (block_dir / "vx").string());
         return 1;
     }
     for (size_t cell_i = 0; cell_i < num_cells; cell_i++) {
@@ -316,9 +338,9 @@ int NativeBinaryInput<T, MemModel>::read(typename FlowStates<T>::mirror_type& fs
     }
     vx.close();
 
-    std::ifstream vy(dir + "/vy", std::ios::binary);
+    std::ifstream vy(block_dir / "vy", std::ios::binary);
     if (!vy) {
-        spdlog::error("Unable to load {}", dir + "/vy");
+        spdlog::error("Unable to load {}", (block_dir / "vy").string());
         return 1;
     }
     for (size_t cell_i = 0; cell_i < num_cells; cell_i++) {
@@ -327,9 +349,9 @@ int NativeBinaryInput<T, MemModel>::read(typename FlowStates<T>::mirror_type& fs
     vy.close();
 
     if (grid.dim() == 3) {
-        std::ifstream vz(dir + "/vz", std::ios::binary);
+        std::ifstream vz(block_dir / "vz", std::ios::binary);
         if (!vz) {
-            spdlog::error("Unable to load {}", dir + "/vz");
+            spdlog::error("Unable to load {}", (block_dir / "vz").string());
             return 1;
         }
 

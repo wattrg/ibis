@@ -204,7 +204,7 @@ SteadyState<MemModel>::SteadyState(json config, GridBlock<MemModel, Ibis::dual> 
         new ConservedQuantities<Ibis::dual>(n_total_cells, dim)};
 
     if (sim_->grid.moving()) {
-        json grid_config = config.at("grid");
+        json grid_config = config.at("grids")[grid.id()];
         json grid_motion_config = grid_config.at("motion");
         auto grid_driver =
             build_grid_motion_driver<Ibis::dual>(sim_->grid, grid_motion_config);
@@ -236,7 +236,7 @@ template <class MemModel>
 int SteadyState<MemModel>::initialise() {
     // read grid and initial condition
     json meta_data{};
-    json grid_config = config_.at("grid");
+    json grid_config = config_.at("grids")[sim_->grid.id()];
     int ic_result = io_.read(*fs_, sim_->grid, sim_->gas_model, sim_->trans_prop,
                              grid_config, meta_data, 0);
     int conversion_result = primatives_to_conserved(*cq_, *fs_, sim_->gas_model);

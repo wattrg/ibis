@@ -5,7 +5,7 @@ gmsh.initialize()
 
 # general settings
 gmsh.option.setNumber("General.Terminal", 1)
-gmsh.option.setNumber("Mesh.Algorithm", 8) # quads
+gmsh.option.setNumber("Mesh.Algorithm", 11) # quads
 gmsh.option.setNumber("Mesh.RecombineAll", 1)
 gmsh.option.setNumber("Mesh.SaveAll", 1)
 

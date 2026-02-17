@@ -44,6 +44,10 @@ public:
         init_grid_block(GridIO(file_name), config);
     }
 
+    GridBlock(std::string file_name, json& config, size_t id) {
+        init_grid_block(GridIO(file_name, id), config);
+    }
+
     GridBlock(
         Vertices<T, execution_space, array_layout> vertices,
         Interfaces<T, execution_space, array_layout> interfaces,
@@ -91,6 +95,7 @@ public:
 
     void init_grid_block(const GridIO& grid_io, json& config) {
         dim_ = grid_io.dim();
+        id_ = grid_io.id();
         json boundaries = config.at("boundaries");
 
         // set the positions of the vertices
@@ -326,6 +331,9 @@ public:
 
     KOKKOS_INLINE_FUNCTION
     size_t dim() const { return dim_; }
+
+    KOKKOS_INLINE_FUNCTION
+    size_t id() const { return id_; }
 
     // this method requires the interface connectivity be set up correctly
     void compute_cell_neighbours() {
@@ -695,6 +703,7 @@ public:
     std::shared_ptr<WLSGradient<T, MemModel, ExecSpace, Layout>> grad_calc_;
 
     // Some information about the grid
+    size_t id_ = 0;
     size_t dim_;
     size_t num_valid_cells_;
     size_t num_ghost_cells_;

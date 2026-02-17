@@ -15,6 +15,11 @@ void Ibis::finalise<SharedMem>() {
     Kokkos::finalize();
 }
 
+template <>
+int Ibis::get_world_rank<SharedMem>() {
+    return 0;
+}
+
 #ifndef DOCTEST_CONFIG_DISABLE
 TEST_CASE("shared_parallel_reduction") {
     double result = Ibis::parallel_reduce<Min<double>, SharedMem>(

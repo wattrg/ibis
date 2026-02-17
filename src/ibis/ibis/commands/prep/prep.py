@@ -328,7 +328,8 @@ class RigidBodyTranslation:
 
 
 class Block:
-    def __init__(self, file_name, initial_condition, boundaries, **kwargs):
+    def __init__(self, file_name, initial_condition, boundaries, id=0, **kwargs):
+        self._id = id
         self._initial_condition = initial_condition
         self._block = file_name
         self.number_cells = 0
@@ -373,20 +374,23 @@ class Block:
     def write(self, grid_directory, flow_directory, binary):
         pathlib.Path(f"{grid_directory}/0000").mkdir(parents=True, exist_ok=True)
         pathlib.Path(f"{flow_directory}/0000").mkdir(parents=True, exist_ok=True)
+        ic_directory = pathlib.Path(flow_directory) / f"{0:04}"
+        block_ic_directory = ic_directory / f"block_{self._id:04}"
+        block_ic_directory.mkdir(parents=True, exist_ok=True)
 
         # write the grid
-        shutil.copy(self._block, f"{grid_directory}/0000/block_{0:04}.su2")
+        shutil.copy(self._block, f"{grid_directory}/0000/block_{self._id:04}.su2")
 
         # write the initial condition
         format = "wb" if binary else "w"
-        ic_directory = f"{flow_directory}/{0:04}"
-        temp = open(f"{ic_directory}/T", format)
-        pressure = open(f"{ic_directory}/p", format)
-        vx = open(f"{ic_directory}/vx", format)
-        vy = open(f"{ic_directory}/vy", format)
+        block_ic_directory = f"{flow_directory}/{0:04}/block_{self._id:04}"
+        temp = open(f"{block_ic_directory}/T", format)
+        pressure = open(f"{block_ic_directory}/p", format)
+        vx = open(f"{block_ic_directory}/vx", format)
+        vy = open(f"{block_ic_directory}/vy", format)
         if self.dim == 3:
             vz = open(f"{ic_directory}/vz", format)
-        meta_data = open(f"{ic_directory}/meta_data.json", "w")
+        meta_data = open(ic_directory / "meta_data.json", "w")
         times = open(f"{flow_directory}/flows", "w")
 
         if type(self._initial_condition) is FlowState:
@@ -1132,7 +1136,7 @@ class IO:
 
 
 class Config:
-    _json_values = ["convective_flux", "viscous_flux", "solver", "grid",
+    _json_values = ["convective_flux", "viscous_flux", "solver", "_grids",
                     "gas_model", "transport_properties", "io"]
     __slots__ = _json_values
 
@@ -1148,9 +1152,29 @@ class Config:
 
     def validate(self):
         for setting in self.__slots__:
-            getattr(self, setting).validate()
+            if setting == "_grids":
+                for grid in self._grids:
+                    grid.validate()
+            else:
+                getattr(self, setting).validate()
         if validation_errors:
             raise ValidationException(validation_errors)
+
+    @property
+    def grid(self) -> list[Block]:
+        return self._grids
+
+    @grid.setter
+    def grid(self, new_grid: Block):
+        self._grids = [new_grid]
+
+    @property
+    def grids(self) -> list[Block]:
+        return self._grids
+    
+    @grids.setter
+    def grids(self, grids: list[Block]):
+        self._grids = grids
 
     def write(self, directories):
         # directories to place things in
@@ -1163,7 +1187,12 @@ class Config:
         # extract all the values to go in the json config file
         json_values = {}
         for setting in self._json_values:
-            json_values[setting] = getattr(self, setting).as_dict()
+            if setting == "_grids":
+                json_values["grids"] = [
+                    grid.as_dict() for grid in self._grids
+                ]
+            else:
+                json_values[setting] = getattr(self, setting).as_dict()
 
         # write the json config file
         with open(config_file, "w") as f:
@@ -1172,7 +1201,8 @@ class Config:
         # write the grid files
         grid_directory = directories["grid_dir"]
         flow_directory = directories["flow_dir"]
-        self.grid.write(grid_directory, flow_directory, binary)
+        for grid in self.grids:
+            grid.write(grid_directory, flow_directory, binary)
 
 
 def main(file_name, res_dir):
