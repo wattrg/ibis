@@ -108,7 +108,7 @@ void FiniteVolume<T, MemModel>::transfer_internal_flowstates(
     for (auto& comm : flow_state_comm_) {
         comm.expect_receive();
     }
-    
+
     // Step 1: pack send buffers
     for (size_t boundary_i = 0; boundary_i < grid.other_blocks().size(); boundary_i++) {
         size_t other_block = grid.other_block(boundary_i);
@@ -147,7 +147,8 @@ void FiniteVolume<T, MemModel>::transfer_internal_flowstates(
 
         // unpack the buffer
         Ibis::parallel_for(
-            "FV::unpack_recv_buffer", cells_to_unpack_to.size(), KOKKOS_LAMBDA(const size_t cell_i) {
+            "FV::unpack_recv_buffer", cells_to_unpack_to.size(),
+            KOKKOS_LAMBDA(const size_t cell_i) {
                 size_t cell_to_unpack_to = cells_to_unpack_to(cell_i);
                 size_t start_index = cell_i * num_vars;
                 fs.gas.rho(cell_to_unpack_to) = buffer(start_index + 0);
@@ -157,8 +158,159 @@ void FiniteVolume<T, MemModel>::transfer_internal_flowstates(
                 if (dim == 3) {
                     fs.vel.z(cell_to_unpack_to) = buffer(start_index + 4);
                 }
-            }  
-        );
+            });
+    }
+}
+
+template <typename buffer_t, typename gradient_t>
+KOKKOS_INLINE_FUNCTION void add_gradient_to_buffer_(buffer_t& buffer,
+                                                    gradient_t& gradient,
+                                                    size_t start_index, size_t cell_i,
+                                                    size_t var_i, size_t dim) {
+    buffer(start_index + var_i + 0) = gradient.x(cell_i);
+    buffer(start_index + var_i + 1) = gradient.y(cell_i);
+    if (dim == 3) {
+        buffer(start_index + var_i + 2) = gradient.z(cell_i);
+    }
+}
+
+template <typename buffer_t, typename gradient_t>
+KOKKOS_INLINE_FUNCTION void unpack_gradient_from_buffer_(buffer_t& buffer,
+                                                         gradient_t& gradient,
+                                                         size_t start_index,
+                                                         size_t cell_i, size_t var_i,
+                                                         size_t dim) {
+    gradient.x(cell_i) = buffer(start_index + var_i + 0);
+    gradient.y(cell_i) = buffer(start_index + var_i + 1);
+    if (dim == 3) {
+        gradient.z(cell_i) = buffer(start_index + var_i + 2);
+    }
+}
+
+template <typename T, class MemModel>
+void FiniteVolume<T, MemModel>::transfer_flow_gradients(
+    const GridBlock<MemModel, T>& grid) {
+    size_t dim = grid.dim();
+    size_t num_vars = cell_grad_.num_grads() * dim;
+
+    // Step 0: Post a receive so that we can wait for incoming data
+    for (auto& comm : gradient_comm_) {
+        comm.expect_receive();
+    }
+
+    bool transfer_p = cell_grad_.p.size() != 0;
+    bool transfer_rho = cell_grad_.rho.size() != 0;
+    bool transfer_u = cell_grad_.u.size() != 0;
+    bool transfer_temp = cell_grad_.temp.size() != 0;
+    bool transfer_vx = cell_grad_.vx.size() != 0;
+    bool transfer_vy = cell_grad_.vy.size() != 0;
+    bool transfer_vz = cell_grad_.vz.size() != 0;
+
+    auto cell_grad = cell_grad_;
+
+    // Step 1: pack send buffers
+    for (size_t boundary_i = 0; boundary_i < grid.other_blocks().size(); boundary_i++) {
+        size_t other_block = grid.other_block(boundary_i);
+        Ibis::SymmetricComm<MemModel, T> comm = flow_state_comm_[boundary_i];
+        auto cells_to_pack = grid.internal_boundary_cells(other_block);
+        auto buffer = comm.send_buf();
+
+        // the parallel work of packing the data
+        Ibis::parallel_for(
+            "FV::pack_send_buffer", cells_to_pack.size(),
+            KOKKOS_LAMBDA(const size_t cell_i) {
+                size_t cell_to_pack = cells_to_pack(cell_i);
+                size_t start_index = cell_i * num_vars;
+                size_t var_i = 0;
+                if (transfer_p) {
+                    add_gradient_to_buffer_(buffer, cell_grad.p, start_index, cell_i,
+                                            var_i, dim);
+                    var_i++;
+                }
+                if (transfer_rho) {
+                    add_gradient_to_buffer_(buffer, cell_grad.rho, start_index, cell_i,
+                                            var_i, dim);
+                    var_i++;
+                }
+                if (transfer_u) {
+                    add_gradient_to_buffer_(buffer, cell_grad.u, start_index, cell_i,
+                                            var_i, dim);
+                    var_i++;
+                }
+                if (transfer_temp) {
+                    add_gradient_to_buffer_(buffer, cell_grad.temp, start_index, cell_i,
+                                            var_i, dim);
+                    var_i++;
+                }
+                if (transfer_vx) {
+                    add_gradient_to_buffer_(buffer, cell_grad.vx, start_index, cell_i,
+                                            var_i, dim);
+                    var_i++;
+                }
+                if (transfer_vy) {
+                    add_gradient_to_buffer_(buffer, cell_grad.vy, start_index, cell_i,
+                                            var_i, dim);
+                    var_i++;
+                }
+                if (transfer_vx) {
+                    add_gradient_to_buffer_(buffer, cell_grad.vz, start_index, cell_i,
+                                            var_i, dim);
+                    var_i++;
+                }
+            });
+    }
+
+    // Step 2: transfer data
+    for (auto& comm : flow_state_comm_) {
+        comm.send();
+        comm.receive();
+    }
+
+    // Step 3: unpack receive buffers
+    for (size_t boundary_i = 0; boundary_i < grid.other_blocks().size(); boundary_i++) {
+        size_t other_block = grid.other_block(boundary_i);
+        Ibis::SymmetricComm<MemModel, T> comm = flow_state_comm_[boundary_i];
+        auto cells_to_unpack_to = grid.internal_boundary_ghost_cells(other_block);
+        auto buffer = comm.recv_buf();
+
+        // unpack the buffer
+        Ibis::parallel_for(
+            "FV::unpack_recv_buffer", cells_to_unpack_to.size(),
+            KOKKOS_LAMBDA(const size_t cell_i) {
+                size_t cell_to_unpack_to = cells_to_unpack_to(cell_i);
+                size_t start_index = cell_i * num_vars;
+                size_t var_i = 0;
+                if (transfer_p) {
+                    unpack_gradient_from_buffer_(buffer, cell_grad.p, start_index, cell_i,
+                                                 var_i, dim);
+                    var_i++;
+                }
+                if (transfer_u) {
+                    unpack_gradient_from_buffer_(buffer, cell_grad.u, start_index, cell_i,
+                                                 var_i, dim);
+                    var_i++;
+                }
+                if (transfer_temp) {
+                    unpack_gradient_from_buffer_(buffer, cell_grad.temp, start_index,
+                                                 cell_i, var_i, dim);
+                    var_i++;
+                }
+                if (transfer_vx) {
+                    unpack_gradient_from_buffer_(buffer, cell_grad.vx, start_index,
+                                                 cell_i, var_i, dim);
+                    var_i++;
+                }
+                if (transfer_vy) {
+                    unpack_gradient_from_buffer_(buffer, cell_grad.vy, start_index,
+                                                 cell_i, var_i, dim);
+                    var_i++;
+                }
+                if (transfer_vz) {
+                    unpack_gradient_from_buffer_(buffer, cell_grad.vz, start_index,
+                                                 cell_i, var_i, dim);
+                    var_i++;
+                }
+            });
     }
 }
 

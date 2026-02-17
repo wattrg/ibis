@@ -105,6 +105,8 @@ public:
                                       const GridBlock<MemModel, T>& grid,
                                       const IdealGas<T>& gas_model);
 
+    void transfer_flow_gradients(const GridBlock<MemModel, T>& grid);
+
 public:
     // methods for IO
     const Gradients<T>& cell_gradients() const { return cell_grad_; }
