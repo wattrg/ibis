@@ -423,7 +423,7 @@ public:
         std::unordered_map<size_t, std::vector<size_t>> external_cells;
         std::unordered_map<size_t, std::vector<size_t>> ghost_cells;
         std::unordered_map<size_t, std::vector<size_t>> faces;
-        std::vector<size_t> other_blocks;
+        // std::vector<size_t> other_blocks;
 
         // loop over all the interblock connections, keeping track of
         // which cells and faces are on the connection
@@ -440,15 +440,15 @@ public:
                 external_cells.insert({other_block, {}});
                 ghost_cells.insert({other_block, {}});
                 faces.insert({other_block, {}});
-                other_blocks.push_back(other_block);
+                other_blocks_.push_back(other_block);
             }
 
             local_cells[other_block].push_back(cell_mapping.local_cell);
             external_cells[other_block].push_back(cell_mapping.other_cell);
             ghost_cells[other_block].push_back(ghost_cell_id);
         }
-        other_blocks_ =
-            Field<size_t, array_layout, memory_space>("other_blocks", other_blocks);
+        // other_blocks_ =
+        //     Field<size_t, array_layout, memory_space>("other_blocks", other_blocks);
 
         // for (size_t other_block : local_cells) {
         for (auto& [other_block, cells] : local_cells) {
@@ -464,9 +464,9 @@ public:
                  Field<size_t, array_layout, memory_space>(
                      "internal_boundary_ghost_cells", ghost_cells[other_block])});
             position_comm_.push_back(
-                Ibis::SymmetricComm<MemModel, T>(other_block, local_cells.size() * dim_));
+                Ibis::SymmetricComm<MemModel, T>(other_block, local_cells[other_block].size() * dim_));
             volume_comm_.push_back(
-                Ibis::SymmetricComm<MemModel, T>(other_block, local_cells.size()));
+                Ibis::SymmetricComm<MemModel, T>(other_block, local_cells[other_block].size()));
         }
     }
 
@@ -481,7 +481,7 @@ public:
         // step 1: back send buffer
         for (size_t boundary_i = 0; boundary_i < other_blocks().size(); boundary_i++) {
             size_t other_block_ = other_block(boundary_i);
-            Ibis::SymmetricComm<MemModel, T> comm = volume_comm_[boundary_i];
+            Ibis::SymmetricComm<MemModel, T>& comm = volume_comm_[boundary_i];
             auto cells_to_pack = internal_boundary_cells(other_block_);
             auto buffer = comm.send_buf();
 
@@ -492,18 +492,17 @@ public:
                     buffer(cell_i) = volumes(cell_to_pack);
                 }  
             );
+            comm.send();
         }
 
-        // Step 2: transfer data
         for (auto& comm : volume_comm_) {
-            comm.send();
             comm.receive();
         }
 
         // Step 3: unpack the receive buffer
         for (size_t boundary_i = 0; boundary_i < other_blocks().size(); boundary_i++) {
             size_t other_block_ = other_block(boundary_i);
-            Ibis::SymmetricComm<MemModel, T> comm = volume_comm_[boundary_i];
+            Ibis::SymmetricComm<MemModel, T>& comm = volume_comm_[boundary_i];
             auto cells_to_unpack_to = internal_boundary_ghost_cells(other_block_);
             auto buffer = comm.recv_buf();
 
@@ -520,7 +519,8 @@ public:
     void transfer_internal_boundary_centroids() {
         size_t dim = dim_;
         size_t num_vars = dim;
-        auto this_cells = cells_;
+        auto centroids = cells_.centroids();
+        size_t num_other_blocks = other_blocks_.size();
 
         // Step 0: Post a receive so that we can wait for incoming data
         for (auto& comm : position_comm_) {
@@ -528,9 +528,9 @@ public:
         }
 
         // Step 1: pack send buffers
-        for (size_t boundary_i = 0; boundary_i < other_blocks().size(); boundary_i++) {
+        for (size_t boundary_i = 0; boundary_i < num_other_blocks; boundary_i++) {
             size_t other_block_ = other_block(boundary_i);
-            Ibis::SymmetricComm<MemModel, T> comm = position_comm_[boundary_i];
+            Ibis::SymmetricComm<MemModel, T>& comm = position_comm_[boundary_i];
             auto cells_to_pack = internal_boundary_cells(other_block_);
             auto buffer = comm.send_buf();
 
@@ -540,24 +540,24 @@ public:
                 KOKKOS_LAMBDA(const size_t cell_i) {
                     size_t cell_to_pack = cells_to_pack(cell_i);
                     size_t start_index = cell_i * num_vars;
-                    buffer(start_index + 0) = this_cells.centroids().x(cell_to_pack);
-                    buffer(start_index + 1) = this_cells.centroids().y(cell_to_pack);
+                    buffer(start_index + 0) = centroids.x(cell_to_pack);
+                    buffer(start_index + 1) = centroids.y(cell_to_pack);
                     if (dim == 3) {
-                        buffer(start_index + 2) = this_cells.centroids().z(cell_to_pack);
+                        buffer(start_index + 2) = centroids.z(cell_to_pack);
                     }
                 });
+            comm.send();
         }
 
-        // Step 2: transfer data
+        // Step 2: receive data
         for (auto& comm : position_comm_) {
-            comm.send();
             comm.receive();
         }
 
         // Step 3: unpack receive buffers
-        for (size_t boundary_i = 0; boundary_i < other_blocks().size(); boundary_i++) {
+        for (size_t boundary_i = 0; boundary_i < num_other_blocks; boundary_i++) {
             size_t other_block_ = other_block(boundary_i);
-            Ibis::SymmetricComm<MemModel, T> comm = position_comm_[boundary_i];
+            Ibis::SymmetricComm<MemModel, T>& comm = position_comm_[boundary_i];
             auto cells_to_unpack_to = internal_boundary_ghost_cells(other_block_);
             auto buffer = comm.recv_buf();
 
@@ -567,10 +567,10 @@ public:
                 KOKKOS_LAMBDA(const size_t cell_i) {
                     size_t cell_to_unpack_to = cells_to_unpack_to(cell_i);
                     size_t start_index = cell_i * num_vars;
-                    this_cells.centroids().x(cell_to_unpack_to) = buffer(start_index + 0);
-                    this_cells.centroids().y(cell_to_unpack_to) = buffer(start_index + 1);
+                    centroids.x(cell_to_unpack_to) = buffer(start_index + 0);
+                    centroids.y(cell_to_unpack_to) = buffer(start_index + 1);
                     if (dim == 3) {
-                        this_cells.centroids().z(cell_to_unpack_to) = buffer(start_index + 2);
+                        centroids.z(cell_to_unpack_to) = buffer(start_index + 2);
                     }
                 });
         }
@@ -597,12 +597,12 @@ public:
     }
 
     // Get the IDs of the other block connected to this block
-    const Field<size_t, array_layout, memory_space> other_blocks() const {
+    const std::vector<size_t> other_blocks() const {
         return other_blocks_;
     }
 
     // Get the IDs of the other block connected to this block
-    size_t other_block(size_t i) const { return other_blocks_(i); }
+    size_t other_block(size_t i) const { return other_blocks_[i]; }
 
     std::map<size_t, size_t> setup_physical_boundaries(
         const GridIO& grid_io, json& boundaries,
@@ -840,7 +840,8 @@ public:
         internal_boundary_ghost_cells_;
     std::unordered_map<size_t, Field<size_t, array_layout, memory_space>>
         internal_boundary_external_cells_;
-    Field<size_t, array_layout, memory_space> other_blocks_;
+    std::vector<size_t> other_blocks_;
+    // Field<size_t, array_layout, memory_space> other_blocks_;
     // std::vector<Field<size_t, array_layout, memory_space>> internal_boundary_faces_;
 
     // this contains all marked interfaces. This includes faces on the boundary,

@@ -20,16 +20,15 @@ target_include_directories(
 target_link_libraries(
 	grid 
 	PUBLIC 
-	Kokkos::kokkos 
-	doctest 
+  doctest 
 	util
 	nlohmann_json::nlohmann_json
 	spdlog::spdlog
 	gas
+	parallel
 )
 
 if (METIS_FOUND)
-    # target_include_directories(grid PRIVATE SYSTEM ${METIS_INCLUDE_PATH})
     target_link_libraries(grid PRIVATE ${METIS_LIBRARIES})
 endif(METIS_FOUND)
 
@@ -52,11 +51,30 @@ if (Ibis_BUILD_TESTS)
         PRIVATE 
         util 
         doctest 
-        Kokkos::kokkos 
         nlohmann_json::nlohmann_json
         spdlog::spdlog
         grid
     )
-   
+
+    if (Ibis_ENABLE_MPI)
+      add_executable(
+        grid_mpi_unittest
+        test/mpi_unittest.cpp
+        test/grid_mpi_unittest.cpp
+      )
+
+      target_link_libraries(
+        grid_mpi_unittest
+        PRIVATE
+        grid
+        doctest
+      )
+
+      add_test(
+        NAME grid_mpi_unittest
+        COMMAND ${MPIEXEC_EXECUTABLE} ${MPIEXEC_NUMPROC_FLAG} 2 grid_mpi_unittest
+      )
+    endif(Ibis_ENABLE_MPI)
+
     add_test(NAME grid_unittest COMMAND grid_unittest)
 endif(Ibis_BUILD_TESTS)

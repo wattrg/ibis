@@ -439,40 +439,46 @@ void GridIO::read_mapped_cells(std::istream &file) {
     size_t other_cell;
     size_t local_face;
     size_t global_face;
+    std::stringstream stream;
     while (get_next_line(file, line)) {
         trim_whitespace(line);
 
         sep = line.find(" ");
         value = line.substr(0, sep);
-        local_cell = std::stoi(value);
+        stream = std::stringstream(value);
+        stream >> local_cell;
         line = line.substr(sep + 1, std::string::npos);
         trim_whitespace(line);
 
         sep = line.find(" ");
         value = line.substr(0, sep);
         trim_whitespace(value);
-        local_face = std::stoi(value);
+        stream = std::stringstream(value);
+        stream >> local_face;
         line = line.substr(sep + 1, std::string::npos);
         trim_whitespace(line);
 
         sep = line.find(" ");
         value = line.substr(0, sep);
         trim_whitespace(value);
-        global_face = std::stoi(value);
+        stream = std::stringstream(value);
+        stream >> global_face;
         line = line.substr(sep + 1, std::string::npos);
         trim_whitespace(line);
 
         sep = line.find(" ");
         value = line.substr(0, sep);
         trim_whitespace(value);
-        other_block = std::stoi(value);
+        std::stringstream stream(value);
+        stream >> other_block;
         line = line.substr(sep + 1, std::string::npos);
         trim_whitespace(line);
 
         sep = line.find(" ");
         value = line.substr(0, sep);
         trim_whitespace(value);
-        other_cell = std::stoi(value);
+        stream = std::stringstream(value);
+        stream >> other_cell;
 
         cell_mapping_.push_back(
             CellMapping(local_cell, local_face, global_face, other_block, other_cell));

@@ -223,37 +223,37 @@ void FiniteVolume<T, MemModel>::transfer_flow_gradients(
                 size_t start_index = cell_i * num_vars;
                 size_t var_i = 0;
                 if (transfer_p) {
-                    add_gradient_to_buffer_(buffer, cell_grad.p, start_index, cell_i,
+                    add_gradient_to_buffer_(buffer, cell_grad.p, start_index, cell_to_pack,
                                             var_i, dim);
                     var_i++;
                 }
                 if (transfer_rho) {
-                    add_gradient_to_buffer_(buffer, cell_grad.rho, start_index, cell_i,
+                    add_gradient_to_buffer_(buffer, cell_grad.rho, start_index, cell_to_pack,
                                             var_i, dim);
                     var_i++;
                 }
                 if (transfer_u) {
-                    add_gradient_to_buffer_(buffer, cell_grad.u, start_index, cell_i,
+                    add_gradient_to_buffer_(buffer, cell_grad.u, start_index, cell_to_pack,
                                             var_i, dim);
                     var_i++;
                 }
                 if (transfer_temp) {
-                    add_gradient_to_buffer_(buffer, cell_grad.temp, start_index, cell_i,
+                    add_gradient_to_buffer_(buffer, cell_grad.temp, start_index, cell_to_pack,
                                             var_i, dim);
                     var_i++;
                 }
                 if (transfer_vx) {
-                    add_gradient_to_buffer_(buffer, cell_grad.vx, start_index, cell_i,
+                    add_gradient_to_buffer_(buffer, cell_grad.vx, start_index, cell_to_pack,
                                             var_i, dim);
                     var_i++;
                 }
                 if (transfer_vy) {
-                    add_gradient_to_buffer_(buffer, cell_grad.vy, start_index, cell_i,
+                    add_gradient_to_buffer_(buffer, cell_grad.vy, start_index, cell_to_pack,
                                             var_i, dim);
                     var_i++;
                 }
                 if (transfer_vx) {
-                    add_gradient_to_buffer_(buffer, cell_grad.vz, start_index, cell_i,
+                    add_gradient_to_buffer_(buffer, cell_grad.vz, start_index, cell_to_pack,
                                             var_i, dim);
                     var_i++;
                 }
@@ -281,33 +281,33 @@ void FiniteVolume<T, MemModel>::transfer_flow_gradients(
                 size_t start_index = cell_i * num_vars;
                 size_t var_i = 0;
                 if (transfer_p) {
-                    unpack_gradient_from_buffer_(buffer, cell_grad.p, start_index, cell_i,
+                    unpack_gradient_from_buffer_(buffer, cell_grad.p, start_index, cell_to_unpack_to,
                                                  var_i, dim);
                     var_i++;
                 }
                 if (transfer_u) {
-                    unpack_gradient_from_buffer_(buffer, cell_grad.u, start_index, cell_i,
+                    unpack_gradient_from_buffer_(buffer, cell_grad.u, start_index, cell_to_unpack_to,
                                                  var_i, dim);
                     var_i++;
                 }
                 if (transfer_temp) {
                     unpack_gradient_from_buffer_(buffer, cell_grad.temp, start_index,
-                                                 cell_i, var_i, dim);
+                                                 cell_to_unpack_to, var_i, dim);
                     var_i++;
                 }
                 if (transfer_vx) {
                     unpack_gradient_from_buffer_(buffer, cell_grad.vx, start_index,
-                                                 cell_i, var_i, dim);
+                                                 cell_to_unpack_to, var_i, dim);
                     var_i++;
                 }
                 if (transfer_vy) {
                     unpack_gradient_from_buffer_(buffer, cell_grad.vy, start_index,
-                                                 cell_i, var_i, dim);
+                                                 cell_to_unpack_to, var_i, dim);
                     var_i++;
                 }
                 if (transfer_vz) {
                     unpack_gradient_from_buffer_(buffer, cell_grad.vz, start_index,
-                                                 cell_i, var_i, dim);
+                                                 cell_to_unpack_to, var_i, dim);
                     var_i++;
                 }
             });

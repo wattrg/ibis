@@ -5,6 +5,11 @@
 #include <grid/grid.h>
 #include <grid/grid_io.h>
 #include <grid/interface.h>
+#include <parallel/parallel.h>
+
+#ifdef Ibis_ENABLE_MPI
+#include <doctest/extensions/doctest_mpi.h>
+#endif
 
 // template <typename T, class ExecSpace, class Layout>
 // void GridBlock<T, ExecSpace,
@@ -329,4 +334,7 @@ TEST_CASE("ghost cell centres") {
     CHECK(block_host.cells().centroids().y(ghost_cell) == 3.5);
     CHECK(block_host.cells().centroids().z(ghost_cell) == 0.0);
 }
+
 #endif  // DOCTEST_CONFIG_DISABLE
+
+

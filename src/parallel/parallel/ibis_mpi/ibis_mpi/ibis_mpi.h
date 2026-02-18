@@ -253,12 +253,12 @@ public:
 
     void send() {
         if (gpu_aware) {
-            MPI_Send(send_buf_.data(), send_buf_.size(), mpi_type_, other_rank_, 0,
-                     mpi_comm_);
+            MPI_Isend(send_buf_.data(), send_buf_.size(), mpi_type_, other_rank_, 0,
+                     mpi_comm_, &send_request_);
         } else {
             Kokkos::deep_copy(host_send_buf_, send_buf_);
-            MPI_Send(host_send_buf_.data(), host_send_buf_.size(), mpi_type_, other_rank_,
-                     0, mpi_comm_);
+            MPI_Isend(host_send_buf_.data(), host_send_buf_.size(), mpi_type_, other_rank_,
+                     0, mpi_comm_, &send_request_);
         }
     }
 
@@ -291,6 +291,7 @@ private:
 
     // some info for MPI
     MPI_Request recv_request_;
+    MPI_Request send_request_;
     MPI_Datatype mpi_type_ = Ibis::MpiDataType<T>::value();
     int other_rank_;
     MPI_Comm mpi_comm_;
