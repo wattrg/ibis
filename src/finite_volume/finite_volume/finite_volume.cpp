@@ -130,11 +130,11 @@ void FiniteVolume<T, MemModel>::transfer_internal_flowstates(
                     buffer(start_index + 4) = fs.vel.z(cell_to_pack);
                 }
             });
+        comm.send();
     }
 
     // Step 2: transfer data
     for (auto& comm : flow_state_comm_) {
-        comm.send();
         comm.receive();
     }
 
@@ -258,11 +258,11 @@ void FiniteVolume<T, MemModel>::transfer_flow_gradients(
                     var_i++;
                 }
             });
+        comm.send();
     }
 
     // Step 2: transfer data
     for (auto& comm : flow_state_comm_) {
-        comm.send();
         comm.receive();
     }
 
