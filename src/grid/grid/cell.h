@@ -214,6 +214,9 @@ public:
     const T& volume(const size_t i) const { return volume_(i); }
 
     KOKKOS_INLINE_FUNCTION
+    T& volume(const size_t i) { return volume_(i); }
+
+    KOKKOS_INLINE_FUNCTION
     const Field<T, array_layout, memory_space>& volumes() const { return volume_; }
 
     KOKKOS_INLINE_FUNCTION

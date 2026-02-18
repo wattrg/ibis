@@ -167,6 +167,9 @@ public:
             face_vel_ = Vector3s<T, Layout, memory_space>(num_interfaces());
         }
 
+        transfer_internal_boundary_volumes();
+        transfer_internal_boundary_centroids();
+
         initialised_ = true;
     }
 
@@ -464,6 +467,112 @@ public:
                 Ibis::SymmetricComm<MemModel, T>(other_block, local_cells.size() * dim_));
             volume_comm_.push_back(
                 Ibis::SymmetricComm<MemModel, T>(other_block, local_cells.size()));
+        }
+    }
+
+    void transfer_internal_boundary_volumes() {
+        auto volumes = cells_.volumes();
+
+        // step 0: Post receives
+        for (auto& comm : volume_comm_) {
+            comm.expect_receive();
+        }
+
+        // step 1: back send buffer
+        for (size_t boundary_i = 0; boundary_i < other_blocks().size(); boundary_i++) {
+            size_t other_block_ = other_block(boundary_i);
+            Ibis::SymmetricComm<MemModel, T> comm = volume_comm_[boundary_i];
+            auto cells_to_pack = internal_boundary_cells(other_block_);
+            auto buffer = comm.send_buf();
+
+            Ibis::parallel_for(
+                "Grid::pack_volume_buffer", cells_to_pack.size(),
+                KOKKOS_LAMBDA(const size_t cell_i) {
+                    size_t cell_to_pack = cells_to_pack(cell_i);
+                    buffer(cell_i) = volumes(cell_to_pack);
+                }  
+            );
+        }
+
+        // Step 2: transfer data
+        for (auto& comm : volume_comm_) {
+            comm.send();
+            comm.receive();
+        }
+
+        // Step 3: unpack the receive buffer
+        for (size_t boundary_i = 0; boundary_i < other_blocks().size(); boundary_i++) {
+            size_t other_block_ = other_block(boundary_i);
+            Ibis::SymmetricComm<MemModel, T> comm = volume_comm_[boundary_i];
+            auto cells_to_unpack_to = internal_boundary_ghost_cells(other_block_);
+            auto buffer = comm.recv_buf();
+
+            Ibis::parallel_for(
+                "Grid::unpack_volume_buffer", cells_to_unpack_to.size(),
+                KOKKOS_LAMBDA(const size_t cell_i) {
+                    size_t cell_to_unpack_to = cells_to_unpack_to(cell_i);
+                    volumes(cell_to_unpack_to) = buffer(cell_i);
+                }
+            );
+        }
+    }
+
+    void transfer_internal_boundary_centroids() {
+        size_t dim = dim_;
+        size_t num_vars = dim;
+        auto this_cells = cells_;
+
+        // Step 0: Post a receive so that we can wait for incoming data
+        for (auto& comm : position_comm_) {
+            comm.expect_receive();
+        }
+
+        // Step 1: pack send buffers
+        for (size_t boundary_i = 0; boundary_i < other_blocks().size(); boundary_i++) {
+            size_t other_block_ = other_block(boundary_i);
+            Ibis::SymmetricComm<MemModel, T> comm = position_comm_[boundary_i];
+            auto cells_to_pack = internal_boundary_cells(other_block_);
+            auto buffer = comm.send_buf();
+
+            // the parallel work of packing the data
+            Ibis::parallel_for(
+                "FV::pack_send_buffer", cells_to_pack.size(),
+                KOKKOS_LAMBDA(const size_t cell_i) {
+                    size_t cell_to_pack = cells_to_pack(cell_i);
+                    size_t start_index = cell_i * num_vars;
+                    buffer(start_index + 0) = this_cells.centroids().x(cell_to_pack);
+                    buffer(start_index + 1) = this_cells.centroids().y(cell_to_pack);
+                    if (dim == 3) {
+                        buffer(start_index + 2) = this_cells.centroids().z(cell_to_pack);
+                    }
+                });
+        }
+
+        // Step 2: transfer data
+        for (auto& comm : position_comm_) {
+            comm.send();
+            comm.receive();
+        }
+
+        // Step 3: unpack receive buffers
+        for (size_t boundary_i = 0; boundary_i < other_blocks().size(); boundary_i++) {
+            size_t other_block_ = other_block(boundary_i);
+            Ibis::SymmetricComm<MemModel, T> comm = position_comm_[boundary_i];
+            auto cells_to_unpack_to = internal_boundary_ghost_cells(other_block_);
+            auto buffer = comm.recv_buf();
+
+            // unpack the buffer
+            Ibis::parallel_for(
+                "FV::unpack_recv_buffer", cells_to_unpack_to.size(),
+                KOKKOS_LAMBDA(const size_t cell_i) {
+                    size_t cell_to_unpack_to = cells_to_unpack_to(cell_i);
+                    size_t start_index = cell_i * num_vars;
+                    this_cells.centroids().x(cell_to_unpack_to) = buffer(start_index + 0);
+                    this_cells.centroids().y(cell_to_unpack_to) = buffer(start_index + 1);
+                    if (dim == 3) {
+                        this_cells.centroids().z(cell_to_unpack_to) = buffer(start_index + 2);
+                    }
+                });
         }
     }
 
