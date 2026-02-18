@@ -46,10 +46,10 @@ public:
         int id = config.at("id");
         GridIO grid_io;
         if (config.contains("cell_map_file_name")) {
-            std::filesystem::path cell_map_path = base_dir / config.at("cell_map_file_name");
+            std::filesystem::path cell_map_path =
+                base_dir / config.at("cell_map_file_name");
             grid_io = GridIO(grid_path.string(), cell_map_path.string(), id);
-        }
-        else {
+        } else {
             grid_io = GridIO(grid_path.string());
         }
         init_grid_block(grid_io, config);
