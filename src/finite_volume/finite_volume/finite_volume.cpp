@@ -211,7 +211,7 @@ void FiniteVolume<T, MemModel>::transfer_flow_gradients(
     // Step 1: pack send buffers
     for (size_t boundary_i = 0; boundary_i < grid.other_blocks().size(); boundary_i++) {
         size_t other_block = grid.other_block(boundary_i);
-        Ibis::SymmetricComm<MemModel, T> comm = flow_state_comm_[boundary_i];
+        Ibis::SymmetricComm<MemModel, T> comm = gradient_comm_[boundary_i];
         auto cells_to_pack = grid.internal_boundary_cells(other_block);
         auto buffer = comm.send_buf();
 
@@ -262,14 +262,14 @@ void FiniteVolume<T, MemModel>::transfer_flow_gradients(
     }
 
     // Step 2: transfer data
-    for (auto& comm : flow_state_comm_) {
+    for (auto& comm : gradient_comm_) {
         comm.receive();
     }
 
     // Step 3: unpack receive buffers
     for (size_t boundary_i = 0; boundary_i < grid.other_blocks().size(); boundary_i++) {
         size_t other_block = grid.other_block(boundary_i);
-        Ibis::SymmetricComm<MemModel, T> comm = flow_state_comm_[boundary_i];
+        Ibis::SymmetricComm<MemModel, T> comm = gradient_comm_[boundary_i];
         auto cells_to_unpack_to = grid.internal_boundary_ghost_cells(other_block);
         auto buffer = comm.recv_buf();
 
