@@ -271,21 +271,25 @@ class ViscousFlux:
 
 
 class StaticGrid:
+    enabled = False
+
     def as_dict(self):
-        return {"enabled": False}
+        return {"enabled": self.enabled}
 
     def validate(self):
         return
 
 
 class BoundaryInterpolationGridMotion:
+    enabled = True
+
     def __init__(self, boundaries, interpolation_power=2.0):
         self._interp_power = interpolation_power
         self._boundaries = boundaries
 
     def as_dict(self):
         dictionary = {
-            "enabled": True,
+            "enabled": self.enabled,
             "type": "boundary_interpolation",
             "interp_power": self._interp_power,
         }
@@ -302,6 +306,7 @@ ShockFitting = BoundaryInterpolationGridMotion
 
 
 class RigidBodyTranslation:
+    enabled = True
     _json_values = ["velocity"]
     __slots__ = _json_values
     _defaults_file = "rigid_body_translation.json"
@@ -316,7 +321,7 @@ class RigidBodyTranslation:
 
     def as_dict(self):
         return {
-            "enabled": True,
+            "enabled": self.enabled,
             "type": "rigid_body_translation",
             "velocity": self.velocity,
         }
@@ -324,13 +329,14 @@ class RigidBodyTranslation:
 
 class Block:
     def __init__(
-        self, file_name, initial_condition, boundaries, id=0, cell_map=None, **kwargs
+        self, file_name, initial_condition, boundaries, cell_map_file=None, **kwargs
     ):
-        self._id = id
+        self._id = None
         self._initial_condition = initial_condition
         self._block = file_name
         self.number_cells = 0
         self.number_vertices = 0
+        self.cell_map_file = cell_map_file
         self.boundaries = boundaries
         self.motion = StaticGrid()
         for key, value in kwargs.items():
@@ -375,6 +381,11 @@ class Block:
 
         # write the grid
         shutil.copy(self._block, f"{grid_directory}/0000/block_{self._id:04}.su2")
+        if self.cell_map_file:
+            shutil.copy(
+                self.cell_map_file,
+                f"{grid_directory}/0000/cell_map_block_{self._id}",
+            )
 
         # write the initial condition
         format = "wb" if binary else "w"
@@ -414,7 +425,17 @@ class Block:
         for key in self.boundaries:
             dictionary["boundaries"][key] = self.boundaries[key].as_dict()
         dictionary["motion"] = self.motion.as_dict()
+        dictionary["cell_map_file"] = f"cell_map_block_{self._id}"
+        dictionary["id"] = self._id
         return dictionary
+
+    @property
+    def id(self):
+        return self._id
+
+    @id.setter
+    def id(self, new_id):
+        self._id = new_id
 
 
 class BoundaryCondition:
@@ -1128,10 +1149,10 @@ class Config:
         "convective_flux",
         "viscous_flux",
         "solver",
-        "_grids",
         "gas_model",
         "transport_properties",
         "io",
+        "_grids",
     ]
     __slots__ = _json_values
 
@@ -1146,12 +1167,24 @@ class Config:
     def validate(self):
         for setting in self.__slots__:
             if setting == "_grids":
+                grid_motion = False
                 for grid in self._grids:
                     grid.validate()
+                    grid_motion = grid_motion or grid.motion.enabled
+                if len(self._grids) > 1 and grid_motion:
+                    validation_errors.append(
+                        ValidationException(
+                            "Grid motion only compatible with single block"
+                        )
+                    )
             else:
                 getattr(self, setting).validate()
         if validation_errors:
             raise ValidationException(validation_errors)
+
+    def _set_grid_ids(self):
+        for i, grid in enumerate(self._grids):
+            grid.id = i
 
     @property
     def grid(self) -> list[Block]:
@@ -1160,6 +1193,7 @@ class Config:
     @grid.setter
     def grid(self, new_grid: Block):
         self._grids = [new_grid]
+        self._set_grid_ids()
 
     @property
     def grids(self) -> list[Block]:
@@ -1168,6 +1202,7 @@ class Config:
     @grids.setter
     def grids(self, grids: list[Block]):
         self._grids = grids
+        self._set_grid_ids()
 
     def write(self, directories):
         # directories to place things in
