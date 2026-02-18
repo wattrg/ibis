@@ -3,12 +3,12 @@
 
 #include <grid/vertex.h>
 
+#include <filesystem>
 #include <fstream>
 #include <iostream>
 #include <string>
 #include <unordered_map>
 #include <vector>
-#include <filesystem>
 
 enum class GridFileType {
     Native,
@@ -124,9 +124,7 @@ public:
 
     GridIO(std::string file_name);
 
-    GridIO(std::string file_name, size_t id) : GridIO(file_name) {
-        id_ = id; 
-    }
+    GridIO(std::string file_name, size_t id) : GridIO(file_name) { id_ = id; }
 
     GridIO(const GridIO &monolithic_grid, const std::vector<size_t> &cells_to_include,
            const std::vector<CellMapping> &&cell_mapping, size_t id);

@@ -153,11 +153,10 @@ int FVIO<T, MemModel>::read(FlowStates<T>& fs, GridBlock<MemModel, T>& grid,
     int block_id = Ibis::get_world_rank<MemModel>();
     std::string block_name = std::format("/block_{:04}.su2", block_id);
     if (moving_grid_ && time_idx != 0) {
-        grid =
-            GridBlock<MemModel, T>("io/grid/" + time_index + block_name, config);
+        grid = GridBlock<MemModel, T>("io/grid/" + time_index + block_name, config);
     } else if (!grid.is_initialised()) {
-        grid = GridBlock<MemModel, T>(
-            "io/grid/" + pad_time_index(0, 4) + block_name, config);
+        grid = GridBlock<MemModel, T>("io/grid/" + pad_time_index(0, 4) + block_name,
+                                      config);
     }
     int result =
         input_->read(fs_host, grid, gas_model, trans_prop, directory_name, meta_data);

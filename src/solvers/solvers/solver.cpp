@@ -6,8 +6,8 @@
 #include <algorithm>
 #include <filesystem>
 #include <iostream>
-#include <string>
 #include <nlohmann/json.hpp>
+#include <string>
 
 #include "solvers/steady_state.h"
 
@@ -69,7 +69,8 @@ std::unique_ptr<Solver> make_solver(json config, std::string grid_dir,
                                     std::string flow_dir) {
     size_t grid_id = Ibis::get_world_rank<MemModel>();
     std::filesystem::path base_path = std::filesystem::path(grid_dir);
-    std::filesystem::path grid_path = base_path / "0000" / std::format("block_{:04}.su2", grid_id);
+    std::filesystem::path grid_path =
+        base_path / "0000" / std::format("block_{:04}.su2", grid_id);
     std::string grid_file = grid_path.string();
     json solver_config = config.at("solver");
     json grid_config = config.at("grids");

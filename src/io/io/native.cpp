@@ -107,7 +107,8 @@ int NativeTextInput<T, MemModel>::read(typename FlowStates<T>::mirror_type& fs,
     int block_id = grid.id();
 
     std::filesystem::path time_directory = dir;
-    std::filesystem::path block_dir = time_directory / std::format("block_{:04}", block_id);
+    std::filesystem::path block_dir =
+        time_directory / std::format("block_{:04}", block_id);
 
     std::ifstream meta_f(time_directory / "meta_data.json");
     if (!meta_f) {
@@ -296,7 +297,8 @@ int NativeBinaryInput<T, MemModel>::read(typename FlowStates<T>::mirror_type& fs
 
     int block_id = grid.id();
     std::filesystem::path time_directory = std::filesystem::path(dir);
-    std::filesystem::path block_dir = time_directory / std::format("block_{:04}", block_id);
+    std::filesystem::path block_dir =
+        time_directory / std::format("block_{:04}", block_id);
 
     size_t num_cells = grid.num_cells();
     std::ifstream meta_f(time_directory / "meta_data.json");
