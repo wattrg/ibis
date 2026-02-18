@@ -14,14 +14,7 @@ from ibis_py_utils import (
     GasModel,
 )
 
-from python_api import (
-    PyAusmdv,
-    PyHanel,
-    PyLdfss2,
-    PyRusanov,
-    GasState,
-    PyIdealGas
-)
+from python_api import PyAusmdv, PyHanel, PyLdfss2, PyRusanov, GasState, PyIdealGas
 
 validation_errors = []
 
@@ -37,11 +30,7 @@ class Vector3:
         self.z = z
 
     def as_dict(self):
-        return {
-            "x": self.x,
-            "y": self.y,
-            "z": self.z
-        }
+        return {"x": self.x, "y": self.y, "z": self.z}
 
 
 class Solver(Enum):
@@ -89,7 +78,9 @@ class BarthJespersen(Limiter):
             setattr(self, key, kwargs[key])
 
     def as_dict(self):
-        dictionary = {"type": self._name, }
+        dictionary = {
+            "type": self._name,
+        }
         for key in self._json_values:
             dictionary[key] = getattr(self, key)
         return dictionary
@@ -134,6 +125,7 @@ class Ausmdv(FluxCalculator):
         self._read_defaults()
         return {"type": self._flux_calc.name()}
 
+
 class Rusanov(FluxCalculator):
     def __init__(self):
         self._flux_calc = PyRusanov()
@@ -165,9 +157,7 @@ def string_to_flux_calc(name):
     elif name == "ldfss2":
         return Ldfss2()
     else:
-        validation_errors.append(
-            ValidationException(f"Unknown flux calculator {name}")
-        )
+        validation_errors.append(ValidationException(f"Unknown flux calculator {name}"))
 
 
 class ThermoInterp(Enum):
@@ -195,8 +185,12 @@ def ensure_custom_type(value, conversion_func):
 
 
 class ConvectiveFlux:
-    _json_values = ["flux_calculator", "reconstruction_order", "limiter",
-                    "thermo_interpolator"]
+    _json_values = [
+        "flux_calculator",
+        "reconstruction_order",
+        "limiter",
+        "thermo_interpolator",
+    ]
     _custom_types = {
         "flux_calculator": string_to_flux_calc,
         "limiter": string_to_limiter,
@@ -206,19 +200,22 @@ class ConvectiveFlux:
     _defaults_file = "convective_flux.json"
 
     def __init__(self, **kwargs):
-        json_data = read_defaults(DEFAULTS_DIRECTORY,
-                                  self._defaults_file)
+        json_data = read_defaults(DEFAULTS_DIRECTORY, self._defaults_file)
         for key in self._json_values:
             if key in self._custom_types:
-                setattr(self, key, ensure_custom_type(json_data[key],
-                                                      self._custom_types[key]))
+                setattr(
+                    self,
+                    key,
+                    ensure_custom_type(json_data[key], self._custom_types[key]),
+                )
             else:
                 setattr(self, key, json_data[key])
 
         for key in kwargs:
             if key in self._custom_types:
-                setattr(self, key, ensure_custom_type(kwargs[key],
-                                                      self._custom_types[key]))
+                setattr(
+                    self, key, ensure_custom_type(kwargs[key], self._custom_types[key])
+                )
             else:
                 setattr(self, key, kwargs[key])
 
@@ -226,8 +223,7 @@ class ConvectiveFlux:
         if self.reconstruction_order not in (1, 2):
             validation_errors.append(
                 ValidationException(
-                    f"reconstruction order {self.reconstruction_order}"
-                    " not supported"
+                    f"reconstruction order {self.reconstruction_order} not supported"
                 )
             )
 
@@ -254,8 +250,7 @@ class ViscousFlux:
     _defaults_file = "viscous_flux.json"
 
     def __init__(self, **kwargs):
-        json_data = read_defaults(DEFAULTS_DIRECTORY,
-                                  self._defaults_file)
+        json_data = read_defaults(DEFAULTS_DIRECTORY, self._defaults_file)
         for key in self._json_values:
             setattr(self, key, json_data[key])
 
@@ -264,8 +259,8 @@ class ViscousFlux:
 
     def validate(self):
         if self.signal_factor < 0:
-            validation_errors.append(ValidationException(
-                f"Invalid signal_factor {self.signal_factor}")
+            validation_errors.append(
+                ValidationException(f"Invalid signal_factor {self.signal_factor}")
             )
 
     def as_dict(self):
@@ -323,12 +318,14 @@ class RigidBodyTranslation:
         return {
             "enabled": True,
             "type": "rigid_body_translation",
-            "velocity": self.velocity
+            "velocity": self.velocity,
         }
 
 
 class Block:
-    def __init__(self, file_name, initial_condition, boundaries, id=0, **kwargs):
+    def __init__(
+        self, file_name, initial_condition, boundaries, id=0, cell_map=None, **kwargs
+    ):
         self._id = id
         self._initial_condition = initial_condition
         self._block = file_name
@@ -362,9 +359,7 @@ class Block:
 
     def validate(self):
         if not self._block:
-            validation_errors.append(
-                ValidationException("No grid blocks specified")
-            )
+            validation_errors.append(ValidationException("No grid blocks specified"))
 
     def _number(self, number, binary):
         if binary:
@@ -396,13 +391,11 @@ class Block:
         if type(self._initial_condition) is FlowState:
             for _ in range(self.number_cells):
                 temp.write(self._number(self._initial_condition.gas.T, binary))
-                pressure.write(self._number(self._initial_condition.gas.p,
-                                            binary))
+                pressure.write(self._number(self._initial_condition.gas.p, binary))
                 vx.write(self._number(self._initial_condition.vel.x, binary))
                 vy.write(self._number(self._initial_condition.vel.y, binary))
                 if self.dim == 3:
-                    vz.write(self._number(self._initial_condition.vel.z,
-                                          binary))
+                    vz.write(self._number(self._initial_condition.vel.z, binary))
         json.dump({"time": 0.0}, meta_data, indent=4)
         times.write("0000\n")
 
@@ -425,8 +418,13 @@ class Block:
 
 
 class BoundaryCondition:
-    def __init__(self, pre_reconstruction, post_convective_flux,
-                 pre_viscous_grad, ghost_cells=True):
+    def __init__(
+        self,
+        pre_reconstruction,
+        post_convective_flux,
+        pre_viscous_grad,
+        ghost_cells=True,
+    ):
         self._pre_reconstruction = pre_reconstruction
         self._post_convective_flux = post_convective_flux
         self._pre_viscous_grad = pre_viscous_grad
@@ -458,10 +456,7 @@ class _FlowStateCopy:
         self.flow_state = flow_state
 
     def as_dict(self):
-        return {
-            "type": "flow_state_copy",
-            "flow_state": self.flow_state.as_dict()
-        }
+        return {"type": "flow_state_copy", "flow_state": self.flow_state.as_dict()}
 
 
 class _BoundaryLayerProfile:
@@ -479,7 +474,7 @@ class _BoundaryLayerProfile:
                 "v": self.vel_profile,
                 "T": self.temp_profile,
                 "p": self.pressure,
-            }
+            },
         }
 
 
@@ -503,10 +498,7 @@ class _FixTemperature:
         self._temperature = temperature
 
     def as_dict(self):
-        return {
-            "type": "fix_temperature",
-            "temperature": self._temperature
-        }
+        return {"type": "fix_temperature", "temperature": self._temperature}
 
 
 class _SubsonicInflow:
@@ -514,10 +506,7 @@ class _SubsonicInflow:
         self._flow_state = flow_state
 
     def as_dict(self):
-        return {
-            "type": "subsonic_inflow",
-            "flow_state": self._flow_state.as_dict()
-        }
+        return {"type": "subsonic_inflow", "flow_state": self._flow_state.as_dict()}
 
 
 class _SubsonicOutflow:
@@ -525,10 +514,7 @@ class _SubsonicOutflow:
         self._pressure = pressure
 
     def as_dict(self):
-        return {
-            "type": "subsonic_outflow",
-            "pressure": self._pressure
-        }
+        return {"type": "subsonic_outflow", "pressure": self._pressure}
 
 
 class _ConstantFlux:
@@ -536,28 +522,26 @@ class _ConstantFlux:
         self._flow_state = flow_state
 
     def as_dict(self):
-        return {
-            "type": "constant_flux",
-            "flow_state": self._flow_state.as_dict()
-        }
+        return {"type": "constant_flux", "flow_state": self._flow_state.as_dict()}
 
 
 def supersonic_inflow(inflow):
     return BoundaryCondition(
         pre_reconstruction=[_FlowStateCopy(inflow)],
         post_convective_flux=[],
-        pre_viscous_grad=[]
+        pre_viscous_grad=[],
     )
 
 
-def boundary_layer_inflow(height, velocity_profile,
-                          temperature_profile, pressure):
+def boundary_layer_inflow(height, velocity_profile, temperature_profile, pressure):
     return BoundaryCondition(
-        pre_reconstruction=[_BoundaryLayerProfile(height, velocity_profile,
-                                                  temperature_profile,
-                                                  pressure)],
+        pre_reconstruction=[
+            _BoundaryLayerProfile(
+                height, velocity_profile, temperature_profile, pressure
+            )
+        ],
         post_convective_flux=[],
-        pre_viscous_grad=[]
+        pre_viscous_grad=[],
     )
 
 
@@ -565,7 +549,7 @@ def supersonic_outflow():
     return BoundaryCondition(
         pre_reconstruction=[_InternalCopy()],
         post_convective_flux=[],
-        pre_viscous_grad=[]
+        pre_viscous_grad=[],
     )
 
 
@@ -573,7 +557,7 @@ def slip_wall():
     return BoundaryCondition(
         pre_reconstruction=[_InternalCopyReflectNormal()],
         post_convective_flux=[],
-        pre_viscous_grad=[]
+        pre_viscous_grad=[],
     )
 
 
@@ -581,7 +565,7 @@ def adiabatic_no_slip_wall():
     return BoundaryCondition(
         pre_reconstruction=[_InternalCopyReflectNormal()],
         post_convective_flux=[],
-        pre_viscous_grad=[_InternalVelCopyReflect()]
+        pre_viscous_grad=[_InternalVelCopyReflect()],
     )
 
 
@@ -589,8 +573,7 @@ def fixed_temperature_no_slip_wall(temperature):
     return BoundaryCondition(
         pre_reconstruction=[_InternalCopyReflectNormal()],
         post_convective_flux=[],
-        pre_viscous_grad=[_InternalVelCopyReflect(),
-                          _FixTemperature(temperature)]
+        pre_viscous_grad=[_InternalVelCopyReflect(), _FixTemperature(temperature)],
     )
 
 
@@ -598,7 +581,7 @@ def subsonic_inflow(flow_state):
     return BoundaryCondition(
         pre_reconstruction=[_SubsonicInflow(flow_state)],
         post_convective_flux=[],
-        pre_viscous_grad=[]
+        pre_viscous_grad=[],
     )
 
 
@@ -606,7 +589,7 @@ def subsonic_outflow(pressure):
     return BoundaryCondition(
         pre_reconstruction=[_SubsonicOutflow(pressure)],
         post_convective_flux=[],
-        pre_viscous_grad=[]
+        pre_viscous_grad=[],
     )
 
 
@@ -614,7 +597,7 @@ def constant_flux(flow_state):
     return BoundaryCondition(
         pre_reconstruction=[_FlowStateCopy(flow_state)],
         post_convective_flux=[_ConstantFlux(flow_state)],
-        pre_viscous_grad=[]
+        pre_viscous_grad=[],
     )
 
 
@@ -652,15 +635,11 @@ class _FixedVelocity:
         self._velocity = velocity
 
     def as_dict(self):
-        return {
-            "type": "fixed_velocity",
-            "velocity": self._velocity.as_dict()
-        }
+        return {"type": "fixed_velocity", "velocity": self._velocity.as_dict()}
 
 
 class _WaveSpeed:
-    _json_values = ["scale", "shock_detection_threshold",
-                    "shock_detection_width"]
+    _json_values = ["scale", "shock_detection_threshold", "shock_detection_width"]
     _defaults_file = "wave_speed.json"
     __slots__ = _json_values + ["constraint"]
 
@@ -678,7 +657,7 @@ class _WaveSpeed:
             "scale": self.scale,
             "shock_detection_threshold": self.shock_detection_threshold,
             "shock_detection_width": self.shock_detection_width,
-            "constraint": self.constraint.as_dict()
+            "constraint": self.constraint.as_dict(),
         }
 
 
@@ -691,15 +670,13 @@ class _InverseDistanceWeighting:
         return {
             "type": "IDW",
             "power": self._power,
-            "sample_points": self._sample_points
+            "sample_points": self._sample_points,
         }
 
 
 class Unconstrained:
     def as_dict(self):
-        return {
-            "type": "none"
-        }
+        return {"type": "none"}
 
 
 class DirectionConstraint:
@@ -707,10 +684,7 @@ class DirectionConstraint:
         self._direction = direction
 
     def as_dict(self):
-        return {
-            "type": "direction",
-            "direction": self._direction.as_dict()
-        }
+        return {"type": "direction", "direction": self._direction.as_dict()}
 
 
 class RadialConstraint:
@@ -718,31 +692,32 @@ class RadialConstraint:
         self._centre = centre
 
     def as_dict(self):
-        return {
-            "type": "radial",
-            "centre": self._centre.as_dict()
-        }
+        return {"type": "radial", "centre": self._centre.as_dict()}
 
 
-def shock_fit(scale=0.001, constraint=Unconstrained,
-              shock_detection_threshold=0.5, shock_detection_width=0.01):
+def shock_fit(
+    scale=0.001,
+    constraint=Unconstrained,
+    shock_detection_threshold=0.5,
+    shock_detection_width=0.01,
+):
     return GridMotionBoundaryCondition(
         direct=[
-            _WaveSpeed(scale=scale,
-                       shock_detection_width=shock_detection_width,
-                       shock_detection_threshold=shock_detection_threshold,
-                       constraint=constraint)
+            _WaveSpeed(
+                scale=scale,
+                shock_detection_width=shock_detection_width,
+                shock_detection_threshold=shock_detection_threshold,
+                constraint=constraint,
+            )
         ],
         interp=[],
-        constraint=[]
+        constraint=[],
     )
 
 
 def fixed_velocity(velocity):
     return GridMotionBoundaryCondition(
-        direct=[_FixedVelocity(velocity)],
-        interp=[],
-        constraint=[]
+        direct=[_FixedVelocity(velocity)], interp=[], constraint=[]
     )
 
 
@@ -750,7 +725,7 @@ def interpolation(sample_points, power=2.0):
     return GridMotionBoundaryCondition(
         direct=[],
         interp=[_InverseDistanceWeighting(sample_points, power)],
-        constraint=[]
+        constraint=[],
     )
 
 
@@ -758,7 +733,7 @@ def constrained_interpolation(sample_points, constraint, power=2.0):
     return GridMotionBoundaryCondition(
         direct=[],
         interp=[_InverseDistanceWeighting(sample_points, power)],
-        constraint=[constraint]
+        constraint=[constraint],
     )
 
 
@@ -785,11 +760,7 @@ class LinearInterpolateCfl(CflSchedule):
         self._cfls = cfls
 
     def as_dict(self):
-        return {
-            "type": self._type,
-            "times": self._times,
-            "cfls": self._cfls
-        }
+        return {"type": self._type, "times": self._times, "cfls": self._cfls}
 
 
 class ResidualBasedCfl(CflSchedule):
@@ -828,9 +799,7 @@ def make_cfl_schedule(config):
             cfls.append((time, cfl))
         return LinearInterpolateCfl(cfls)
     else:
-        validation_errors.append(
-            ValidationException(f"Unkown cfl schedule {cfl_type}")
-        )
+        validation_errors.append(ValidationException(f"Unkown cfl schedule {cfl_type}"))
 
 
 class ButcherTableau:
@@ -852,29 +821,37 @@ def butcher_tableau(method):
     elif method == "midpoint":
         return ButcherTableau([[0.5]], [0, 1], [0.5])
     elif method == "rk3":
-        return ButcherTableau([[1/2], [-1, 2]], [1/6, 2/3, 1/6], [0.5, 1.0])
+        return ButcherTableau([[1 / 2], [-1, 2]], [1 / 6, 2 / 3, 1 / 6], [0.5, 1.0])
     elif method == "ssp-rk3":
-        return ButcherTableau([[1], [0.25, 0.25]], [1/6, 1/6, 2/3], [1, 0.5])
+        return ButcherTableau([[1], [0.25, 0.25]], [1 / 6, 1 / 6, 2 / 3], [1, 0.5])
     elif method == "rk4":
-        return ButcherTableau([[0.5], [0, 0.5], [0, 0, 1]],
-                              [1/6, 1/3, 1/3, 1/6],
-                              [0.5, 0.5, 1.0])
+        return ButcherTableau(
+            [[0.5], [0, 0.5], [0, 0, 1]], [1 / 6, 1 / 3, 1 / 3, 1 / 6], [0.5, 0.5, 1.0]
+        )
     else:
         raise ValidationException(f"Unknown method {method}")
 
 
 class RungeKutta:
-    _json_values = ["cfl", "max_time", "max_step", "print_frequency",
-                    "plot_frequency", "plot_every_n_steps", "dt_init",
-                    "method", "butcher_tableau",
-                    "residual_frequency", "residuals_every_n_steps"]
+    _json_values = [
+        "cfl",
+        "max_time",
+        "max_step",
+        "print_frequency",
+        "plot_frequency",
+        "plot_every_n_steps",
+        "dt_init",
+        "method",
+        "butcher_tableau",
+        "residual_frequency",
+        "residuals_every_n_steps",
+    ]
     _defaults_file = "runge_kutta.json"
     _name = Solver.RungeKutta.value
     __slots__ = _json_values
 
     def __init__(self, **kwargs):
-        json_data = read_defaults(DEFAULTS_DIRECTORY,
-                                  self._defaults_file)
+        json_data = read_defaults(DEFAULTS_DIRECTORY, self._defaults_file)
         if "butcher_tableau" in kwargs and "method" in kwargs:
             validation_errors.append(
                 ValidationException("butcher_tableau and method provided")
@@ -933,8 +910,12 @@ class Gmres:
 
 
 class FGmres:
-    _json_values = ["max_iters", "max_preconditioner_iters",
-                    "preconditioner_tolerance", "tolerance"]
+    _json_values = [
+        "max_iters",
+        "max_preconditioner_iters",
+        "preconditioner_tolerance",
+        "tolerance",
+    ]
     _type = "fgmres"
     __slots__ = _json_values
     _defaults_file = "fgmres.json"
@@ -959,8 +940,14 @@ class FGmres:
 
 
 class SteadyState:
-    _json_values = ["cfl", "max_steps", "print_frequency", "plot_frequency",
-                    "diagnostics_frequency", "tolerance"]
+    _json_values = [
+        "cfl",
+        "max_steps",
+        "print_frequency",
+        "plot_frequency",
+        "diagnostics_frequency",
+        "tolerance",
+    ]
     _defaults_file = "steady_state.json"
     _name = Solver.SteadyState.value
     __slots__ = _json_values + ["linear_solver", "cfl"]
@@ -990,8 +977,7 @@ class SteadyState:
 
 
 def make_default_solver():
-    default_solver_name = read_defaults(DEFAULTS_DIRECTORY,
-                                        "config.json")["solver"]
+    default_solver_name = read_defaults(DEFAULTS_DIRECTORY, "config.json")["solver"]
     default_solver = string_to_solver(default_solver_name)
     if default_solver == Solver.RungeKutta:
         return RungeKutta()
@@ -1033,7 +1019,7 @@ class IdealGas(GasModel):
             "R": self._gas_model.R(),
             "Cv": self._gas_model.Cv(),
             "Cp": self._gas_model.Cp(),
-            "gamma": self._gas_model.gamma()
+            "gamma": self._gas_model.gamma(),
         }
 
 
@@ -1058,8 +1044,7 @@ def build_viscosity_model(gas_model):
         return SutherlandViscosity(mu_0, T_0, T_s)
     else:
         validation_errors.append(
-            ValidationException(f"Unknown default viscosity "
-                                f"model {viscosity_model}")
+            ValidationException(f"Unknown default viscosity model {viscosity_model}")
         )
 
 
@@ -1074,8 +1059,9 @@ def build_thermal_conductivity_model(gas_model):
         return ConstantPrandtlNumber(Pr)
     else:
         validation_errors.append(
-            ValidationException("Unknown default thermal conductivity "
-                                f"model {thermal_conductivity}")
+            ValidationException(
+                f"Unknown default thermal conductivity model {thermal_conductivity}"
+            )
         )
 
 
@@ -1106,13 +1092,14 @@ def string_to_io_format(string):
 
 
 class IO:
-    _json_values = ["flow_format",]
+    _json_values = [
+        "flow_format",
+    ]
     __slots__ = _json_values
     _defaults_file = "io.json"
 
     def __init__(self, **kwargs):
-        json_data = read_defaults(DEFAULTS_DIRECTORY,
-                                  self._defaults_file)
+        json_data = read_defaults(DEFAULTS_DIRECTORY, self._defaults_file)
 
         for key in self._json_values:
             setattr(self, key, string_to_io_format(json_data[key]))
@@ -1124,8 +1111,10 @@ class IO:
                 setattr(self, key, string_to_io_format(kwargs[key]))
 
     def validate(self):
-        if (self.flow_format is IOFormat.VtkText or
-                self.flow_format is IOFormat.VtkBinary):
+        if (
+            self.flow_format is IOFormat.VtkText
+            or self.flow_format is IOFormat.VtkBinary
+        ):
             validation_errors.append(
                 ValidationException("Vtk not supported as input format")
             )
@@ -1134,10 +1123,16 @@ class IO:
         return {"flow_format": self.flow_format.value}
 
 
-
 class Config:
-    _json_values = ["convective_flux", "viscous_flux", "solver", "_grids",
-                    "gas_model", "transport_properties", "io"]
+    _json_values = [
+        "convective_flux",
+        "viscous_flux",
+        "solver",
+        "_grids",
+        "gas_model",
+        "transport_properties",
+        "io",
+    ]
     __slots__ = _json_values
 
     def __init__(self):
@@ -1145,9 +1140,7 @@ class Config:
         self.viscous_flux = ViscousFlux()
         self.solver = make_default_solver()
         self.gas_model = default_gas_model()
-        self.transport_properties = build_transport_property_model(
-            self.gas_model
-        )
+        self.transport_properties = build_transport_property_model(self.gas_model)
         self.io = IO()
 
     def validate(self):
@@ -1171,7 +1164,7 @@ class Config:
     @property
     def grids(self) -> list[Block]:
         return self._grids
-    
+
     @grids.setter
     def grids(self, grids: list[Block]):
         self._grids = grids
@@ -1188,9 +1181,7 @@ class Config:
         json_values = {}
         for setting in self._json_values:
             if setting == "_grids":
-                json_values["grids"] = [
-                    grid.as_dict() for grid in self._grids
-                ]
+                json_values["grids"] = [grid.as_dict() for grid in self._grids]
             else:
                 json_values[setting] = getattr(self, setting).as_dict()
 
@@ -1211,8 +1202,7 @@ def main(file_name, res_dir):
     global SHARE_DIRECTORY
     DEFAULTS_DIRECTORY = f"{res_dir}/defaults"
     SHARE_DIRECTORY = res_dir
-    directories = read_defaults(DEFAULTS_DIRECTORY,
-                                "directories.json")
+    directories = read_defaults(DEFAULTS_DIRECTORY, "directories.json")
     config_dir = directories["config_dir"]
     config_status = directories["config_status"]
     if not os.path.exists(config_dir):
