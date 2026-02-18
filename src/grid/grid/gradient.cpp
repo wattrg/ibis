@@ -23,12 +23,14 @@ json build_gradient_config() {
 
     motion["enabled"] = false;
     config["motion"] = motion;
+    config["id"] = 0;
     return config;
 }
 
 TEST_CASE("gradient") {
     json config = build_gradient_config();
-    GridBlock<SharedMem, Ibis::real> block_dev("../../../src/grid/test/grid.su2", config);
+    config["grid_file_name"] = "grid.su2";
+    GridBlock<SharedMem, Ibis::real> block_dev("../../../src/grid/test", config);
     auto block_host = block_dev.host_mirror();
     block_host.deep_copy(block_dev);
     WLSGradient<Ibis::real, SharedMem> wls_gradient(block_dev);

@@ -69,18 +69,16 @@ std::unique_ptr<Solver> make_solver(json config, std::string grid_dir,
                                     std::string flow_dir) {
     size_t grid_id = Ibis::get_world_rank<MemModel>();
     std::filesystem::path base_path = std::filesystem::path(grid_dir);
-    std::filesystem::path grid_path =
-        base_path / "0000" / std::format("block_{:04}.su2", grid_id);
-    std::string grid_file = grid_path.string();
+    std::filesystem::path grid_path = base_path / "0000";
     json solver_config = config.at("solver");
     json grid_config = config.at("grids");
     std::string solver_name = solver_config.at("name");
     if (solver_name == "runge_kutta") {
-        GridBlock<MemModel, Ibis::real> grid(grid_file, grid_config[grid_id], grid_id);
+        GridBlock<MemModel, Ibis::real> grid(grid_path, grid_config[grid_id]);
         return std::unique_ptr<Solver>(
             new RungeKutta<MemModel>(config, std::move(grid), grid_dir, flow_dir));
     } else if (solver_name == "steady_state") {
-        GridBlock<MemModel, Ibis::dual> grid(grid_file, grid_config[grid_id], grid_id);
+        GridBlock<MemModel, Ibis::dual> grid(grid_path, grid_config[grid_id]);
         return std::unique_ptr<Solver>(
             new SteadyState<MemModel>(config, std::move(grid), grid_dir, flow_dir));
     } else {

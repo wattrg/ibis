@@ -40,12 +40,19 @@ public:
 
     GridBlock(const GridIO& grid_io, json& config) { init_grid_block(grid_io, config); }
 
-    GridBlock(std::string file_name, json& config) {
-        init_grid_block(GridIO(file_name), config);
-    }
-
-    GridBlock(std::string file_name, json& config, size_t id) {
-        init_grid_block(GridIO(file_name, id), config);
+    GridBlock(std::string dir_name, json& config) {
+        std::filesystem::path base_dir = dir_name;
+        std::filesystem::path grid_path = base_dir / config.at("grid_file_name");
+        int id = config.at("id");
+        GridIO grid_io;
+        if (config.contains("cell_map_file_name")) {
+            std::filesystem::path cell_map_path = base_dir / config.at("cell_map_file_name");
+            grid_io = GridIO(grid_path.string(), cell_map_path.string(), id);
+        }
+        else {
+            grid_io = GridIO(grid_path.string());
+        }
+        init_grid_block(grid_io, config);
     }
 
     GridBlock(

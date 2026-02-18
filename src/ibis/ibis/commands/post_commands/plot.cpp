@@ -63,8 +63,7 @@ void plot_vtk(json directories, std::vector<std::string> extra_vars) {
     for (size_t block_i = 0; block_i < config.at("grids").size(); block_i++) {
         json grid_config = config.at("grids")[block_i];
         GridBlock<SharedMem, T> grid(
-            grid_dir / "0000" / std::format("block_{:04}.su2", block_i), grid_config,
-            block_i);
+            grid_dir / "0000", grid_config);
         FiniteVolume<T, SharedMem> fv(grid, config);
         FlowStates<T> fs(grid.num_total_cells());
         for (unsigned int time_idx = 0; time_idx < dirs.size(); time_idx++) {

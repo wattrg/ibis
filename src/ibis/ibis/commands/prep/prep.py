@@ -380,11 +380,12 @@ class Block:
         block_ic_directory.mkdir(parents=True, exist_ok=True)
 
         # write the grid
-        shutil.copy(self._block, f"{grid_directory}/0000/block_{self._id:04}.su2")
+        self.base_grid_path = f"{grid_directory}/0000"
+        shutil.copy(self._block, f"{self.base_grid_path}/block_{self._id:04}.su2")
         if self.cell_map_file:
             shutil.copy(
                 self.cell_map_file,
-                f"{grid_directory}/0000/cell_map_block_{self._id}",
+                f"{self.base_grid_path}/cell_map_block_{self._id}",
             )
 
         # write the initial condition
@@ -424,8 +425,10 @@ class Block:
         dictionary["dimensions"] = self.dim
         for key in self.boundaries:
             dictionary["boundaries"][key] = self.boundaries[key].as_dict()
+        dictionary["grid_file_name"] = f"block_{self._id:04}.su2"
         dictionary["motion"] = self.motion.as_dict()
-        dictionary["cell_map_file"] = f"cell_map_block_{self._id}"
+        if self.cell_map_file:
+            dictionary["cell_map_file_name"] = f"cell_map_block_{self._id}"
         dictionary["id"] = self._id
         return dictionary
 

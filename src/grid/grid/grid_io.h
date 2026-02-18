@@ -124,7 +124,11 @@ public:
 
     GridIO(std::string file_name);
 
-    GridIO(std::string file_name, size_t id) : GridIO(file_name) { id_ = id; }
+    GridIO(std::string file_name, std::string cell_mapping, size_t id) : GridIO(file_name) {
+        id_ = id;
+        std::ifstream mapped_cells (cell_mapping);
+        read_mapped_cells(mapped_cells);
+    }
 
     GridIO(const GridIO &monolithic_grid, const std::vector<size_t> &cells_to_include,
            const std::vector<CellMapping> &&cell_mapping, size_t id);
