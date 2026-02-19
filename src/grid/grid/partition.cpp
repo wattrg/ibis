@@ -180,5 +180,43 @@ TEST_CASE("partition_metis_symmetric_mapping") {
         }
     }
 }
+
+TEST_CASE("partition_metis_num_boundary_conditions") {
+    std::vector<GridIO> partitioned_grids = build_partitioned_grid();
+    GridIO monolithic_grid("../../../src/grid/test/grid.su2");
+
+    size_t num_slip_wall_top_faces =
+        monolithic_grid.markers()["slip_wall_top"].size();
+    size_t num_slip_wall_bottom_faces =
+        monolithic_grid.markers()["slip_wall_bottom"].size();
+    size_t num_inflow_faces = monolithic_grid.markers()["outflow"].size();
+    size_t num_outflow_faces = monolithic_grid.markers()["inflow"].size();
+
+    size_t num_partitioned_slip_wall_top_faces =
+        partitioned_grids[0].markers()["slip_wall_top"].size() +
+        partitioned_grids[1].markers()["slip_wall_top"].size();
+    size_t num_partitioned_slip_wall_bottom_faces =
+        partitioned_grids[0].markers()["slip_wall_bottom"].size() +
+        partitioned_grids[1].markers()["slip_wall_bottom"].size();
+    size_t num_partitioned_inflow_faces =
+        partitioned_grids[0].markers()["inflow"].size() +
+        partitioned_grids[1].markers()["inflow"].size();
+    size_t num_partitioned_outflow_faces =
+        partitioned_grids[0].markers()["outflow"].size() +
+        partitioned_grids[1].markers()["outflow"].size();
+    CHECK(num_slip_wall_top_faces == num_partitioned_slip_wall_top_faces);
+    CHECK(num_slip_wall_bottom_faces == num_partitioned_slip_wall_bottom_faces);
+    CHECK(num_inflow_faces == num_partitioned_inflow_faces);
+    CHECK(num_outflow_faces == num_partitioned_outflow_faces);
+}
+
+// TEST_CASE("partition_metis_boundary_condition_locations") {
+//     std::vector<GridIO> partitioned_grids = build_partitioned_grid();
+//     GridIO monolithic_grid("../../../src/grid/test/grid.su2");
+
+//     std::vector<ElemIO> slip_wall_faces = monolithic_grid.markers()["slip_wall"];
+    
+// }
+
 #endif  // DOCTEST_CONFIG_DISABLE
 #endif  // Ibis_ENABLE_METIS
