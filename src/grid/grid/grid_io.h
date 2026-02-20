@@ -160,6 +160,14 @@ public:
 
     size_t id() const { return id_; }
 
+    size_t global_to_local_vertex_id (size_t global_id) const;
+    size_t global_to_local_face_id (size_t global_id) const;
+    size_t global_to_local_cell_id (size_t global_id) const;
+
+    size_t local_to_global_vertex_id (size_t local_id) const;
+    size_t local_to_global_face_id (size_t local_id) const;
+    size_t local_to_global_cell_id (size_t local_id) const;
+
     void read_su2_grid(std::istream &grid_file);
     void write_su2_grid(std::ostream &grid_file);
 
@@ -173,6 +181,15 @@ private:
 
     std::vector<std::vector<size_t>> cell_faces_;  // the ID of the faces of each cell
     InterfaceLookup interface_lookup_;
+
+    // These map the global index to the local index
+    std::unordered_map<size_t, size_t> global_to_local_vertex_map_;
+    std::unordered_map<size_t, size_t> global_to_local_face_map_;
+    std::unordered_map<size_t, size_t> global_to_local_cell_map_;
+
+    std::unordered_map<size_t, size_t> local_to_global_vertex_map_;
+    std::unordered_map<size_t, size_t> local_to_global_face_map_;
+    std::unordered_map<size_t, size_t> local_to_global_cell_map_;
 
     std::unordered_map<std::string, std::vector<ElemIO>> markers_;
     size_t dim_;

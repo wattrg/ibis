@@ -146,8 +146,6 @@ GridIO::GridIO(const GridIO &monolithic_grid, const std::vector<size_t> &cells_t
     cells_.reserve(num_cells);
 
     // maps global_vertex_id -> local_vertex_id
-    std::unordered_map<size_t, size_t> vertex_map;
-    std::unordered_map<size_t, size_t> face_map;
     const InterfaceLookup &global_face_lookup = monolithic_grid.interface_lookup();
 
     for (size_t local_cell_i = 0; local_cell_i < num_cells; local_cell_i++) {
@@ -159,38 +157,44 @@ GridIO::GridIO(const GridIO &monolithic_grid, const std::vector<size_t> &cells_t
         // gather the list of local vertices and faces for this cell
         std::vector<size_t> local_vertex_ids{};
         for (auto &global_vertex : global_vertex_ids) {
-            if (vertex_map.find(global_vertex) == vertex_map.end()) {
+            if (global_to_local_vertex_map_.find(global_vertex) == global_to_local_vertex_map_.end()) {
                 // we haven't encountered this vertex in this partition yet,
                 // so we'll add it now
-                vertex_map[global_vertex] = vertex_map.size();
+                size_t local_vertex_id = global_to_local_vertex_map_.size();
+                global_to_local_vertex_map_[global_vertex] = local_vertex_id;
+                local_to_global_vertex_map_[local_vertex_id] = global_vertex;
                 vertices_.push_back(monolithic_grid.vertices()[global_vertex]);
             }
-            local_vertex_ids.push_back(vertex_map[global_vertex]);
+            local_vertex_ids.push_back(global_to_local_vertex_map_[global_vertex]);
         }
 
         // At this point, we have the information to build the local cell
         cells_.push_back(ElemIO(local_vertex_ids, global_elem_io.cell_type(),
                                 global_elem_io.face_order()));
+        global_to_local_cell_map_[global_cell_i] = local_cell_i;
+        local_to_global_cell_map_[local_cell_i] = global_cell_i;
 
-        // set up the faces from the global faces
+        // set up the local faces from the global faces
         std::vector<size_t> local_face_ids{};
         std::vector<ElemIO> global_faces = global_elem_io.interfaces();
         cell_faces_ = std::vector<std::vector<size_t>>{num_cells};
-        InterfaceLookup local_face_lookup;
+        // InterfaceLookup local_face_lookup;
         for (ElemIO &global_face : global_faces) {
             size_t global_face_id = global_face_lookup.id(global_face.vertex_ids());
-            if (face_map.find(global_face_id) == face_map.end()) {
+            if (global_to_local_face_map_.find(global_face_id) == global_to_local_face_map_.end()) {
                 // we haven't encountered this face in this partition yet,
                 // so we'll add it now
-                face_map[global_face_id] = face_map.size();
+                size_t local_face_id = global_to_local_face_map_.size();
+                global_to_local_face_map_[global_face_id] = local_face_id;
+                local_to_global_face_map_[local_face_id] = global_face_id;
                 std::vector<size_t> local_vertices_on_face;
                 for (size_t global_vertex_id : global_face.vertex_ids()) {
-                    local_vertices_on_face.push_back(vertex_map[global_vertex_id]);
+                    local_vertices_on_face.push_back(global_to_local_vertex_map_[global_vertex_id]);
                 }
                 faces_.push_back(
                     ElemIO(local_vertices_on_face, global_face.cell_type(), global_face.face_order())
                 );
-                local_face_lookup.insert(global_face.vertex_ids());
+                interface_lookup_.insert(local_vertices_on_face);
             }
             // std::cout << local_cell_i << " " << cell_faces_
             cell_faces_[local_cell_i].push_back(faces_.size() - 1);
@@ -199,7 +203,7 @@ GridIO::GridIO(const GridIO &monolithic_grid, const std::vector<size_t> &cells_t
 
     // update the cell mappings from the global face id to the local face id
     for (CellMapping& mapping : cell_mapping_) {
-        mapping.local_face = face_map[mapping.global_face];
+        mapping.local_face = global_to_local_face_map_[mapping.global_face];
     }
 
     // setup the local markers for this partition
@@ -209,8 +213,8 @@ GridIO::GridIO(const GridIO &monolithic_grid, const std::vector<size_t> &cells_t
             size_t global_face_id = global_face_lookup.id(global_elem.vertex_ids());
             // if global_face_id is in the face_map, then the face belongs to
             // this partition
-            if (face_map.find(global_face_id) != face_map.end()) {
-                local_elems.push_back(faces_[face_map[global_face_id]]);
+            if (global_to_local_face_map_.find(global_face_id) != global_to_local_face_map_.end()) {
+                local_elems.push_back(faces_[global_to_local_face_map_[global_face_id]]);
             }
         }
         markers_[tag] = local_elems;
@@ -559,6 +563,30 @@ std::vector<ElemIO> ElemIO::interfaces() const {
         default:
             throw new std::runtime_error("Unreachable");
     }
+}
+
+size_t GridIO::global_to_local_vertex_id(size_t global_id) const {
+    return global_to_local_vertex_map_.at(global_id);
+}
+
+size_t GridIO::global_to_local_face_id(size_t global_id) const {
+    return global_to_local_face_map_.at(global_id);
+}
+
+size_t GridIO::global_to_local_cell_id(size_t global_id) const {
+    return global_to_local_cell_map_.at(global_id);
+}
+
+size_t GridIO::local_to_global_vertex_id(size_t local_id) const {
+    return local_to_global_vertex_map_.at(local_id);
+}
+
+size_t GridIO::local_to_global_face_id(size_t local_id) const {
+    return local_to_global_face_map_.at(local_id);
+}
+
+size_t GridIO::local_to_global_cell_id(size_t local_id) const {
+    return local_to_global_cell_map_.at(local_id);
 }
 
 #ifndef DOCTEST_CONFIG_DISABLE
