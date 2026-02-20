@@ -241,6 +241,22 @@ public:
         }
     }
 
+    SymmetricComm& operator=(const SymmetricComm& other) {
+        if (this != &other) {
+            other_rank_ = other.other_rank_;
+            mpi_comm_ = other.mpi_comm_;
+
+            send_buf_ = view_type("send_buf", other.send_buf_.size());
+            recv_buf_ = view_type("recv_buf", other.recv_buf_.size());
+
+            if constexpr (!gpu_aware) {
+                host_send_buf_ = Kokkos::create_mirror_view(send_buf_);
+                host_recv_buf_ = Kokkos::create_mirror_view(recv_buf_);
+            }
+        }
+        return *this;
+    }
+
     void expect_receive() {
         if (gpu_aware) {
             MPI_Irecv(recv_buf_.data(), recv_buf_.size(), mpi_type_, other_rank_, 0,

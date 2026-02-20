@@ -3,6 +3,7 @@
 #include <spdlog/spdlog.h>
 
 #include "gas/transport_properties.h"
+#include "parallel/parallel.h"
 
 template <typename T, class MemModel>
 int NativeTextOutput<T, MemModel>::write(const typename FlowStates<T>::mirror_type& fs,
@@ -22,15 +23,18 @@ int NativeTextOutput<T, MemModel>::write(const typename FlowStates<T>::mirror_ty
     std::filesystem::path dir = time_directory / std::format("block_{:04}", block_id);
     std::filesystem::create_directories(dir);
 
-    std::ofstream meta_f(time_directory / "meta_data.json");
-    json meta;
-    meta["time"] = time;
-    meta_f << meta.dump(4);
-    meta_f.close();
 
-    std::ofstream flows(base_dir / "flows", std::ios_base::app);
-    flows << time_dir << std::endl;
-    flows.close();
+    if (Ibis::get_world_rank<MemModel>() == 0) {
+        std::ofstream meta_f(time_directory / "meta_data.json");
+        json meta;
+        meta["time"] = time;
+        meta_f << meta.dump(4);
+        meta_f.close();
+
+        std::ofstream flows(base_dir / "flows", std::ios_base::app);
+        flows << time_dir << std::endl;
+        flows.close();
+    }
 
     std::ofstream temp(dir / "T");
     if (!temp) {
@@ -218,15 +222,17 @@ int NativeBinaryOutput<T, MemModel>::write(const typename FlowStates<T>::mirror_
     std::filesystem::path dir = time_directory / std::format("block_{:04}", block_id);
     std::filesystem::create_directories(dir);
 
-    std::ofstream meta_f(time_directory / "meta_data.json");
-    json meta;
-    meta["time"] = time;
-    meta_f << meta.dump(4);
-    meta_f.close();
+    if (Ibis::get_world_rank<MemModel>() == 0) {
+        std::ofstream meta_f(time_directory / "meta_data.json");
+        json meta;
+        meta["time"] = time;
+        meta_f << meta.dump(4);
+        meta_f.close();
 
-    std::ofstream flows(base_dir / "flows", std::ios_base::app);
-    flows << time_dir << std::endl;
-    flows.close();
+        std::ofstream flows(base_dir / "flows", std::ios_base::app);
+        flows << time_dir << std::endl;
+        flows.close();
+    }
 
     std::ofstream temp(dir / "T", std::ios::binary);
     if (!temp) {

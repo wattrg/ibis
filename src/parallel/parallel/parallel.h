@@ -53,23 +53,35 @@ private:
 
 public:
     SymmetricComm() {}
+
     SymmetricComm(int other_rank, size_t buf_size) {
         (void)other_rank;
         (void)buf_size;
         throw std::runtime_error("Not implemented");
     }
+
     SymmetricComm(int other_rank) {
         (void)other_rank;
         throw std::runtime_error("Not implemented");
     }
+
     SymmetricComm(const SymmetricComm& other) {
         (void)other;
         throw std::runtime_error("not implemented");
     }
+
+    SymmetricComm& operator=(const SymmetricComm& other) {
+        if (this != &other) {
+            (void) other;
+            throw std::runtime_error("not implemented");
+        }
+        return *this;
+    }
+
     void expect_receive() { throw std::runtime_error("Not implemented"); }
     void send() { throw std::runtime_error("Not implemented"); }
     int receive() { throw std::runtime_error("Not implemented"); }
-    void resize_buffers(size_t new_size) { throw std::runtime_error("Not implemented"); }
+    void resize_buffers(size_t new_size) { (void)new_size; throw std::runtime_error("Not implemented"); }
     const Kokkos::View<T*, MemSpace>& send_buf() const {
         throw std::runtime_error("Not implemented");
     }
