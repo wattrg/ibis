@@ -119,6 +119,7 @@ private:
     void print_progress(unsigned int step, Ibis::real wc);
     std::string stop_reason(unsigned int step);
     bool stop_now(unsigned int step);
+    bool is_master_();
 
     size_t max_step() const { return jfnk_.max_steps(); }
 

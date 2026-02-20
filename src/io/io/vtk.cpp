@@ -143,7 +143,9 @@ int VtkTextOutput<T, MemModel>::write(const typename FlowStates<T>::mirror_type&
     auto grid_host = grid.host_mirror();
     grid_host.deep_copy(grid);
 
-    std::ofstream f(plot_dir + "/" + time_dir + "/" + "/block_0.vtu");
+    // std::ofstream f(plot_dir + "/" + time_dir + "/" + "/block_0.vtu");
+    std::filesystem::path file_path = std::filesystem::path(plot_dir) / time_dir / std::format("block_{}.vtu", grid.id());
+    std::ofstream f(file_path);
     f << "<VTKFile type='UnstructuredGrid' version='1.0' byte_order='LittleEndian'>"
       << std::endl;
     f << "<UnstructuredGrid>" << std::endl;
@@ -385,7 +387,8 @@ int VtkBinaryOutput<T, MemModel>::write(const typename FlowStates<T>::mirror_typ
     auto grid_host = grid.host_mirror();
     grid_host.deep_copy(grid);
 
-    std::ofstream f(plot_dir + "/" + time_dir + "/" + "/block_0.vtu", std::ios::binary);
+    std::filesystem::path file_path = std::filesystem::path(plot_dir) / time_dir / std::format("block_{}.vtu", grid.id());
+    std::ofstream f(file_path, std::ios::binary);
     f << "<VTKFile type='UnstructuredGrid' version='1.0' byte_order='LittleEndian'>"
       << std::endl;
     f << "<UnstructuredGrid>" << std::endl;

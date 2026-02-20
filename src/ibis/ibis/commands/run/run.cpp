@@ -6,6 +6,7 @@
 #include <parallel/parallel.h>
 #include <solvers/solver.h>
 #include <spdlog/spdlog.h>
+#include <parallel/parallel.h>
 
 #include <Kokkos_Core.hpp>
 #include <nlohmann/json.hpp>
@@ -53,14 +54,17 @@ int run(int argc, char* argv[]) {
             make_solver<MemModel>(config, grid_dir, flow_dir);
         result = solver->solve();
     }
+    if (Ibis::get_world_rank<MemModel>() == 0) {
+        if (result != 0) {
+            spdlog::error("run failed");
+        } else {
+            spdlog::info("run complete");
+        }
+        
+    }
 
     Ibis::finalise<MemModel>();
 
-    if (result != 0) {
-        spdlog::error("run failed");
-    } else {
-        spdlog::info("run complete");
-    }
     return result;
 }
 template int run<SharedMem>(int, char*[]);

@@ -39,6 +39,8 @@ protected:
     virtual std::string stop_reason(unsigned step) = 0;
     virtual size_t max_step() const = 0;
 
+    virtual bool is_master_() = 0;
+
     // error checking
     virtual int count_bad_cells() = 0;
 

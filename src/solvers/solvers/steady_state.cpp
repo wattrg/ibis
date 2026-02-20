@@ -272,6 +272,11 @@ int SteadyState<MemModel>::finalise() {
 }
 
 template <class MemModel>
+bool SteadyState<MemModel>::is_master_() {
+    return (Ibis::get_world_rank<MemModel>() == 0);
+}
+
+template <class MemModel>
 int SteadyState<MemModel>::take_step(size_t step) {
     jfnk_.step(sim_, *cq_, *fs_, step);
     return 0;

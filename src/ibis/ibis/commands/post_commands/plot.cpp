@@ -60,17 +60,32 @@ void plot_vtk(json directories, std::vector<std::string> extra_vars) {
         io.add_output_variable(extra_var);
     }
 
-    for (size_t block_i = 0; block_i < config.at("grids").size(); block_i++) {
-        json grid_config = config.at("grids")[block_i];
-        GridBlock<SharedMem, T> grid(grid_dir / "0000", grid_config);
-        FiniteVolume<T, SharedMem> fv(grid, config);
-        FlowStates<T> fs(grid.num_total_cells());
-        for (unsigned int time_idx = 0; time_idx < dirs.size(); time_idx++) {
+    // for (size_t block_i = 0; block_i < config.at("grids").size(); block_i++) {
+    //     json grid_config = config.at("grids")[block_i];
+    //     GridBlock<SharedMem, T> grid(grid_dir / "0000", grid_config);
+    //     FiniteVolume<T, SharedMem> fv(grid, config);
+    //     FlowStates<T> fs(grid.num_total_cells());
+    //     for (unsigned int time_idx = 0; time_idx < dirs.size(); time_idx++) {
+    //         json meta_data;
+    //         io.read(fs, grid, gas_model, trans_prop, grid_config, meta_data, time_idx);
+    //         io.write(fs, fv, grid, gas_model, trans_prop, meta_data.at("time"));
+    //         spdlog::info("Written VTK file at time index {}", time_idx);
+    //     }
+    // }
+    for (unsigned int time_idx = 0; time_idx < dirs.size(); time_idx++) {
+        for (size_t block_i = 0; block_i < config.at("grids").size(); block_i++) {
+            json grid_config = config.at("grids")[block_i];
+            // start by reading the initial grid. This will be updated if the
+            // grid is moving. However this isn't great because we
+            // base flow state memory allocations on this grid
+            GridBlock<SharedMem, T> grid(grid_dir / "0000", grid_config);
+            FiniteVolume<T, SharedMem> fv(grid, config);
+            FlowStates<T> fs(grid.num_total_cells());
             json meta_data;
             io.read(fs, grid, gas_model, trans_prop, grid_config, meta_data, time_idx);
             io.write(fs, fv, grid, gas_model, trans_prop, meta_data.at("time"));
-            spdlog::info("Written VTK file at time index {}", time_idx);
         }
+        spdlog::info("Written VTK file at time index {}", time_idx);
     }
     io.write_coordinating_file();
 }

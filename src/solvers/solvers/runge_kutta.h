@@ -88,6 +88,7 @@ private:
     bool stop_now(unsigned int step);
     size_t max_step() const { return max_step_; }
     int count_bad_cells() { return fv_.count_bad_cells(flow_, grid_.num_cells()); }
+    bool is_master_();
 
     // this computes the L2 norms of the time derivates evaluated
     // at the beginning of the previous step (essential whatever is in k_[0]).

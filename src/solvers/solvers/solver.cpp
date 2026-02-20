@@ -8,6 +8,7 @@
 #include <iostream>
 #include <nlohmann/json.hpp>
 #include <string>
+#include <parallel/parallel.h>
 
 #include "solvers/steady_state.h"
 
@@ -18,6 +19,7 @@ Solver::Solver(std::string grid_dir, std::string flow_dir)
 
 int Solver::solve() {
     int success = initialise();
+    bool is_master = is_master_();
     if (success != 0) {
         spdlog::error("Failed to initialise runge kutta solver");
         return success;
@@ -26,39 +28,47 @@ int Solver::solve() {
     for (size_t step = 0; step < max_step(); step++) {
         int result = take_step(step);
 
-        if (residuals_this_step(step)) {
+        if (is_master && residuals_this_step(step)) {
             write_residuals(step, sw.elapsed().count());
         }
 
         if (result != 0) {
-            spdlog::error("step {} failed", step);
-            plot_solution(step);
+            if (is_master) {
+                spdlog::error("step {} failed", step);
+                plot_solution(step);
+            }
             return 1;
         }
 
         int bad_cells = count_bad_cells();
         if (bad_cells > 0) {
-            spdlog::error("Encountered {} bad cells on step {}", bad_cells, step);
-            plot_solution(step);
+            if (is_master) {
+                spdlog::error("Encountered {} bad cells on step {}", bad_cells, step);
+                plot_solution(step);
+            }
             return 1;
         }
 
         if (stop_now(step)) {
-            std::string reason = stop_reason(step);
-            spdlog::info("STOPPING: {}", reason);
-            plot_solution(step);
+            if (is_master) {
+                std::string reason = stop_reason(step);
+                spdlog::info("STOPPING: {}", reason);
+                plot_solution(step);
+            }
             break;
         }
 
-        if (print_this_step(step)) {
+        if (is_master && print_this_step(step)) {
             print_progress(step, sw.elapsed().count());
         }
 
-        if (plot_this_step(step)) {
+        if (is_master && plot_this_step(step)) {
             plot_solution(step);
         }
     }
-    spdlog::info("Elapsed Wall Clock: {:.3}s", sw);
+    if (is_master) {
+        spdlog::info("Elapsed Wall Clock: {:.3}s", sw);
+    }
     finalise();
 
     return 0;

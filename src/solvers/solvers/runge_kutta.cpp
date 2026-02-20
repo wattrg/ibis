@@ -9,6 +9,7 @@
 #include <util/numeric_types.h>
 
 #include <limits>
+#include "parallel/parallel.h"
 
 // Implementation of Butcher tableau
 Ibis::real ButcherTableau::a(size_t i, size_t j) { return a_[i - 1][j]; }
@@ -106,6 +107,11 @@ int RungeKutta<MemModel>::initialise() {
 template <class MemModel>
 int RungeKutta<MemModel>::finalise() {
     return 0;
+}
+
+template <class MemModel>
+bool RungeKutta<MemModel>::is_master_() {
+    return (Ibis::get_world_rank<MemModel>() == 0);
 }
 
 template <class MemModel>
