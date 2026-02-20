@@ -279,5 +279,37 @@ TEST_CASE("parition_metis_internal_boundary_condition_locations") {
     }
 }
 
+void test_mapped_cell_location(GridIO& monolith, GridIO& part, size_t global_cell, size_t local_cell) {
+    ElemIO global_elem = monolith.cells()[global_cell];
+    ElemIO local_elem = part.cells()[local_cell];
+    auto global_vertices = monolith.vertices();
+    auto local_vertices = part.vertices();
+
+    CHECK(global_elem.vertex_ids().size() == local_elem.vertex_ids().size());
+    for (size_t global_vertex_id : global_elem.vertex_ids()) {
+        size_t local_vertex_id = part.global_to_local_vertex_id(global_vertex_id);
+        CHECK(global_vertices[global_vertex_id].pos().x == local_vertices[local_vertex_id].pos().x);
+        CHECK(global_vertices[global_vertex_id].pos().y == local_vertices[local_vertex_id].pos().y);
+        CHECK(global_vertices[global_vertex_id].pos().z == local_vertices[local_vertex_id].pos().z);
+    }
+}
+
+TEST_CASE("partition_metis_mapped_cell_locations") {
+    std::vector<GridIO> partitioned_grids = build_partitioned_grid();
+    GridIO monolith("../../../src/grid/test/grid.su2");
+
+    for (CellMapping& cell_map_part0 : partitioned_grids[0].cell_mapping()) {
+        size_t other_cell = cell_map_part0.other_cell;
+        size_t global_cell = partitioned_grids[1].local_to_global_cell_id(other_cell);
+        test_mapped_cell_location(monolith, partitioned_grids[1], global_cell, other_cell);
+    }
+
+    for (CellMapping& cell_map_part1 : partitioned_grids[1].cell_mapping()) {
+        size_t other_cell = cell_map_part1.other_cell;
+        size_t global_cell = partitioned_grids[0].local_to_global_cell_id(other_cell);
+        test_mapped_cell_location(monolith, partitioned_grids[0], global_cell, other_cell);
+    }
+}
+
 #endif  // DOCTEST_CONFIG_DISABLE
 #endif  // Ibis_ENABLE_METIS
