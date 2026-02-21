@@ -336,5 +336,3 @@ TEST_CASE("ghost cell centres") {
 }
 
 #endif  // DOCTEST_CONFIG_DISABLE
-
-

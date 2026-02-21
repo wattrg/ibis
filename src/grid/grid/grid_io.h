@@ -160,13 +160,13 @@ public:
 
     size_t id() const { return id_; }
 
-    size_t global_to_local_vertex_id (size_t global_id) const;
-    size_t global_to_local_face_id (size_t global_id) const;
-    size_t global_to_local_cell_id (size_t global_id) const;
+    size_t global_to_local_vertex_id(size_t global_id) const;
+    size_t global_to_local_face_id(size_t global_id) const;
+    size_t global_to_local_cell_id(size_t global_id) const;
 
-    size_t local_to_global_vertex_id (size_t local_id) const;
-    size_t local_to_global_face_id (size_t local_id) const;
-    size_t local_to_global_cell_id (size_t local_id) const;
+    size_t local_to_global_vertex_id(size_t local_id) const;
+    size_t local_to_global_face_id(size_t local_id) const;
+    size_t local_to_global_cell_id(size_t local_id) const;
 
     void read_su2_grid(std::istream &grid_file);
     void write_su2_grid(std::ostream &grid_file);

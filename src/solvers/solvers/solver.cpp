@@ -1,3 +1,4 @@
+#include <parallel/parallel.h>
 #include <solvers/runge_kutta.h>
 #include <solvers/solver.h>
 #include <spdlog/spdlog.h>
@@ -8,7 +9,6 @@
 #include <iostream>
 #include <nlohmann/json.hpp>
 #include <string>
-#include <parallel/parallel.h>
 
 #include "solvers/steady_state.h"
 

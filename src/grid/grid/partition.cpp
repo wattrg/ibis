@@ -185,8 +185,7 @@ TEST_CASE("partition_metis_num_boundary_conditions") {
     std::vector<GridIO> partitioned_grids = build_partitioned_grid();
     GridIO monolithic_grid("../../../src/grid/test/grid.su2");
 
-    size_t num_slip_wall_top_faces =
-        monolithic_grid.markers()["slip_wall_top"].size();
+    size_t num_slip_wall_top_faces = monolithic_grid.markers()["slip_wall_top"].size();
     size_t num_slip_wall_bottom_faces =
         monolithic_grid.markers()["slip_wall_bottom"].size();
     size_t num_inflow_faces = monolithic_grid.markers()["outflow"].size();
@@ -210,18 +209,19 @@ TEST_CASE("partition_metis_num_boundary_conditions") {
     CHECK(num_outflow_faces == num_partitioned_outflow_faces);
 }
 
-void test_boundary_location(GridIO& monolith, GridIO& partition, std::string boundary_name) {
-    
-    std::vector<ElemIO> monolith_boundary_faces =
-        monolith.markers()[boundary_name];
-    std::vector<ElemIO> part_boundary_faces =
-        partition.markers()[boundary_name];
+void test_boundary_location(GridIO& monolith, GridIO& partition,
+                            std::string boundary_name) {
+    std::vector<ElemIO> monolith_boundary_faces = monolith.markers()[boundary_name];
+    std::vector<ElemIO> part_boundary_faces = partition.markers()[boundary_name];
     for (const ElemIO& elem : part_boundary_faces) {
         for (size_t vertex_id : elem.vertex_ids()) {
             size_t global_vertex_id = partition.local_to_global_vertex_id(vertex_id);
-            CHECK(monolith.vertices()[global_vertex_id].pos().x == doctest::Approx(partition.vertices()[vertex_id].pos().x));
-            CHECK(monolith.vertices()[global_vertex_id].pos().y == doctest::Approx(partition.vertices()[vertex_id].pos().y));
-            CHECK(monolith.vertices()[global_vertex_id].pos().z == doctest::Approx(partition.vertices()[vertex_id].pos().z));
+            CHECK(monolith.vertices()[global_vertex_id].pos().x ==
+                  doctest::Approx(partition.vertices()[vertex_id].pos().x));
+            CHECK(monolith.vertices()[global_vertex_id].pos().y ==
+                  doctest::Approx(partition.vertices()[vertex_id].pos().y));
+            CHECK(monolith.vertices()[global_vertex_id].pos().z ==
+                  doctest::Approx(partition.vertices()[vertex_id].pos().z));
         }
     }
 }
@@ -240,23 +240,31 @@ TEST_CASE("partition_metis_boundary_condition_locations") {
     test_boundary_location(monolithic_grid, partitioned_grids[1], "outflow");
 }
 
-void test_face_location(GridIO& monolith, GridIO& part0, GridIO& part1, size_t global_face_id, size_t local_face_id_0, size_t local_face_id_1) {
+void test_face_location(GridIO& monolith, GridIO& part0, GridIO& part1,
+                        size_t global_face_id, size_t local_face_id_0,
+                        size_t local_face_id_1) {
     std::vector<size_t> global_vertex_ids = monolith.faces()[global_face_id].vertex_ids();
     std::vector<size_t> local_vertex_ids0 = part0.faces()[local_face_id_0].vertex_ids();
     std::vector<size_t> local_vertex_ids1 = part1.faces()[local_face_id_1].vertex_ids();
 
     for (size_t vertex_id : local_vertex_ids0) {
         size_t global_vertex_id = part0.local_to_global_vertex_id(vertex_id);
-        CHECK(monolith.vertices()[global_vertex_id].pos().x == part0.vertices()[vertex_id].pos().x);
-        CHECK(monolith.vertices()[global_vertex_id].pos().y == part0.vertices()[vertex_id].pos().y);
-        CHECK(monolith.vertices()[global_vertex_id].pos().z == part0.vertices()[vertex_id].pos().z);
+        CHECK(monolith.vertices()[global_vertex_id].pos().x ==
+              part0.vertices()[vertex_id].pos().x);
+        CHECK(monolith.vertices()[global_vertex_id].pos().y ==
+              part0.vertices()[vertex_id].pos().y);
+        CHECK(monolith.vertices()[global_vertex_id].pos().z ==
+              part0.vertices()[vertex_id].pos().z);
     }
 
     for (size_t vertex_id : local_vertex_ids1) {
         size_t global_vertex_id = part1.local_to_global_vertex_id(vertex_id);
-        CHECK(monolith.vertices()[global_vertex_id].pos().x == part1.vertices()[vertex_id].pos().x);
-        CHECK(monolith.vertices()[global_vertex_id].pos().y == part1.vertices()[vertex_id].pos().y);
-        CHECK(monolith.vertices()[global_vertex_id].pos().z == part1.vertices()[vertex_id].pos().z);
+        CHECK(monolith.vertices()[global_vertex_id].pos().x ==
+              part1.vertices()[vertex_id].pos().x);
+        CHECK(monolith.vertices()[global_vertex_id].pos().y ==
+              part1.vertices()[vertex_id].pos().y);
+        CHECK(monolith.vertices()[global_vertex_id].pos().z ==
+              part1.vertices()[vertex_id].pos().z);
     }
 }
 
@@ -267,19 +275,24 @@ TEST_CASE("parition_metis_internal_boundary_condition_locations") {
     for (CellMapping& cell_map_part0 : partitioned_grids[0].cell_mapping()) {
         size_t local_face_id_0 = cell_map_part0.local_face;
         size_t global_face = cell_map_part0.global_face;
-        size_t local_face_id_1 = partitioned_grids[1].global_to_local_face_id(global_face);
-        test_face_location(monolithic_grid, partitioned_grids[0], partitioned_grids[1], global_face, local_face_id_0, local_face_id_1);
+        size_t local_face_id_1 =
+            partitioned_grids[1].global_to_local_face_id(global_face);
+        test_face_location(monolithic_grid, partitioned_grids[0], partitioned_grids[1],
+                           global_face, local_face_id_0, local_face_id_1);
     }
 
     for (CellMapping& cell_map_part1 : partitioned_grids[1].cell_mapping()) {
         size_t local_face_id_1 = cell_map_part1.local_face;
         size_t global_face = cell_map_part1.global_face;
-        size_t local_face_id_0 = partitioned_grids[0].global_to_local_face_id(global_face);
-        test_face_location(monolithic_grid, partitioned_grids[1], partitioned_grids[0], global_face, local_face_id_1, local_face_id_0);
+        size_t local_face_id_0 =
+            partitioned_grids[0].global_to_local_face_id(global_face);
+        test_face_location(monolithic_grid, partitioned_grids[1], partitioned_grids[0],
+                           global_face, local_face_id_1, local_face_id_0);
     }
 }
 
-void test_mapped_cell_location(GridIO& monolith, GridIO& part, size_t global_cell, size_t local_cell) {
+void test_mapped_cell_location(GridIO& monolith, GridIO& part, size_t global_cell,
+                               size_t local_cell) {
     ElemIO global_elem = monolith.cells()[global_cell];
     ElemIO local_elem = part.cells()[local_cell];
     auto global_vertices = monolith.vertices();
@@ -288,9 +301,12 @@ void test_mapped_cell_location(GridIO& monolith, GridIO& part, size_t global_cel
     CHECK(global_elem.vertex_ids().size() == local_elem.vertex_ids().size());
     for (size_t global_vertex_id : global_elem.vertex_ids()) {
         size_t local_vertex_id = part.global_to_local_vertex_id(global_vertex_id);
-        CHECK(global_vertices[global_vertex_id].pos().x == local_vertices[local_vertex_id].pos().x);
-        CHECK(global_vertices[global_vertex_id].pos().y == local_vertices[local_vertex_id].pos().y);
-        CHECK(global_vertices[global_vertex_id].pos().z == local_vertices[local_vertex_id].pos().z);
+        CHECK(global_vertices[global_vertex_id].pos().x ==
+              local_vertices[local_vertex_id].pos().x);
+        CHECK(global_vertices[global_vertex_id].pos().y ==
+              local_vertices[local_vertex_id].pos().y);
+        CHECK(global_vertices[global_vertex_id].pos().z ==
+              local_vertices[local_vertex_id].pos().z);
     }
 }
 
@@ -301,13 +317,15 @@ TEST_CASE("partition_metis_mapped_cell_locations") {
     for (CellMapping& cell_map_part0 : partitioned_grids[0].cell_mapping()) {
         size_t other_cell = cell_map_part0.other_cell;
         size_t global_cell = partitioned_grids[1].local_to_global_cell_id(other_cell);
-        test_mapped_cell_location(monolith, partitioned_grids[1], global_cell, other_cell);
+        test_mapped_cell_location(monolith, partitioned_grids[1], global_cell,
+                                  other_cell);
     }
 
     for (CellMapping& cell_map_part1 : partitioned_grids[1].cell_mapping()) {
         size_t other_cell = cell_map_part1.other_cell;
         size_t global_cell = partitioned_grids[0].local_to_global_cell_id(other_cell);
-        test_mapped_cell_location(monolith, partitioned_grids[0], global_cell, other_cell);
+        test_mapped_cell_location(monolith, partitioned_grids[0], global_cell,
+                                  other_cell);
     }
 }
 

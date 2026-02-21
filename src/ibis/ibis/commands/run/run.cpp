@@ -6,7 +6,6 @@
 #include <parallel/parallel.h>
 #include <solvers/solver.h>
 #include <spdlog/spdlog.h>
-#include <parallel/parallel.h>
 
 #include <Kokkos_Core.hpp>
 #include <nlohmann/json.hpp>
@@ -60,7 +59,6 @@ int run(int argc, char* argv[]) {
         } else {
             spdlog::info("run complete");
         }
-        
     }
 
     Ibis::finalise<MemModel>();

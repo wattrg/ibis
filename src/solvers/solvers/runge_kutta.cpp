@@ -9,6 +9,7 @@
 #include <util/numeric_types.h>
 
 #include <limits>
+
 #include "parallel/parallel.h"
 
 // Implementation of Butcher tableau

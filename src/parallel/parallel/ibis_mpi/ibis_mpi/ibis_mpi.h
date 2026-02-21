@@ -270,11 +270,11 @@ public:
     void send() {
         if (gpu_aware) {
             MPI_Isend(send_buf_.data(), send_buf_.size(), mpi_type_, other_rank_, 0,
-                     mpi_comm_, &send_request_);
+                      mpi_comm_, &send_request_);
         } else {
             Kokkos::deep_copy(host_send_buf_, send_buf_);
-            MPI_Isend(host_send_buf_.data(), host_send_buf_.size(), mpi_type_, other_rank_,
-                     0, mpi_comm_, &send_request_);
+            MPI_Isend(host_send_buf_.data(), host_send_buf_.size(), mpi_type_,
+                      other_rank_, 0, mpi_comm_, &send_request_);
         }
     }
 

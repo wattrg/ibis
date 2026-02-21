@@ -72,7 +72,7 @@ public:
 
     SymmetricComm& operator=(const SymmetricComm& other) {
         if (this != &other) {
-            (void) other;
+            (void)other;
             throw std::runtime_error("not implemented");
         }
         return *this;
@@ -81,7 +81,10 @@ public:
     void expect_receive() { throw std::runtime_error("Not implemented"); }
     void send() { throw std::runtime_error("Not implemented"); }
     int receive() { throw std::runtime_error("Not implemented"); }
-    void resize_buffers(size_t new_size) { (void)new_size; throw std::runtime_error("Not implemented"); }
+    void resize_buffers(size_t new_size) {
+        (void)new_size;
+        throw std::runtime_error("Not implemented");
+    }
     const Kokkos::View<T*, MemSpace>& send_buf() const {
         throw std::runtime_error("Not implemented");
     }

@@ -55,14 +55,15 @@ public:
         init_grid_block(grid_io, config);
     }
 
-    GridBlock(
-        Vertices<T, execution_space, array_layout> vertices,
-        Interfaces<T, execution_space, array_layout> interfaces,
-        Cells<T, execution_space, array_layout> cells, size_t dim, size_t num_valid_cells,
-        size_t num_ghost_cells,
-        std::map<std::string, Field<size_t, array_layout, memory_space>> ghost_cells,
-        std::map<std::string, Field<size_t, array_layout, memory_space>> boundary_faces,
-        std::vector<std::string> boundary_tags)
+    GridBlock(Vertices<T, execution_space, array_layout> vertices,
+              Interfaces<T, execution_space, array_layout> interfaces,
+              Cells<T, execution_space, array_layout> cells, size_t dim,
+              size_t num_valid_cells, size_t num_ghost_cells,
+              std::unordered_map<std::string, Field<size_t, array_layout, memory_space>>
+                  ghost_cells,
+              std::unordered_map<std::string, Field<size_t, array_layout, memory_space>>
+                  boundary_faces,
+              std::vector<std::string> boundary_tags)
         : vertices_(vertices),
           interfaces_(interfaces),
           cells_(cells),
@@ -73,11 +74,44 @@ public:
           boundary_faces_(boundary_faces),
           boundary_tags_(boundary_tags) {}
 
+    GridBlock(Vertices<T, execution_space, array_layout> vertices,
+              Interfaces<T, execution_space, array_layout> interfaces,
+              Cells<T, execution_space, array_layout> cells, size_t dim,
+              size_t num_valid_cells, size_t num_ghost_cells,
+              size_t number_internal_ghost_cells,
+              std::unordered_map<std::string, Field<size_t, array_layout, memory_space>>
+                  ghost_cells,
+              std::unordered_map<std::string, Field<size_t, array_layout, memory_space>>
+                  boundary_faces,
+              std::vector<std::string> boundary_tags,
+              std::unordered_map<size_t, Field<size_t, array_layout, memory_space>>
+                  internal_boundary_cells,
+              std::unordered_map<size_t, Field<size_t, array_layout, memory_space>>
+                  internal_boundary_ghost_cells,
+              std::unordered_map<size_t, Field<size_t, array_layout, memory_space>>
+                  internal_boundary_external_cells,
+              std::unordered_map<size_t, Field<size_t, array_layout, memory_space>>
+                  internal_boundary_faces)
+        : vertices_(vertices),
+          interfaces_(interfaces),
+          cells_(cells),
+          dim_(dim),
+          num_valid_cells_(num_valid_cells),
+          num_ghost_cells_(num_ghost_cells),
+          num_internal_ghost_cells_(number_internal_ghost_cells),
+          ghost_cells_(ghost_cells),
+          boundary_faces_(boundary_faces),
+          boundary_tags_(boundary_tags),
+          internal_boundary_cells_(internal_boundary_cells),
+          internal_boundary_ghost_cells_(internal_boundary_ghost_cells),
+          internal_boundary_external_cells_(internal_boundary_external_cells),
+          internal_boundary_faces_(internal_boundary_faces) {}
+
     GridBlock(size_t num_vertices, size_t num_faces, size_t num_valid_cells,
               size_t num_ghost_cells, size_t dim, size_t num_cell_vertex_ids,
               size_t num_face_vertex_ids, size_t num_face_ids,
-              std::map<std::string, size_t> ghost_cell_sizes,
-              std::map<std::string, size_t> boundary_face_sizes) {
+              std::unordered_map<std::string, size_t> ghost_cell_sizes,
+              std::unordered_map<std::string, size_t> boundary_face_sizes) {
         num_valid_cells_ = num_valid_cells;
         num_ghost_cells_ = num_ghost_cells;
         dim_ = dim;
@@ -87,9 +121,10 @@ public:
             Interfaces<T, execution_space, array_layout>(num_faces, num_face_vertex_ids);
         cells_ = Cells<T, execution_space, array_layout>(
             num_valid_cells, num_ghost_cells, num_cell_vertex_ids, num_face_ids);
-        ghost_cells_ = std::map<std::string, Field<size_t, array_layout, memory_space>>{};
+        ghost_cells_ =
+            std::unordered_map<std::string, Field<size_t, array_layout, memory_space>>{};
         boundary_faces_ =
-            std::map<std::string, Field<size_t, array_layout, memory_space>>{};
+            std::unordered_map<std::string, Field<size_t, array_layout, memory_space>>{};
         for (auto const& [key, val] : ghost_cell_sizes) {
             ghost_cells_.insert(
                 {key, Field<size_t, array_layout, memory_space>("bc_cells", val)});
@@ -135,7 +170,7 @@ public:
             interface_shapes.push_back(faces[face_i].cell_type());
         }
 
-        std::map<size_t, size_t> ghost_cell_map =
+        std::unordered_map<size_t, size_t> ghost_cell_map =
             setup_physical_boundaries(grid_io, boundaries, cell_vertices, cell_shapes);
         setup_internal_boundaries(grid_io);
         setup_face_markers(grid_io);
@@ -184,7 +219,7 @@ public:
         }
     }
 
-    void compute_interface_connectivity(std::map<size_t, size_t> ghost_cells) {
+    void compute_interface_connectivity(std::unordered_map<size_t, size_t> ghost_cells) {
         auto this_interfaces = interfaces_;
         auto this_cells = cells_;
         Kokkos::parallel_for(
@@ -241,9 +276,11 @@ public:
         auto vertices = vertices_.host_mirror();
         auto interfaces = interfaces_.host_mirror();
         auto cells = cells_.host_mirror();
-        std::map<std::string, Field<size_t, array_layout, host_mirror_mem_space>>
+        std::unordered_map<std::string,
+                           Field<size_t, array_layout, host_mirror_mem_space>>
             ghost_cells{};
-        std::map<std::string, Field<size_t, array_layout, host_mirror_mem_space>>
+        std::unordered_map<std::string,
+                           Field<size_t, array_layout, host_mirror_mem_space>>
             boundary_faces{};
 
         for (auto const& [key, val] : ghost_cells_) {
@@ -253,8 +290,34 @@ public:
             boundary_faces.insert({key, val.host_mirror()});
         }
 
+        std::unordered_map<size_t, Field<size_t, array_layout, host_mirror_mem_space>>
+            internal_boundary_cells;
+        std::unordered_map<size_t, Field<size_t, array_layout, host_mirror_mem_space>>
+            internal_boundary_ghost_cells;
+        std::unordered_map<size_t, Field<size_t, array_layout, host_mirror_mem_space>>
+            internal_boundary_external_cells;
+        std::unordered_map<size_t, Field<size_t, array_layout, host_mirror_mem_space>>
+            internal_boundary_faces;
+        for (size_t other_block_id : other_blocks_) {
+            internal_boundary_cells.insert(
+                {other_block_id,
+                 internal_boundary_cells_.at(other_block_id).host_mirror()});
+            internal_boundary_ghost_cells.insert(
+                {other_block_id,
+                 internal_boundary_cells_.at(other_block_id).host_mirror()});
+            internal_boundary_external_cells.insert(
+                {other_block_id,
+                 internal_boundary_external_cells_.at(other_block_id).host_mirror()});
+            internal_boundary_faces.insert(
+                {other_block_id,
+                 internal_boundary_faces_.at(other_block_id).host_mirror()});
+        }
+
         return mirror_type(vertices, interfaces, cells, dim_, num_valid_cells_,
-                           num_ghost_cells_, ghost_cells, boundary_faces, boundary_tags_);
+                           num_ghost_cells_, num_internal_ghost_cells_, ghost_cells,
+                           boundary_faces, boundary_tags_, internal_boundary_cells,
+                           internal_boundary_ghost_cells,
+                           internal_boundary_external_cells, internal_boundary_faces);
     }
 
     template <class OtherSpace>
@@ -266,6 +329,19 @@ public:
             std::string tag = boundary_tags_[i];
             ghost_cells_.at(tag).deep_copy(other.ghost_cells_.at(tag));
             boundary_faces_.at(tag).deep_copy(other.boundary_faces_.at(tag));
+        }
+
+        // other_blocks_ = other.other_blocks_;
+        other_blocks_ = other.other_blocks_;
+        for (size_t other_block : other_blocks_) {
+            internal_boundary_cells_[other_block].deep_copy(
+                other.internal_boundary_cells_.at(other_block));
+            internal_boundary_ghost_cells_[other_block].deep_copy(
+                other.internal_boundary_ghost_cells_.at(other_block));
+            internal_boundary_external_cells_[other_block].deep_copy(
+                other.internal_boundary_external_cells_.at(other_block));
+            internal_boundary_faces_[other_block].deep_copy(
+                other.internal_boundary_faces_.at(other_block));
         }
     }
 
@@ -304,6 +380,14 @@ public:
 
     KOKKOS_INLINE_FUNCTION
     size_t num_cells() const { return num_valid_cells_; }
+
+    KOKKOS_INLINE_FUNCTION
+    size_t ghost_cell_start_index() const { return num_valid_cells_; }
+
+    KOKKOS_INLINE_FUNCTION
+    size_t internal_boundary_cell_start_index() const {
+        return num_valid_cells_ + num_ghost_cells_ - num_internal_ghost_cells_;
+    }
 
     KOKKOS_INLINE_FUNCTION
     size_t num_ghost_cells() const { return num_ghost_cells_; }
@@ -423,7 +507,6 @@ public:
         std::unordered_map<size_t, std::vector<size_t>> external_cells;
         std::unordered_map<size_t, std::vector<size_t>> ghost_cells;
         std::unordered_map<size_t, std::vector<size_t>> faces;
-        // std::vector<size_t> other_blocks;
 
         // loop over all the interblock connections, keeping track of
         // which cells and faces are on the connection
@@ -446,9 +529,8 @@ public:
             local_cells[other_block].push_back(cell_mapping.local_cell);
             external_cells[other_block].push_back(cell_mapping.other_cell);
             ghost_cells[other_block].push_back(ghost_cell_id);
+            faces[other_block].push_back(cell_mapping.local_face);
         }
-        // other_blocks_ =
-        //     Field<size_t, array_layout, memory_space>("other_blocks", other_blocks);
 
         // for (size_t other_block : local_cells) {
         for (auto& [other_block, cells] : local_cells) {
@@ -463,10 +545,13 @@ public:
                 {other_block,
                  Field<size_t, array_layout, memory_space>(
                      "internal_boundary_ghost_cells", ghost_cells[other_block])});
-            position_comm_.push_back(
-                Ibis::SymmetricComm<MemModel, T>(other_block, local_cells[other_block].size() * dim_));
-            volume_comm_.push_back(
-                Ibis::SymmetricComm<MemModel, T>(other_block, local_cells[other_block].size()));
+            internal_boundary_faces_.insert(
+                {other_block, Field<size_t, array_layout, memory_space>(
+                                  "internal_boundary_faces", faces[other_block])});
+            position_comm_.push_back(Ibis::SymmetricComm<MemModel, T>(
+                other_block, local_cells[other_block].size() * dim_));
+            volume_comm_.push_back(Ibis::SymmetricComm<MemModel, T>(
+                other_block, local_cells[other_block].size()));
         }
     }
 
@@ -490,8 +575,7 @@ public:
                 KOKKOS_LAMBDA(const size_t cell_i) {
                     size_t cell_to_pack = cells_to_pack(cell_i);
                     buffer(cell_i) = volumes(cell_to_pack);
-                }  
-            );
+                });
             comm.send();
         }
 
@@ -511,8 +595,7 @@ public:
                 KOKKOS_LAMBDA(const size_t cell_i) {
                     size_t cell_to_unpack_to = cells_to_unpack_to(cell_i);
                     volumes(cell_to_unpack_to) = buffer(cell_i);
-                }
-            );
+                });
         }
     }
 
@@ -597,14 +680,12 @@ public:
     }
 
     // Get the IDs of the other block connected to this block
-    const std::vector<size_t> other_blocks() const {
-        return other_blocks_;
-    }
+    const std::vector<size_t> other_blocks() const { return other_blocks_; }
 
     // Get the IDs of the other block connected to this block
     size_t other_block(size_t i) const { return other_blocks_[i]; }
 
-    std::map<size_t, size_t> setup_physical_boundaries(
+    std::unordered_map<size_t, size_t> setup_physical_boundaries(
         const GridIO& grid_io, json& boundaries,
         std::vector<std::vector<size_t>>& cell_vertices,
         std::vector<ElemType> cell_shapes) {
@@ -612,7 +693,7 @@ public:
         (void)cell_shapes;
         num_ghost_cells_ = 0;
         const InterfaceLookup& interfaces = grid_io.interface_lookup();
-        std::map<size_t, size_t> ghost_cell_map;  // face_id -> ghost_cell_id
+        std::unordered_map<size_t, size_t> ghost_cell_map;  // face_id -> ghost_cell_id
         for (auto& [bc_label, boundary_config] : boundaries.items()) {
             boundary_tags_.push_back(bc_label);
             std::vector<ElemIO> bc_faces = grid_io.markers()[bc_label];
@@ -827,8 +908,10 @@ public:
 
     // information about which faces are on physical boundaries, and which ghost
     // cells belong to which boundary
-    std::map<std::string, Field<size_t, array_layout, memory_space>> ghost_cells_;
-    std::map<std::string, Field<size_t, array_layout, memory_space>> boundary_faces_;
+    std::unordered_map<std::string, Field<size_t, array_layout, memory_space>>
+        ghost_cells_;
+    std::unordered_map<std::string, Field<size_t, array_layout, memory_space>>
+        boundary_faces_;
     std::vector<std::string> boundary_tags_;
 
     // Interblock communication
@@ -840,17 +923,18 @@ public:
         internal_boundary_ghost_cells_;
     std::unordered_map<size_t, Field<size_t, array_layout, memory_space>>
         internal_boundary_external_cells_;
+    std::unordered_map<size_t, Field<size_t, array_layout, memory_space>>
+        internal_boundary_faces_;
     std::vector<size_t> other_blocks_;
-    // Field<size_t, array_layout, memory_space> other_blocks_;
-    // std::vector<Field<size_t, array_layout, memory_space>> internal_boundary_faces_;
 
     // this contains all marked interfaces. This includes faces on the boundary,
     // and other faces that have been marked for one reason or another (e.g.
     // shock fitting)
-    std::map<std::string, Field<size_t, array_layout, memory_space>> markers_;
+    std::unordered_map<std::string, Field<size_t, array_layout, memory_space>> markers_;
 
     // vertices which belong to marked entities
-    std::map<std::string, Field<size_t, array_layout, memory_space>> marked_vertices_;
+    std::unordered_map<std::string, Field<size_t, array_layout, memory_space>>
+        marked_vertices_;
 
     // grid motion
     // GridMotion<T, execution_space, array_layout> motion_;
