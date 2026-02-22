@@ -80,6 +80,8 @@ public:
 
     void write_coordinating_file();
 
+    void increment_time_index() { time_index_++; }
+
 private:
     std::unique_ptr<FVInput<T, MemModel>> input_;
     std::unique_ptr<FVOutput<T, MemModel>> output_;

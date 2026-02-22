@@ -57,7 +57,7 @@ public:
                 base_dir / config.at("cell_map_file_name");
             grid_io = GridIO(grid_path.string(), cell_map_path.string(), id);
         } else {
-            grid_io = GridIO(grid_path.string());
+            grid_io = GridIO(grid_path.string(), id);
         }
         init_grid_block(grid_io, config);
     }

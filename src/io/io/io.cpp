@@ -123,9 +123,8 @@ int FVIO<T, MemModel>::write(const FlowStates<T>& fs, FiniteVolume<T, MemModel>&
 
     std::string time_index = pad_time_index(time_index_, 4);
     std::string time_directory_name = output_dir_ + "/" + time_index;
-    int grid_id = Ibis::get_world_rank<MemModel>();
-    std::string grid_name = std::format("block_{:04}.su2", grid_id);
-    std::string flow_dir = std::format("{}/block_{:04}", output_dir_, grid_id);
+    std::string grid_name = std::format("block_{:04}.su2", grid.id());
+    std::string flow_dir = std::format("{}/block_{:04}", output_dir_, grid.id());
     std::filesystem::create_directory(output_dir_);
     std::filesystem::create_directory(time_directory_name);
     int result = output_->write(fs_host, fv, grid, gas_model, trans_prop, output_dir_,
@@ -137,7 +136,6 @@ int FVIO<T, MemModel>::write(const FlowStates<T>& fs, FiniteVolume<T, MemModel>&
         grid_io.write_su2_grid(grid_file);
     }
 
-    time_index_++;
     return result;
 }
 
@@ -150,8 +148,7 @@ int FVIO<T, MemModel>::read(FlowStates<T>& fs, GridBlock<MemModel, T>& grid,
     auto fs_host = fs.host_mirror();
     std::string time_index = pad_time_index(time_idx, 4);
     std::string directory_name = input_dir_ + "/" + time_index;
-    int block_id = Ibis::get_world_rank<MemModel>();
-    std::string block_name = std::format("/block_{:04}.su2", block_id);
+    std::string block_name = std::format("/block_{:04}.su2", grid.id());
     if (moving_grid_ && time_idx != 0) {
         grid = GridBlock<MemModel, T>("io/grid/" + time_index + block_name, config);
     } else if (!grid.is_initialised()) {

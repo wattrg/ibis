@@ -303,6 +303,7 @@ int SteadyState<MemModel>::plot_solution(unsigned int step) {
     Ibis::real t = (Ibis::real)step;
     int result =
         io_.write(*fs_, sim_->fv, sim_->grid, sim_->gas_model, sim_->trans_prop, t);
+    io_.increment_time_index();
     spdlog::info("  written flow solution: step {}", step);
     return result;
 }

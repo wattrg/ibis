@@ -257,6 +257,7 @@ template <class MemModel>
 int RungeKutta<MemModel>::plot_solution(unsigned int step) {
     int result = io_.write(flow_, fv_, grid_, gas_model_, trans_prop_, t_);
     time_since_last_plot_ = 0.0;
+    io_.increment_time_index();
     spdlog::info("  written flow solution: step {}, time {:.6e}", step, t_);
     return result;
 }

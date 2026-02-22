@@ -373,6 +373,7 @@ class Block:
         return f"{number:.16e}\n"
 
     def write(self, grid_directory, flow_directory, binary):
+        print(f"Writing block {self._id}, with {self.number_cells}")
         pathlib.Path(f"{grid_directory}/0000").mkdir(parents=True, exist_ok=True)
         pathlib.Path(f"{flow_directory}/0000").mkdir(parents=True, exist_ok=True)
         ic_directory = pathlib.Path(flow_directory) / f"{0:04}"
@@ -397,8 +398,6 @@ class Block:
         vy = open(f"{block_ic_directory}/vy", format)
         if self.dim == 3:
             vz = open(f"{ic_directory}/vz", format)
-        meta_data = open(ic_directory / "meta_data.json", "w")
-        times = open(f"{flow_directory}/flows", "w")
 
         if type(self._initial_condition) is FlowState:
             for _ in range(self.number_cells):
@@ -408,8 +407,6 @@ class Block:
                 vy.write(self._number(self._initial_condition.vel.y, binary))
                 if self.dim == 3:
                     vz.write(self._number(self._initial_condition.vel.z, binary))
-        json.dump({"time": 0.0}, meta_data, indent=4)
-        times.write("0000\n")
 
         temp.close()
         pressure.close()
@@ -417,8 +414,14 @@ class Block:
         vy.close()
         if self.dim == 3:
             vz.close()
-        meta_data.close()
-        times.close()
+
+        if self._id == 0:
+            meta_data = open(ic_directory / "meta_data.json", "w")
+            times = open(f"{flow_directory}/flows", "w")
+            json.dump({"time": 0.0}, meta_data, indent=4)
+            times.write("0000\n")
+            meta_data.close()
+            times.close()
 
     def as_dict(self):
         dictionary = {"boundaries": {}}

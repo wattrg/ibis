@@ -442,7 +442,7 @@ int VtkBinaryOutput<T, MemModel>::write(const typename FlowStates<T>::mirror_typ
 
     // register that we've written this file
     times_.push_back(time);
-    dirs_.push_back(time_dir + "/block_0.vtu");
+    dirs_.push_back(time_dir + std::format("/block_{}.vtu", grid.id()));
     return 0;
 }
 

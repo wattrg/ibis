@@ -23,7 +23,7 @@ int NativeTextOutput<T, MemModel>::write(const typename FlowStates<T>::mirror_ty
     std::filesystem::path dir = time_directory / std::format("block_{:04}", block_id);
     std::filesystem::create_directories(dir);
 
-    if (Ibis::get_world_rank<MemModel>() == 0) {
+    if (grid.id() == 0) {
         std::ofstream meta_f(time_directory / "meta_data.json");
         json meta;
         meta["time"] = time;
@@ -221,7 +221,7 @@ int NativeBinaryOutput<T, MemModel>::write(const typename FlowStates<T>::mirror_
     std::filesystem::path dir = time_directory / std::format("block_{:04}", block_id);
     std::filesystem::create_directories(dir);
 
-    if (Ibis::get_world_rank<MemModel>() == 0) {
+    if (grid.id() == 0) {
         std::ofstream meta_f(time_directory / "meta_data.json");
         json meta;
         meta["time"] = time;
