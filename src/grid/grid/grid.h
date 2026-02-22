@@ -170,7 +170,9 @@ public:
 
         std::unordered_map<size_t, size_t> ghost_cell_map =
             setup_physical_boundaries(grid_io, boundaries, cell_vertices, cell_shapes);
-        setup_internal_boundaries(grid_io);
+        std::unordered_map<size_t, size_t> internal_boundary_ghost_cell_map =
+            setup_internal_boundaries(grid_io);
+        ghost_cell_map.merge(internal_boundary_ghost_cell_map);
         setup_face_markers(grid_io);
 
         interfaces_ = Interfaces<T, execution_space, array_layout>(interface_vertices,
@@ -474,18 +476,22 @@ public:
     // this should be called after setup_physical_boundaries, so that
     // the ghost cells for internal boundaries appear after the physical
     // boundaries in the arrays of cells
-    void setup_internal_boundaries(const GridIO& grid_io) {
+    std::unordered_map<size_t, size_t> setup_internal_boundaries(const GridIO& grid_io) {
         std::vector<CellMapping> internal_boundaries = grid_io.cell_mapping();
 
         // map for each external block, which cells connect to which cells
         std::unordered_map<size_t, std::vector<InternalBoundaryMap>>
             internal_boundary_map;
 
+        // ghost cell map for attaching interfaces later (face_id -> ghost_cell_id)
+        std::unordered_map<size_t, size_t> ghost_cell_map;
+
         // Step 1: sort internal_boundaries into an unordered map with
         // the other block
         num_internal_ghost_cells_ = 0;
         for (CellMapping& cell_mapping : internal_boundaries) {
             size_t ghost_cell_id = num_valid_cells_ + num_ghost_cells_;
+            ghost_cell_map[cell_mapping.local_face] = ghost_cell_id;
             num_internal_ghost_cells_++;
             num_ghost_cells_++;
             size_t other_block = cell_mapping.other_block;
@@ -527,6 +533,8 @@ public:
             volume_comm_.push_back(Ibis::SymmetricComm<MemModel, T>(
                 other_block, internal_boundary_map[other_block].size()));
         }
+
+        return ghost_cell_map;
     }
 
     void transfer_internal_boundary_volumes() {

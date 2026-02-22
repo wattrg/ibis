@@ -144,7 +144,7 @@ void RungeKutta<MemModel>::function_eval_(FlowStates<Ibis::real> fs,
 template <class MemModel>
 int RungeKutta<MemModel>::take_step(size_t step) {
     (void)step;
-
+    
     // if (moving_grid_ && tableau_.num_stages() > 1) {
     // we need to save the initial grid vertex positions
     init_vertex_pos_ = grid_.vertices().positions();
@@ -258,7 +258,9 @@ int RungeKutta<MemModel>::plot_solution(unsigned int step) {
     int result = io_.write(flow_, fv_, grid_, gas_model_, trans_prop_, t_);
     time_since_last_plot_ = 0.0;
     io_.increment_time_index();
-    spdlog::info("  written flow solution: step {}, time {:.6e}", step, t_);
+    if (Ibis::get_world_rank<MemModel>() == 0) {
+        spdlog::info("  written flow solution: step {}, time {:.6e}", step, t_);
+    }
     return result;
 }
 

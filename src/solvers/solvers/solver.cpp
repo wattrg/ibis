@@ -33,7 +33,9 @@ int Solver::solve() {
         }
 
         if (result != 0) {
-            spdlog::error("step {} failed", step);
+            if (is_master) {
+                spdlog::error("step {} failed", step);
+            }
             plot_solution(step);
             return 1;
         }
@@ -42,8 +44,8 @@ int Solver::solve() {
         if (bad_cells > 0) {
             if (is_master) {
                 spdlog::error("Encountered {} bad cells on step {}", bad_cells, step);
-                plot_solution(step);
             }
+            plot_solution(step);
             return 1;
         }
 
@@ -51,8 +53,8 @@ int Solver::solve() {
             if (is_master) {
                 std::string reason = stop_reason(step);
                 spdlog::info("STOPPING: {}", reason);
-                plot_solution(step);
             }
+            plot_solution(step);
             break;
         }
 
@@ -60,7 +62,7 @@ int Solver::solve() {
             print_progress(step, sw.elapsed().count());
         }
 
-        if (is_master && plot_this_step(step)) {
+        if (plot_this_step(step)) {
             plot_solution(step);
         }
     }

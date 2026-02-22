@@ -58,8 +58,8 @@ FiniteVolume<T, MemModel>::FiniteVolume(GridBlock<MemModel, T>& grid, json confi
         size_t num_cells_on_boundary = grid.internal_boundary_map(other_block).size();
         flow_state_comm_.push_back(Ibis::SymmetricComm<MemModel, T>(
             other_block, num_cells_on_boundary * num_flow_vars));
-        gradient_comm_.push_back(Ibis::SymmetricComm<MemModel, T>(
-            other_block, num_cells_on_boundary * num_grads));
+        // gradient_comm_.push_back(Ibis::SymmetricComm<MemModel, T>(
+            // other_block, num_cells_on_boundary * num_grads));
     }
 }
 
@@ -112,9 +112,8 @@ void FiniteVolume<T, MemModel>::transfer_internal_flowstates(
     for (size_t boundary_i = 0; boundary_i < grid.other_blocks().size(); boundary_i++) {
         size_t other_block = grid.other_block(boundary_i);
         Ibis::SymmetricComm<MemModel, T>& comm = flow_state_comm_[boundary_i];
-        // auto cells_to_pack = grid.internal_boundary_cells(other_block);
-        auto boundary_map = grid.internal_boundary_map(other_block);
-        auto buffer = comm.send_buf();
+        auto& boundary_map = grid.internal_boundary_map(other_block);
+        auto& buffer = comm.send_buf();
 
         // the parallel work of packing the data
         Ibis::parallel_for(
@@ -142,23 +141,29 @@ void FiniteVolume<T, MemModel>::transfer_internal_flowstates(
     for (size_t boundary_i = 0; boundary_i < grid.other_blocks().size(); boundary_i++) {
         size_t other_block = grid.other_block(boundary_i);
         Ibis::SymmetricComm<MemModel, T>& comm = flow_state_comm_[boundary_i];
-        // auto cells_to_unpack_to = grid.internal_boundary_ghost_cells(other_block);
-        auto boundary_map = grid.internal_boundary_map(other_block);
-        auto buffer = comm.recv_buf();
-
+        auto& boundary_map = grid.internal_boundary_map(other_block);
+        auto& buffer = comm.recv_buf();
+        // size_t block = grid.id();
         // unpack the buffer
         Ibis::parallel_for(
             "FV::unpack_recv_buffer", boundary_map.size(),
             KOKKOS_LAMBDA(const size_t cell_i) {
                 size_t cell_to_unpack_to = boundary_map(cell_i).ghost_cell_id;
                 size_t start_index = cell_i * num_vars;
-                fs.gas.rho(cell_to_unpack_to) = buffer(start_index + 0);
-                fs.gas.pressure(cell_to_unpack_to) = buffer(start_index + 1);
+                // std::cout << block << " " << boundary_map(cell_i).local_face_id << std::endl;
+                GasState<T> gs;
+                gs.rho = buffer(start_index + 0);
+                gs.pressure = buffer(start_index + 1);
                 fs.vel.x(cell_to_unpack_to) = buffer(start_index + 2);
                 fs.vel.y(cell_to_unpack_to) = buffer(start_index + 3);
                 if (dim == 3) {
                     fs.vel.z(cell_to_unpack_to) = buffer(start_index + 4);
                 }
+                gas_model.update_thermo_from_rhop(gs);
+                fs.gas.rho(cell_to_unpack_to) = gs.rho;
+                fs.gas.pressure(cell_to_unpack_to) = gs.pressure;
+                fs.gas.temp(cell_to_unpack_to) = gs.temp;
+                fs.gas.energy(cell_to_unpack_to) = gs.energy;
             });
     }
 }
@@ -340,7 +345,7 @@ void FiniteVolume<T, MemModel>::apply_geometric_conservation_law(
     Interfaces<T> faces = grid.interfaces();
     Vector3s<T> face_vel = grid.face_vel();
     Vector3s<T> face_norm = faces.norm();
-    Kokkos::parallel_for(
+    Ibis::parallel_for(
         "FV::GCL", num_cells, KOKKOS_LAMBDA(const size_t cell_i) {
             auto face_ids = cell_faces.face_ids(cell_i);
             T dVdt = T(0.0);
@@ -377,7 +382,7 @@ Ibis::real FiniteVolume<T, MemModel>::estimate_dt(const FlowStates<T>& flow_stat
     Ibis::real viscous_signal_factor = viscous_flux_.signal_factor();
     // IdealGas<T> gas_model = gas_model_;
 
-    return Ibis::parallel_reduce<Min<Ibis::real>, Ibis::DefaultMemModel>(
+    return Ibis::parallel_reduce<Min<Ibis::real>, MemModel>(
         "FV::signal_frequency", num_cells,
         KOKKOS_LAMBDA(const size_t cell_i, Ibis::real& dt_utd) {
             auto cell_face_ids = cell_interfaces.face_ids(cell_i);
@@ -457,7 +462,7 @@ void FiniteVolume<T, MemModel>::flux_surface_integral(const GridBlock<MemModel, 
     Interfaces<T> faces = grid.interfaces();
     ConservedQuantities<T> flux = flux_;
     size_t num_cells = grid.num_cells();
-    Kokkos::parallel_for(
+    Ibis::parallel_for(
         "flux_integral", num_cells, KOKKOS_LAMBDA(const size_t cell_i) {
             auto face_ids = cell_faces.face_ids(cell_i);
             T d_mass = 0.0;
@@ -489,16 +494,14 @@ void FiniteVolume<T, MemModel>::flux_surface_integral(const GridBlock<MemModel, 
 template <typename T, class MemModel>
 size_t FiniteVolume<T, MemModel>::count_bad_cells(const FlowStates<T>& fs,
                                                   const size_t num_cells) {
-    size_t n_bad_cells = 0;
-    Kokkos::parallel_reduce(
+    size_t n_bad_cells = Ibis::parallel_reduce<Sum<size_t>, MemModel>(
         "FiniteVolume::count_bad_cells", num_cells,
         KOKKOS_LAMBDA(const int cell_i, size_t& n_bad_cells_utd) {
             if (fs.gas.temp(cell_i) < 0.0 || fs.gas.rho(cell_i) < 0.0 ||
                 Ibis::isnan(fs.gas.rho(cell_i)) || Ibis::isinf(fs.gas.rho(cell_i))) {
                 n_bad_cells_utd += 1;
             }
-        },
-        n_bad_cells);
+        });
     return n_bad_cells;
 }
 

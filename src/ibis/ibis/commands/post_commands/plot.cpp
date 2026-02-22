@@ -63,6 +63,7 @@ void plot_vtk(json directories, std::vector<std::string> extra_vars) {
     for (unsigned int time_idx = 0; time_idx < dirs.size(); time_idx++) {
         for (size_t block_i = 0; block_i < config.at("grids").size(); block_i++) {
             json grid_config = config.at("grids")[block_i];
+            grid_config.erase("cell_map_file_name");
             // start by reading the initial grid. This will be updated if the
             // grid is moving. However this isn't great because we
             // base flow state memory allocations on this grid
