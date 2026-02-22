@@ -135,7 +135,7 @@ public:
 
     void init_grid_block(const GridIO& grid_io, json& config) {
         dim_ = grid_io.dim();
-        id_ = grid_io.id();
+        id_ = config.at("id");
         json boundaries = config.at("boundaries");
 
         // set the positions of the vertices

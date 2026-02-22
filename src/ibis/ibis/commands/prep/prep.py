@@ -329,14 +329,19 @@ class RigidBodyTranslation:
 
 class Block:
     def __init__(
-        self, file_name, initial_condition, boundaries, cell_map_file=None, **kwargs
+        self,
+        file_name,
+        initial_condition,
+        boundaries,
+        cell_map_file_name=None,
+        **kwargs,
     ):
         self._id = None
         self._initial_condition = initial_condition
         self._block = file_name
         self.number_cells = 0
         self.number_vertices = 0
-        self.cell_map_file = cell_map_file
+        self.cell_map_file_name = cell_map_file_name
         self.boundaries = boundaries
         self.motion = StaticGrid()
         for key, value in kwargs.items():
@@ -383,9 +388,9 @@ class Block:
         # write the grid
         self.base_grid_path = f"{grid_directory}/0000"
         shutil.copy(self._block, f"{self.base_grid_path}/block_{self._id:04}.su2")
-        if self.cell_map_file:
+        if self.cell_map_file_name:
             shutil.copy(
-                self.cell_map_file,
+                self.cell_map_file_name,
                 f"{self.base_grid_path}/cell_map_block_{self._id}",
             )
 
@@ -430,7 +435,7 @@ class Block:
             dictionary["boundaries"][key] = self.boundaries[key].as_dict()
         dictionary["grid_file_name"] = f"block_{self._id:04}.su2"
         dictionary["motion"] = self.motion.as_dict()
-        if self.cell_map_file:
+        if self.cell_map_file_name:
             dictionary["cell_map_file_name"] = f"cell_map_block_{self._id}"
         dictionary["id"] = self._id
         return dictionary

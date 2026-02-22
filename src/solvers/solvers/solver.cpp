@@ -33,10 +33,8 @@ int Solver::solve() {
         }
 
         if (result != 0) {
-            if (is_master) {
-                spdlog::error("step {} failed", step);
-                plot_solution(step);
-            }
+            spdlog::error("step {} failed", step);
+            plot_solution(step);
             return 1;
         }
 
