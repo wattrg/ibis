@@ -55,8 +55,7 @@ FiniteVolume<T, MemModel>::FiniteVolume(GridBlock<MemModel, T>& grid, json confi
     size_t num_grads = cell_grad_.num_grads() * grid.dim();
     for (size_t block_i = 0; block_i < grid.other_blocks().size(); block_i++) {
         size_t other_block = grid.other_block(block_i);
-        size_t num_cells_on_boundary =
-            grid.internal_boundary_ghost_cells(other_block).size();
+        size_t num_cells_on_boundary = grid.internal_boundary_map(other_block).size();
         flow_state_comm_.push_back(Ibis::SymmetricComm<MemModel, T>(
             other_block, num_cells_on_boundary * num_flow_vars));
         gradient_comm_.push_back(Ibis::SymmetricComm<MemModel, T>(
@@ -113,14 +112,15 @@ void FiniteVolume<T, MemModel>::transfer_internal_flowstates(
     for (size_t boundary_i = 0; boundary_i < grid.other_blocks().size(); boundary_i++) {
         size_t other_block = grid.other_block(boundary_i);
         Ibis::SymmetricComm<MemModel, T> comm = flow_state_comm_[boundary_i];
-        auto cells_to_pack = grid.internal_boundary_cells(other_block);
+        // auto cells_to_pack = grid.internal_boundary_cells(other_block);
+        auto boundary_map = grid.internal_boundary_map(other_block);
         auto buffer = comm.send_buf();
 
         // the parallel work of packing the data
         Ibis::parallel_for(
-            "FV::pack_send_buffer", cells_to_pack.size(),
+            "FV::pack_send_buffer", boundary_map.size(),
             KOKKOS_LAMBDA(const size_t cell_i) {
-                size_t cell_to_pack = cells_to_pack(cell_i);
+                size_t cell_to_pack = boundary_map(cell_i).local_cell_id;
                 size_t start_index = cell_i * num_vars;
                 buffer(start_index + 0) = fs.gas.rho(cell_to_pack);
                 buffer(start_index + 1) = fs.gas.pressure(cell_to_pack);
@@ -142,14 +142,15 @@ void FiniteVolume<T, MemModel>::transfer_internal_flowstates(
     for (size_t boundary_i = 0; boundary_i < grid.other_blocks().size(); boundary_i++) {
         size_t other_block = grid.other_block(boundary_i);
         Ibis::SymmetricComm<MemModel, T> comm = flow_state_comm_[boundary_i];
-        auto cells_to_unpack_to = grid.internal_boundary_ghost_cells(other_block);
+        // auto cells_to_unpack_to = grid.internal_boundary_ghost_cells(other_block);
+        auto boundary_map = grid.internal_boundary_map(other_block);
         auto buffer = comm.recv_buf();
 
         // unpack the buffer
         Ibis::parallel_for(
-            "FV::unpack_recv_buffer", cells_to_unpack_to.size(),
+            "FV::unpack_recv_buffer", boundary_map.size(),
             KOKKOS_LAMBDA(const size_t cell_i) {
-                size_t cell_to_unpack_to = cells_to_unpack_to(cell_i);
+                size_t cell_to_unpack_to = boundary_map(cell_i).ghost_cell_id;
                 size_t start_index = cell_i * num_vars;
                 fs.gas.rho(cell_to_unpack_to) = buffer(start_index + 0);
                 fs.gas.pressure(cell_to_unpack_to) = buffer(start_index + 1);
@@ -212,14 +213,15 @@ void FiniteVolume<T, MemModel>::transfer_flow_gradients(
     for (size_t boundary_i = 0; boundary_i < grid.other_blocks().size(); boundary_i++) {
         size_t other_block = grid.other_block(boundary_i);
         Ibis::SymmetricComm<MemModel, T> comm = gradient_comm_[boundary_i];
-        auto cells_to_pack = grid.internal_boundary_cells(other_block);
+        // auto cells_to_pack = grid.internal_boundary_cells(other_block);
+        auto boundary_map = grid.internal_boundary_map(other_block);
         auto buffer = comm.send_buf();
 
         // the parallel work of packing the data
         Ibis::parallel_for(
-            "FV::pack_send_buffer", cells_to_pack.size(),
+            "FV::pack_send_buffer", boundary_map.size(),
             KOKKOS_LAMBDA(const size_t cell_i) {
-                size_t cell_to_pack = cells_to_pack(cell_i);
+                size_t cell_to_pack = boundary_map(cell_i).local_cell_id;
                 size_t start_index = cell_i * num_vars;
                 size_t var_i = 0;
                 if (transfer_p) {
@@ -270,14 +272,15 @@ void FiniteVolume<T, MemModel>::transfer_flow_gradients(
     for (size_t boundary_i = 0; boundary_i < grid.other_blocks().size(); boundary_i++) {
         size_t other_block = grid.other_block(boundary_i);
         Ibis::SymmetricComm<MemModel, T> comm = gradient_comm_[boundary_i];
-        auto cells_to_unpack_to = grid.internal_boundary_ghost_cells(other_block);
+        // auto cells_to_unpack_to = grid.internal_boundary_ghost_cells(other_block);
+        auto boundary_map = grid.internal_boundary_map(other_block);
         auto buffer = comm.recv_buf();
 
         // unpack the buffer
         Ibis::parallel_for(
-            "FV::unpack_recv_buffer", cells_to_unpack_to.size(),
+            "FV::unpack_recv_buffer", boundary_map.size(),
             KOKKOS_LAMBDA(const size_t cell_i) {
-                size_t cell_to_unpack_to = cells_to_unpack_to(cell_i);
+                size_t cell_to_unpack_to = boundary_map(cell_i).ghost_cell_id;
                 size_t start_index = cell_i * num_vars;
                 size_t var_i = 0;
                 if (transfer_p) {
