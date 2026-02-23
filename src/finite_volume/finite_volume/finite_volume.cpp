@@ -150,7 +150,6 @@ void FiniteVolume<T, MemModel>::transfer_internal_flowstates(
             KOKKOS_LAMBDA(const size_t cell_i) {
                 size_t cell_to_unpack_to = boundary_map(cell_i).ghost_cell_id;
                 size_t start_index = cell_i * num_vars;
-                // std::cout << block << " " << boundary_map(cell_i).local_face_id << std::endl;
                 GasState<T> gs;
                 gs.rho = buffer(start_index + 0);
                 gs.pressure = buffer(start_index + 1);

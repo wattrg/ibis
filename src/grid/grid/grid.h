@@ -23,6 +23,13 @@ class GridMotionDriver;
 template <typename T, class MemSpace, class ExecSpace, class Layout>
 class WLSGradient;
 
+struct InternalBoundaryMap {
+    size_t local_cell_id;
+    size_t mapped_cell_local_id;
+    size_t ghost_cell_id;
+    size_t local_face_id;
+};
+
 // The main GridBlock
 template <class MemModel, typename T, class ExecSpace = Kokkos::DefaultExecutionSpace,
           class Layout = Kokkos::DefaultExecutionSpace::array_layout>
@@ -36,12 +43,6 @@ public:
     using mirror_type = GridBlock<MemModel, T, host_execution_space, array_layout>;
 
 public:
-    struct InternalBoundaryMap {
-        size_t local_cell_id;
-        size_t mapped_cell_local_id;
-        size_t ghost_cell_id;
-        size_t local_face_id;
-    };
 
     GridBlock() {}
 
@@ -294,7 +295,7 @@ public:
             size_t, Field<InternalBoundaryMap, array_layout, host_mirror_mem_space>>
             internal_boundary_map;
         for (size_t other_block : other_blocks()) {
-            internal_boundary_map[other_block] = internal_boundary_map_.at(other_block);
+            internal_boundary_map.insert({other_block, internal_boundary_map_.at(other_block).host_mirror()});
         }
 
         return mirror_type(vertices, interfaces, cells, dim_, num_valid_cells_,
@@ -317,6 +318,8 @@ public:
         for (size_t other_block : other_blocks()) {
             internal_boundary_map_[other_block].deep_copy(
                 other.internal_boundary_map_.at(other_block));
+        }
+        for (size_t other_block_i = 0; other_block_i < other.other_blocks_.size(); other_block_i++) {
             volume_comm_ = other.volume_comm_;
             position_comm_ = other.position_comm_;
         }
@@ -664,8 +667,8 @@ public:
         const InterfaceLookup& interfaces = grid_io.interface_lookup();
         std::unordered_map<size_t, size_t> ghost_cell_map;  // face_id -> ghost_cell_id
         for (auto& [bc_label, boundary_config] : boundaries.items()) {
-            boundary_tags_.push_back(bc_label);
             std::vector<ElemIO> bc_faces = grid_io.markers()[bc_label];
+            boundary_tags_.push_back(bc_label);
 
             // loop over all the boundary faces for this boundary, keeping
             // track of which cells and faces belong to this boundary
