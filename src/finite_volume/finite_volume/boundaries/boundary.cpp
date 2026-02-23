@@ -4,6 +4,11 @@
 #include <util/numeric_types.h>
 #include <util/vector3.h>
 
+#ifdef Ibis_ENABLE_MPI
+#include <ibis_mpi/ibis_mpi_conserved_quantities.h>
+#include <ibis_mpi/ibis_mpi_dual.h>
+#endif
+
 #include <Kokkos_Core.hpp>
 
 template <typename T, class MemModel>

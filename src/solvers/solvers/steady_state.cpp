@@ -7,8 +7,11 @@
 #include <solvers/cfl.h>
 #include <solvers/steady_state.h>
 #include <solvers/transient_linear_system.h>
+#include <finite_volume/grid_motion_driver.h>
 
-#include "finite_volume/grid_motion_driver.h"
+#ifdef Ibis_ENABLE_MPI
+#include <ibis_mpi/ibis_mpi_dual.h>
+#endif
 
 template <class MemModel>
 SteadyStateLinearisation<MemModel>::SteadyStateLinearisation(

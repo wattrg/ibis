@@ -1,5 +1,6 @@
 #include <parallel/parallel.h>
 #include <solvers/runge_kutta.h>
+#include <solvers/steady_state.h>
 #include <solvers/solver.h>
 #include <spdlog/spdlog.h>
 #include <spdlog/stopwatch.h>
@@ -10,7 +11,10 @@
 #include <nlohmann/json.hpp>
 #include <string>
 
-#include "solvers/steady_state.h"
+#ifdef Ibis_ENABLE_MPI
+#include <ibis_mpi/ibis_mpi_conserved_quantities.h>
+#include <ibis_mpi/ibis_mpi_dual.h>
+#endif
 
 using json = nlohmann::json;
 

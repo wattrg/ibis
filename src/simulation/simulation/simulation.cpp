@@ -4,6 +4,10 @@
 #include <simulation/simulation.h>
 #include <util/numeric_types.h>
 
+#ifdef Ibis_ENABLE_MPI
+#include <ibis_mpi/ibis_mpi_dual.h>
+#endif
+
 template <typename T, class MemModel>
 Sim<T, MemModel>::Sim(GridBlock<MemModel, T> grid_, json config) : grid(grid_) {
     fv = FiniteVolume<T, MemModel>(grid, config);

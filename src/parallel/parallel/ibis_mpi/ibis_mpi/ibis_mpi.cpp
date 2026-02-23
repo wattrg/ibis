@@ -1,8 +1,8 @@
-#include "parallel/ibis_mpi/ibis_mpi/ibis_mpi.h"
-
+#include <mpi.h>
 #include <doctest/extensions/doctest_mpi.h>
 #include <ibis_mpi/ibis_mpi.h>
-#include <mpi.h>
+#include <ibis_mpi/ibis_mpi_dual.h>
+#include <ibis_mpi/ibis_mpi_conserved_quantities.h>
 #include <parallel/parallel.h>
 #include <util/numeric_types.h>
 
@@ -34,6 +34,10 @@ void Ibis::initialise<Mpi>(int argc, char** argv) {
 template <>
 void Ibis::finalise<Mpi>() {
     Ibis::finalise<SharedMem>();
+
+    Ibis::finalise_mpi_conserved_quantities_norms();
+    Ibis::finalise_mpi_dual();
+
     MPI_Finalize();
 }
 
@@ -49,6 +53,19 @@ void Ibis::init_mpi_dual() {
     MPI_Op_create((MPI_User_function*)MPI_custom_max<Ibis::dual>, 1, &Ibis::MPI_dual_max);
     MPI_Op_create((MPI_User_function*)MPI_custom_min<Ibis::dual>, 1, &Ibis::MPI_dual_min);
     MPI_Op_create((MPI_User_function*)MPI_custom_sum<Ibis::dual>, 1, &Ibis::MPI_dual_sum);
+}
+
+void Ibis::finalise_mpi_dual() {
+    MPI_Op_free(&Ibis::MPI_dual_max);
+    MPI_Op_free(&Ibis::MPI_dual_min);
+    MPI_Op_free(&Ibis::MPI_dual_sum);
+}
+
+void Ibis::finalise_mpi_conserved_quantities_norms() {
+    MPI_Type_free(&MPI_ConservedQuantitiesNorm_real);
+    MPI_Type_free(&MPI_ConservedQuantitiesNorm_dual);
+    MPI_Op_free(&MPI_ConservedQuantitiesNorm_sum_real);
+    MPI_Op_free(&MPI_ConservedQuantitiesNorm_sum_dual);
 }
 
 void Ibis::init_mpi_conserved_quantities_norms() {

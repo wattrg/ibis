@@ -5,6 +5,11 @@
 #include <parallel/parallel.h>
 #include <util/numeric_types.h>
 
+#ifdef Ibis_ENABLE_MPI
+#include <ibis_mpi/ibis_mpi_conserved_quantities.h>
+#include <ibis_mpi/ibis_mpi_dual.h>
+#endif
+
 #include "gas/transport_properties.h"
 
 template <typename T, class MemModel>

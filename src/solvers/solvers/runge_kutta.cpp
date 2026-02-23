@@ -1,3 +1,5 @@
+#include <limits>
+
 #include <finite_volume/primative_conserved_conversion.h>
 #include <finite_volume/shock_fitting.h>
 #include <gas/transport_properties.h>
@@ -7,10 +9,12 @@
 #include <solvers/solver.h>
 #include <spdlog/spdlog.h>
 #include <util/numeric_types.h>
+#include <parallel/parallel.h>
 
-#include <limits>
-
-#include "parallel/parallel.h"
+#ifdef Ibis_ENABLE_MPI
+#include <ibis_mpi/ibis_mpi_conserved_quantities.h>
+#include <ibis_mpi/ibis_mpi_dual.h>
+#endif
 
 // Implementation of Butcher tableau
 Ibis::real ButcherTableau::a(size_t i, size_t j) { return a_[i - 1][j]; }
@@ -289,7 +293,7 @@ bool RungeKutta<MemModel>::stop_now(unsigned int step) {
 
 template <class MemModel>
 ConservedQuantitiesNorm<Ibis::real> RungeKutta<MemModel>::L2_norms() {
-    return k_[0].L2_norms();
+    return k_[0].L2_norms<MemModel>();
 }
 
 template class RungeKutta<SharedMem>;

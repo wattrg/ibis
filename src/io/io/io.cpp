@@ -14,6 +14,10 @@
 
 #include "gas/transport_properties.h"
 
+#ifdef Ibis_ENABLE_MPI
+#include <ibis_mpi/ibis_mpi_dual.h>
+#endif
+
 FlowFormat string_to_flow_format(std::string format) {
     if (format == "native_text") {
         return FlowFormat::NativeText;

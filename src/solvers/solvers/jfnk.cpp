@@ -2,6 +2,11 @@
 #include <linear_algebra/gmres.h>
 #include <solvers/jfnk.h>
 
+#ifdef Ibis_ENABLE_MPI
+#include <ibis_mpi/ibis_mpi_conserved_quantities.h>
+#include <ibis_mpi/ibis_mpi_dual.h>
+#endif
+
 template <class MemModel>
 Jfnk<MemModel>::Jfnk(std::shared_ptr<PseudoTransientLinearSystem> system,
                      std::unique_ptr<CflSchedule>&& cfl,
@@ -25,7 +30,7 @@ Jfnk<MemModel>::Jfnk(std::shared_ptr<PseudoTransientLinearSystem> system,
 template <class MemModel>
 int Jfnk<MemModel>::initialise() {
     system_->eval_rhs();
-    residual_norms_ = residuals_->L2_norms();
+    residual_norms_ = residuals_->L2_norms<MemModel>();
     initial_residual_norms_ = residual_norms_;
     return 0;
 }
@@ -59,7 +64,7 @@ LinearSolveResult Jfnk<MemModel>::step(std::shared_ptr<Sim<Ibis::dual, MemModel>
     // These residuals get re-used for the next step if we haven't converged.
     apply_update_(sim, cq, fs);
     system_->eval_rhs();
-    residual_norms_ = residuals_->L2_norms();
+    residual_norms_ = residuals_->L2_norms<MemModel>();
     return last_gmres_result_;
 }
 

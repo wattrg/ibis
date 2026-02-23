@@ -5,7 +5,7 @@
 #include <util/numeric_types.h>
 #include <util/types.h>
 // #include <ibis_mpi/ibis_mpi.h>
-// #include <parallel/parallel.h>
+#include <parallel/parallel.h>
 
 #include <Kokkos_Core.hpp>
 #include <fstream>
@@ -115,7 +115,36 @@ public:
 
     void apply_time_derivative(const ConservedQuantities<T>& dudt, Ibis::real dt);
 
-    ConservedQuantitiesNorm<T> L2_norms() const;
+    template <class MemModel>
+    ConservedQuantitiesNorm<T> L2_norms() const {
+        
+        ConservedQuantitiesNorm<T> norms{};
+        norms = Ibis::parallel_reduce<Sum<ConservedQuantitiesNorm<T>>, MemModel>(
+            "L2_norm", num_values_,
+            KOKKOS_CLASS_LAMBDA(const size_t i, ConservedQuantitiesNorm<T>& tl_cq) {
+                T mass_i = mass(i);
+                T momentum_xi = momentum_x(i);
+                T momentum_yi = momentum_y(i);
+                T momentum_zi = (dim_ == 3) ? momentum_z(i) : T(0.0);
+                T energy_i = energy(i);
+                tl_cq.mass() += mass_i * mass_i;
+                tl_cq.momentum_x() += momentum_xi * momentum_xi;
+                tl_cq.momentum_y() += momentum_yi * momentum_yi;
+                tl_cq.momentum_z() += momentum_zi * momentum_zi;
+                tl_cq.energy() += energy_i * energy_i;
+                tl_cq.global() += mass_i * mass_i + momentum_xi * momentum_xi +
+                                  momentum_yi * momentum_yi + momentum_zi * momentum_zi +
+                                  energy_i * energy_i;
+            });
+
+        norms.global() = Ibis::sqrt(norms.global());
+        norms.mass() = Ibis::sqrt(norms.mass());
+        norms.momentum_x() = Ibis::sqrt(norms.momentum_x());
+        norms.momentum_y() = Ibis::sqrt(norms.momentum_y());
+        norms.momentum_z() = Ibis::sqrt(norms.momentum_z());
+        norms.energy() = Ibis::sqrt(norms.energy());
+        return norms;
+    }
 
     // ConservedQuantitiesNorm<Ibis::real> Linf_norms() const;
 

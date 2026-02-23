@@ -2,6 +2,10 @@
 #include <util/conserved_quantities.h>
 #include <util/numeric_types.h>
 
+#ifdef Ibis_ENABLE_MPI
+#include <ibis_mpi/ibis_mpi_conserved_quantities.h>
+#endif
+
 template <typename T>
 void ConservedQuantitiesNorm<T>::write_to_file(std::ofstream& f, Ibis::real wc,
                                                Ibis::real time, size_t step) {
@@ -38,35 +42,36 @@ void ConservedQuantities<T>::apply_time_derivative(const ConservedQuantities<T>&
         });
 }
 
-template <typename T>
-ConservedQuantitiesNorm<T> ConservedQuantities<T>::L2_norms() const {
-    ConservedQuantitiesNorm<T> norms{};
-    norms = Ibis::parallel_reduce<Sum<ConservedQuantitiesNorm<T>>, Ibis::DefaultMemModel>(
-        "L2_norm", num_values_,
-        KOKKOS_CLASS_LAMBDA(const size_t i, ConservedQuantitiesNorm<T>& tl_cq) {
-            T mass_i = mass(i);
-            T momentum_xi = momentum_x(i);
-            T momentum_yi = momentum_y(i);
-            T momentum_zi = (dim_ == 3) ? momentum_z(i) : T(0.0);
-            T energy_i = energy(i);
-            tl_cq.mass() += mass_i * mass_i;
-            tl_cq.momentum_x() += momentum_xi * momentum_xi;
-            tl_cq.momentum_y() += momentum_yi * momentum_yi;
-            tl_cq.momentum_z() += momentum_zi * momentum_zi;
-            tl_cq.energy() += energy_i * energy_i;
-            tl_cq.global() += mass_i * mass_i + momentum_xi * momentum_xi +
-                              momentum_yi * momentum_yi + momentum_zi * momentum_zi +
-                              energy_i * energy_i;
-        });
+// template <typename T>
+// template <class MemModel>
+// ConservedQuantitiesNorm<T> ConservedQuantities<T>::L2_norms() const {
+//     ConservedQuantitiesNorm<T> norms{};
+//     norms = Ibis::parallel_reduce<Sum<ConservedQuantitiesNorm<T>>, MemModel>(
+//         "L2_norm", num_values_,
+//         KOKKOS_CLASS_LAMBDA(const size_t i, ConservedQuantitiesNorm<T>& tl_cq) {
+//             T mass_i = mass(i);
+//             T momentum_xi = momentum_x(i);
+//             T momentum_yi = momentum_y(i);
+//             T momentum_zi = (dim_ == 3) ? momentum_z(i) : T(0.0);
+//             T energy_i = energy(i);
+//             tl_cq.mass() += mass_i * mass_i;
+//             tl_cq.momentum_x() += momentum_xi * momentum_xi;
+//             tl_cq.momentum_y() += momentum_yi * momentum_yi;
+//             tl_cq.momentum_z() += momentum_zi * momentum_zi;
+//             tl_cq.energy() += energy_i * energy_i;
+//             tl_cq.global() += mass_i * mass_i + momentum_xi * momentum_xi +
+//                               momentum_yi * momentum_yi + momentum_zi * momentum_zi +
+//                               energy_i * energy_i;
+//         });
 
-    norms.global() = Ibis::sqrt(norms.global());
-    norms.mass() = Ibis::sqrt(norms.mass());
-    norms.momentum_x() = Ibis::sqrt(norms.momentum_x());
-    norms.momentum_y() = Ibis::sqrt(norms.momentum_y());
-    norms.momentum_z() = Ibis::sqrt(norms.momentum_z());
-    norms.energy() = Ibis::sqrt(norms.energy());
-    return norms;
-}
+//     norms.global() = Ibis::sqrt(norms.global());
+//     norms.mass() = Ibis::sqrt(norms.mass());
+//     norms.momentum_x() = Ibis::sqrt(norms.momentum_x());
+//     norms.momentum_y() = Ibis::sqrt(norms.momentum_y());
+//     norms.momentum_z() = Ibis::sqrt(norms.momentum_z());
+//     norms.energy() = Ibis::sqrt(norms.energy());
+//     return norms;
+// }
 
 template <typename T>
 void ConservedQuantities<T>::deep_copy(const ConservedQuantities<T>& other) {
@@ -75,6 +80,10 @@ void ConservedQuantities<T>::deep_copy(const ConservedQuantities<T>& other) {
 
 template class ConservedQuantities<Ibis::real>;
 template class ConservedQuantities<Ibis::dual>;
+// template ConservedQuantitiesNorm<Ibis::real> ConservedQuantities<Ibis::real>::L2_norms<SharedMem>;
+// template ConservedQuantitiesNorm<Ibis::real> ConservedQuantities<Ibis::real>::L2_norms<Mpi>;
+// template ConservedQuantitiesNorm<Ibis::dual> ConservedQuantities<Ibis::dual>::L2_norms<SharedMem>();
+// template ConservedQuantitiesNorm<Ibis::dual> ConservedQuantities<Ibis::dual>::L2_norms<Mpi>();
 
 template <typename T>
 void apply_time_derivative(const ConservedQuantities<T>& U0, ConservedQuantities<T>& U1,

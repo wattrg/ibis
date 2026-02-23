@@ -5,8 +5,12 @@
 #include <ibis_mpi/ibis_mpi.h>
 #include <mpi.h>
 #include <util/numeric_types.h>
-
 #include <Kokkos_Core.hpp>
+
+#ifdef Ibis_ENABLE_MPI
+#include <ibis_mpi/ibis_mpi_conserved_quantities.h>
+#include <ibis_mpi/ibis_mpi_dual.h>
+#endif
 
 int main(int argc, char* argv[]) {
     // MPI_Init(&argc, &argv);

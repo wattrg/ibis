@@ -2,6 +2,10 @@
 #include <io/binary_util.h>
 #include <io/vtk.h>
 
+#ifdef Ibis_ENABLE_MPI
+#include <ibis_mpi/ibis_mpi_dual.h>
+#endif
+
 using array_layout = Kokkos::DefaultExecutionSpace::array_layout;
 using host_mem_space = Kokkos::DefaultHostExecutionSpace::memory_space;
 
