@@ -16,3 +16,6 @@
 [submodule "extern/CLI11"]
 	path = extern/CLI11
 	url = git@github.com:CLIUtils/CLI11.git
+[submodule "extern/kokkos-kernels"]
+	path = extern/kokkos-kernels
+	url = git@github.com:kokkos/kokkos-kernels.git

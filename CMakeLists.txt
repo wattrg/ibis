@@ -52,6 +52,21 @@ add_subdirectory(extern/CLI11 EXCLUDE_FROM_ALL)
 find_package(Python COMPONENTS Interpreter Development REQUIRED)
 add_subdirectory(extern/pybind11 EXCLUDE_FROM_ALL)
 
+# Kokkos kernels
+# Disable umbrella enable
+set(KokkosKernels_ENABLE_ALL_COMPONENTS OFF CACHE BOOL "" FORCE)
+
+# Enable only graph algorithms
+set(KokkosKernels_ENABLE_COMPONENT_GRAPH ON CACHE BOOL "" FORCE)
+set(KokkosKernels_ENABLE_COMPONENT_SPARSE ON CACHE BOOL "" FORCE)
+
+# Disable others explicitly
+set(KokkosKernels_ENABLE_COMPONENT_BLAS OFF CACHE BOOL "" FORCE)
+set(KokkosKernels_ENABLE_COMPONENT_LAPACK OFF CACHE BOOL "" FORCE)
+set(KokkosKernels_ENABLE_COMPONENT_ODE OFF CACHE BOOL "" FORCE)
+set(KokkosKernels_ENABLE_COMPONENT_BATCHED OFF CACHE BOOL "" FORCE)
+add_subdirectory(extern/kokkos-kernels EXCLUDE_FROM_ALL)
+
 # Find METIS
 option(Ibis_ENABLE_METIS "Enable using METIS" ON)
 if (Ibis_ENABLE_METIS)
