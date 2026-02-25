@@ -31,6 +31,7 @@ target_link_libraries(
         runtime_dirs
 )
 target_include_directories(partition PUBLIC ../..)
+target_compile_definitions(partition PRIVATE DOCTEST_CONFIG_DISABLE)
 
 # non-distributed variant of the run command
 add_library(run STATIC run/run.cpp ../config.cpp)
@@ -48,6 +49,7 @@ target_link_libraries(
         CLI11::CLI11
 )
 target_include_directories(run PUBLIC ../..)
+target_compile_definitions(partition PRIVATE DOCTEST_CONFIG_DISABLE)
 
 if (Ibis_ENABLE_MPI)
   target_compile_definitions(run PRIVATE Ibis_ENABLE_DISTRIBUTED_MEMORY)

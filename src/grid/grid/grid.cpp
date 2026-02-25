@@ -27,7 +27,6 @@
 // Kokkos::DefaultExecutionSpace::array_layout>; template class GridBlock<Ibis::dual,
 // Kokkos::DefaultExecutionSpace, Kokkos::DefaultExecutionSpace::array_layout>;
 
-#ifndef DOCTEST_CONFIG_DISABLE
 struct GridInfo {
     Vertices<Ibis::real, Kokkos::DefaultHostExecutionSpace> vertices;
     Interfaces<Ibis::real, Kokkos::DefaultHostExecutionSpace> faces;
@@ -335,4 +334,3 @@ TEST_CASE("ghost cell centres") {
     CHECK(block_host.cells().centroids().z(ghost_cell) == 0.0);
 }
 
-#endif  // DOCTEST_CONFIG_DISABLE

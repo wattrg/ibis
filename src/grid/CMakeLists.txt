@@ -28,6 +28,8 @@ target_link_libraries(
 	parallel
 )
 
+target_compile_definitions(grid PRIVATE DOCTEST_CONFIG_DISABLE)
+
 if (METIS_FOUND)
     target_link_libraries(grid PRIVATE ${METIS_LIBRARIES})
 endif(METIS_FOUND)

@@ -1,8 +1,6 @@
 #include <doctest/doctest.h>
-// #include <parallel/shared_memory.h>
 #include <parallel/parallel.h>
 #include <util/numeric_types.h>
-
 #include <Kokkos_Core.hpp>
 
 template <>
@@ -20,7 +18,6 @@ int Ibis::get_world_rank<SharedMem>() {
     return 0;
 }
 
-#ifndef DOCTEST_CONFIG_DISABLE
 TEST_CASE("shared_parallel_reduction") {
     double result = Ibis::parallel_reduce<Min<double>, SharedMem>(
         "test", 10,
@@ -36,4 +33,3 @@ TEST_CASE("shared_parallel_reduction") {
 
     CHECK(result == 5);
 }
-#endif  // DOCTEST_CONFIG_DISABLE

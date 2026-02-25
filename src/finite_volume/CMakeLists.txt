@@ -31,6 +31,7 @@ target_link_libraries(
 )
 
 target_include_directories(finite_volume PUBLIC .)
+target_compile_definitions(finite_volume PRIVATE DOCTEST_CONFIG_DISABLE)
 
 if (Ibis_BUILD_TESTS)
     add_executable(

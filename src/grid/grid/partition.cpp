@@ -133,7 +133,6 @@ std::vector<GridIO> partition_metis(GridIO& monolithic_grid, size_t n_partitions
     return grids;
 }
 
-#ifndef DOCTEST_CONFIG_DISABLE
 std::vector<GridIO> build_partitioned_grid() {
     // read a test grid
     GridIO monolithic_grid("../../../src/grid/test/grid.su2");
@@ -329,5 +328,4 @@ TEST_CASE("partition_metis_mapped_cell_locations") {
     }
 }
 
-#endif  // DOCTEST_CONFIG_DISABLE
 #endif  // Ibis_ENABLE_METIS

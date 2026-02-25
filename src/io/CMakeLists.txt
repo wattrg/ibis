@@ -20,3 +20,5 @@ target_include_directories(
 	PUBLIC
 	.
 )
+
+target_compile_definitions(IO PRIVATE DOCTEST_CONFIG_DISABLE)

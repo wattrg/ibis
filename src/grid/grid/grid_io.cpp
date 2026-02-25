@@ -592,7 +592,47 @@ size_t GridIO::local_to_global_cell_id(size_t local_id) const {
     return local_to_global_cell_map_.at(local_id);
 }
 
-#ifndef DOCTEST_CONFIG_DISABLE
+InterfaceLookup::InterfaceLookup() {
+    hash_map_ = std::unordered_map<std::string, size_t>{};
+}
+
+size_t InterfaceLookup::insert(std::vector<size_t> vertex_ids) {
+    std::string hash = hash_vertex_ids(vertex_ids);
+    if (contains_hash(hash)) {
+        return hash_map_[hash];
+    }
+    size_t id = hash_map_.size();
+    hash_map_.insert({hash, id});
+    return id;
+}
+
+bool InterfaceLookup::contains(std::vector<size_t> vertex_ids) const {
+    std::string hash = hash_vertex_ids(vertex_ids);
+    return contains_hash(hash);
+}
+
+size_t InterfaceLookup::id(std::vector<size_t> vertex_ids) const {
+    std::string hash = hash_vertex_ids(vertex_ids);
+    if (contains_hash(hash)) {
+        return hash_map_.at(hash);
+    }
+    return std::numeric_limits<size_t>::max();
+}
+
+bool InterfaceLookup::contains_hash(std::string hash) const {
+    return hash_map_.find(hash) != hash_map_.end();
+}
+
+std::string InterfaceLookup::hash_vertex_ids(std::vector<size_t> vertex_ids) const {
+    std::sort(vertex_ids.begin(), vertex_ids.end(), std::greater<size_t>());
+    std::string hash_value = "";
+    for (size_t i = 0; i < vertex_ids.size(); i++) {
+        hash_value.append(std::to_string(vertex_ids[i]));
+        hash_value.append(",");
+    }
+    return hash_value;
+}
+
 TEST_CASE("trim whitespace") {
     std::string test1 = " hello world    ";
     std::string test2 = "hello world";
@@ -804,46 +844,6 @@ TEST_CASE("read_cell_mapping") {
     // CHECK(part1.cell_mapping() == expected_map1);
 }
 
-InterfaceLookup::InterfaceLookup() {
-    hash_map_ = std::unordered_map<std::string, size_t>{};
-}
-
-size_t InterfaceLookup::insert(std::vector<size_t> vertex_ids) {
-    std::string hash = hash_vertex_ids(vertex_ids);
-    if (contains_hash(hash)) {
-        return hash_map_[hash];
-    }
-    size_t id = hash_map_.size();
-    hash_map_.insert({hash, id});
-    return id;
-}
-
-bool InterfaceLookup::contains(std::vector<size_t> vertex_ids) const {
-    std::string hash = hash_vertex_ids(vertex_ids);
-    return contains_hash(hash);
-}
-
-size_t InterfaceLookup::id(std::vector<size_t> vertex_ids) const {
-    std::string hash = hash_vertex_ids(vertex_ids);
-    if (contains_hash(hash)) {
-        return hash_map_.at(hash);
-    }
-    return std::numeric_limits<size_t>::max();
-}
-
-bool InterfaceLookup::contains_hash(std::string hash) const {
-    return hash_map_.find(hash) != hash_map_.end();
-}
-
-std::string InterfaceLookup::hash_vertex_ids(std::vector<size_t> vertex_ids) const {
-    std::sort(vertex_ids.begin(), vertex_ids.end(), std::greater<size_t>());
-    std::string hash_value = "";
-    for (size_t i = 0; i < vertex_ids.size(); i++) {
-        hash_value.append(std::to_string(vertex_ids[i]));
-        hash_value.append(",");
-    }
-    return hash_value;
-}
 
 TEST_CASE("interface look up contains") {
     InterfaceLookup x;
@@ -904,4 +904,3 @@ TEST_CASE("interface look up") {
     CHECK(x.id(std::vector<size_t>{7, 6}) == 9);
 }
 
-#endif  // DOCTEST_CONFIG_DISABLE

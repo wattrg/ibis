@@ -7,6 +7,7 @@ add_library(
     util/conserved_quantities.cpp)
 target_link_libraries(util PUBLIC Kokkos::kokkos doctest parallel)
 target_include_directories(util PUBLIC .)
+target_compile_definitions(util PRIVATE DOCTEST_CONFIG_DISABLE)
 
 
 if (Ibis_BUILD_TESTS)

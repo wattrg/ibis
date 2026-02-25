@@ -56,6 +56,10 @@ add_subdirectory(extern/pybind11 EXCLUDE_FROM_ALL)
 # Disable umbrella enable
 set(KokkosKernels_ENABLE_ALL_COMPONENTS OFF CACHE BOOL "" FORCE)
 
+
+set(KokkosKernels_INST_LAYOUTRIGHT ON CACHE BOOL "" FORCE)
+set(KokkosKernels_INST_LAYOUTLEFT ON CACHE BOOL "" FORCE)
+
 # Enable only graph algorithms
 set(KokkosKernels_ENABLE_COMPONENT_GRAPH ON CACHE BOOL "" FORCE)
 set(KokkosKernels_ENABLE_COMPONENT_SPARSE ON CACHE BOOL "" FORCE)
@@ -119,6 +123,7 @@ add_subdirectory(src/io)
 add_subdirectory(src/python)
 add_subdirectory(src/simulation)
 add_subdirectory(src/parallel)
+add_subdirectory(src/algorithms)
 add_subdirectory(share)
 
 # allow packaging to distribute a pre-compiled 

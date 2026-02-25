@@ -64,7 +64,10 @@ target_link_libraries(
 	steady_state
 	runge_kutta
 )
-
+target_compile_definitions(solver PRIVATE DOCTEST_CONFIG_DISABLE)
+target_compile_definitions(runge_kutta PRIVATE DOCTEST_CONFIG_DISABLE)
+target_compile_definitions(steady_state PRIVATE DOCTEST_CONFIG_DISABLE)
+target_compile_definitions(jfnk PRIVATE DOCTEST_CONFIG_DISABLE)
 
 if (Ibis_BUILD_TESTS)
 	add_executable(

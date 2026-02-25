@@ -18,6 +18,7 @@ target_include_directories(
     PUBLIC
     .
 )
+target_compile_definitions(ibis_kokkos PRIVATE DOCTEST_CONFIG_DISABLE)
 
 if (Ibis_BUILD_TESTS)
     add_executable(

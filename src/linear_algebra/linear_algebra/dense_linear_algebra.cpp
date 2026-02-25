@@ -1,9 +1,6 @@
 #include <doctest/doctest.h>
 #include <linear_algebra/dense_linear_algebra.h>
 
-#include "Kokkos_Core_fwd.hpp"
-
-#ifndef DOCTEST_CONFIG_DISABLE
 Ibis::Vector<Ibis::real> small_test_vector() {
     Ibis::Vector<Ibis::real> x("x", 4);
     auto x_h = x.host_mirror();
@@ -351,4 +348,3 @@ TEST_CASE("Ibis::Matrix::columns") {
     CHECK(columns.n_cols() == 2);
     // CHECK(columns(0, 0) == 1.0);
 }
-#endif  // DOCTEST_CONFIG_DISABLE

@@ -9,7 +9,6 @@
 #endif
 
 #ifdef Ibis_ENABLE_MPI
-#ifndef DOCTEST_CONFIG_DISABLE
 
 json build_config(size_t id) {
     json config{};
@@ -98,6 +97,5 @@ MPI_TEST_CASE("block position communication", 2) {
               doctest::Approx(block_other_host.cells().centroids().z(other_cell_id)));
     }
 }
-#endif  // DOCTEST_CONFIG_DISABLE
 
 #endif  // Ibis_ENABLE_MPI

@@ -317,7 +317,6 @@ std::unique_ptr<IterativeLinearSolver> make_linear_solver(
     }
 }
 
-#ifndef DOCTEST_CONFIG_DISABLE
 TEST_CASE("GMRES") {
     class TestLinearSystem : public LinearSystem {
     public:
@@ -499,4 +498,3 @@ TEST_CASE("FGMRES") {
     CHECK(x_h(3) == doctest::Approx(1.5));
     CHECK(x_h(4) == doctest::Approx(0.5));
 }
-#endif  // DOCTEST_CONFIG_DISABLE

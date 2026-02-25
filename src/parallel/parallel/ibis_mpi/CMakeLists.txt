@@ -19,7 +19,7 @@ target_include_directories(
     .
 )
 
-target_compile_definitions(ibis_mpi PRIVATE Ibis_ENABLE_DISTRIBUTED_MEMORY)
+target_compile_definitions(ibis_mpi PRIVATE Ibis_ENABLE_DISTRIBUTED_MEMORY DOCTEST_CONFIG_DISABLE)
 
 if (Ibis_BUILD_TESTS)
     add_executable(

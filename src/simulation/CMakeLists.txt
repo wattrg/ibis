@@ -12,3 +12,4 @@ target_link_libraries(
     nlohmann_json::nlohmann_json
 )
 target_include_directories(simulation PUBLIC .)
+target_compile_definitions(simulation PRIVATE DOCTEST_CONFIG_DISABLE)

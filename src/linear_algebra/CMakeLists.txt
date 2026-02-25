@@ -15,6 +15,7 @@ target_link_libraries(
     doctest
 )
 target_include_directories(linear_algebra PUBLIC .)
+target_compile_definitions(linear_algebra PRIVATE DOCTEST_CONFIG_DISABLE)
 
 
 if (Ibis_BUILD_TESTS)

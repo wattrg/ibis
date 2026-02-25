@@ -15,4 +15,8 @@ target_link_libraries(
 	gas
 )
 
+target_compile_definitions(
+	python_api PRIVATE DOCTEST_CONFIG_DISABLE
+)
+
 install(TARGETS python_api DESTINATION ${CMAKE_INSTALL_LIBDIR})

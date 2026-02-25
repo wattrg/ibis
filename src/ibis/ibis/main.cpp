@@ -8,10 +8,6 @@
 #define DOCTEST_CONFIG_IMPLEMENT
 #include <doctest/doctest.h>
 
-#ifdef Ibis_ENABLE_MPI
-#include <doctest/extensions/doctest_mpi.h>
-#endif
-
 #include <ibis/commands/clean/clean.h>
 #include <ibis/commands/partition/partition_grid.h>
 #include <ibis/commands/post_commands/plot.h>
