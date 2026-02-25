@@ -1,0 +1,1 @@
+add_subdirectory(graph_colouring_kokkos_kernels)
