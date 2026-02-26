@@ -333,4 +333,3 @@ TEST_CASE("ghost cell centres") {
     CHECK(block_host.cells().centroids().y(ghost_cell) == 3.5);
     CHECK(block_host.cells().centroids().z(ghost_cell) == 0.0);
 }
-

@@ -1,8 +1,8 @@
-#include <mpi.h>
 #include <doctest/extensions/doctest_mpi.h>
 #include <ibis_mpi/ibis_mpi.h>
-#include <ibis_mpi/ibis_mpi_dual.h>
 #include <ibis_mpi/ibis_mpi_conserved_quantities.h>
+#include <ibis_mpi/ibis_mpi_dual.h>
+#include <mpi.h>
 #include <parallel/parallel.h>
 #include <util/numeric_types.h>
 
@@ -81,7 +81,6 @@ void Ibis::init_mpi_conserved_quantities_norms() {
     MPI_Op_create((MPI_User_function*)MPI_custom_sum<ConservedQuantitiesNorm<Ibis::dual>>,
                   1, &MPI_ConservedQuantitiesNorm_sum_dual);
 }
-
 
 // Tests
 // Pure MPI reductions
@@ -402,6 +401,5 @@ MPI_TEST_CASE("MPI_sum_conserved_quantities_norm_real", 2) {
     CHECK(result.momentum_z() == 160.0);
     CHECK(result.energy() == 180.0);
 }
-
 
 #endif

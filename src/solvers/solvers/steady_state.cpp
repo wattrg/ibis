@@ -1,4 +1,5 @@
 #include <finite_volume/finite_volume.h>
+#include <finite_volume/grid_motion_driver.h>
 #include <finite_volume/primative_conserved_conversion.h>
 #include <gas/flow_state.h>
 #include <gas/transport_properties.h>
@@ -7,7 +8,6 @@
 #include <solvers/cfl.h>
 #include <solvers/steady_state.h>
 #include <solvers/transient_linear_system.h>
-#include <finite_volume/grid_motion_driver.h>
 
 #ifdef Ibis_ENABLE_MPI
 #include <ibis_mpi/ibis_mpi_dual.h>

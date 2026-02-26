@@ -4,7 +4,7 @@
 #include <mpi.h>
 
 namespace Ibis {
-  
+
 // MPI data types
 template <typename Type>
 struct MpiDataType;
@@ -17,7 +17,6 @@ struct MpiDataType;
     struct MpiDataType<type> {                           \
         static MPI_Datatype value() { return MPI_type; } \
     };
-
 
 MpiTypeMapping(short int, MPI_SHORT)                                // NOLINT
     MpiTypeMapping(int, MPI_INT)                                    // NOLINT
@@ -33,9 +32,8 @@ MpiTypeMapping(short int, MPI_SHORT)                                // NOLINT
     MpiTypeMapping(long double, MPI_LONG_DOUBLE)                    // NOLINT
     MpiTypeMapping(char, MPI_CHAR)                                  // NOLINT
 
-
-// Custom MPI operations of standard overloaded operators
-template <typename T>
+    // Custom MPI operations of standard overloaded operators
+    template <typename T>
     void MPI_custom_sum(T* invec, T* inoutvec, int* len, MPI_Datatype* datatype) {
     (void)datatype;
     for (int i = 0; i < *len; i++) {
@@ -59,6 +57,6 @@ void MPI_custom_min(T* invec, T* inoutvec, int* len, MPI_Datatype* datatype) {
     }
 }
 
-} // namespace ibis
+}  // namespace Ibis
 
 #endif

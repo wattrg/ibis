@@ -10,7 +10,6 @@
 
 namespace Ibis {
 
-
 template <typename Type>
 struct MpiDataType;
 

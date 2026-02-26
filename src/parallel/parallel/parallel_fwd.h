@@ -18,8 +18,8 @@ class Reducer {
                         FunctorType functor) -> typename ReducerType::scalar_type;
 
     template <class PolicyType, class FunctorType>
-    inline auto execute(const std::string& str, PolicyType& policy, FunctorType functor)
-        -> typename ReducerType::scalar_type;
+    inline auto execute(const std::string& str, PolicyType& policy,
+                        FunctorType functor) -> typename ReducerType::scalar_type;
 };
 
 template <class ReducerType, class MemModel>

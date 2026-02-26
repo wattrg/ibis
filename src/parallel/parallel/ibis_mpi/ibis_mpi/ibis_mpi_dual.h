@@ -1,8 +1,8 @@
 #ifndef IBIS_MPI_DUAL_H
 #define IBIS_MPI_DUAL_H
 
-#include <mpi.h>
 #include <ibis_mpi/ibis_mpi_types.h>
+#include <mpi.h>
 #include <util/numeric_types.h>
 
 namespace Ibis {
@@ -36,6 +36,6 @@ struct MpiReduction<Sum<Dual<T>>> {
 
 void init_mpi_dual();
 void finalise_mpi_dual();
-} // namespace Ibis
+}  // namespace Ibis
 
 #endif

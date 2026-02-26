@@ -86,7 +86,7 @@ private:
 // for Kokkos reductions
 namespace Kokkos {
 template <typename T>
-struct reduction_identity<ConservedQuantitiesNorm<T> > {
+struct reduction_identity<ConservedQuantitiesNorm<T>> {
     KOKKOS_FORCEINLINE_FUNCTION
     static ConservedQuantitiesNorm<T> sum() { return ConservedQuantitiesNorm<T>(); }
 };
@@ -117,7 +117,6 @@ public:
 
     template <class MemModel>
     ConservedQuantitiesNorm<T> L2_norms() const {
-        
         ConservedQuantitiesNorm<T> norms{};
         norms = Ibis::parallel_reduce<Sum<ConservedQuantitiesNorm<T>>, MemModel>(
             "L2_norm", num_values_,

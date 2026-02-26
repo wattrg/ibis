@@ -80,10 +80,12 @@ void ConservedQuantities<T>::deep_copy(const ConservedQuantities<T>& other) {
 
 template class ConservedQuantities<Ibis::real>;
 template class ConservedQuantities<Ibis::dual>;
-// template ConservedQuantitiesNorm<Ibis::real> ConservedQuantities<Ibis::real>::L2_norms<SharedMem>;
-// template ConservedQuantitiesNorm<Ibis::real> ConservedQuantities<Ibis::real>::L2_norms<Mpi>;
-// template ConservedQuantitiesNorm<Ibis::dual> ConservedQuantities<Ibis::dual>::L2_norms<SharedMem>();
-// template ConservedQuantitiesNorm<Ibis::dual> ConservedQuantities<Ibis::dual>::L2_norms<Mpi>();
+// template ConservedQuantitiesNorm<Ibis::real>
+// ConservedQuantities<Ibis::real>::L2_norms<SharedMem>; template
+// ConservedQuantitiesNorm<Ibis::real> ConservedQuantities<Ibis::real>::L2_norms<Mpi>;
+// template ConservedQuantitiesNorm<Ibis::dual>
+// ConservedQuantities<Ibis::dual>::L2_norms<SharedMem>(); template
+// ConservedQuantitiesNorm<Ibis::dual> ConservedQuantities<Ibis::dual>::L2_norms<Mpi>();
 
 template <typename T>
 void apply_time_derivative(const ConservedQuantities<T>& U0, ConservedQuantities<T>& U1,

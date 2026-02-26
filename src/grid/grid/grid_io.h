@@ -124,9 +124,7 @@ public:
 
     GridIO(std::string file_name);
 
-    GridIO(std::string file_name, size_t id) : GridIO(file_name) {
-        id_ = id;
-    }
+    GridIO(std::string file_name, size_t id) : GridIO(file_name) { id_ = id; }
 
     GridIO(std::string file_name, std::string cell_mapping, size_t id)
         : GridIO(file_name) {

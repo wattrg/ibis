@@ -844,7 +844,6 @@ TEST_CASE("read_cell_mapping") {
     // CHECK(part1.cell_mapping() == expected_map1);
 }
 
-
 TEST_CASE("interface look up contains") {
     InterfaceLookup x;
     x.insert(std::vector<size_t>{0, 1});
@@ -903,4 +902,3 @@ TEST_CASE("interface look up") {
     CHECK(x.id(std::vector<size_t>{3, 7}) == 8);
     CHECK(x.id(std::vector<size_t>{7, 6}) == 9);
 }
-

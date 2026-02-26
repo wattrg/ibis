@@ -20,7 +20,7 @@ using host_exec_space = Kokkos::DefaultHostExecutionSpace;
 template <typename T, class MemModel>
 class ScalarAccessor {
 public:
-    virtual ~ScalarAccessor() {};
+    virtual ~ScalarAccessor(){};
 
     virtual void init(const FlowStates<T, array_layout, host_mem_space>& fs,
                       FiniteVolume<T, MemModel>& fv, const GridBlock<MemModel, T>& grid,
@@ -42,7 +42,7 @@ public:
 template <typename T, class MemModel>
 class VectorAccessor {
 public:
-    virtual ~VectorAccessor() {};
+    virtual ~VectorAccessor(){};
 
     virtual void init(const FlowStates<T, array_layout, host_mem_space>& fs,
                       FiniteVolume<T, MemModel>& fv, const GridBlock<MemModel, T>& grid,

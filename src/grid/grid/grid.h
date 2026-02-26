@@ -43,7 +43,6 @@ public:
     using mirror_type = GridBlock<MemModel, T, host_execution_space, array_layout>;
 
 public:
-
     GridBlock() {}
 
     GridBlock(const GridIO& grid_io, json& config) { init_grid_block(grid_io, config); }
@@ -295,7 +294,8 @@ public:
             size_t, Field<InternalBoundaryMap, array_layout, host_mirror_mem_space>>
             internal_boundary_map;
         for (size_t other_block : other_blocks()) {
-            internal_boundary_map.insert({other_block, internal_boundary_map_.at(other_block).host_mirror()});
+            internal_boundary_map.insert(
+                {other_block, internal_boundary_map_.at(other_block).host_mirror()});
         }
 
         return mirror_type(vertices, interfaces, cells, dim_, num_valid_cells_,
@@ -319,7 +319,8 @@ public:
             internal_boundary_map_[other_block].deep_copy(
                 other.internal_boundary_map_.at(other_block));
         }
-        for (size_t other_block_i = 0; other_block_i < other.other_blocks_.size(); other_block_i++) {
+        for (size_t other_block_i = 0; other_block_i < other.other_blocks_.size();
+             other_block_i++) {
             volume_comm_ = other.volume_comm_;
             position_comm_ = other.position_comm_;
         }

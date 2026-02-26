@@ -1,6 +1,7 @@
 #include <doctest/doctest.h>
 #include <parallel/parallel.h>
 #include <util/numeric_types.h>
+
 #include <Kokkos_Core.hpp>
 
 template <>

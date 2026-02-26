@@ -7,7 +7,7 @@
 
 class LinearSystem {
 public:
-    LinearSystem() {};
+    LinearSystem(){};
 
     virtual ~LinearSystem() {}
 

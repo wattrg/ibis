@@ -64,7 +64,7 @@ FiniteVolume<T, MemModel>::FiniteVolume(GridBlock<MemModel, T>& grid, json confi
         flow_state_comm_.push_back(Ibis::SymmetricComm<MemModel, T>(
             other_block, num_cells_on_boundary * num_flow_vars));
         // gradient_comm_.push_back(Ibis::SymmetricComm<MemModel, T>(
-            // other_block, num_cells_on_boundary * num_grads));
+        // other_block, num_cells_on_boundary * num_grads));
     }
 }
 

@@ -1,7 +1,7 @@
 #include <parallel/parallel.h>
 #include <solvers/runge_kutta.h>
-#include <solvers/steady_state.h>
 #include <solvers/solver.h>
+#include <solvers/steady_state.h>
 #include <spdlog/spdlog.h>
 #include <spdlog/stopwatch.h>
 

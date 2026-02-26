@@ -1,11 +1,11 @@
 #ifndef IBIS_MPI_CONSERVED_QUANTITIES_H
 #define IBIS_MPI_CONSERVED_QUANTITIES_H
 
-#include <mpi.h>
 #include <ibis_mpi/ibis_mpi_types.h>
+#include <mpi.h>
 #include <util/conserved_quantities.h>
 
-namespace Ibis{
+namespace Ibis {
 // Allow ConservedQuantitiesNorm to be used as a custom scalar type for MPI reductions
 extern MPI_Datatype MPI_ConservedQuantitiesNorm_real;
 extern MPI_Datatype MPI_ConservedQuantitiesNorm_dual;
@@ -33,6 +33,6 @@ struct MpiReduction<Sum<ConservedQuantitiesNorm<Ibis::dual>>> {
 
 void init_mpi_conserved_quantities_norms();
 void finalise_mpi_conserved_quantities_norms();
-} // namespace Ibis
+}  // namespace Ibis
 
 #endif
