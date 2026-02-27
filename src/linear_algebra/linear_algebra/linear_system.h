@@ -1,8 +1,8 @@
 #ifndef LINEAR_SYSTEM_H
 #define LINEAR_SYSTEM_H
 
-#include <linear_algebra/dense_linear_algebra.h>
 #include <linear_algebra/crs.h>
+#include <linear_algebra/dense_linear_algebra.h>
 #include <simulation/simulation.h>
 #include <util/numeric_types.h>
 

@@ -1,17 +1,17 @@
 #ifndef GRID_H
 #define GRID_H
 
+#include <gas/flow_state.h>
+#include <graph_colouring/graph_colouring.h>
 #include <grid/cell.h>
 #include <grid/grid_io.h>
-#include <gas/flow_state.h>
 #include <grid/interface.h>
 #include <parallel/parallel.h>
-#include <graph_colouring/graph_colouring.h>
 
 // #include <limits>
-#include <nlohmann/json.hpp>
 #include <util/types.h>
 
+#include <nlohmann/json.hpp>
 
 using json = nlohmann::json;
 
@@ -865,24 +865,17 @@ public:
 
     void compute_colours() {
         using Colourer_type = GridColourer<GridBlock_type>;
-        std::unique_ptr<Colourer_type> colourer =
-            make_grid_colourer<GridBlock_type>();
+        std::unique_ptr<Colourer_type> colourer = make_grid_colourer<GridBlock_type>();
         colourer.compute_colours(*this);
         colours_ = colourer.colours();
         num_colours_ = colourer.num_colours();
     }
 
-    size_t colour_of_cell(size_t cell_i) {
-        return colours_(cell_i);
-    }
+    size_t colour_of_cell(size_t cell_i) { return colours_(cell_i); }
 
-    Ibis::Array1D<size_t> colours() {
-        return colours_;
-    }
-    
-    size_t num_colours() const {
-        return num_colours_;
-    }
+    Ibis::Array1D<size_t> colours() { return colours_; }
+
+    size_t num_colours() const { return num_colours_; }
 
 public:
     // The primary grid data structures

@@ -88,28 +88,32 @@ public:
     }
 
     // update a single gas state from the collection
-    template <typename layout = Ibis::DefaultArrayLayout, typename space = Ibis::DefaultMemSpace>
+    template <typename layout = Ibis::DefaultArrayLayout,
+              typename space = Ibis::DefaultMemSpace>
     KOKKOS_INLINE_FUNCTION void update_thermo_from_pT(
         const GasStates<T, layout, space> &gs, const size_t i) const {
         gs.rho(i) = rho_from_pT(gs.pressure(i), gs.temp(i), R_);
         gs.energy(i) = energy_from_temp(gs.temp(i), Cv_);
     }
 
-    template <typename layout = Ibis::DefaultArrayLayout, typename space = Ibis::DefaultMemSpace>
+    template <typename layout = Ibis::DefaultArrayLayout,
+              typename space = Ibis::DefaultMemSpace>
     KOKKOS_INLINE_FUNCTION void update_thermo_from_rhoT(
         const GasStates<T, layout, space> &gs, const size_t i) const {
         gs.pressure(i) = p_from_rhoT(gs.rho(i), gs.temp(i), R_);
         gs.energy(i) = energy_from_temp(gs.temp(i), Cv_);
     }
 
-    template <typename layout = Ibis::DefaultArrayLayout, typename space = Ibis::DefaultMemSpace>
+    template <typename layout = Ibis::DefaultArrayLayout,
+              typename space = Ibis::DefaultMemSpace>
     KOKKOS_INLINE_FUNCTION void update_thermo_from_rhop(
         const GasStates<T, layout, space> &gs, const size_t i) const {
         gs.temp(i) = T_from_rhop(gs.rho(i), gs.pressure(i), R_);
         gs.energy(i) = energy_from_temp(gs.temp(i), Cv_);
     }
 
-    template <typename layout = Ibis::DefaultArrayLayout, typename space = Ibis::DefaultMemSpace>
+    template <typename layout = Ibis::DefaultArrayLayout,
+              typename space = Ibis::DefaultMemSpace>
     KOKKOS_INLINE_FUNCTION void update_thermo_from_rhou(
         const GasStates<T, layout, space> &gs, const size_t i) const {
         gs.temp(i) = temp_from_energy(gs.energy(i), Cv_);
@@ -117,7 +121,8 @@ public:
     }
 
     // update all the gas states
-    template <typename exec = Ibis::DefaultExecSpace, typename layout = Ibis::DefaultArrayLayout>
+    template <typename exec = Ibis::DefaultExecSpace,
+              typename layout = Ibis::DefaultArrayLayout>
     void update_thermo_from_pT(
         GasStates<T, layout, typename exec::memory_space> &gs) const {
         Kokkos::parallel_for(
@@ -125,7 +130,8 @@ public:
             KOKKOS_CLASS_LAMBDA(const size_t i) { update_thermo_from_pT(gs, i); });
     }
 
-    template <typename exec = Ibis::DefaultExecSpace, typename layout = Ibis::DefaultArrayLayout>
+    template <typename exec = Ibis::DefaultExecSpace,
+              typename layout = Ibis::DefaultArrayLayout>
     void update_thermo_from_rhoT(
         GasStates<T, layout, typename exec::memory_space> &gs) const {
         Kokkos::parallel_for(
@@ -133,7 +139,8 @@ public:
             KOKKOS_CLASS_LAMBDA(const size_t i) { update_thermo_from_rhoT(gs, i); });
     }
 
-    template <typename exec = Ibis::DefaultExecSpace, typename layout = Ibis::DefaultArrayLayout>
+    template <typename exec = Ibis::DefaultExecSpace,
+              typename layout = Ibis::DefaultArrayLayout>
     void update_thermo_from_rhop(
         GasStates<T, layout, typename exec::memory_space> &gs) const {
         Kokkos::parallel_for(
@@ -141,7 +148,8 @@ public:
             KOKKOS_CLASS_LAMBDA(const size_t i) { update_thermo_from_rhop(gs, i); });
     }
 
-    template <typename exec = Ibis::DefaultExecSpace, typename layout = Ibis::DefaultArrayLayout>
+    template <typename exec = Ibis::DefaultExecSpace,
+              typename layout = Ibis::DefaultArrayLayout>
     void update_thermo_from_rhou(
         GasStates<T, layout, typename exec::memory_space> &gs) const {
         Kokkos::parallel_for(
@@ -155,7 +163,8 @@ public:
         return speed_of_sound_(gs.temp, R_, gamma_);
     }
 
-    template <typename layout = Ibis::DefaultArrayLayout, typename space = Ibis::DefaultMemSpace>
+    template <typename layout = Ibis::DefaultArrayLayout,
+              typename space = Ibis::DefaultMemSpace>
     KOKKOS_INLINE_FUNCTION T speed_of_sound(const GasStates<T, layout, space> &gs,
                                             const size_t i) const {
         return speed_of_sound_(gs.temp(i), R_, gamma_);
@@ -164,7 +173,8 @@ public:
     KOKKOS_INLINE_FUNCTION
     T internal_energy(const GasState<T> &gs) const { return Cv_ * gs.temp; }
 
-    template <typename layout = Ibis::DefaultArrayLayout, typename space = Ibis::DefaultMemSpace>
+    template <typename layout = Ibis::DefaultArrayLayout,
+              typename space = Ibis::DefaultMemSpace>
     KOKKOS_INLINE_FUNCTION T internal_energy(const GasStates<T, layout, space> &gs,
                                              const size_t i) const {
         return Cv_ * gs.temp(i);

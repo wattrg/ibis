@@ -8,6 +8,7 @@
 
 #include <nlohmann/json.hpp>
 #include <stdexcept>
+
 #include "util/types.h"
 
 using json = nlohmann::json;
@@ -26,7 +27,8 @@ public:
         Ts_ = config.at("T_s");
     }
 
-    template <typename exec = Ibis::DefaultExecSpace, typename layout = Ibis::DefaultArrayLayout>
+    template <typename exec = Ibis::DefaultExecSpace,
+              typename layout = Ibis::DefaultArrayLayout>
     KOKKOS_INLINE_FUNCTION T
     viscosity(const GasStates<T, layout, typename exec::memory_space>& gas_states,
               const IdealGas<T>& gas_model, const size_t i) const {
@@ -61,7 +63,8 @@ public:
         Pr_ = config.at("Pr");
     }
 
-    template <typename exec = Ibis::DefaultExecSpace, typename layout = Ibis::DefaultArrayLayout>
+    template <typename exec = Ibis::DefaultExecSpace,
+              typename layout = Ibis::DefaultArrayLayout>
     KOKKOS_INLINE_FUNCTION T thermal_conductivity(
         const GasStates<T, layout, typename exec::memory_space>& gas_states,
         const IdealGas<T>& gas_model, const size_t i) const {
@@ -109,7 +112,8 @@ public:
         }
     }
 
-    template <typename exec = Ibis::DefaultExecSpace, typename layout = Ibis::DefaultArrayLayout>
+    template <typename exec = Ibis::DefaultExecSpace,
+              typename layout = Ibis::DefaultArrayLayout>
     KOKKOS_INLINE_FUNCTION T
     viscosity(const GasStates<T, layout, typename exec::memory_space>& gas_states,
               const IdealGas<T>& gas_model, const size_t i) const {
@@ -121,7 +125,8 @@ public:
         return viscosity_.viscosity(gas_state, gas_model);
     }
 
-    template <typename exec = Ibis::DefaultExecSpace, typename layout = Ibis::DefaultArrayLayout>
+    template <typename exec = Ibis::DefaultExecSpace,
+              typename layout = Ibis::DefaultArrayLayout>
     KOKKOS_INLINE_FUNCTION T thermal_conductivity(
         const GasStates<T, layout, typename exec::memory_space>& gas_states,
         const IdealGas<T>& gas_model, const size_t i) const {

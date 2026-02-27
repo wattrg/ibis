@@ -16,9 +16,7 @@ class GridColourer;
 template <class GridBlock_type>
 class KokkosKernels_GridColourer : GridColourer<GridBlock_type> {
 public:
-    Ibis::Array1D<Ordinal> colours() const {
-        return colours_;
-    }
+    Ibis::Array1D<Ordinal> colours() const { return colours_; }
 
     size_t num_colours() const { return num_colours_; }
 
@@ -72,7 +70,8 @@ public:
                                                          row_map, entries);
         auto colours =
             kernel_handle.get_distance2_graph_coloring_handle()->get_vertex_colors();
-        num_colours_ = kernel_handle.get_distance2_graph_coloring_handle()->get_num_colors();
+        num_colours_ =
+            kernel_handle.get_distance2_graph_coloring_handle()->get_num_colors();
 
         kernel_handle.destroy_distance2_graph_coloring_handle();
         colours_ = colours;

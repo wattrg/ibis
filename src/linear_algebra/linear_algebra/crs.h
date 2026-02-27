@@ -5,9 +5,9 @@
 
 namespace Ibis {
 
-template <typename OffsetType, typename OrdinalType, typename ScalarType, class Layout = DefaultArrayLayout, class MemSpace = DefaultMemSpace>
+template <typename OffsetType, typename OrdinalType, typename ScalarType,
+          class Layout = DefaultArrayLayout, class MemSpace = DefaultMemSpace>
 class CrsMatrix {
-
 public:
     CrsMatrix();
 
@@ -50,7 +50,7 @@ private:
     Ibis::Array1D<OrdinalType, Layout, MemSpace> entries_;
     Ibis::Array1D<ScalarType, Layout, MemSpace> values_;
 };
-    
-}
+
+}  // namespace Ibis
 
 #endif

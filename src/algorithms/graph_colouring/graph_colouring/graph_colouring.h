@@ -1,7 +1,6 @@
 #ifndef COLOURING_H
 #define COLOURING_H
 
-#include <graph_colouring_kokkos_kernels/graph_colouring_kokkos_kernels.h>
 #include <util/types.h>
 
 template <class GridBlock_type>
@@ -14,11 +13,13 @@ public:
     virtual size_t num_colours() const = 0;
 };
 
-template <class GridBlock_type>
+template <typename GridBlock_type>
+class KokkosKernels_GridColourer;
+
+template <typename GridBlock_type>
 std::unique_ptr<GridColourer<GridBlock_type>> make_grid_colourer() {
-    return std::make_unique<GridBlock_type>(
-        KokkosKernels_GridColourer<GridBlock_type>()
-    );
+    return std::make_unique<GridColourer<GridBlock_type>>(
+        KokkosKernels_GridColourer<GridBlock_type>());
 }
 
 #endif

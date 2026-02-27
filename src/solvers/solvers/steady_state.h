@@ -11,7 +11,6 @@
 #include <solvers/transient_linear_system.h>
 #include <util/conserved_quantities.h>
 
-
 template <class MemModel>
 class SteadyStateLinearisation : public PseudoTransientLinearSystem {
 public:
