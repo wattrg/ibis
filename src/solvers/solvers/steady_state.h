@@ -11,7 +11,6 @@
 #include <solvers/transient_linear_system.h>
 #include <util/conserved_quantities.h>
 
-#include "finite_volume/grid_motion_driver.h"
 
 template <class MemModel>
 class SteadyStateLinearisation : public PseudoTransientLinearSystem {
@@ -29,6 +28,8 @@ public:
     // SystemLinearisation interface
     void matrix_vector_product(Ibis::Vector<Ibis::real>& vec,
                                Ibis::Vector<Ibis::real>& result);
+
+    void compute_matrix(Ibis::CrsMatrix<int, int, Ibis::real>& matrix);
 
     std::unique_ptr<LinearSystem> preconditioner();
 

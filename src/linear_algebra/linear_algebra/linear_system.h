@@ -2,6 +2,7 @@
 #define LINEAR_SYSTEM_H
 
 #include <linear_algebra/dense_linear_algebra.h>
+#include <linear_algebra/crs.h>
 #include <simulation/simulation.h>
 #include <util/numeric_types.h>
 
@@ -13,6 +14,8 @@ public:
 
     virtual void matrix_vector_product(Ibis::Vector<Ibis::real>& vec,
                                        Ibis::Vector<Ibis::real>& result) = 0;
+
+    virtual void compute_matrix(Ibis::CrsMatrix<int, int, Ibis::real>& matrix) = 0;
 
     virtual std::unique_ptr<LinearSystem> preconditioner() = 0;
 

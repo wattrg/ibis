@@ -17,6 +17,7 @@ target_link_libraries(
   Kokkos::kokkos
   KokkosKernels::kokkoskernels
   doctest
+  graph_colouring
 )
 
 if (Ibis_BUILD_TESTS)

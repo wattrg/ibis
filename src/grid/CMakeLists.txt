@@ -26,6 +26,7 @@ target_link_libraries(
 	spdlog::spdlog
 	gas
 	parallel
+	graph_colouring
 )
 
 target_compile_definitions(grid PRIVATE DOCTEST_CONFIG_DISABLE)

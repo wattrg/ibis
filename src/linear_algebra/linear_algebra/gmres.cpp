@@ -4,6 +4,7 @@
 #include <linear_algebra/linear_system.h>
 #include <spdlog/spdlog.h>
 
+#include "linear_algebra/crs.h"
 #include "util/types.h"
 
 using HostExecSpace = Ibis::DefaultHostExecSpace;
@@ -352,6 +353,8 @@ TEST_CASE("GMRES") {
 
         ~TestLinearSystem() {}
 
+        void compute_matrix(Ibis::CrsMatrix<int, int, Ibis::real>&) {}
+
         void eval_rhs() {}
 
         void set_rhs(Ibis::Vector<Ibis::real>& rhs) { rhs_ = rhs; }
@@ -430,6 +433,8 @@ TEST_CASE("FGMRES") {
                                    Ibis::Vector<Ibis::real>& res) {
             Ibis::gemv(matrix_, vec, res);
         }
+
+        void compute_matrix(Ibis::CrsMatrix<int, int, Ibis::real>&) {}
 
         std::unique_ptr<LinearSystem> preconditioner() {
             throw new std::runtime_error("");

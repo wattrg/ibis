@@ -3,16 +3,15 @@
 
 #include <grid/cell.h>
 #include <grid/grid_io.h>
-// #include <grid/gradient.h>
-// #include <finite_volume/grid_motion_driver.h>
 #include <gas/flow_state.h>
 #include <grid/interface.h>
-// #include <util/communication.h>
+#include <parallel/parallel.h>
+#include <graph_colouring/graph_colouring.h>
 
 // #include <limits>
 #include <nlohmann/json.hpp>
+#include <util/types.h>
 
-#include "parallel/parallel.h"
 
 using json = nlohmann::json;
 
@@ -41,6 +40,7 @@ public:
     using host_execution_space = Kokkos::DefaultHostExecutionSpace;
     using host_mirror_mem_space = host_execution_space::memory_space;
     using mirror_type = GridBlock<MemModel, T, host_execution_space, array_layout>;
+    using GridBlock_type = GridBlock<MemModel, T, ExecSpace, Layout>;
 
 public:
     GridBlock() {}
@@ -863,6 +863,27 @@ public:
 
     void transfer_interblock_cell_centres();
 
+    void compute_colours() {
+        using Colourer_type = GridColourer<GridBlock_type>;
+        std::unique_ptr<Colourer_type> colourer =
+            make_grid_colourer<GridBlock_type>();
+        colourer.compute_colours(*this);
+        colours_ = colourer.colours();
+        num_colours_ = colourer.num_colours();
+    }
+
+    size_t colour_of_cell(size_t cell_i) {
+        return colours_(cell_i);
+    }
+
+    Ibis::Array1D<size_t> colours() {
+        return colours_;
+    }
+    
+    size_t num_colours() const {
+        return num_colours_;
+    }
+
 public:
     // The primary grid data structures
     Vertices<T, execution_space, array_layout> vertices_;
@@ -902,6 +923,9 @@ public:
     // vertices which belong to marked entities
     std::unordered_map<std::string, Field<size_t, array_layout, memory_space>>
         marked_vertices_;
+
+    Ibis::Array1D<size_t, array_layout, memory_space> colours_;
+    size_t num_colours_;
 
     // grid motion
     // GridMotion<T, execution_space, array_layout> motion_;

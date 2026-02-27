@@ -134,6 +134,59 @@ void SteadyStateLinearisation<MemModel>::matrix_vector_product(
 }
 
 template <class MemModel>
+void SteadyStateLinearisation<MemModel>::compute_matrix(Ibis::CrsMatrix<int, int,
+                                                        Ibis::real>& matrix) {
+    auto grid = sim_->grid;
+    size_t num_cells = grid.num_cells();
+    Ibis::Vector<Ibis::real> purt_vec("Purturbation", num_cells * n_cons_);                               
+    Ibis::Vector<Ibis::real> res_vec("Result", num_cells * n_cons_);
+    size_t num_colours = grid.num_colours();
+    size_t n_cons = n_cons_;
+    auto colours = grid.colours();
+    auto neighbours = grid.cells().neighbour_cells();
+    for (size_t colour = 0; colour < num_colours; colour++) {
+        for (size_t conserved_i = 0; conserved_i < n_cons_; conserved_i++) {
+            // set values in the purturbation vector
+            Ibis::parallel_for("SteadyStateLinearisation::set_purturbation_vec", num_cells, KOKKOS_LAMBDA(const size_t cell_i){
+                size_t vector_idx = cell_i * n_cons + conserved_i;
+                size_t cell_colour = colours(cell_i);
+                purt_vec(vector_idx) = (cell_colour == colour) ? 1.0 : 0.0;
+            });
+
+            // Perform matrix-vector product
+            matrix_vector_product(purt_vec, res_vec);
+
+            // extract matrix elements
+            Ibis::parallel_for("SteadyStateLinearisation::set_crs", num_cells, KOKKOS_LAMBDA(const size_t cell_i){
+                if (colours(cell_i) == colour) {
+                    // this cell was purturbed, so we'll fill out
+                    // the matrix entries for it
+                    size_t row_idx = cell_i * n_cons + conserved_i;
+                    auto cell_i_ngbrs = neighbours(cell_i);
+                    matrix(row_idx, row_idx) = res_vec(row_idx);
+                    for (size_t ngbr_i = 0; ngbr_i < cell_i_ngbrs.size(); ngbr_i++) {
+                        size_t ngbr_cell = cell_i_ngbrs(ngbr_i);
+                        size_t col_idx = ngbr_cell * n_cons + conserved_i;
+                        matrix(row_idx, col_idx) = res_vec(col_idx);
+
+                        auto ngbr_ngbrs = neighbours(ngbr_cell);
+                        for (size_t ngbr_ngbr_i = 0; ngbr_ngbr_i < ngbr_ngbrs.size(); ngbr_ngbr_i++) {
+                            if (ngbr_ngbr_i != cell_i) {
+                                size_t ngbr_ngbr_cell = ngbr_ngbrs(ngbr_ngbr_i);
+                                col_idx = ngbr_ngbr_cell * n_cons + conserved_i;
+                                matrix(row_idx, col_idx) = res_vec(col_idx);
+                            }                
+                        }
+                    }
+                
+                }
+            });
+        }
+           
+    }
+}
+
+template <class MemModel>
 void SteadyStateLinearisation<MemModel>::eval_rhs() {
     if (sim_->grid.moving()) {
         sim_->fv.compute_dudt(*fs_, *vertex_vel_, *cq_, sim_->grid, *residuals_,

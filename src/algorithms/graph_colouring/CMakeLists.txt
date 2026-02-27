@@ -1,1 +1,5 @@
 add_subdirectory(graph_colouring_kokkos_kernels)
+
+add_library(graph_colouring INTERFACE)
+target_include_directories(graph_colouring INTERFACE .)
+target_link_libraries(graph_colouring INTERFACE grid graph_colouring_kokkos_kernels)
