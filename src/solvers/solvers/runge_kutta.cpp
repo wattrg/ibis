@@ -293,7 +293,7 @@ bool RungeKutta<MemModel>::stop_now(unsigned int step) {
 
 template <class MemModel>
 ConservedQuantitiesNorm<Ibis::real> RungeKutta<MemModel>::L2_norms() {
-    return k_[0].L2_norms<MemModel>();
+    return k_[0].template L2_norms<MemModel>();
 }
 
 template class RungeKutta<SharedMem>;
