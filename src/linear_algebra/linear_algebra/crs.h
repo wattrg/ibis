@@ -43,7 +43,9 @@ public:
         }
     }
 
-    size_t num_entries() { return entries_.size(); }
+    size_t num_entries() const { return entries_.size(); }
+
+    size_t num_rows() const { return row_map_.size() - 1; }
 
 private:
     Ibis::Array1D<OffsetType, Layout, MemSpace> row_map_;

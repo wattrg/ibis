@@ -34,5 +34,5 @@ if (Ibis_BUILD_TESTS)
     graph_colouring_kokkos_kernels
   )
 
-  add_test(NAME graph_colouring_kokkos_kernels COMMAND graph_colouring_kokos_kernels_unittest)
+  add_test(NAME graph_colouring_kokkos_kernels COMMAND graph_colouring_kokkos_kernels_unittest)
 endif (Ibis_BUILD_TESTS)
