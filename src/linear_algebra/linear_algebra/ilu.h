@@ -1,10 +1,11 @@
 #ifndef ILU_H
 #define ILU_H
 
+#include <ilu_kokkos_kernels/ilu_kokkos_kernels.h>
 #include <linear_algebra/crs.h>
 #include <linear_algebra/gmres.h>
 #include <linear_algebra/linear_system.h>
-#include <ilu_kokkos_kernels/ilu_kokkos_kernels.h>
+
 #include "util/types.h"
 
 template <class MemModel, typename T>
@@ -19,12 +20,12 @@ public:
 private:
     std::shared_ptr<LinearSystem> system_;
     Ibis::CrsMatrix<int, int, double, Ibis::Vector<Ibis::real>::layout,
-                    Ibis::Vector<Ibis::real>::mem_space> matrix_;
+                    Ibis::Vector<Ibis::real>::mem_space>
+        matrix_;
 
     using handle_type = KokkosKernels_ILU<Ibis::DefaultExecSpace, Ibis::DefaultMemSpace,
-                      Ibis::DefaultArrayLayout>;
+                                          Ibis::DefaultArrayLayout>;
     handle_type ilu_handle_;
-
 };
 
 #endif

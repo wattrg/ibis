@@ -2,12 +2,13 @@
 #include <ilu_kokkos_kernels/ilu_kokkos_kernels.h>
 #include <util/types.h>
 
-
 TEST_CASE("ilu_kokkos_kernels") {
-    using array_type = Ibis::Array1D<int, Ibis::DefaultArrayLayout, Ibis::DefaultMemSpace>;
+    using array_type =
+        Ibis::Array1D<int, Ibis::DefaultArrayLayout, Ibis::DefaultMemSpace>;
     array_type A_rowmap("rowmap", 5);
     array_type A_entries("entries", 10);
-    Ibis::Array1D<double, Ibis::DefaultArrayLayout, Ibis::DefaultMemSpace> A_values("values", 10);
+    Ibis::Array1D<double, Ibis::DefaultArrayLayout, Ibis::DefaultMemSpace> A_values(
+        "values", 10);
     A_rowmap(0) = 0;
     A_rowmap(1) = 2;
     A_rowmap(2) = 5;
@@ -38,7 +39,8 @@ TEST_CASE("ilu_kokkos_kernels") {
 
     Ibis::CrsGraph<int, int> A_graph(A_rowmap, A_entries);
     Ibis::CrsMatrix<int, int, double> A(A_graph, A_values);
-    auto ilu = KokkosKernels_ILU<Ibis::DefaultExecSpace, Ibis::DefaultMemSpace, Ibis::DefaultArrayLayout>(A_graph, 0);
+    auto ilu = KokkosKernels_ILU<Ibis::DefaultExecSpace, Ibis::DefaultMemSpace,
+                                 Ibis::DefaultArrayLayout>(A_graph, 0);
 
     ilu.numeric_phase(A);
 
@@ -85,6 +87,4 @@ TEST_CASE("ilu_kokkos_kernels") {
     CHECK(ilu.U.values(4) == doctest::Approx(3.87097));
     CHECK(ilu.U.values(5) == doctest::Approx(-0.5));
     CHECK(ilu.U.values(6) == doctest::Approx(2.87083));
-
 }
-

@@ -13,7 +13,7 @@ public:
     using offset = OffsetType;
     using ordinal = OrdinalType;
     using mem_space = MemSpace;
-    
+
     CrsGraph() {}
 
     CrsGraph(Array1D<OffsetType, Layout, MemSpace> row_map_,
@@ -32,14 +32,12 @@ public:
 
     size_t num_entries() const { return entries.size(); }
 
-    size_t num_rows() const { return row_map.size() - 1; }    
+    size_t num_rows() const { return row_map.size() - 1; }
 
 public:
     Ibis::Array1D<OffsetType, Layout, MemSpace> row_map;
     Ibis::Array1D<OrdinalType, Layout, MemSpace> entries;
 };
-
-
 
 template <typename OffsetType, typename OrdinalType, typename ScalarType,
           class Layout = DefaultArrayLayout, class MemSpace = DefaultMemSpace>

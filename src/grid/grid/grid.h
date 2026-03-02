@@ -6,8 +6,8 @@
 #include <grid/cell.h>
 #include <grid/grid_io.h>
 #include <grid/interface.h>
-#include <parallel/parallel.h>
 #include <linear_algebra/crs.h>
+#include <parallel/parallel.h>
 
 // #include <limits>
 #include <util/types.h>
@@ -887,9 +887,11 @@ public:
 
                 if (distance == 2) {
                     auto neighbour_neighbours = neighbours(neighbour_cell);
-                    for (size_t ngbr_i = 0; ngbr_i < neighbour_neighbours.size(); ngbr_i++) {
+                    for (size_t ngbr_i = 0; ngbr_i < neighbour_neighbours.size();
+                         ngbr_i++) {
                         size_t ngbr_ngbr_cell = neighbour_neighbours(ngbr_i);
-                        if (ngbr_ngbr_cell != cell_i && ngbr_ngbr_cell < grid_host.num_cells()) {
+                        if (ngbr_ngbr_cell != cell_i &&
+                            ngbr_ngbr_cell < grid_host.num_cells()) {
                             serial_entries.push_back(ngbr_ngbr_cell);
                         }
                     }
@@ -898,9 +900,10 @@ public:
             serial_row_map.push_back(serial_entries.size());
         }
 
-
-        Ibis::Array1D<int, array_layout, memory_space> row_map("CrsGraph::row_map", serial_row_map.size());
-        Ibis::Array1D<int, array_layout, memory_space> entries("CrsGraph::entries", serial_entries.size());
+        Ibis::Array1D<int, array_layout, memory_space> row_map("CrsGraph::row_map",
+                                                               serial_row_map.size());
+        Ibis::Array1D<int, array_layout, memory_space> entries("CrsGraph::entries",
+                                                               serial_entries.size());
         auto row_map_h = Kokkos::create_mirror_view(row_map);
         auto entries_h = Kokkos::create_mirror_view(entries);
         for (int i = 0; i < serial_row_map.size(); i++) {
@@ -911,23 +914,21 @@ public:
         }
 
         if (distance == 1) {
-            distance_1_graph_.row_map =
-                Ibis::Array1D<int, array_layout, memory_space>("CrsGraph::row_map", serial_row_map.size());
-            distance_1_graph_.entries =
-                Ibis::Array1D<int, array_layout, memory_space>("CrsGraph::entries", serial_entries.size());
+            distance_1_graph_.row_map = Ibis::Array1D<int, array_layout, memory_space>(
+                "CrsGraph::row_map", serial_row_map.size());
+            distance_1_graph_.entries = Ibis::Array1D<int, array_layout, memory_space>(
+                "CrsGraph::entries", serial_entries.size());
             Kokkos::deep_copy(distance_1_graph_.row_map, row_map_h);
             Kokkos::deep_copy(distance_1_graph_.entries, entries_h);
 
-        }
-        else if (distance == 2) {
-            distance_2_graph_.row_map =
-                Ibis::Array1D<int, array_layout, memory_space>("CrsGraph::row_map", serial_row_map.size());
-            distance_2_graph_.entries =
-                Ibis::Array1D<int, array_layout, memory_space>("CrsGraph::entries", serial_entries.size());
+        } else if (distance == 2) {
+            distance_2_graph_.row_map = Ibis::Array1D<int, array_layout, memory_space>(
+                "CrsGraph::row_map", serial_row_map.size());
+            distance_2_graph_.entries = Ibis::Array1D<int, array_layout, memory_space>(
+                "CrsGraph::entries", serial_entries.size());
             Kokkos::deep_copy(distance_2_graph_.row_map, row_map_h);
             Kokkos::deep_copy(distance_2_graph_.entries, entries_h);
         }
-
     }
 
     Ibis::CrsGraph<int, int, array_layout, memory_space> graph(int distance) {
