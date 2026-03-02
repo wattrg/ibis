@@ -7,6 +7,7 @@
 #include <grid/grid_io.h>
 #include <grid/interface.h>
 #include <parallel/parallel.h>
+#include <linear_algebra/crs.h>
 
 // #include <limits>
 #include <util/types.h>
@@ -863,6 +864,86 @@ public:
 
     void transfer_interblock_cell_centres();
 
+    void compute_graph(int distance) {
+        std::cout << this->num_cells();
+        if (!(distance == 1 || distance == 2)) {
+            std::runtime_error("Grid graph distance should be 1 or 2");
+        }
+
+        auto grid_host = this->host_mirror();
+        grid_host.deep_copy(*this);
+
+        std::vector<int> serial_row_map{0};
+        std::vector<int> serial_entries;
+        auto neighbours = grid_host.cells().neighbour_cells();
+        for (size_t cell_i = 0; cell_i < grid_host.num_cells(); cell_i++) {
+            auto neighbour_cells = neighbours(cell_i);
+            for (size_t neighbour_i = 0; neighbour_i < neighbour_cells.size();
+                 neighbour_i++) {
+                size_t neighbour_cell = neighbour_cells(neighbour_i);
+                if (neighbour_cell < grid_host.num_cells()) {
+                    serial_entries.push_back(neighbour_cell);
+                }
+
+                if (distance == 2) {
+                    auto neighbour_neighbours = neighbours(neighbour_cell);
+                    for (size_t ngbr_i = 0; ngbr_i < neighbour_neighbours.size(); ngbr_i++) {
+                        size_t ngbr_ngbr_cell = neighbour_neighbours(ngbr_i);
+                        if (ngbr_ngbr_cell != cell_i && ngbr_ngbr_cell < grid_host.num_cells()) {
+                            serial_entries.push_back(ngbr_ngbr_cell);
+                        }
+                    }
+                }
+            }
+            serial_row_map.push_back(serial_entries.size());
+        }
+
+
+        Ibis::Array1D<int, array_layout, memory_space> row_map("CrsGraph::row_map", serial_row_map.size());
+        Ibis::Array1D<int, array_layout, memory_space> entries("CrsGraph::entries", serial_entries.size());
+        auto row_map_h = Kokkos::create_mirror_view(row_map);
+        auto entries_h = Kokkos::create_mirror_view(entries);
+        for (int i = 0; i < serial_row_map.size(); i++) {
+            row_map_h(i) = serial_row_map[i];
+        }
+        for (int i = 0; i < serial_entries.size(); i++) {
+            entries_h(i) = serial_entries[i];
+        }
+
+        if (distance == 1) {
+            distance_1_graph_.row_map =
+                Ibis::Array1D<int, array_layout, memory_space>("CrsGraph::row_map", serial_row_map.size());
+            distance_1_graph_.entries =
+                Ibis::Array1D<int, array_layout, memory_space>("CrsGraph::entries", serial_entries.size());
+            Kokkos::deep_copy(distance_1_graph_.row_map, row_map_h);
+            Kokkos::deep_copy(distance_1_graph_.entries, entries_h);
+
+        }
+        else if (distance == 2) {
+            distance_2_graph_.row_map =
+                Ibis::Array1D<int, array_layout, memory_space>("CrsGraph::row_map", serial_row_map.size());
+            distance_2_graph_.entries =
+                Ibis::Array1D<int, array_layout, memory_space>("CrsGraph::entries", serial_entries.size());
+            Kokkos::deep_copy(distance_2_graph_.row_map, row_map_h);
+            Kokkos::deep_copy(distance_2_graph_.entries, entries_h);
+        }
+
+    }
+
+    Ibis::CrsGraph<int, int, array_layout, memory_space> graph(int distance) {
+        if (distance == 1) {
+            return distance_1_graph_;
+        }
+        return distance_2_graph_;
+    }
+
+    Ibis::CrsGraph<int, int, array_layout, memory_space> graph(int distance) const {
+        if (distance == 1) {
+            return distance_1_graph_;
+        }
+        return distance_2_graph_;
+    }
+
     void compute_colours() {
         using Colourer_type = GridColourer<GridBlock_type>;
         std::unique_ptr<Colourer_type> colourer = make_grid_colourer<GridBlock_type>();
@@ -917,6 +998,8 @@ public:
     std::unordered_map<std::string, Field<size_t, array_layout, memory_space>>
         marked_vertices_;
 
+    Ibis::CrsGraph<int, int, array_layout, memory_space> distance_1_graph_;
+    Ibis::CrsGraph<int, int, array_layout, memory_space> distance_2_graph_;
     Ibis::Array1D<size_t, array_layout, memory_space> colours_;
     size_t num_colours_;
 

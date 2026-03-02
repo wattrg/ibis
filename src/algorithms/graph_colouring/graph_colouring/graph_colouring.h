@@ -10,7 +10,7 @@ public:
 
     virtual Ibis::Array1D<int> colours() const = 0;
 
-    virtual size_t num_colours() const = 0;
+    virtual int num_colours() const = 0;
 };
 
 template <typename GridBlock_type>

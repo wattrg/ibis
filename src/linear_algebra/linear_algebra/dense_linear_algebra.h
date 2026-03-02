@@ -16,6 +16,11 @@ template <typename T, class ExecSpace = DefaultExecSpace,
           class MemSpace = typename ExecSpace::memory_space>
 class Vector {
 public:
+    using layout = Layout;
+    using exec_space = ExecSpace;
+    using mem_space = MemSpace;
+    using scalar = T;
+    
     Vector() {}
 
     Vector(std::string name, size_t n_values) {

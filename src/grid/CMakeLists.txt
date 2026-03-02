@@ -27,6 +27,7 @@ target_link_libraries(
 	gas
 	parallel
 	graph_colouring
+	linear_algebra
 )
 
 target_compile_definitions(grid PRIVATE DOCTEST_CONFIG_DISABLE)

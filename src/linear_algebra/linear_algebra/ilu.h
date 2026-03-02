@@ -3,11 +3,14 @@
 
 #include <linear_algebra/crs.h>
 #include <linear_algebra/gmres.h>
-#include <linear_algrebra/linear_system.h>
+#include <linear_algebra/linear_system.h>
+#include <ilu_kokkos_kernels/ilu_kokkos_kernels.h>
+#include "util/types.h"
 
+template <class MemModel, typename T>
 class ILU : IterativeLinearSolver {
 public:
-    ILU(std::shared_ptr<LinearSystem> system, size_t k = 0);
+    ILU(GridBlock<MemModel, T> grid, std::shared_ptr<LinearSystem> system, size_t k = 0);
 
     LinearSolveResult solve(Ibis::Vector<Ibis::real>& x);
 
@@ -15,7 +18,13 @@ public:
 
 private:
     std::shared_ptr<LinearSystem> system_;
-    Ibis::CrsMatrix<int, int, double, Ibis::Vector::Layout, class MemSpace>
+    Ibis::CrsMatrix<int, int, double, Ibis::Vector<Ibis::real>::layout,
+                    Ibis::Vector<Ibis::real>::mem_space> matrix_;
+
+    using handle_type = KokkosKernels_ILU<Ibis::DefaultExecSpace, Ibis::DefaultMemSpace,
+                      Ibis::DefaultArrayLayout>;
+    handle_type ilu_handle_;
+
 };
 
 #endif

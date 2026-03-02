@@ -37,6 +37,7 @@ TEST_CASE("grid colouring") {
         "../../../../../src/algorithms/graph_colouring/graph_colouring_kokkos_kernels/"
         "test",
         config);
+    block.compute_graph(1);
     auto block_host = block.host_mirror();
     block_host.deep_copy(block);
 
