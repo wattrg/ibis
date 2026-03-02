@@ -1,76 +1,89 @@
 #include <doctest/doctest.h>
-#include <graph_colouring_kokkos_kernels/graph_colouring_kokkos_kernels.h>
-#include <grid/grid.h>
+#include <ilu_kokkos_kernels/ilu_kokkos_kernels.h>
+#include <util/types.h>
 
-#include <nlohmann/json.hpp>
 
-#include "Kokkos_UnorderedMap.hpp"
-#include "util/types.h"
+TEST_CASE("ilu_kokkos_kernels") {
+    using array_type = Ibis::Array1D<int, Ibis::DefaultArrayLayout, Ibis::DefaultMemSpace>;
+    array_type A_rowmap("rowmap", 5);
+    array_type A_entries("entries", 10);
+    Ibis::Array1D<double, Ibis::DefaultArrayLayout, Ibis::DefaultMemSpace> A_values("values", 10);
+    A_rowmap(0) = 0;
+    A_rowmap(1) = 2;
+    A_rowmap(2) = 5;
+    A_rowmap(3) = 8;
+    A_rowmap(4) = 10;
 
-json build_config() {
-    json config{};
-    json boundaries{};
-    json slip_wall{};
-    json inflow{};
-    json outflow{};
-    json motion{};
-    slip_wall["ghost_cells"] = true;
-    inflow["ghost_cells"] = true;
-    outflow["ghost_cells"] = true;
-    boundaries["slip_wall_bottom"] = slip_wall;
-    boundaries["slip_wall_top"] = slip_wall;
-    boundaries["inflow"] = inflow;
-    boundaries["outflow"] = outflow;
-    config["boundaries"] = boundaries;
-    motion["enabled"] = false;
-    config["motion"] = motion;
-    config["id"] = 0;
-    config["grid_file_name"] = "grid.su2";
-    return config;
+    A_entries(0) = 0;
+    A_entries(1) = 1;
+    A_entries(2) = 0;
+    A_entries(3) = 1;
+    A_entries(4) = 2;
+    A_entries(5) = 1;
+    A_entries(6) = 2;
+    A_entries(7) = 3;
+    A_entries(8) = 2;
+    A_entries(9) = 3;
+
+    A_values(0) = 4.0;
+    A_values(1) = -0.5;
+    A_values(2) = -1.0;
+    A_values(3) = 4.0;
+    A_values(4) = -0.5;
+    A_values(5) = -1.0;
+    A_values(6) = 4.0;
+    A_values(7) = -0.5;
+    A_values(8) = -1.0;
+    A_values(9) = 3.0;
+
+    Ibis::CrsMatrix<int, int, double> A(A_rowmap, A_entries, A_values);
+    auto ilu = KokkosKernels_ILU<Ibis::DefaultExecSpace, Ibis::DefaultMemSpace, Ibis::DefaultArrayLayout>(A, 0);
+
+    ilu.numeric_phase(A);
+
+    CHECK(ilu.L.row_map(0) == 0);
+    CHECK(ilu.L.row_map(1) == 1);
+    CHECK(ilu.L.row_map(2) == 3);
+    CHECK(ilu.L.row_map(3) == 5);
+    CHECK(ilu.L.row_map(4) == 7);
+
+    CHECK(ilu.U.row_map(0) == 0);
+    CHECK(ilu.U.row_map(1) == 2);
+    CHECK(ilu.U.row_map(2) == 4);
+    CHECK(ilu.U.row_map(3) == 6);
+    CHECK(ilu.U.row_map(4) == 7);
+
+    CHECK(ilu.L.entries(0) == 0);
+    CHECK(ilu.L.entries(1) == 0);
+    CHECK(ilu.L.entries(2) == 1);
+    CHECK(ilu.L.entries(3) == 1);
+    CHECK(ilu.L.entries(4) == 2);
+    CHECK(ilu.L.entries(5) == 2);
+    CHECK(ilu.L.entries(6) == 3);
+
+    CHECK(ilu.U.entries(0) == 0);
+    CHECK(ilu.U.entries(1) == 1);
+    CHECK(ilu.U.entries(2) == 1);
+    CHECK(ilu.U.entries(3) == 2);
+    CHECK(ilu.U.entries(4) == 2);
+    CHECK(ilu.U.entries(5) == 3);
+    CHECK(ilu.U.entries(6) == 3);
+
+    CHECK(ilu.L.values(0) == doctest::Approx(1.0));
+    CHECK(ilu.L.values(1) == doctest::Approx(-0.25));
+    CHECK(ilu.L.values(2) == doctest::Approx(1.0));
+    CHECK(ilu.L.values(3) == doctest::Approx(-0.258065));
+    CHECK(ilu.L.values(4) == doctest::Approx(1.0));
+    CHECK(ilu.L.values(5) == doctest::Approx(-0.25833));
+    CHECK(ilu.L.values(6) == doctest::Approx(1.0));
+
+    CHECK(ilu.U.values(0) == doctest::Approx(4.0));
+    CHECK(ilu.U.values(1) == doctest::Approx(-0.5));
+    CHECK(ilu.U.values(2) == doctest::Approx(3.875));
+    CHECK(ilu.U.values(3) == doctest::Approx(-0.5));
+    CHECK(ilu.U.values(4) == doctest::Approx(3.87097));
+    CHECK(ilu.U.values(5) == doctest::Approx(-0.5));
+    CHECK(ilu.U.values(6) == doctest::Approx(2.87083));
+
 }
 
-TEST_CASE("grid colouring") {
-    json config = build_config();
-    using GridBlock_type = GridBlock<SharedMem, Ibis::real, Kokkos::DefaultExecutionSpace,
-                                     Kokkos::DefaultExecutionSpace::array_layout>;
-    GridBlock_type block(
-        "../../../../../src/algorithms/graph_colouring/graph_colouring_kokkos_kernels/"
-        "test",
-        config);
-    auto block_host = block.host_mirror();
-    block_host.deep_copy(block);
-
-    KokkosKernels_GridColourer<GridBlock_type> colourer;
-    colourer.compute_colouring(block);
-    Ibis::Array1D<int> colours = colourer.colours();
-
-    auto colours_host = Kokkos::create_mirror(colours);
-    Kokkos::deep_copy(colours_host, colours);
-
-    for (size_t cell_i = 0; cell_i < block_host.num_cells(); cell_i++) {
-        auto neighbour_cells = block_host.cells().neighbour_cells(cell_i);
-        for (size_t neighbour_i = 0; neighbour_i < neighbour_cells.size();
-             neighbour_i++) {
-            size_t neighbour_cell = neighbour_cells(neighbour_i);
-            if (neighbour_cell >= block_host.num_cells()) {
-                continue;
-            }
-            CHECK(colours_host(cell_i) != colours_host(neighbour_cell));
-
-            // Check that the neighbour's neighbours also don't have the same colour
-            auto neighbour_neighbours =
-                block_host.cells().neighbour_cells(neighbour_cell);
-            size_t num_neighbour_neighbours = neighbour_neighbours.size();
-            for (size_t neighbour_neighbour_i = 0;
-                 neighbour_neighbour_i < num_neighbour_neighbours;
-                 neighbour_neighbour_i++) {
-                size_t neighbour_neighbour_cell =
-                    neighbour_neighbours(neighbour_neighbour_i);
-                if (neighbour_neighbour_cell != cell_i &&
-                    neighbour_neighbour_cell < block_host.num_cells()) {
-                    CHECK(colours_host(cell_i) != colours_host(neighbour_neighbour_cell));
-                }
-            }
-        }
-    }
-}

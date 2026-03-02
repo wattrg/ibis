@@ -13,11 +13,12 @@ target_include_directories(
 target_link_libraries(
   ilu_kokkos_kernels
   PUBLIC
-  grid
+  linear_algebra
   Kokkos::kokkos
   KokkosKernels::kokkoskernels
   doctest
   ilu
+
 )
 
 if (Ibis_BUILD_TESTS)
