@@ -4,6 +4,7 @@
 // #include <linear_algebra/linear_solver.h>
 #include <linear_algebra/dense_linear_algebra.h>
 #include <linear_algebra/linear_system.h>
+#include <linear_algebra/ilu.h>
 #include <util/numeric_types.h>
 #include <util/types.h>
 
@@ -28,6 +29,8 @@ public:
     virtual ~IterativeLinearSolver() {}
 
     virtual LinearSolveResult solve(Ibis::Vector<Ibis::real>& x) = 0;
+
+    virtual void update_preconditioner() = 0;
 };
 
 class Gmres : public IterativeLinearSolver {
@@ -49,12 +52,16 @@ public:
 
     LinearSolveResult solve(Ibis::Vector<Ibis::real>& x0);
 
+    void update_preconditioner();
+
 private:
     // configuration
     size_t max_iters_;
     size_t num_vars_;
     Ibis::real tol_;
     std::shared_ptr<LinearSystem> system_;
+    std::shared_ptr<LinearSystem> precondition_system_;
+    std::unique_ptr<DirectPreconditioner> precondition_solver_;
 
 public:  // this has to be public to access from inside kernels
     // memory
@@ -63,6 +70,7 @@ public:  // this has to be public to access from inside kernels
     // Ibis::Vector<Ibis::real> z_;
     Ibis::Vector<Ibis::real> r0_;
     Ibis::Vector<Ibis::real> w_;
+
 
     // least squares problem
     Ibis::Matrix<Ibis::real, HostExecSpace> H0_;
@@ -94,6 +102,8 @@ public:
            std::shared_ptr<LinearSystem> preconditioner, json config);
 
     LinearSolveResult solve(Ibis::Vector<Ibis::real>& x);
+
+    void update_preconditioner() {}
 
 private:
     // configuration

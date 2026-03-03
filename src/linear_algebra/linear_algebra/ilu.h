@@ -8,14 +8,20 @@
 #include <triangular_solver_kokkos_kernels/triangular_solver_kokkos_kernels.h>
 #include <util/types.h>
 
+class DirectPreconditioner : DirectLinearSolver {
+    virtual void solve(Ibis::Vector<Ibis::real>& x) = 0;
+
+    virtual void update_preconditioner() = 0;  
+};
+
 template <class MemModel>
-class ILU : LinearSolver {
+class ILU : DirectPreconditioner {
 public:
     ILU(std::shared_ptr<LinearSystem> system, size_t k = 0);
 
     void solve(Ibis::Vector<Ibis::real>& x);
 
-    void decompose();
+    void update_preconditioner();
 
 private:
     std::shared_ptr<LinearSystem> system_;
