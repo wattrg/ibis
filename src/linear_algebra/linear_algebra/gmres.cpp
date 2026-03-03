@@ -114,7 +114,7 @@ Gmres::Gmres(std::shared_ptr<LinearSystem> system,
     w_ = Ibis::Vector<Ibis::real>("Gmres::w", num_vars_);
     v_ = Ibis::Vector<Ibis::real>("Gmres::v", num_vars_);
     if (preconditioner) {
-        preconditioned_v_ = Ibis::Vector<Ibis::real>("Gmres::preconditioned_v", num_vars_);
+        z_ = Ibis::Vector<Ibis::real>("Gmres::preconditioned_v", num_vars_);
     }
 
     // the system of equation
@@ -158,11 +158,11 @@ LinearSolveResult Gmres::solve(Ibis::Vector<Ibis::real>& x0) {
     for (size_t j = 0; j < max_iters_; j++) {
         // build the next krylov vector and entries in the Hessenberg matrix
         if (precondition_solver_) {
-            precondition_solver_->solve(v_, preconditioned_v_);
+            precondition_solver_->solve(v_, z_);
         } else {
-            preconditioned_v_ = v_;
+            z_ = v_;
         }
-        system_->matrix_vector_product(preconditioned_v_, w_);
+        system_->matrix_vector_product(z_, w_);
         for (size_t i = 0; i < j + 1; i++) {
             auto vi = krylov_vectors_.column(i);
             H0_(i, j) = Ibis::dot(w_, vi);
@@ -199,11 +199,11 @@ LinearSolveResult Gmres::solve(Ibis::Vector<Ibis::real>& x0) {
     ym.deep_copy_space(ym_host);
     Ibis::gemv(V, ym, w_);
     if (precondition_solver_) {
-        precondition_solver_->solve(w_, preconditioned_v_);
+        precondition_solver_->solve(w_, z_);
     } else {
-        preconditioned_v_ = w_;
+        zv_ = w_;
     }
-    Ibis::add_scaled_vector(x0, preconditioned_v_, 1.0);
+    Ibis::add_scaled_vector(x0, z_, 1.0);
 
     return result;
 }

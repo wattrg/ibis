@@ -69,8 +69,7 @@ public:  // this has to be public to access from inside kernels
     // memory
     Ibis::Matrix<Ibis::real> krylov_vectors_;
     Ibis::Vector<Ibis::real> v_;
-    Ibis::Vector<Ibis::real> preconditioned_v_;
-    // Ibis::Vector<Ibis::real> z_;
+    Ibis::Vector<Ibis::real> z_;
     Ibis::Vector<Ibis::real> r0_;
     Ibis::Vector<Ibis::real> w_;
 
