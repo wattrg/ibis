@@ -3,23 +3,23 @@
 
 #include <ilu_kokkos_kernels/ilu_kokkos_kernels.h>
 #include <linear_algebra/crs.h>
-#include <linear_algebra/gmres.h>
+#include <linear_algebra/linear_solver.h>
 #include <linear_algebra/linear_system.h>
 #include <triangular_solver_kokkos_kernels/triangular_solver_kokkos_kernels.h>
+#include <util/types.h>
 
-#include "util/types.h"
-
-template <class MemModel, typename T>
-class ILU : IterativeLinearSolver {
+template <class MemModel>
+class ILU : LinearSolver {
 public:
-    ILU(GridBlock<MemModel, T> grid, std::shared_ptr<LinearSystem> system, size_t k = 0);
+    ILU(std::shared_ptr<LinearSystem> system, size_t k = 0);
 
-    LinearSolveResult solve(Ibis::Vector<Ibis::real>& x);
+    void solve(Ibis::Vector<Ibis::real>& x);
 
     void decompose();
 
 private:
     std::shared_ptr<LinearSystem> system_;
+
     Ibis::CrsMatrix<int, int, double, Ibis::Vector<Ibis::real>::layout,
                     Ibis::Vector<Ibis::real>::mem_space>
         matrix_;
@@ -33,6 +33,8 @@ private:
         Ibis::DefaultExecSpace, Ibis::DefaultMemSpace, Ibis::DefaultArrayLayout>;
     triangular_solver_handle_type lower_triangular_solve_handle_;
     triangular_solver_handle_type upper_triangular_solve_handle_;
+
+    Ibis::Vector<Ibis::real> temp_vec_;
 };
 
 #endif

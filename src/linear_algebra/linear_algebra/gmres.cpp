@@ -353,6 +353,9 @@ TEST_CASE("GMRES") {
 
         ~TestLinearSystem() {}
 
+        Ibis::CrsGraph<int, int> compute_matrix_graph() {
+            throw std::runtime_error("Not implemented");
+        }
         void compute_matrix(Ibis::CrsMatrix<int, int, Ibis::real>&) {}
 
         void eval_rhs() {}
@@ -365,7 +368,7 @@ TEST_CASE("GMRES") {
         }
 
         std::unique_ptr<LinearSystem> preconditioner() {
-            throw new std::runtime_error("");
+            throw new std::runtime_error("Not implemented");
         }
 
         KOKKOS_INLINE_FUNCTION
@@ -434,7 +437,13 @@ TEST_CASE("FGMRES") {
             Ibis::gemv(matrix_, vec, res);
         }
 
-        void compute_matrix(Ibis::CrsMatrix<int, int, Ibis::real>&) {}
+        Ibis::CrsGraph<int, int> compute_matrix_graph() {
+            throw std::runtime_error("Not implemented");
+        }
+
+        void compute_matrix(Ibis::CrsMatrix<int, int, Ibis::real>&) {
+            throw std::runtime_error("Not implemented");
+        }
 
         std::unique_ptr<LinearSystem> preconditioner() {
             throw new std::runtime_error("");

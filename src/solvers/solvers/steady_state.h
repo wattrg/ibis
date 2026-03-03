@@ -28,6 +28,8 @@ public:
     void matrix_vector_product(Ibis::Vector<Ibis::real>& vec,
                                Ibis::Vector<Ibis::real>& result);
 
+    Ibis::CrsGraph<int, int> compute_matrix_graph();
+
     void compute_matrix(Ibis::CrsMatrix<int, int, Ibis::real>& matrix);
 
     std::unique_ptr<LinearSystem> preconditioner();
@@ -76,6 +78,10 @@ private:
     FlowStates<Ibis::dual> fs_tmp_;  // temporary storage for perturbed flow states
     ConservedQuantities<Ibis::dual> cq_tmp_;  // storage for perturbed cq
     Vector3s<Ibis::dual> vertex_pos_tmp_;     // storage for perturbed vertex pos
+
+    // memory for computing the actual matrix
+    Ibis::Vector<Ibis::real> purt_vec_;
+    Ibis::Vector<Ibis::real> res_vec_;
 
     // the simulation
     std::shared_ptr<Sim<Ibis::dual, MemModel>> sim_;

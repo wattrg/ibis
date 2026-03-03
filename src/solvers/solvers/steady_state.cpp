@@ -134,12 +134,63 @@ void SteadyStateLinearisation<MemModel>::matrix_vector_product(
 }
 
 template <class MemModel>
+Ibis::CrsGraph<int, int> SteadyStateLinearisation<MemModel>::compute_matrix_graph() {
+    // get the graph of the grid
+    auto grid = sim_->grid;
+    grid.compute_graph(2);
+    auto grid_graph = grid.graph(2);
+    auto grid_graph_h = grid_graph.host_mirror();
+    grid_graph_h.deep_copy(grid_graph);
+
+    // compute the graph of the linear system in serial on the CPU
+    size_t n_cons = n_cons_;
+    std::vector<int> serial_rowmap{0};
+    std::vector<int> serial_entries;
+    for (int row_i = 0; row_i < grid_graph_h.num_rows(); row_i++) {
+        int row_start_idx = grid_graph_h.row_map(row_i);
+        int num_values_in_row = grid_graph_h.row_map(row_i + 1) - row_start_idx;
+        for (int cons_i_row = 0; cons_i_row < n_cons; cons_i_row++) {
+            for (int col_idx = 0; col_idx < num_values_in_row; col_idx++) {
+                int grid_col = grid_graph_h.entries(row_start_idx + col_idx);
+                int start_idx = grid_col * n_cons;
+                for (size_t cons_i = 0; cons_i < n_cons; cons_i++) {
+                    serial_entries.push_back(start_idx + cons_i);
+                }
+            }
+            serial_rowmap.push_back(serial_entries.size());
+        }
+    }
+
+    // allocate the graph on the default device
+    Ibis::CrsGraph<int, int> system_graph(serial_rowmap.size() - 1,
+                                          serial_entries.size());
+    auto system_graph_h = system_graph.host_mirror();
+    for (int i = 0; i < serial_rowmap.size(); i++) {
+        system_graph_h.row_map(i) = serial_rowmap[i];
+    }
+    for (int i = 0; i < serial_entries.size(); i++) {
+        system_graph_h.entries(i) = serial_entries[i];
+    }
+    system_graph.deep_copy(system_graph_h);
+
+    // return the system graph
+    return system_graph;
+}
+
+template <class MemModel>
 void SteadyStateLinearisation<MemModel>::compute_matrix(
     Ibis::CrsMatrix<int, int, Ibis::real>& matrix) {
     auto grid = sim_->grid;
     size_t num_cells = grid.num_cells();
-    Ibis::Vector<Ibis::real> purt_vec("Purturbation", num_cells * n_cons_);
-    Ibis::Vector<Ibis::real> res_vec("Result", num_cells * n_cons_);
+    if (purt_vec_.size() < n_vars_) {
+        purt_vec_ =
+            Ibis::Vector<Ibis::real>("SteadyStateLineariation::purt_vec", n_vars_);
+    }
+    if (res_vec_.size() < n_vars_) {
+        res_vec_ = Ibis::Vector<Ibis::real>("SteadyStateLinearisation::res_vec", n_vars_);
+    }
+    auto purt_vec = purt_vec_;
+    auto res_vec = res_vec_;
     size_t num_colours = grid.num_colours();
     size_t n_cons = n_cons_;
     auto colours = grid.colours();
