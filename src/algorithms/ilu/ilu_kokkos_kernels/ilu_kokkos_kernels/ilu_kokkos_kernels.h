@@ -53,6 +53,11 @@ public:
         KokkosSparse::spiluk_symbolic(&handle_, fill_level_, A.row_map, A.entries,
                                       L.graph.row_map, L.graph.entries, U.graph.row_map,
                                       U.graph.entries);
+
+        Kokkos::resize(L.graph.entries, spiluk_handle->get_nnzL());
+        Kokkos::resize(L.values, spiluk_handle->get_nnzL());
+        Kokkos::resize(U.graph.entries, spiluk_handle->get_nnzU());
+        Kokkos::resize(U.values, spiluk_handle->get_nnzU());
     }
 
     void numeric_phase(Ibis::CrsMatrix<Offset, Ordinal, Scalar>& A) {

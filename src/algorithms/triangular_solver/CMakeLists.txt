@@ -1,0 +1,5 @@
+add_subdirectory(triangular_solver_kokkos_kernels)
+
+add_library(triangular_solver INTERFACE)
+target_include_directories(triangular_solver INTERFACE .)
+target_link_libraries(triangular_solver INTERFACE triangular_solver_kokkos_kernels)
