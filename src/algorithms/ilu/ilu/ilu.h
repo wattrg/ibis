@@ -1,4 +1,4 @@
-#ifndef COLOURING_H
-#define COLOURING_H
+#ifndef ILU_H
+#define ILU_H
 
 #endif

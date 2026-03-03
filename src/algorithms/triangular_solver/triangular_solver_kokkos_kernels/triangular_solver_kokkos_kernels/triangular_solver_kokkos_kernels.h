@@ -1,5 +1,5 @@
-#ifndef KOKKOS_KERNEL_GRAPH_COLOUR_H
-#define KOKKOS_KERNEL_GRAPH_COLOUR_H
+#ifndef KOKKOS_KERNEL_TRIANGULAR_SOLVER_H
+#define KOKKOS_KERNEL_TRIANGULAR_SOLVER_H
 
 #include <linear_algebra/crs.h>
 #include <linear_algebra/dense_linear_algebra.h>

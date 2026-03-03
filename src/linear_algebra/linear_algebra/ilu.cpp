@@ -9,7 +9,11 @@ ILU<MemModel, T>::ILU(GridBlock<MemModel, T> grid, std::shared_ptr<LinearSystem>
     auto graph = grid.graph(2);
 
     // Step 2: construct the ilu handle
-    ilu_handle_ = ILU::handle_type(graph, k);
+    ilu_handle_ = ILU::ilu_handle_type(graph, k);
+    lower_triangular_solve_handle_ = ILU::triangular_solver_handle_type(
+        ilu_handle_.L, Ibis::TriangularMatrixType::LOWER);
+    lower_triangular_solve_handle_ = ILU::triangular_solver_handle_type(
+        ilu_handle_.U, Ibis::TriangularMatrixType::UPPER);
 }
 
 template <class MemModel, typename T>

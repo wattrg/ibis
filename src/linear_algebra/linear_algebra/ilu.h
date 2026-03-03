@@ -5,6 +5,7 @@
 #include <linear_algebra/crs.h>
 #include <linear_algebra/gmres.h>
 #include <linear_algebra/linear_system.h>
+#include <triangular_solver_kokkos_kernels/triangular_solver_kokkos_kernels.h>
 
 #include "util/types.h"
 
@@ -23,9 +24,15 @@ private:
                     Ibis::Vector<Ibis::real>::mem_space>
         matrix_;
 
-    using handle_type = KokkosKernels_ILU<Ibis::DefaultExecSpace, Ibis::DefaultMemSpace,
-                                          Ibis::DefaultArrayLayout>;
-    handle_type ilu_handle_;
+    using ilu_handle_type =
+        KokkosKernels_ILU<Ibis::DefaultExecSpace, Ibis::DefaultMemSpace,
+                          Ibis::DefaultArrayLayout>;
+    ilu_handle_type ilu_handle_;
+
+    using triangular_solver_handle_type = KokkosKernels_SparseTriangularSolver<
+        Ibis::DefaultExecSpace, Ibis::DefaultMemSpace, Ibis::DefaultArrayLayout>;
+    triangular_solver_handle_type lower_triangular_solve_handle_;
+    triangular_solver_handle_type upper_triangular_solve_handle_;
 };
 
 #endif
