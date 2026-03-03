@@ -5,6 +5,7 @@
 #include <spdlog/spdlog.h>
 
 #include "linear_algebra/crs.h"
+#include "linear_algebra/ilu.h"
 #include "util/types.h"
 
 using HostExecSpace = Ibis::DefaultHostExecSpace;
@@ -80,7 +81,9 @@ LinearSolveResult::LinearSolveResult(bool success_, size_t n_iters_, Ibis::real 
 
 LinearSolveResult::LinearSolveResult() : LinearSolveResult(false, 0, -1.0, -1.0) {}
 
-Gmres::Gmres(std::shared_ptr<LinearSystem> system, const size_t max_iters,
+Gmres::Gmres(std::shared_ptr<LinearSystem> system,
+             std::shared_ptr<DirectPreconditioner> preconditioner,
+             const size_t max_iters,
              Ibis::real tol) {
     tol_ = tol;
     num_vars_ = system->num_vars();
@@ -110,12 +113,25 @@ Gmres::Gmres(std::shared_ptr<LinearSystem> system, const size_t max_iters,
     r0_ = Ibis::Vector<Ibis::real>("Gmres::r0", num_vars_);
     w_ = Ibis::Vector<Ibis::real>("Gmres::w", num_vars_);
     v_ = Ibis::Vector<Ibis::real>("Gmres::v", num_vars_);
+    if (preconditioner) {
+        preconditioned_v_ = Ibis::Vector<Ibis::real>("Gmres::preconditioned_v", num_vars_);
+    }
 
+    // the system of equation
     system_ = system;
+
+    // preconditioner
+    if (preconditioner) {
+        precondition_system_ = system_->preconditioner();
+        precondition_solver_ = preconditioner;
+    }
 }
 
 Gmres::Gmres(std::shared_ptr<LinearSystem> system, json config)
-    : Gmres(system, config.at("max_iters"), config.at("tol")) {}
+    : Gmres(system,
+            make_direct_preconditioner<SharedMem>(system->preconditioner(),
+                                                  config.at("preconditioner")),
+            config.at("max_iters"), config.at("tol")) {}
 
 LinearSolveResult Gmres::solve(Ibis::Vector<Ibis::real>& x0) {
     // zero out (or set to identity matrix) memory
@@ -141,7 +157,12 @@ LinearSolveResult Gmres::solve(Ibis::Vector<Ibis::real>& x0) {
     LinearSolveResult result{false, 0, tol_, beta};
     for (size_t j = 0; j < max_iters_; j++) {
         // build the next krylov vector and entries in the Hessenberg matrix
-        system_->matrix_vector_product(v_, w_);
+        if (precondition_solver_) {
+            precondition_solver_->solve(v_, preconditioned_v_);
+        } else {
+            preconditioned_v_ = v_;
+        }
+        system_->matrix_vector_product(preconditioned_v_, w_);
         for (size_t i = 0; i < j + 1; i++) {
             auto vi = krylov_vectors_.column(i);
             H0_(i, j) = Ibis::dot(w_, vi);
@@ -177,7 +198,12 @@ LinearSolveResult Gmres::solve(Ibis::Vector<Ibis::real>& x0) {
     Ibis::upper_triangular_solve(H, ym_host, g);
     ym.deep_copy_space(ym_host);
     Ibis::gemv(V, ym, w_);
-    Ibis::add_scaled_vector(x0, w_, 1.0);
+    if (precondition_solver_) {
+        precondition_solver_->solve(w_, preconditioned_v_);
+    } else {
+        preconditioned_v_ = w_;
+    }
+    Ibis::add_scaled_vector(x0, preconditioned_v_, 1.0);
 
     return result;
 }
@@ -227,7 +253,7 @@ FGmres::FGmres(std::shared_ptr<LinearSystem> system, const size_t max_iters,
     // The preconditioner system of equations, and gmres to solve it
     precondition_system_ = precondition_system;
     preconditioner_ =
-        Gmres(precondition_system, max_precondition_iters, precondition_tol);
+        Gmres(precondition_system, nullptr, max_precondition_iters, precondition_tol);
 }
 
 FGmres::FGmres(std::shared_ptr<LinearSystem> system,
@@ -395,7 +421,7 @@ TEST_CASE("GMRES") {
 
     std::shared_ptr<LinearSystem> sys{new TestLinearSystem()};
 
-    Gmres solver{sys, 5, 1e-14};
+    Gmres solver{sys, nullptr, 5, 1e-14};
     Ibis::Vector<Ibis::real> x{"x", 5};
     LinearSolveResult result = solver.solve(x);
 

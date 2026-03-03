@@ -17,13 +17,15 @@ private:
                                                          ExecSpace, MemSpace, MemSpace>;
 
 public:
-    KokkosKernels_ILU() = delete;
+    KokkosKernels_ILU() {}
 
     KokkosKernels_ILU(Ibis::CrsGraph<Offset, Ordinal>& A, int fill_level) {
         symbolic_phase(A, fill_level);
     }
 
-    ~KokkosKernels_ILU() { handle_.destroy_spiluk_handle(); }
+    ~KokkosKernels_ILU() {
+        handle_.destroy_spiluk_handle();
+    }
 
     void symbolic_phase(Ibis::CrsGraph<Offset, Ordinal>& A, int fill_level) {
         fill_level_ = fill_level;

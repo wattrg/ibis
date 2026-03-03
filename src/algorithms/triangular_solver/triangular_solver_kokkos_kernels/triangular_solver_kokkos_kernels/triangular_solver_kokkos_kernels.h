@@ -19,8 +19,8 @@ private:
                                                          ExecSpace, MemSpace, MemSpace>;
 
 public:
-    KokkosKernels_SparseTriangularSolver() = delete;
-
+    KokkosKernels_SparseTriangularSolver() {}
+    
     KokkosKernels_SparseTriangularSolver(
         const Ibis::CrsMatrix<Offset, Ordinal, Scalar>& A,
         const Ibis::TriangularMatrixType type) {

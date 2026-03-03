@@ -5,7 +5,9 @@
 #include <linear_algebra/linear_system.h>
 
 class DirectLinearSolver {
-    virtual void solve(Ibis::Vector<Ibis::real>& x) = 0;
+public:
+    virtual ~DirectLinearSolver() = default;
+    virtual void solve(Ibis::Vector<Ibis::real>& rhs, Ibis::Vector<Ibis::real>& x) = 0;
 };
 
 #endif

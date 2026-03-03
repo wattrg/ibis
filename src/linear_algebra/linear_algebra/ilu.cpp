@@ -28,10 +28,11 @@ void ILU<MemModel>::update_preconditioner() {
 }
 
 template <class MemModel>
-void ILU<MemModel>::solve(Ibis::Vector<Ibis::real>& x) {
-    lower_triangular_solve_handle_.solve(ilu_handle_.L, system_->rhs(), temp_vec_);
+void ILU<MemModel>::solve(Ibis::Vector<Ibis::real>& rhs, Ibis::Vector<Ibis::real>& x) {
+    lower_triangular_solve_handle_.solve(ilu_handle_.L, rhs, temp_vec_);
     upper_triangular_solve_handle_.solve(ilu_handle_.U, temp_vec_, x);
 }
 
 template class ILU<SharedMem>;
 template class ILU<Mpi>;
+

@@ -46,7 +46,9 @@ public:
 
     ~Gmres() {}
 
-    Gmres(std::shared_ptr<LinearSystem> system, const size_t max_iters, Ibis::real tol);
+    Gmres(std::shared_ptr<LinearSystem> system,
+          std::shared_ptr<DirectPreconditioner> preconditioner,
+          const size_t max_iters, Ibis::real tol);
 
     Gmres(std::shared_ptr<LinearSystem> system, json config);
 
@@ -61,12 +63,13 @@ private:
     Ibis::real tol_;
     std::shared_ptr<LinearSystem> system_;
     std::shared_ptr<LinearSystem> precondition_system_;
-    std::unique_ptr<DirectPreconditioner> precondition_solver_;
+    std::shared_ptr<DirectPreconditioner> precondition_solver_;
 
 public:  // this has to be public to access from inside kernels
     // memory
     Ibis::Matrix<Ibis::real> krylov_vectors_;
     Ibis::Vector<Ibis::real> v_;
+    Ibis::Vector<Ibis::real> preconditioned_v_;
     // Ibis::Vector<Ibis::real> z_;
     Ibis::Vector<Ibis::real> r0_;
     Ibis::Vector<Ibis::real> w_;
