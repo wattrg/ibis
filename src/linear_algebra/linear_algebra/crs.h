@@ -13,6 +13,8 @@ public:
     using offset = OffsetType;
     using ordinal = OrdinalType;
     using mem_space = MemSpace;
+    using rowmap_type = Array1D<OffsetType, Layout, MemSpace>;
+    using entries_type = Array1D<OrdinalType, Layout, MemSpace>;
     using host_mirror_type =
         CrsGraph<OffsetType, OrdinalType, Layout, Ibis::DefaultHostMemSpace>;
 
@@ -38,6 +40,7 @@ public:
                 return row_start_idx + col_idx;
             }
         }
+        assert(false && "row and col does is not present in CrsMatrix");
     }
 
     KOKKOS_INLINE_FUNCTION

@@ -24,7 +24,9 @@ public:
     }
 
     ~KokkosKernels_ILU() {
-        handle_.destroy_spiluk_handle();
+        if (handle_.get_spiluk_handle()) {
+            handle_.destroy_spiluk_handle();
+        }
     }
 
     void symbolic_phase(Ibis::CrsGraph<Offset, Ordinal>& A, int fill_level) {

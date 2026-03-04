@@ -437,6 +437,130 @@ TEST_CASE("GMRES") {
     CHECK(x_h(4) == doctest::Approx(0.5));
 }
 
+TEST_CASE("RPGMRES") {
+    class TestLinearSystem : public LinearSystem {
+    public:
+        using ExecSpace = Kokkos::DefaultExecutionSpace;
+
+        TestLinearSystem() {
+            matrix_ = Ibis::Matrix<Ibis::real, ExecSpace>("A", 5, 5);
+            auto matrix_h = matrix_.host_mirror();
+            matrix_h(0, 0) = 2.0;
+            matrix_h(0, 1) = -0.5;
+            matrix_h(1, 0) = -1.0;
+            matrix_h(1, 1) = 2.0;
+            matrix_h(1, 2) = -0.5;
+            matrix_h(2, 1) = -1.0;
+            matrix_h(2, 2) = 2.0;
+            matrix_h(2, 3) = -0.5;
+            matrix_h(3, 2) = -1.0;
+            matrix_h(3, 3) = 2.0;
+            matrix_h(3, 4) = -0.5;
+            matrix_h(4, 3) = -1.0;
+            matrix_h(4, 4) = 2.0;
+            matrix_.deep_copy_space(matrix_h);
+
+            rhs_ = Ibis::Vector<Ibis::real, ExecSpace>("rhs", 5);
+            auto rhs_h = rhs_.host_mirror();
+            rhs_h(0) = 2.0;
+            rhs_h(1) = -0.5;
+            rhs_h(2) = -2.75;
+            rhs_h(3) = 3.75;
+            rhs_h(4) = -0.5;
+            rhs_.deep_copy_space(rhs_h);
+        }
+
+        ~TestLinearSystem() {}
+
+        Ibis::CrsGraph<int, int> compute_matrix_graph() {
+            std::vector<int> row_map{0, 2, 5, 8, 11, 13};
+            std::vector<int> entries{0, 1, 0, 1, 2, 1, 2, 3, 2, 3, 4, 3, 4};
+
+            int num_rows = row_map.size() - 1;
+            int num_entries = entries.size();
+            Ibis::CrsGraph<int, int> graph(num_rows, num_entries);
+            auto graph_h = graph.host_mirror();
+
+            for (int i = 0; i < num_rows + 1; i++) {
+                graph_h.row_map(i) = row_map[i];
+            }
+            for (int i = 0; i < num_entries; i++) {
+                graph_h.entries(i) = entries[i];
+            }
+            graph.deep_copy(graph_h);
+            return graph;
+            
+        }
+        void compute_matrix(Ibis::CrsMatrix<int, int, Ibis::real>& matrix) {
+            auto matrix_h = matrix.host_mirror();
+            matrix_h.deep_copy(matrix); // copy graph to host
+            matrix_h(0, 0) = 2.0;
+            matrix_h(0, 1) = -0.5;
+            matrix_h(1, 0) = -1.0;
+            matrix_h(1, 1) = 2.0;
+            matrix_h(1, 2) = -0.5;
+            matrix_h(2, 1) = -1.0;
+            matrix_h(2, 2) = 2.0;
+            matrix_h(2, 3) = -0.5;
+            matrix_h(3, 2) = -1.0;
+            matrix_h(3, 3) = 2.0;
+            matrix_h(3, 4) = -0.5;
+            matrix_h(4, 3) = -1.0;
+            matrix_h(4, 4) = 2.0;
+            matrix.deep_copy(matrix_h);
+        }
+
+        void eval_rhs() {}
+
+        void set_rhs(Ibis::Vector<Ibis::real>& rhs) { rhs_ = rhs; }
+
+        void matrix_vector_product(Ibis::Vector<Ibis::real>& vec,
+                                   Ibis::Vector<Ibis::real>& res) {
+            Ibis::gemv(matrix_, vec, res);
+        }
+
+        std::unique_ptr<LinearSystem> preconditioner() {
+            return std::make_unique<TestLinearSystem>();
+        }
+
+        KOKKOS_INLINE_FUNCTION
+        Ibis::real& rhs(const size_t i) const { return rhs_(i); }
+
+        KOKKOS_INLINE_FUNCTION
+        Ibis::real& rhs(const size_t i, const size_t j) const {
+            (void)j;
+            return rhs_(i);
+        }
+
+        Ibis::Vector<Ibis::real>& rhs() { return rhs_; }
+
+        size_t num_vars() const { return 5; }
+
+    private:
+        Ibis::Matrix<Ibis::real, ExecSpace> matrix_;
+        Ibis::Vector<Ibis::real, ExecSpace> rhs_;
+    };
+
+    {
+        std::shared_ptr<LinearSystem> sys{new TestLinearSystem()};
+        std::shared_ptr<DirectPreconditioner> ilu {new ILU<SharedMem>(sys, 0)};
+        ilu->update_preconditioner();
+        Gmres solver{sys, ilu, 5, 1e-14};
+        Ibis::Vector<Ibis::real> x{"x", 5};
+        LinearSolveResult result = solver.solve(x);
+
+        auto x_h = x.host_mirror();
+        x_h.deep_copy_space(x);
+
+        CHECK(result.success == true);
+        CHECK(x_h(0) == doctest::Approx(1.0));
+        CHECK(x_h(1) == doctest::Approx(0.0));
+        CHECK(x_h(2) == doctest::Approx(-1.0));
+        CHECK(x_h(3) == doctest::Approx(1.5));
+        CHECK(x_h(4) == doctest::Approx(0.5));
+    }
+}
+
 TEST_CASE("FGMRES") {
     class TestLinearSystem : public LinearSystem {
     public:

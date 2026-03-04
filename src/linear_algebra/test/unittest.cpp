@@ -6,8 +6,8 @@
 
 int main(int argc, char* argv[]) {
     doctest::Context ctx;
-    ctx.applyCommandLine(argc, argv);
     Kokkos::initialize(argc, argv);
+    ctx.applyCommandLine(argc, argv);
     int res = ctx.run();
     Kokkos::finalize();
     return res;

@@ -21,7 +21,7 @@ public:
 template <class MemModel>
 class ILU : public DirectPreconditioner {
 public:
-    ~ILU() {}
+    ~ILU() {};
 
     ILU(std::shared_ptr<LinearSystem> system, size_t k = 0);
 
@@ -40,12 +40,12 @@ private:
     using ilu_handle_type =
         KokkosKernels_ILU<Ibis::DefaultExecSpace, Ibis::DefaultMemSpace,
                           Ibis::DefaultArrayLayout>;
-    ilu_handle_type ilu_handle_;
+    std::unique_ptr<ilu_handle_type> ilu_handle_;
 
     using triangular_solver_handle_type = KokkosKernels_SparseTriangularSolver<
         Ibis::DefaultExecSpace, Ibis::DefaultMemSpace, Ibis::DefaultArrayLayout>;
-    triangular_solver_handle_type lower_triangular_solve_handle_;
-    triangular_solver_handle_type upper_triangular_solve_handle_;
+    std::unique_ptr<triangular_solver_handle_type> lower_triangular_solve_handle_;
+    std::unique_ptr<triangular_solver_handle_type> upper_triangular_solve_handle_;
 
     Ibis::Vector<Ibis::real> temp_vec_;
 };

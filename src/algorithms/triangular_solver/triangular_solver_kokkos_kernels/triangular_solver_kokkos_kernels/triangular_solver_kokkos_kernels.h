@@ -27,7 +27,11 @@ public:
         symbolic_phase(A, type);
     }
 
-    ~KokkosKernels_SparseTriangularSolver() { handle_.destroy_sptrsv_handle(); }
+    ~KokkosKernels_SparseTriangularSolver() {
+        if (handle_.get_sptrsv_handle()) {
+            handle_.destroy_sptrsv_handle();
+        }
+    }
 
     void symbolic_phase(const Ibis::CrsMatrix<Offset, Ordinal, Scalar>& A,
                         const Ibis::TriangularMatrixType type) {
