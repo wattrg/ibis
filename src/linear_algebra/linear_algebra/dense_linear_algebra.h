@@ -149,7 +149,7 @@ public:
     template <typename OtherLayout>
     void deep_copy(Matrix<T, ExecSpace, OtherLayout, MemSpace>& other) {
         assert(this->n_rows() == other.n_rows());
-        assert(this->n_cols() == other.n_rows());
+        assert(this->n_cols() == other.n_cols());
 
         size_t n_rows = this->n_rows();
         size_t n_cols = this->n_cols();

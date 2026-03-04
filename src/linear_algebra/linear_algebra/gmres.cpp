@@ -52,8 +52,8 @@ void apply_rotations_to_hessenberg_(Ibis::Matrix<Ibis::real, HostExecSpace> H0,
     Omega(j + 1, j + 1) = ci;
 
     // rotate the hessenberg matrix and the right hand side
-    auto H_old = H0.sub_matrix(0, j + 2, 0, j + 2);
-    auto H_new = H1.sub_matrix(0, j + 2, 0, j + 2);
+    auto H_old = H0.sub_matrix(0, j + 2, 0, j + 1);
+    auto H_new = H1.sub_matrix(0, j + 2, 0, j + 1);
     auto Omega_sub = Omega.sub_matrix(0, j + 2, 0, j + 2);
 
     auto g = g0.sub_vector(0, j + 2);
@@ -201,7 +201,7 @@ LinearSolveResult Gmres::solve(Ibis::Vector<Ibis::real>& x0) {
     if (precondition_solver_) {
         precondition_solver_->solve(w_, z_);
     } else {
-        zv_ = w_;
+        z_ = w_;
     }
     Ibis::add_scaled_vector(x0, z_, 1.0);
 
@@ -348,6 +348,7 @@ std::unique_ptr<IterativeLinearSolver> make_linear_solver(
     }
 }
 
+#ifndef DOCTEST_CONFIG_DISABLE
 TEST_CASE("GMRES") {
     class TestLinearSystem : public LinearSystem {
     public:
@@ -542,3 +543,4 @@ TEST_CASE("FGMRES") {
     CHECK(x_h(3) == doctest::Approx(1.5));
     CHECK(x_h(4) == doctest::Approx(0.5));
 }
+#endif // DOCTEST_CONFIG_DISABLE
