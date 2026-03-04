@@ -544,7 +544,6 @@ TEST_CASE("RPGMRES") {
     {
         std::shared_ptr<LinearSystem> sys{new TestLinearSystem()};
         std::shared_ptr<DirectPreconditioner> ilu {new ILU<SharedMem>(sys, 0)};
-        ilu->update_preconditioner();
         Gmres solver{sys, ilu, 5, 1e-14};
         Ibis::Vector<Ibis::real> x{"x", 5};
         LinearSolveResult result = solver.solve(x);
