@@ -146,12 +146,12 @@ Ibis::CrsGraph<int, int> SteadyStateLinearisation<MemModel>::compute_matrix_grap
     size_t n_cons = n_cons_;
     std::vector<int> serial_rowmap{0};
     std::vector<int> serial_entries;
-    for (int row_i = 0; row_i < grid_graph_h.num_rows(); row_i++) {
-        int row_start_idx = grid_graph_h.row_map(row_i);
-        int num_values_in_row = grid_graph_h.row_map(row_i + 1) - row_start_idx;
-        for (int cons_i_row = 0; cons_i_row < n_cons; cons_i_row++) {
+    for (size_t row_i = 0; row_i < grid_graph_h.num_rows(); row_i++) {
+        int grid_row_start_idx = grid_graph_h.row_map(row_i);
+        int num_values_in_row = grid_graph_h.row_map(row_i + 1) - grid_row_start_idx;
+        for (size_t cons_i_row = 0; cons_i_row < n_cons; cons_i_row++) {
             for (int col_idx = 0; col_idx < num_values_in_row; col_idx++) {
-                int grid_col = grid_graph_h.entries(row_start_idx + col_idx);
+                int grid_col = grid_graph_h.entries(grid_row_start_idx + col_idx);
                 int start_idx = grid_col * n_cons;
                 for (size_t cons_i = 0; cons_i < n_cons; cons_i++) {
                     serial_entries.push_back(start_idx + cons_i);
@@ -165,10 +165,10 @@ Ibis::CrsGraph<int, int> SteadyStateLinearisation<MemModel>::compute_matrix_grap
     Ibis::CrsGraph<int, int> system_graph(serial_rowmap.size() - 1,
                                           serial_entries.size());
     auto system_graph_h = system_graph.host_mirror();
-    for (int i = 0; i < serial_rowmap.size(); i++) {
+    for (size_t i = 0; i < serial_rowmap.size(); i++) {
         system_graph_h.row_map(i) = serial_rowmap[i];
     }
-    for (int i = 0; i < serial_entries.size(); i++) {
+    for (size_t i = 0; i < serial_entries.size(); i++) {
         system_graph_h.entries(i) = serial_entries[i];
     }
     system_graph.deep_copy(system_graph_h);
@@ -189,20 +189,23 @@ void SteadyStateLinearisation<MemModel>::compute_matrix(
     if (res_vec_.size() < n_vars_) {
         res_vec_ = Ibis::Vector<Ibis::real>("SteadyStateLinearisation::res_vec", n_vars_);
     }
+    if (grid.colours().size() == 0) {
+        grid.compute_colours();
+    }
     auto purt_vec = purt_vec_;
     auto res_vec = res_vec_;
-    size_t num_colours = grid.num_colours();
+    int num_colours = grid.num_colours();
     size_t n_cons = n_cons_;
     auto colours = grid.colours();
     auto neighbours = grid.cells().neighbour_cells();
-    for (size_t colour = 0; colour < num_colours; colour++) {
+    for (int colour = 0; colour < num_colours; colour++) {
         for (size_t conserved_i = 0; conserved_i < n_cons_; conserved_i++) {
             // set values in the purturbation vector
             Ibis::parallel_for(
                 "SteadyStateLinearisation::set_purturbation_vec", num_cells,
                 KOKKOS_LAMBDA(const size_t cell_i) {
                     size_t vector_idx = cell_i * n_cons + conserved_i;
-                    size_t cell_colour = colours(cell_i);
+                    int cell_colour = colours(cell_i);
                     purt_vec(vector_idx) = (cell_colour == colour) ? 1.0 : 0.0;
                 });
 
@@ -221,17 +224,22 @@ void SteadyStateLinearisation<MemModel>::compute_matrix(
                         matrix(row_idx, row_idx) = res_vec(row_idx);
                         for (size_t ngbr_i = 0; ngbr_i < cell_i_ngbrs.size(); ngbr_i++) {
                             size_t ngbr_cell = cell_i_ngbrs(ngbr_i);
-                            size_t col_idx = ngbr_cell * n_cons + conserved_i;
-                            matrix(row_idx, col_idx) = res_vec(col_idx);
+                            if (ngbr_cell < num_cells) {
+                                size_t col_idx = ngbr_cell * n_cons + conserved_i;
+                                matrix(row_idx, col_idx) = res_vec(col_idx);
+                            }
 
-                            auto ngbr_ngbrs = neighbours(ngbr_cell);
-                            for (size_t ngbr_ngbr_i = 0; ngbr_ngbr_i < ngbr_ngbrs.size();
-                                 ngbr_ngbr_i++) {
-                                if (ngbr_ngbr_i != cell_i) {
+                            if (ngbr_cell < num_cells) {
+                                auto ngbr_ngbrs = neighbours(ngbr_cell);
+                                for (size_t ngbr_ngbr_i = 0; ngbr_ngbr_i < ngbr_ngbrs.size();
+                                     ngbr_ngbr_i++) {
                                     size_t ngbr_ngbr_cell = ngbr_ngbrs(ngbr_ngbr_i);
-                                    col_idx = ngbr_ngbr_cell * n_cons + conserved_i;
-                                    matrix(row_idx, col_idx) = res_vec(col_idx);
+                                    if (ngbr_ngbr_cell != cell_i and ngbr_ngbr_cell < num_cells) {
+                                        size_t col_idx = ngbr_ngbr_cell * n_cons + conserved_i;
+                                        matrix(row_idx, col_idx) = res_vec(col_idx);
+                                    }
                                 }
+                            
                             }
                         }
                     }

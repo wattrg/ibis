@@ -916,11 +916,11 @@ class RungeKutta:
         return
 
 
-class Gmres:
-    _json_values = ["max_iters", "tol"]
-    _type = "gmres"
+class Ilu:
+    _json_values = ["fill_in"]
+    _type = "ilu"
     __slots__ = _json_values
-    _defaults_file = "gmres.json"
+    _defaults_file = "ilu.json"
 
     def __init__(self, **kwargs):
         json_data = read_defaults(DEFAULTS_DIRECTORY, self._defaults_file)
@@ -935,6 +935,45 @@ class Gmres:
         dictionary = {"type": self._type}
         for key in self._json_values:
             dictionary[key] = getattr(self, key)
+        return dictionary
+
+    def validate(self):
+        return
+
+
+def get_preconditioner(name):
+    if name == "ilu":
+        return Ilu()
+    elif name == "none":
+        return None
+    else:
+        validation_errors.append(ValidationException(f"Unknown preconditioner: {name}"))
+
+
+class Gmres:
+    _json_values = ["max_iters", "tol", "preconditioner"]
+    _type = "gmres"
+    __slots__ = _json_values
+    _defaults_file = "gmres.json"
+
+    def __init__(self, **kwargs):
+        json_data = read_defaults(DEFAULTS_DIRECTORY, self._defaults_file)
+
+        for key in json_data:
+            setattr(self, key, json_data[key])
+
+        self.preconditioner = get_preconditioner(self.preconditioner)
+
+        for key in kwargs:
+            setattr(self, key, kwargs[key])
+
+    def as_dict(self):
+        dictionary = {"type": self._type}
+        for key in self._json_values:
+            if key == "preconditioner":
+                dictionary[key] = self.preconditioner.as_dict()
+            else:
+                dictionary[key] = getattr(self, key)
         return dictionary
 
     def validate(self):
@@ -1281,6 +1320,7 @@ def main(file_name, res_dir):
         "SteadyState": SteadyState,
         "Gmres": Gmres,
         "FGmres": FGmres,
+        "Ilu": Ilu,
         "IO": IO,
         "IOFormat": IOFormat,
         "supersonic_inflow": supersonic_inflow,

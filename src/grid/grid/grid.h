@@ -865,7 +865,6 @@ public:
     void transfer_interblock_cell_centres();
 
     void compute_graph(int distance) {
-        std::cout << this->num_cells();
         if (!(distance == 1 || distance == 2)) {
             std::runtime_error("Grid graph distance should be 1 or 2");
         }
@@ -877,6 +876,7 @@ public:
         std::vector<int> serial_entries;
         auto neighbours = grid_host.cells().neighbour_cells();
         for (size_t cell_i = 0; cell_i < grid_host.num_cells(); cell_i++) {
+            serial_entries.push_back(cell_i);
             auto neighbour_cells = neighbours(cell_i);
             for (size_t neighbour_i = 0; neighbour_i < neighbour_cells.size();
                  neighbour_i++) {
@@ -885,11 +885,11 @@ public:
                     serial_entries.push_back(neighbour_cell);
                 }
 
-                if (distance == 2) {
+                if (distance == 2 && neighbour_cell < grid_host.num_cells()) {
                     auto neighbour_neighbours = neighbours(neighbour_cell);
-                    for (size_t ngbr_i = 0; ngbr_i < neighbour_neighbours.size();
-                         ngbr_i++) {
-                        size_t ngbr_ngbr_cell = neighbour_neighbours(ngbr_i);
+                    for (size_t ngbr_ngbr_i = 0; ngbr_ngbr_i < neighbour_neighbours.size();
+                         ngbr_ngbr_i++) {
+                        size_t ngbr_ngbr_cell = neighbour_neighbours(ngbr_ngbr_i);
                         if (ngbr_ngbr_cell != cell_i &&
                             ngbr_ngbr_cell < grid_host.num_cells()) {
                             serial_entries.push_back(ngbr_ngbr_cell);
@@ -906,10 +906,10 @@ public:
                                                                serial_entries.size());
         auto row_map_h = Kokkos::create_mirror_view(row_map);
         auto entries_h = Kokkos::create_mirror_view(entries);
-        for (int i = 0; i < serial_row_map.size(); i++) {
+        for (size_t i = 0; i < serial_row_map.size(); i++) {
             row_map_h(i) = serial_row_map[i];
         }
-        for (int i = 0; i < serial_entries.size(); i++) {
+        for (size_t i = 0; i < serial_entries.size(); i++) {
             entries_h(i) = serial_entries[i];
         }
 
@@ -946,18 +946,19 @@ public:
     }
 
     void compute_colours() {
+        compute_graph(1);
         using Colourer_type = GridColourer<GridBlock_type>;
         std::unique_ptr<Colourer_type> colourer = make_grid_colourer<GridBlock_type>();
-        colourer.compute_colours(*this);
-        colours_ = colourer.colours();
-        num_colours_ = colourer.num_colours();
+        colourer->compute_colouring(*this);
+        colours_ = colourer->colours();
+        num_colours_ = colourer->num_colours();
     }
 
     size_t colour_of_cell(size_t cell_i) { return colours_(cell_i); }
 
-    Ibis::Array1D<size_t> colours() { return colours_; }
+    Ibis::Array1D<int> colours() { return colours_; }
 
-    size_t num_colours() const { return num_colours_; }
+    int num_colours() const { return num_colours_; }
 
 public:
     // The primary grid data structures
@@ -1001,7 +1002,7 @@ public:
 
     Ibis::CrsGraph<int, int, array_layout, memory_space> distance_1_graph_;
     Ibis::CrsGraph<int, int, array_layout, memory_space> distance_2_graph_;
-    Ibis::Array1D<size_t, array_layout, memory_space> colours_;
+    Ibis::Array1D<int, array_layout, memory_space> colours_;
     size_t num_colours_;
 
     // grid motion

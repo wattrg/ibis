@@ -1,9 +1,7 @@
 #ifndef KOKKOS_KERNEL_GRAPH_COLOUR_H
 #define KOKKOS_KERNEL_GRAPH_COLOUR_H
 
-#include <graph_colouring/graph_colouring.h>
-// #include <grid/grid.h>
-
+#include <graph_colouring/graph_colouring_interface.h>
 #include <KokkosGraph_Distance2Color.hpp>
 
 using Scalar = KokkosKernels::default_scalar;
@@ -14,8 +12,10 @@ template <class GridBlock_type>
 class GridColourer;
 
 template <class GridBlock_type>
-class KokkosKernels_GridColourer : GridColourer<GridBlock_type> {
+class KokkosKernels_GridColourer : public GridColourer<GridBlock_type> {
 public:
+    ~KokkosKernels_GridColourer() = default;
+
     Ibis::Array1D<Ordinal> colours() const { return colours_; }
 
     int num_colours() const { return num_colours_; }

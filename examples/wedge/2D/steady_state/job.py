@@ -8,10 +8,7 @@ gas_model.update_thermo_from_rhoT(gas_state)
 vx = mach * gas_model.speed_of_sound(gas_state)
 flow_state = FlowState(gas=gas_state, vx=vx)
 
-config.convective_flux = ConvectiveFlux(
-    flux_calculator=Hanel(),
-    reconstruction_order=2
-)
+config.convective_flux = ConvectiveFlux(flux_calculator=Hanel(), reconstruction_order=2)
 
 config.gas_model = gas_model
 
@@ -22,7 +19,7 @@ config.solver = SteadyState(
     plot_frequency=100,
     diagnostics_frequency=1,
     tolerance=1e-10,
-    linear_solver=Gmres(tol=1e-1, max_iters=100)
+    linear_solver=Gmres(tol=1e-1, max_iters=50),
 )
 
 config.grid = Block(
@@ -32,7 +29,7 @@ config.grid = Block(
         "inflow": supersonic_inflow(flow_state),
         "outflow": supersonic_outflow(),
         "wall": slip_wall(),
-    }
+    },
 )
 
 config.io = IO(flow_format="native_text")

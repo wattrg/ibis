@@ -1,4 +1,5 @@
 {
   "max_iters": 50,
-  "tol": 1e-2
+  "tol": 1e-2,
+  "preconditioner": "ilu"
 }

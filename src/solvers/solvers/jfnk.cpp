@@ -57,6 +57,7 @@ LinearSolveResult Jfnk<MemModel>::step(std::shared_ptr<Sim<Ibis::dual, MemModel>
     set_pseudo_time_step_size(cfl * stable_dt_);
 
     // solve the linear system of equations
+    gmres_->update_preconditioner();
     last_gmres_result_ = gmres_->solve(dU_);
 
     // apply the update and calculate the new residuals

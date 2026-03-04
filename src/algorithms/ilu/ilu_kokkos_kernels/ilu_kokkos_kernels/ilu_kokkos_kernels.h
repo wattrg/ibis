@@ -1,8 +1,7 @@
-#ifndef KOKKOS_KERNEL_GRAPH_COLOUR_H
-#define KOKKOS_KERNEL_GRAPH_COLOUR_H
+#ifndef KOKKOS_KERNELS_ILU_H
+#define KOKKOS_KERNELS_ILU_H
 
 #include <linear_algebra/crs.h>
-
 #include <KokkosSparse_spiluk.hpp>
 
 using Scalar = KokkosKernels::default_scalar;
