@@ -914,18 +914,14 @@ public:
         }
 
         if (distance == 1) {
-            distance_1_graph_.row_map = Ibis::Array1D<int, array_layout, memory_space>(
-                "CrsGraph::row_map", serial_row_map.size());
-            distance_1_graph_.entries = Ibis::Array1D<int, array_layout, memory_space>(
-                "CrsGraph::entries", serial_entries.size());
+            distance_1_graph_.row_map = row_map;
+            distance_1_graph_.entries = entries;
             Kokkos::deep_copy(distance_1_graph_.row_map, row_map_h);
             Kokkos::deep_copy(distance_1_graph_.entries, entries_h);
 
         } else if (distance == 2) {
-            distance_2_graph_.row_map = Ibis::Array1D<int, array_layout, memory_space>(
-                "CrsGraph::row_map", serial_row_map.size());
-            distance_2_graph_.entries = Ibis::Array1D<int, array_layout, memory_space>(
-                "CrsGraph::entries", serial_entries.size());
+            distance_2_graph_.row_map = row_map;
+            distance_2_graph_.entries = entries;
             Kokkos::deep_copy(distance_2_graph_.row_map, row_map_h);
             Kokkos::deep_copy(distance_2_graph_.entries, entries_h);
         }

@@ -221,12 +221,17 @@ void SteadyStateLinearisation<MemModel>::compute_matrix(
                         // the matrix entries for it
                         size_t row_idx = cell_i * n_cons + conserved_i;
                         auto cell_i_ngbrs = neighbours(cell_i);
-                        matrix(row_idx, row_idx) = res_vec(row_idx);
+                        for (size_t cons_i = 0; cons_i < n_cons; cons_i++) {
+                            size_t col_idx = cell_i * n_cons + cons_i;
+                            matrix(row_idx, col_idx) = res_vec(col_idx);
+                        }
                         for (size_t ngbr_i = 0; ngbr_i < cell_i_ngbrs.size(); ngbr_i++) {
                             size_t ngbr_cell = cell_i_ngbrs(ngbr_i);
                             if (ngbr_cell < num_cells) {
-                                size_t col_idx = ngbr_cell * n_cons + conserved_i;
-                                matrix(row_idx, col_idx) = res_vec(col_idx);
+                                for (size_t cons_i = 0; cons_i < n_cons; cons_i++) {
+                                    size_t col_idx = ngbr_cell * n_cons + cons_i;
+                                    matrix(row_idx, col_idx) = res_vec(col_idx);
+                                }
                             }
 
                             if (ngbr_cell < num_cells) {
@@ -235,8 +240,10 @@ void SteadyStateLinearisation<MemModel>::compute_matrix(
                                      ngbr_ngbr_i++) {
                                     size_t ngbr_ngbr_cell = ngbr_ngbrs(ngbr_ngbr_i);
                                     if (ngbr_ngbr_cell != cell_i and ngbr_ngbr_cell < num_cells) {
-                                        size_t col_idx = ngbr_ngbr_cell * n_cons + conserved_i;
-                                        matrix(row_idx, col_idx) = res_vec(col_idx);
+                                        for (size_t cons_i = 0; cons_i < n_cons; cons_i++) {
+                                            size_t col_idx = ngbr_ngbr_cell * n_cons + cons_i;
+                                            matrix(row_idx, col_idx) = res_vec(col_idx);
+                                        }
                                     }
                                 }
                             

@@ -916,7 +916,11 @@ class RungeKutta:
         return
 
 
-class Ilu:
+class DirectPreconditioner:
+    pass
+
+
+class Ilu(DirectPreconditioner):
     _json_values = ["fill_in"]
     _type = "ilu"
     __slots__ = _json_values
@@ -971,7 +975,10 @@ class Gmres:
         dictionary = {"type": self._type}
         for key in self._json_values:
             if key == "preconditioner":
-                dictionary[key] = self.preconditioner.as_dict()
+                if isinstance(self.preconditioner, DirectPreconditioner):
+                    dictionary[key] = self.preconditioner.as_dict()
+                elif self.preconditioner is None:
+                    dictionary[key] = {"type": "none"}
             else:
                 dictionary[key] = getattr(self, key)
         return dictionary

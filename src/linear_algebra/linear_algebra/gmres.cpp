@@ -209,7 +209,9 @@ LinearSolveResult Gmres::solve(Ibis::Vector<Ibis::real>& x0) {
 }
 
 void Gmres::update_preconditioner() {
-    precondition_solver_->update_preconditioner();
+    if (precondition_solver_) {
+        precondition_solver_->update_preconditioner();
+    }
 }
 
 FGmres::FGmres(std::shared_ptr<LinearSystem> system, const size_t max_iters,

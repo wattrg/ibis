@@ -18,7 +18,7 @@ ILU<MemModel>::ILU(std::shared_ptr<LinearSystem> system, size_t k) : system_(sys
         ilu_handle_->U, Ibis::TriangularMatrixType::UPPER);
 
     // Compute and decompose the matrix
-    update_preconditioner();
+    // update_preconditioner();
 
     temp_vec_ = Ibis::Vector<Ibis::real>("ILU::temp_vec", system->num_vars());
 }
