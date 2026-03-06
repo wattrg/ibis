@@ -2,6 +2,7 @@
 #define KOKKOS_KERNEL_GRAPH_COLOUR_H
 
 #include <graph_colouring/graph_colouring_interface.h>
+
 #include <KokkosGraph_Distance2Color.hpp>
 
 using Scalar = KokkosKernels::default_scalar;

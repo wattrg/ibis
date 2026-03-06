@@ -83,8 +83,7 @@ LinearSolveResult::LinearSolveResult() : LinearSolveResult(false, 0, -1.0, -1.0)
 
 Gmres::Gmres(std::shared_ptr<LinearSystem> system,
              std::shared_ptr<LinearSystem> preconditioner_system,
-             std::shared_ptr<DirectPreconditioner> preconditioner,
-             const size_t max_iters,
+             std::shared_ptr<DirectPreconditioner> preconditioner, const size_t max_iters,
              Ibis::real tol) {
     tol_ = tol;
     num_vars_ = system->num_vars();
@@ -128,9 +127,9 @@ Gmres::Gmres(std::shared_ptr<LinearSystem> system,
     }
 }
 
-Gmres::Gmres(std::shared_ptr<LinearSystem> system, std::shared_ptr<LinearSystem> precondition_system, json config)
-    : Gmres(system,
-            precondition_system,
+Gmres::Gmres(std::shared_ptr<LinearSystem> system,
+             std::shared_ptr<LinearSystem> precondition_system, json config)
+    : Gmres(system, precondition_system,
             make_direct_preconditioner<SharedMem>(precondition_system,
                                                   config.at("preconditioner")),
             config.at("max_iters"), config.at("tol")) {}
@@ -256,8 +255,8 @@ FGmres::FGmres(std::shared_ptr<LinearSystem> system, const size_t max_iters,
 
     // The preconditioner system of equations, and gmres to solve it
     precondition_system_ = precondition_system;
-    preconditioner_ =
-        Gmres(precondition_system, nullptr, nullptr, max_precondition_iters, precondition_tol);
+    preconditioner_ = Gmres(precondition_system, nullptr, nullptr, max_precondition_iters,
+                            precondition_tol);
 }
 
 FGmres::FGmres(std::shared_ptr<LinearSystem> system,
@@ -342,7 +341,8 @@ std::unique_ptr<IterativeLinearSolver> make_linear_solver(
     json config) {
     std::string solver_type = config.at("type");
     if (solver_type == "gmres") {
-        return std::unique_ptr<IterativeLinearSolver>(new Gmres(system, preconditioner, config));
+        return std::unique_ptr<IterativeLinearSolver>(
+            new Gmres(system, preconditioner, config));
     } else if (solver_type == "fgmres") {
         return std::unique_ptr<IterativeLinearSolver>(
             new FGmres(system, preconditioner, config));
@@ -493,11 +493,10 @@ TEST_CASE("RPGMRES") {
             }
             graph.deep_copy(graph_h);
             return graph;
-            
         }
         void compute_matrix(Ibis::CrsMatrix<int, int, Ibis::real>& matrix) {
             auto matrix_h = matrix.host_mirror();
-            matrix_h.deep_copy(matrix); // copy graph to host
+            matrix_h.deep_copy(matrix);  // copy graph to host
             matrix_h(0, 0) = 2.0;
             matrix_h(0, 1) = -0.5;
             matrix_h(1, 0) = -1.0;
@@ -548,7 +547,8 @@ TEST_CASE("RPGMRES") {
     {
         std::shared_ptr<LinearSystem> sys{new TestLinearSystem()};
         std::shared_ptr<LinearSystem> precondition_sys{new TestLinearSystem()};
-        std::shared_ptr<DirectPreconditioner> ilu {new ILU<SharedMem>(precondition_sys, 0)};
+        std::shared_ptr<DirectPreconditioner> ilu{
+            new ILU<SharedMem>(precondition_sys, 0)};
         ilu->update_preconditioner();
         Gmres solver{sys, precondition_sys, ilu, 5, 1e-14};
         Ibis::Vector<Ibis::real> x{"x", 5};
@@ -672,4 +672,4 @@ TEST_CASE("FGMRES") {
     CHECK(x_h(3) == doctest::Approx(1.5));
     CHECK(x_h(4) == doctest::Approx(0.5));
 }
-#endif // DOCTEST_CONFIG_DISABLE
+#endif  // DOCTEST_CONFIG_DISABLE

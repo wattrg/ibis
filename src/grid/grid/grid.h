@@ -887,8 +887,8 @@ public:
 
                 if (distance == 2 && neighbour_cell < grid_host.num_cells()) {
                     auto neighbour_neighbours = neighbours(neighbour_cell);
-                    for (size_t ngbr_ngbr_i = 0; ngbr_ngbr_i < neighbour_neighbours.size();
-                         ngbr_ngbr_i++) {
+                    for (size_t ngbr_ngbr_i = 0;
+                         ngbr_ngbr_i < neighbour_neighbours.size(); ngbr_ngbr_i++) {
                         size_t ngbr_ngbr_cell = neighbour_neighbours(ngbr_ngbr_i);
                         if (ngbr_ngbr_cell != cell_i &&
                             ngbr_ngbr_cell < grid_host.num_cells()) {

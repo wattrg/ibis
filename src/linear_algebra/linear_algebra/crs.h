@@ -2,6 +2,7 @@
 #define CRS_H
 
 #include <util/types.h>
+
 #include <iostream>
 
 namespace Ibis {
@@ -41,7 +42,6 @@ public:
                 return row_start_idx + col_idx;
             }
         }
-        std::cout << row << " " << col << std::endl;
         assert(false && "row and col is not present in CrsMatrix");
     }
 

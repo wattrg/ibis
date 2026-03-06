@@ -3,8 +3,8 @@
 
 // #include <linear_algebra/linear_solver.h>
 #include <linear_algebra/dense_linear_algebra.h>
-#include <linear_algebra/linear_system.h>
 #include <linear_algebra/ilu.h>
+#include <linear_algebra/linear_system.h>
 #include <util/numeric_types.h>
 #include <util/types.h>
 
@@ -48,10 +48,11 @@ public:
 
     Gmres(std::shared_ptr<LinearSystem> system,
           std::shared_ptr<LinearSystem> preconditioner_system,
-          std::shared_ptr<DirectPreconditioner> preconditioner,
-          const size_t max_iters, Ibis::real tol);
+          std::shared_ptr<DirectPreconditioner> preconditioner, const size_t max_iters,
+          Ibis::real tol);
 
-    Gmres(std::shared_ptr<LinearSystem> system, std::shared_ptr<LinearSystem> precondition_system, json config);
+    Gmres(std::shared_ptr<LinearSystem> system,
+          std::shared_ptr<LinearSystem> precondition_system, json config);
 
     LinearSolveResult solve(Ibis::Vector<Ibis::real>& x0);
 
@@ -73,7 +74,6 @@ public:  // this has to be public to access from inside kernels
     Ibis::Vector<Ibis::real> z_;
     Ibis::Vector<Ibis::real> r0_;
     Ibis::Vector<Ibis::real> w_;
-
 
     // least squares problem
     Ibis::Matrix<Ibis::real, HostExecSpace> H0_;

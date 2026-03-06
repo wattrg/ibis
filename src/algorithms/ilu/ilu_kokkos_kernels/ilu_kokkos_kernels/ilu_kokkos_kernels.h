@@ -2,6 +2,7 @@
 #define KOKKOS_KERNELS_ILU_H
 
 #include <linear_algebra/crs.h>
+
 #include <KokkosSparse_spiluk.hpp>
 
 using Scalar = KokkosKernels::default_scalar;
