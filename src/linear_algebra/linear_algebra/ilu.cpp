@@ -1,10 +1,10 @@
 #include <linear_algebra/ilu.h>
 
 template <class MemModel>
-ILU<MemModel>::ILU(std::shared_ptr<LinearSystem> system, size_t k) : system_(system) {
+ILU<MemModel>::ILU(std::shared_ptr<LinearSystem> system, size_t k, int stencil_distance) : system_(system) {
     // construct the graph of the sparsity pattern of the
     // linear system
-    Ibis::CrsGraph<int, int> graph = system->compute_matrix_graph();
+    Ibis::CrsGraph<int, int> graph = system->compute_matrix_graph(stencil_distance);
     Ibis::Array1D<Ibis::real> values("ILU::matrix::values", graph.num_entries());
     matrix_ = Ibis::CrsMatrix<int, int, Ibis::real>(graph, values);
 

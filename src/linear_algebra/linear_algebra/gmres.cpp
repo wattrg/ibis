@@ -82,6 +82,7 @@ LinearSolveResult::LinearSolveResult(bool success_, size_t n_iters_, Ibis::real 
 LinearSolveResult::LinearSolveResult() : LinearSolveResult(false, 0, -1.0, -1.0) {}
 
 Gmres::Gmres(std::shared_ptr<LinearSystem> system,
+             std::shared_ptr<LinearSystem> preconditioner_system,
              std::shared_ptr<DirectPreconditioner> preconditioner,
              const size_t max_iters,
              Ibis::real tol) {
@@ -122,14 +123,15 @@ Gmres::Gmres(std::shared_ptr<LinearSystem> system,
 
     // preconditioner
     if (preconditioner) {
-        precondition_system_ = system_->preconditioner();
+        precondition_system_ = preconditioner_system;
         precondition_solver_ = preconditioner;
     }
 }
 
-Gmres::Gmres(std::shared_ptr<LinearSystem> system, json config)
+Gmres::Gmres(std::shared_ptr<LinearSystem> system, std::shared_ptr<LinearSystem> precondition_system, json config)
     : Gmres(system,
-            make_direct_preconditioner<SharedMem>(system->preconditioner(),
+            precondition_system,
+            make_direct_preconditioner<SharedMem>(precondition_system,
                                                   config.at("preconditioner")),
             config.at("max_iters"), config.at("tol")) {}
 
@@ -255,7 +257,7 @@ FGmres::FGmres(std::shared_ptr<LinearSystem> system, const size_t max_iters,
     // The preconditioner system of equations, and gmres to solve it
     precondition_system_ = precondition_system;
     preconditioner_ =
-        Gmres(precondition_system, nullptr, max_precondition_iters, precondition_tol);
+        Gmres(precondition_system, nullptr, nullptr, max_precondition_iters, precondition_tol);
 }
 
 FGmres::FGmres(std::shared_ptr<LinearSystem> system,
@@ -340,7 +342,7 @@ std::unique_ptr<IterativeLinearSolver> make_linear_solver(
     json config) {
     std::string solver_type = config.at("type");
     if (solver_type == "gmres") {
-        return std::unique_ptr<IterativeLinearSolver>(new Gmres(system, config));
+        return std::unique_ptr<IterativeLinearSolver>(new Gmres(system, preconditioner, config));
     } else if (solver_type == "fgmres") {
         return std::unique_ptr<IterativeLinearSolver>(
             new FGmres(system, preconditioner, config));
@@ -386,7 +388,7 @@ TEST_CASE("GMRES") {
 
         ~TestLinearSystem() {}
 
-        Ibis::CrsGraph<int, int> compute_matrix_graph() {
+        Ibis::CrsGraph<int, int> compute_matrix_graph(int stencil_distance) {
             throw std::runtime_error("Not implemented");
         }
         void compute_matrix(Ibis::CrsMatrix<int, int, Ibis::real>&) {}
@@ -424,7 +426,7 @@ TEST_CASE("GMRES") {
 
     std::shared_ptr<LinearSystem> sys{new TestLinearSystem()};
 
-    Gmres solver{sys, nullptr, 5, 1e-14};
+    Gmres solver{sys, nullptr, nullptr, 5, 1e-14};
     Ibis::Vector<Ibis::real> x{"x", 5};
     LinearSolveResult result = solver.solve(x);
 
@@ -474,7 +476,7 @@ TEST_CASE("RPGMRES") {
 
         ~TestLinearSystem() {}
 
-        Ibis::CrsGraph<int, int> compute_matrix_graph() {
+        Ibis::CrsGraph<int, int> compute_matrix_graph(int stencil_distance) {
             std::vector<int> row_map{0, 2, 5, 8, 11, 13};
             std::vector<int> entries{0, 1, 0, 1, 2, 1, 2, 3, 2, 3, 4, 3, 4};
 
@@ -545,8 +547,10 @@ TEST_CASE("RPGMRES") {
 
     {
         std::shared_ptr<LinearSystem> sys{new TestLinearSystem()};
-        std::shared_ptr<DirectPreconditioner> ilu {new ILU<SharedMem>(sys, 0)};
-        Gmres solver{sys, ilu, 5, 1e-14};
+        std::shared_ptr<LinearSystem> precondition_sys{new TestLinearSystem()};
+        std::shared_ptr<DirectPreconditioner> ilu {new ILU<SharedMem>(precondition_sys, 0)};
+        ilu->update_preconditioner();
+        Gmres solver{sys, precondition_sys, ilu, 5, 1e-14};
         Ibis::Vector<Ibis::real> x{"x", 5};
         LinearSolveResult result = solver.solve(x);
 
@@ -593,7 +597,7 @@ TEST_CASE("FGMRES") {
             Ibis::gemv(matrix_, vec, res);
         }
 
-        Ibis::CrsGraph<int, int> compute_matrix_graph() {
+        Ibis::CrsGraph<int, int> compute_matrix_graph(int stencil_distance) {
             throw std::runtime_error("Not implemented");
         }
 

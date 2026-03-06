@@ -921,7 +921,7 @@ class DirectPreconditioner:
 
 
 class Ilu(DirectPreconditioner):
-    _json_values = ["fill_in"]
+    _json_values = ["fill_in", "stencil_distance"]
     _type = "ilu"
     __slots__ = _json_values
     _defaults_file = "ilu.json"

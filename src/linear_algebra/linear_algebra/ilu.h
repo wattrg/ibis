@@ -23,7 +23,7 @@ class ILU : public DirectPreconditioner {
 public:
     ~ILU() {};
 
-    ILU(std::shared_ptr<LinearSystem> system, size_t k = 0);
+    ILU(std::shared_ptr<LinearSystem> system, size_t k = 0, int stencil_distance = 1);
 
 
     void solve(Ibis::Vector<Ibis::real>& rhs, Ibis::Vector<Ibis::real>& x);

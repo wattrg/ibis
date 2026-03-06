@@ -16,10 +16,13 @@ Jfnk<MemModel>::Jfnk(std::shared_ptr<PseudoTransientLinearSystem> system,
     tolerance_ = config.at("tolerance");
 
     system_ = system;
-    std::shared_ptr<LinearSystem> preconditioner = system_->preconditioner();
-    preconditioner_ =
-        std::dynamic_pointer_cast<PseudoTransientLinearSystem>(preconditioner);
-    gmres_ = make_linear_solver(system, preconditioner_, config.at("linear_solver"));
+    precondition_system_ = nullptr;
+    if (config.at("linear_solver").at("preconditioner").at("type") != "none") {
+        std::shared_ptr<LinearSystem> precondition_system = system_->preconditioner();
+        precondition_system_ =
+            std::dynamic_pointer_cast<PseudoTransientLinearSystem>(precondition_system);
+    }
+    gmres_ = make_linear_solver(system, precondition_system_, config.at("linear_solver"));
 
     cfl_ = std::move(cfl);
     residual_based_cfl_ = cfl_->residual_based();
@@ -38,8 +41,8 @@ int Jfnk<MemModel>::initialise() {
 template <class MemModel>
 void Jfnk<MemModel>::set_pseudo_time_step_size(Ibis::real dt_star) {
     system_->set_pseudo_time_step(dt_star);
-    if (preconditioner_) {
-        preconditioner_->set_pseudo_time_step(dt_star);
+    if (precondition_system_) {
+        precondition_system_->set_pseudo_time_step(dt_star);
     }
 }
 

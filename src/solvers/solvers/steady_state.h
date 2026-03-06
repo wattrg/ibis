@@ -20,7 +20,8 @@ public:
                              std::shared_ptr<ConservedQuantities<Ibis::dual>> cq,
                              std::shared_ptr<FlowStates<Ibis::dual>> fs,
                              std::shared_ptr<Vector3s<Ibis::dual>> vertex_vel,
-                             bool allow_reconstruction = true);
+                             bool allow_reconstruction = true,
+                             int jacobian_stencil_size = 1);
 
     ~SteadyStateLinearisation() {}
 
@@ -28,7 +29,7 @@ public:
     void matrix_vector_product(Ibis::Vector<Ibis::real>& vec,
                                Ibis::Vector<Ibis::real>& result);
 
-    Ibis::CrsGraph<int, int> compute_matrix_graph();
+    Ibis::CrsGraph<int, int> compute_matrix_graph(int stencil_distance);
 
     void compute_matrix(Ibis::CrsMatrix<int, int, Ibis::real>& matrix);
 
@@ -57,6 +58,7 @@ public:
 private:
     Ibis::real dt_star_;
     bool allow_reconstruction_;
+    int jacobian_stencil_size_ = 1;
 
     // memory
     size_t n_cells_;        // excluding ghost cells
@@ -80,7 +82,7 @@ private:
     Vector3s<Ibis::dual> vertex_pos_tmp_;     // storage for perturbed vertex pos
 
     // memory for computing the actual matrix
-    Ibis::Vector<Ibis::real> purt_vec_;
+    Ibis::Vector<Ibis::real> pert_vec_;
     Ibis::Vector<Ibis::real> res_vec_;
 
     // the simulation

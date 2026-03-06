@@ -59,9 +59,9 @@ public:
 
 private:
     std::shared_ptr<PseudoTransientLinearSystem> system_;
-    std::shared_ptr<PseudoTransientLinearSystem> preconditioner_;
-    std::unique_ptr<CflSchedule> cfl_;
+    std::shared_ptr<PseudoTransientLinearSystem> precondition_system_;
     std::unique_ptr<IterativeLinearSolver> gmres_;
+    std::unique_ptr<CflSchedule> cfl_;
     Ibis::Vector<Ibis::real> dU_;
 
     size_t max_steps_;

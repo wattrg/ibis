@@ -19,11 +19,12 @@ SteadyStateLinearisation<MemModel>::SteadyStateLinearisation(
     std::shared_ptr<ConservedQuantities<Ibis::dual>> residuals,
     std::shared_ptr<ConservedQuantities<Ibis::dual>> cq,
     std::shared_ptr<FlowStates<Ibis::dual>> fs,
-    std::shared_ptr<Vector3s<Ibis::dual>> vertex_vel, bool allow_reconstruction) {
+    std::shared_ptr<Vector3s<Ibis::dual>> vertex_vel, bool allow_reconstruction, int jacobian_stencil_size) {
     sim_ = sim;
     cq_ = cq;
     fs_ = fs;
     allow_reconstruction_ = allow_reconstruction;
+    jacobian_stencil_size_ = jacobian_stencil_size;
     size_t dim = sim_->grid.dim();
 
     size_t num_grid_vars = 0;
@@ -134,11 +135,11 @@ void SteadyStateLinearisation<MemModel>::matrix_vector_product(
 }
 
 template <class MemModel>
-Ibis::CrsGraph<int, int> SteadyStateLinearisation<MemModel>::compute_matrix_graph() {
+Ibis::CrsGraph<int, int> SteadyStateLinearisation<MemModel>::compute_matrix_graph(int stencil_distance) {
     // get the graph of the grid
     auto grid = sim_->grid;
-    grid.compute_graph(2);
-    auto grid_graph = grid.graph(2);
+    grid.compute_graph(stencil_distance);
+    auto grid_graph = grid.graph(stencil_distance);
     auto grid_graph_h = grid_graph.host_mirror();
     grid_graph_h.deep_copy(grid_graph);
 
@@ -146,12 +147,12 @@ Ibis::CrsGraph<int, int> SteadyStateLinearisation<MemModel>::compute_matrix_grap
     size_t n_cons = n_cons_;
     std::vector<int> serial_rowmap{0};
     std::vector<int> serial_entries;
-    for (size_t row_i = 0; row_i < grid_graph_h.num_rows(); row_i++) {
-        int grid_row_start_idx = grid_graph_h.row_map(row_i);
-        int num_values_in_row = grid_graph_h.row_map(row_i + 1) - grid_row_start_idx;
+    for (size_t grid_row_idx = 0; grid_row_idx < grid_graph_h.num_rows(); grid_row_idx++) {
+        int grid_row_start_idx = grid_graph_h.row_map(grid_row_idx);
+        int num_values_in_row = grid_graph_h.row_map(grid_row_idx + 1) - grid_row_start_idx;
         for (size_t cons_i_row = 0; cons_i_row < n_cons; cons_i_row++) {
-            for (int col_idx = 0; col_idx < num_values_in_row; col_idx++) {
-                int grid_col = grid_graph_h.entries(grid_row_start_idx + col_idx);
+            for (int grid_col_idx = 0; grid_col_idx < num_values_in_row; grid_col_idx++) {
+                int grid_col = grid_graph_h.entries(grid_row_start_idx + grid_col_idx);
                 int start_idx = grid_col * n_cons;
                 for (size_t cons_i = 0; cons_i < n_cons; cons_i++) {
                     serial_entries.push_back(start_idx + cons_i);
@@ -182,8 +183,8 @@ void SteadyStateLinearisation<MemModel>::compute_matrix(
     Ibis::CrsMatrix<int, int, Ibis::real>& matrix) {
     auto grid = sim_->grid;
     size_t num_cells = grid.num_cells();
-    if (purt_vec_.size() < n_vars_) {
-        purt_vec_ =
+    if (pert_vec_.size() < n_vars_) {
+        pert_vec_ =
             Ibis::Vector<Ibis::real>("SteadyStateLineariation::purt_vec", n_vars_);
     }
     if (res_vec_.size() < n_vars_) {
@@ -192,65 +193,80 @@ void SteadyStateLinearisation<MemModel>::compute_matrix(
     if (grid.colours().size() == 0) {
         grid.compute_colours();
     }
-    auto purt_vec = purt_vec_;
+    auto pert_vec = pert_vec_;
     auto res_vec = res_vec_;
     int num_colours = grid.num_colours();
+    int stencil_distance = jacobian_stencil_size_;
     size_t n_cons = n_cons_;
     auto colours = grid.colours();
     auto neighbours = grid.cells().neighbour_cells();
+    Kokkos::deep_copy(matrix.values, 0.0);
     for (int colour = 0; colour < num_colours; colour++) {
-        for (size_t conserved_i = 0; conserved_i < n_cons_; conserved_i++) {
-            // set values in the purturbation vector
+        for (size_t perturbed_conserved_i = 0; perturbed_conserved_i < n_cons_; perturbed_conserved_i++) {
+            // set values in the perturbation vector
             Ibis::parallel_for(
                 "SteadyStateLinearisation::set_purturbation_vec", num_cells,
                 KOKKOS_LAMBDA(const size_t cell_i) {
-                    size_t vector_idx = cell_i * n_cons + conserved_i;
-                    int cell_colour = colours(cell_i);
-                    purt_vec(vector_idx) = (cell_colour == colour) ? 1.0 : 0.0;
+                    for (size_t cons_i = 0; cons_i < n_cons; cons_i++) {
+                        size_t vector_idx = cell_i * n_cons + cons_i;
+                        int cell_colour = colours(cell_i);
+                        pert_vec(vector_idx) = (cell_colour == colour && cons_i == perturbed_conserved_i) ? 1.0 : 0.0;
+                    }
                 });
 
             // Perform matrix-vector product
-            matrix_vector_product(purt_vec, res_vec);
+            matrix_vector_product(pert_vec, res_vec);
 
             // extract matrix elements
             Ibis::parallel_for(
                 "SteadyStateLinearisation::set_crs", num_cells,
                 KOKKOS_LAMBDA(const size_t cell_i) {
+                    // This essentially does a depth first search of the cell's neighbours
+                    // to find a cell that was perturbed. Maybe breadth first would be better?
                     if (colours(cell_i) == colour) {
-                        // this cell was purturbed, so we'll fill out
-                        // the matrix entries for it
-                        size_t row_idx = cell_i * n_cons + conserved_i;
-                        auto cell_i_ngbrs = neighbours(cell_i);
-                        for (size_t cons_i = 0; cons_i < n_cons; cons_i++) {
-                            size_t col_idx = cell_i * n_cons + cons_i;
-                            matrix(row_idx, col_idx) = res_vec(col_idx);
+                        // this cell was perturbed
+                        size_t col_idx = cell_i * n_cons + perturbed_conserved_i;
+                        for (size_t affected_conserved_i = 0; affected_conserved_i < n_cons; affected_conserved_i++) {
+                            size_t row_idx = cell_i * n_cons + affected_conserved_i;
+                            matrix(row_idx, col_idx) = res_vec(row_idx);
                         }
+                        return;
+                    } else if (stencil_distance >= 1) {
+                        // Check if the neighbours of this cell was perturbed
+                        auto cell_i_ngbrs = neighbours(cell_i);
                         for (size_t ngbr_i = 0; ngbr_i < cell_i_ngbrs.size(); ngbr_i++) {
                             size_t ngbr_cell = cell_i_ngbrs(ngbr_i);
                             if (ngbr_cell < num_cells) {
-                                for (size_t cons_i = 0; cons_i < n_cons; cons_i++) {
-                                    size_t col_idx = ngbr_cell * n_cons + cons_i;
-                                    matrix(row_idx, col_idx) = res_vec(col_idx);
-                                }
-                            }
-
-                            if (ngbr_cell < num_cells) {
-                                auto ngbr_ngbrs = neighbours(ngbr_cell);
-                                for (size_t ngbr_ngbr_i = 0; ngbr_ngbr_i < ngbr_ngbrs.size();
-                                     ngbr_ngbr_i++) {
-                                    size_t ngbr_ngbr_cell = ngbr_ngbrs(ngbr_ngbr_i);
-                                    if (ngbr_ngbr_cell != cell_i and ngbr_ngbr_cell < num_cells) {
-                                        for (size_t cons_i = 0; cons_i < n_cons; cons_i++) {
-                                            size_t col_idx = ngbr_ngbr_cell * n_cons + cons_i;
-                                            matrix(row_idx, col_idx) = res_vec(col_idx);
-                                        }
+                                if (colours(ngbr_cell) == colour) {
+                                    // cell_i was perturbed by ngbr_cell
+                                    size_t col_idx = ngbr_cell * n_cons + perturbed_conserved_i;
+                                    for (size_t affected_cons_i = 0; affected_cons_i < n_cons; affected_cons_i++) {
+                                        size_t row_idx = cell_i * n_cons + affected_cons_i;
+                                        matrix(row_idx, col_idx) = res_vec(row_idx);
+                                    }
+                                    return;
+                                }                          
+                                else if (stencil_distance >= 2) {
+                                    auto ngbr_ngbrs = neighbours(ngbr_cell);
+                                    for (size_t ngbr_ngbr_i = 0; ngbr_ngbr_i < ngbr_ngbrs.size(); ngbr_ngbr_i++) {
+                                        size_t ngbr_ngbr_cell = ngbr_ngbrs(ngbr_ngbr_i);
+                                        if (ngbr_ngbr_cell < num_cells && ngbr_ngbr_cell != cell_i) {
+                                            if (colours(ngbr_ngbr_cell) == colour) {
+                                                size_t col_idx = ngbr_ngbr_cell * n_cons + perturbed_conserved_i;
+                                                for (size_t affected_cons_i = 0; affected_cons_i < n_cons; affected_cons_i++) {
+                                                    size_t row_idx = cell_i * n_cons + affected_cons_i;
+                                                    matrix(row_idx, col_idx) = res_vec(row_idx);
+                                                }
+                                                return;
+                                            }
+                                        }                                 
                                     }
                                 }
-                            
                             }
                         }
                     }
-                });
+                }  
+            );
         }
     }
 }

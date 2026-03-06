@@ -47,10 +47,11 @@ public:
     ~Gmres() {}
 
     Gmres(std::shared_ptr<LinearSystem> system,
+          std::shared_ptr<LinearSystem> preconditioner_system,
           std::shared_ptr<DirectPreconditioner> preconditioner,
           const size_t max_iters, Ibis::real tol);
 
-    Gmres(std::shared_ptr<LinearSystem> system, json config);
+    Gmres(std::shared_ptr<LinearSystem> system, std::shared_ptr<LinearSystem> precondition_system, json config);
 
     LinearSolveResult solve(Ibis::Vector<Ibis::real>& x0);
 
