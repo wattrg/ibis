@@ -2,8 +2,7 @@
 #define CRS_H
 
 #include <util/types.h>
-
-#include <iostream>
+#include <util/unreachable.h>
 
 namespace Ibis {
 
@@ -43,6 +42,7 @@ public:
             }
         }
         assert(false && "row and col is not present in CrsMatrix");
+        UNREACHABLE("row and col is not present in CrsMatrx");
     }
 
     KOKKOS_INLINE_FUNCTION

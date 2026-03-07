@@ -11,22 +11,8 @@
 #include <doctest/extensions/doctest_mpi.h>
 #endif
 
-// template <typename T, class ExecSpace, class Layout>
-// void GridBlock<T, ExecSpace,
-// Layout>::set_motion_driver(std::shared_ptr<GridMotionDriver<T>> driver) {
-//     motion_driver_ = driver;
-// }
 
-// template <typename T, class ExecSpace, class Layout>
-// void GridBlock<T, ExecSpace, Layout>::compute_grid_motion(const FlowStates<T>& fs,
-//                                        const Vector3s<T>& vertex_vel) {
-//     motion_driver_->compute_vertex_velocities(fs, *this, vertex_vel);
-//     compute_face_vel(vertex_vel);
-// }
-// template class GridBlock<Ibis::real, Kokkos::DefaultExecutionSpace,
-// Kokkos::DefaultExecutionSpace::array_layout>; template class GridBlock<Ibis::dual,
-// Kokkos::DefaultExecutionSpace, Kokkos::DefaultExecutionSpace::array_layout>;
-
+#ifndef DOCTEST_CONFIG_DISABLE
 struct GridInfo {
     Vertices<Ibis::real, Kokkos::DefaultHostExecutionSpace> vertices;
     Interfaces<Ibis::real, Kokkos::DefaultHostExecutionSpace> faces;
@@ -333,3 +319,4 @@ TEST_CASE("ghost cell centres") {
     CHECK(block_host.cells().centroids().y(ghost_cell) == 3.5);
     CHECK(block_host.cells().centroids().z(ghost_cell) == 0.0);
 }
+#endif // DOCTEST_CONFIG_DISABLE

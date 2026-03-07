@@ -57,7 +57,7 @@ FiniteVolume<T, MemModel>::FiniteVolume(GridBlock<MemModel, T>& grid, json confi
 
     // setup internal boundaries
     size_t num_flow_vars = (grid.dim() == 3) ? 5 : 4;
-    size_t num_grads = cell_grad_.num_grads() * grid.dim();
+    // size_t num_grads = cell_grad_.num_grads() * grid.dim();
     for (size_t block_i = 0; block_i < grid.other_blocks().size(); block_i++) {
         size_t other_block = grid.other_block(block_i);
         size_t num_cells_on_boundary = grid.internal_boundary_map(other_block).size();

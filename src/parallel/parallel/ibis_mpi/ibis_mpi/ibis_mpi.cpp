@@ -82,6 +82,7 @@ void Ibis::init_mpi_conserved_quantities_norms() {
                   1, &MPI_ConservedQuantitiesNorm_sum_dual);
 }
 
+#ifndef DOCTEST_CONFIG_DISABLE
 // Tests
 // Pure MPI reductions
 MPI_TEST_CASE("MPI_Min_scalar", 2) {
@@ -402,4 +403,5 @@ MPI_TEST_CASE("MPI_sum_conserved_quantities_norm_real", 2) {
     CHECK(result.energy() == 180.0);
 }
 
+#endif // DOCTEST_CONFIG_DISABLE
 #endif

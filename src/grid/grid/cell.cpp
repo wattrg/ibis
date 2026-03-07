@@ -3,6 +3,7 @@
 #include <grid/cell.h>
 #include <grid/interface.h>
 
+#ifndef DOCTEST_CONFIG_DISABLE
 struct CellInfo {
     Vertices<Ibis::real> vertices;
     Interfaces<Ibis::real> interfaces;
@@ -97,3 +98,4 @@ TEST_CASE("cell_centre") {
         CHECK(Kokkos::fabs(cells_mirror.centroids().y(i) - y_values[i]) < 1e-14);
     }
 }
+#endif // DOCTEST_CONFIG_DISABLE

@@ -1,6 +1,7 @@
 #include <doctest/doctest.h>
 #include <grid/interface.h>
 
+#ifndef DOCTEST_CONFIG_DISABLE
 Interfaces<Ibis::real> generate_interfaces() {
     Vertices<Ibis::real> vertices(16);
     auto vertices_host = vertices.host_mirror();
@@ -95,3 +96,4 @@ TEST_CASE("Interface centres") {
         CHECK(Kokkos::abs(centre_mirror.z(i) - 0.0) < 1e-14);
     }
 }
+#endif // DOCTEST_CONFIG_DISABLE

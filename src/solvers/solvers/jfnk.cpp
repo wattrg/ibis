@@ -64,9 +64,9 @@ LinearSolveResult Jfnk<MemModel>::step(std::shared_ptr<Sim<Ibis::dual, MemModel>
     // solve the linear system of equations
     if (last_gmres_result_.n_iters > gmres_iters_to_recompute_preconditioner_ ||
         !last_gmres_result_.success) {
-        last_gmres_result_ = gmres_->solve(dU_);
-        
+        gmres_->update_preconditioner();
     }
+    last_gmres_result_ = gmres_->solve(dU_);
 
     // apply the update and calculate the new residuals
     // so we can check non-linear convergence.

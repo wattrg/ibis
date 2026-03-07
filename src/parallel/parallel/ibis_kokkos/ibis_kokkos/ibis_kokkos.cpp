@@ -19,6 +19,7 @@ int Ibis::get_world_rank<SharedMem>() {
     return 0;
 }
 
+#ifndef DOCTEST_CONFIG_DISABLE
 TEST_CASE("shared_parallel_reduction") {
     double result = Ibis::parallel_reduce<Min<double>, SharedMem>(
         "test", 10,
@@ -34,3 +35,4 @@ TEST_CASE("shared_parallel_reduction") {
 
     CHECK(result == 5);
 }
+#endif // DOCTEST_CONFIG_DISABLE
