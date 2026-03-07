@@ -21,6 +21,7 @@ Jfnk<MemModel>::Jfnk(std::shared_ptr<PseudoTransientLinearSystem> system,
         std::shared_ptr<LinearSystem> precondition_system = system_->preconditioner();
         precondition_system_ =
             std::dynamic_pointer_cast<PseudoTransientLinearSystem>(precondition_system);
+        gmres_iters_to_recompute_preconditioner_ = config.at("linear_solver").at("preconditioner").at("gmres_iters_before_recompute");
     }
     gmres_ = make_linear_solver(system, precondition_system_, config.at("linear_solver"));
 
@@ -35,6 +36,7 @@ int Jfnk<MemModel>::initialise() {
     system_->eval_rhs();
     residual_norms_ = residuals_->L2_norms<MemModel>();
     initial_residual_norms_ = residual_norms_;
+    gmres_->update_preconditioner();
     return 0;
 }
 
@@ -60,8 +62,11 @@ LinearSolveResult Jfnk<MemModel>::step(std::shared_ptr<Sim<Ibis::dual, MemModel>
     set_pseudo_time_step_size(cfl * stable_dt_);
 
     // solve the linear system of equations
-    gmres_->update_preconditioner();
-    last_gmres_result_ = gmres_->solve(dU_);
+    if (last_gmres_result_.n_iters > gmres_iters_to_recompute_preconditioner_ ||
+        !last_gmres_result_.success) {
+        last_gmres_result_ = gmres_->solve(dU_);
+        
+    }
 
     // apply the update and calculate the new residuals
     // so we can check non-linear convergence.

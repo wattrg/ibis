@@ -59,14 +59,15 @@ public:
 
 private:
     std::shared_ptr<PseudoTransientLinearSystem> system_;
-    std::shared_ptr<PseudoTransientLinearSystem> precondition_system_;
     std::unique_ptr<IterativeLinearSolver> gmres_;
+    std::shared_ptr<PseudoTransientLinearSystem> precondition_system_;
     std::unique_ptr<CflSchedule> cfl_;
     Ibis::Vector<Ibis::real> dU_;
 
     size_t max_steps_;
     Ibis::real tolerance_;
     Ibis::real stable_dt_;
+    size_t gmres_iters_to_recompute_preconditioner_ = 20;
 
     std::shared_ptr<ConservedQuantities<Ibis::dual>> residuals_;
     ConservedQuantitiesNorm<Ibis::dual> residual_norms_;

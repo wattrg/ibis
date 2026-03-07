@@ -15,8 +15,8 @@ config.gas_model = gas_model
 config.solver = SteadyState(
     cfl=10.0,
     max_steps=1000,
-    print_frequency=10,
-    plot_frequency=10,
+    print_frequency=100,
+    plot_frequency=100,
     diagnostics_frequency=1,
     tolerance=1e-10,
     linear_solver=Gmres(tol=1e-1, max_iters=50, preconditioner=Ilu()),

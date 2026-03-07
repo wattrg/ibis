@@ -402,7 +402,7 @@ class Block:
         vx = open(f"{block_ic_directory}/vx", format)
         vy = open(f"{block_ic_directory}/vy", format)
         if self.dim == 3:
-            vz = open(f"{ic_directory}/vz", format)
+            vz = open(f"{block_ic_directory}/vz", format)
 
         if type(self._initial_condition) is FlowState:
             for _ in range(self.number_cells):
@@ -921,7 +921,7 @@ class DirectPreconditioner:
 
 
 class Ilu(DirectPreconditioner):
-    _json_values = ["fill_in", "stencil_distance"]
+    _json_values = ["fill_in", "stencil_distance", "gmres_iters_before_recompute"]
     _type = "ilu"
     __slots__ = _json_values
     _defaults_file = "ilu.json"

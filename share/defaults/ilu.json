@@ -1,4 +1,5 @@
 {
   "fill_in": 0,
-  "stencil_distance": 1
+  "stencil_distance": 1,
+  "gmres_iters_before_recompute": 30
 }
