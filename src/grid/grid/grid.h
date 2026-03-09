@@ -869,6 +869,13 @@ public:
             std::runtime_error("Grid graph distance should be 1 or 2");
         }
 
+        if (distance == 1 && distance_1_graph_.row_map.size() == num_cells() + 1) {
+            return;
+        }
+        if (distance == 2 && distance_2_graph_.row_map.size() == num_cells() + 1) {
+            return;
+        }
+
         auto grid_host = this->host_mirror();
         grid_host.deep_copy(*this);
 
@@ -897,7 +904,9 @@ public:
                     }
                 }
             }
-            serial_row_map.push_back(serial_entries.size());
+            serial_row_map.push_back(serial_entries.size());   
+            std::sort(serial_entries.begin() + serial_row_map[cell_i], 
+                      serial_entries.begin() + serial_row_map[cell_i + 1]);         
         }
 
         Ibis::Array1D<int, array_layout, memory_space> row_map("CrsGraph::row_map",
