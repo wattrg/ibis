@@ -14,6 +14,8 @@ public:
 
     Vector3<T> &pos() { return _pos; }
 
+    const Vector3<T> &pos() const { return _pos; }
+
     bool operator==(const Vertex<T> &other) const { return _pos == other._pos; }
 
 private:

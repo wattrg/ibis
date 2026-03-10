@@ -83,6 +83,8 @@ PYBIND11_MODULE(python_api, m) {
         .def("vertices",
              static_cast<std::vector<Vertex<Ibis::real>> (GridIO::*)() const>(
                  &GridIO::vertices))
+        .def("cell_centre", static_cast<Vector3<Ibis::real> (GridIO::*)(size_t) const>(
+            &GridIO::cell_centre))
         .def("cells",
              static_cast<const std::vector<ElemIO>& (GridIO::*)() const>(
                  &GridIO::cells));

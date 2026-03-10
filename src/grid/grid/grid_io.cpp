@@ -592,6 +592,24 @@ size_t GridIO::local_to_global_cell_id(size_t local_id) const {
     return local_to_global_cell_map_.at(local_id);
 }
 
+Vector3<Ibis::real> GridIO::cell_centre(size_t cell_i) const {
+    std::vector<size_t> vertex_ids = cells_[cell_i].vertex_ids();
+    size_t n_vertices = vertex_ids.size();
+    Ibis::real x = 0.0;
+    Ibis::real y = 0.0;
+    Ibis::real z = 0.0;
+    for (size_t vertex_id : vertex_ids) {
+        Vector3<Ibis::real> vertex_pos = vertices_[vertex_id].pos();
+        x += vertex_pos.x;
+        y += vertex_pos.y;
+        z += vertex_pos.z;
+    }
+    x /= n_vertices;
+    y /= n_vertices;
+    z /= n_vertices;
+    return Vector3<Ibis::real>(x, y, z);
+}
+
 InterfaceLookup::InterfaceLookup() {
     hash_map_ = std::unordered_map<std::string, size_t>{};
 }

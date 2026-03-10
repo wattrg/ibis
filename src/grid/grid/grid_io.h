@@ -150,6 +150,8 @@ public:
 
     const std::vector<ElemIO> &cells() const { return cells_; }
 
+    Vector3<Ibis::real> cell_centre(size_t cell_i) const;
+
     const std::vector<std::vector<size_t>> &cell_face_ids() const { return cell_faces_; }
 
     std::unordered_map<std::string, std::vector<ElemIO>> markers() const {
