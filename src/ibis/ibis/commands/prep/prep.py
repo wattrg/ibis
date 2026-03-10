@@ -14,7 +14,15 @@ from ibis_py_utils import (
     GasModel,
 )
 
-from python_api import PyAusmdv, PyHanel, PyLdfss2, PyRusanov, GasState, PyIdealGas
+from python_api import (
+    PyAusmdv,
+    PyHanel,
+    PyLdfss2,
+    PyRusanov,
+    GasState,
+    PyIdealGas,
+    GridIO,
+)
 
 validation_errors = []
 
@@ -404,14 +412,38 @@ class Block:
         if self.dim == 3:
             vz = open(f"{block_ic_directory}/vz", format)
 
+        def write_flow_state(flow_state, binary):
+            temp.write(self._number(flow_state.gas.T, binary))
+            pressure.write(self._number(flow_state.gas.p, binary))
+            vx.write(self._number(flow_state.vel.x, binary))
+            vy.write(self._number(flow_state.vel.y, binary))
+            if self.dim == 3:
+                vz.write(self._number(flow_state.vel.z), binary)
+
         if type(self._initial_condition) is FlowState:
             for _ in range(self.number_cells):
-                temp.write(self._number(self._initial_condition.gas.T, binary))
-                pressure.write(self._number(self._initial_condition.gas.p, binary))
-                vx.write(self._number(self._initial_condition.vel.x, binary))
-                vy.write(self._number(self._initial_condition.vel.y, binary))
-                if self.dim == 3:
-                    vz.write(self._number(self._initial_condition.vel.z, binary))
+                write_flow_state(self._initial_condition, binary)
+        elif callable(self._initial_condition):
+            grid_io = GridIO(f"{self.base_grid_path}/block_{self._id:04}.su2", self._id)
+            cells = grid_io.cells()
+            vertices = grid_io.vertices()
+            for cell_i in range(self.number_cells):
+                cell_vertex_ids = cells[cell_i].vertex_ids()
+                x = 0.0
+                y = 0.0
+                z = 0.0
+                n = 0
+                for vertex_id in cell_vertex_ids:
+                    vertex = vertices[vertex_id]
+                    x += vertex.pos().x
+                    y += vertex.pos().y
+                    z += vertex.pos().z
+                    n += 1
+                x /= n
+                y /= n
+                z /= n
+                flow_state = self._initial_condition(x, y, z)
+                write_flow_state(flow_state, binary)
 
         temp.close()
         pressure.close()

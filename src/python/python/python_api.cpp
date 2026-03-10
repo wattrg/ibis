@@ -2,6 +2,7 @@
 #include <gas/gas_model.h>
 #include <gas/gas_state.h>
 #include <pybind11/pybind11.h>
+#include <pybind11/stl.h>
 #include <util/vector3.h>
 
 #define DOCTEST_CONFIG_IMPLEMENT
@@ -69,5 +70,20 @@ PYBIND11_MODULE(python_api, m) {
         .def("name", &Rusanov<Ibis::real>::name);
 
     // GridIO
-    pybind11::class_<GridIO>(m, "GridIO").def(pybind11::init<std::string>());
+    pybind11::class_<Vertex<Ibis::real>>(m, "Vertex")
+        .def("pos", static_cast<Vector3<Ibis::real>& (Vertex<Ibis::real>::*)()>(
+            &Vertex<Ibis::real>::pos));
+    pybind11::class_<ElemIO>(m, "ElemIO")
+        .def("vertex_ids",
+             static_cast<std::vector<size_t> (ElemIO::*)() const>(
+                &ElemIO::vertex_ids));
+    pybind11::class_<GridIO>(m, "GridIO")
+        .def(pybind11::init<std::string>())
+        .def(pybind11::init<std::string, size_t>())
+        .def("vertices",
+             static_cast<std::vector<Vertex<Ibis::real>> (GridIO::*)() const>(
+                 &GridIO::vertices))
+        .def("cells",
+             static_cast<const std::vector<ElemIO>& (GridIO::*)() const>(
+                 &GridIO::cells));
 }
