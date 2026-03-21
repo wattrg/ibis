@@ -1,5 +1,10 @@
 import json
 from python_api import Vector3
+from pathlib import Path
+from python_api import GridIO, vtk_type_from_elem_type
+import numpy as np
+import pyvista as pv
+from typing import Self
 
 
 def read_defaults(defaults_dir, file_name):
@@ -31,9 +36,13 @@ class FlowState:
 
     def as_dict(self):
         return {
-            "p": self.gas.p, "T": self.gas.T,
-            "rho": self.gas.rho, "energy": self.gas.energy,
-            "vx": self.vel.x, "vy": self.vel.y, "vz": self.vel.z
+            "p": self.gas.p,
+            "T": self.gas.T,
+            "rho": self.gas.rho,
+            "energy": self.gas.energy,
+            "vx": self.vel.x,
+            "vy": self.vel.y,
+            "vz": self.vel.z,
         }
 
 
@@ -50,7 +59,7 @@ class SutherlandViscosity:
             "type": "sutherland",
             "mu_0": self._mu_0,
             "T_0": self._T_0,
-            "T_s": self._T_s
+            "T_s": self._T_s,
         }
 
 
@@ -61,15 +70,11 @@ class ConstantPrandtlNumber:
         self._Pr = Pr
 
     def as_dict(self):
-        return {
-            "type": "constant_prandtl_number",
-            "Pr": self._Pr
-        }
+        return {"type": "constant_prandtl_number", "Pr": self._Pr}
 
 
 class TransportPropertyModel:
-    __slots__ = ["_viscosity_model",
-                 "_thermal_conducitivty_model"]
+    __slots__ = ["_viscosity_model", "_thermal_conducitivty_model"]
 
     def __init__(self, viscosity, thermal_conductivity):
         self._viscosity_model = viscosity
@@ -84,7 +89,7 @@ class TransportPropertyModel:
     def as_dict(self):
         return {
             "viscosity": self._viscosity_model.as_dict(),
-            "thermal_conductivity": self._thermal_conducitivty_model.as_dict()
+            "thermal_conductivity": self._thermal_conducitivty_model.as_dict(),
         }
 
     def validate(self):
@@ -92,8 +97,7 @@ class TransportPropertyModel:
 
 
 class GasModel:
-    __slots__ = ["_gas_model", "_transport_properties", "_type",
-                 "_species"]
+    __slots__ = ["_gas_model", "_transport_properties", "_type", "_species"]
 
     def update_thermo_from_pT(self, gas_state):
         self._gas_model.update_thermo_from_pT(gas_state)
@@ -118,3 +122,110 @@ class GasModel:
 
     def as_dict(self):
         return self._gas_model.as_dict()
+
+
+def _grid_to_pyvista(grid: GridIO) -> pv.UnstructuredGrid:
+    grid_vertices = grid.vertices()
+    vertices = np.zeros((len(grid_vertices), 3))
+    for i, grid_vertex in enumerate(grid_vertices):
+        vertices[i, 0] = grid_vertex.x
+        vertices[i, 1] = grid_vertex.y
+        vertices[i, 2] = grid_vertex.z
+
+    grid_cells = grid.cells()
+    cell_types = []
+    cells = []
+    for i, cell in enumerate(grid_cells):
+        # fill out cell_types and cells
+        cell_types.append(vtk_type_from_elem_type(cell.cell_type))
+        cell_vertices = cell.vertex_ids()
+        cells.append(len(cell_vertices))
+        for cell_vertex in cell_vertices:
+            cells.append(cell_vertex)
+    return pv.UnstructuredGrid(cells, cell_types, vertices)
+
+
+def _read_flow_data(file, binary_format):
+    if binary_format:
+        return np.fromfile(file, dtype=np.float64)
+    else:
+        return np.loadtxt(file, dtype=np.float64)
+
+
+class FlowSolution:
+    def __init__(self, solution: pv.UnstructuredGrid):
+        self._pv_mesh = solution
+        self._cell_data_cache = self._pv_mesh.point_data_to_cell_data()
+
+    @classmethod
+    def from_grid(cls, grid: GridIO) -> Self:
+        pv_mesh = _grid_to_pyvista(grid)
+        return cls(pv_mesh)
+
+    @classmethod
+    def from_directory(cls, base_dir: Path | str, time_index: int) -> Self:
+        dir = Path(base_dir)
+
+        # read simulation config
+        with open(dir / "config" / "config.json") as f:
+            config = json.load(f)
+
+        # read the grid
+        if config["grids"][0]["motion"]["enabled"]:
+            grid_dir = dir / "io" / "grid" / f"{time_index:.04}"
+        else:
+            grid_dir = dir / "io" / "grid" / "0000"
+        flow_dir = dir / "io" / "flow" / f"{time_index:.04}"
+        grids = [GridIO(grid_dir, i) for i in range(len(config["grids"]))]
+
+        if config["io"]["flow_format"] == "native_binary":
+            binary_flow_data = True
+        else:
+            binary_flow_data = False
+
+        pv_meshs = []
+        for grid in grids:
+            # read the grid
+            pv_mesh = _grid_to_pyvista(grid)
+
+            # read corresponding flow data
+            flow_dir_block = flow_dir / f"block_{grid.id():04}"
+            pv_mesh.cell_data["p"] = _read_flow_data(
+                flow_dir_block / "p", binary_flow_data
+            )
+            pv_mesh.cell_data["T"] = _read_flow_data(
+                flow_dir_block / "T", binary_flow_data
+            )
+            pv_mesh.cell_data["vel"] = np.zeros((len(grid.cell()), 3))
+            vx = _read_flow_data(flow_dir_block / "vx", binary_flow_data)
+            vy = _read_flow_data(flow_dir_block / "vy", binary_flow_data)
+            pv_mesh.cell_data["vel"][:, 0] = vx
+            pv_mesh.cell_data["vel"][:, 1] = vy
+            if grid.dim() == 3:
+                vz = _read_flow_data(flow_dir_block / "vz", binary_flow_data)
+                pv_mesh.cell_data["vel"][:, 2] = vz
+
+            pv_meshs.append(pv_mesh)
+
+        # join grids together
+        flow_solution = pv.UnstructuredGrid()
+        flow_solution = flow_solution.merge(pv_meshs)
+        flow_solution.cell_data_to_point_data()
+        return cls(flow_solution)
+
+    def interpolate(self, other_solution: Self):
+        self._pv_mesh.sample(other_solution._pv_mesh)
+
+    def _to_cell_data(self):
+        if self._cell_data_cache is None:
+            self._cell_data_cache = self._pv_mesh.point_data_to_cell_data()
+        return self._cell_data_cache
+
+    def pressure(self) -> np.array:
+        return self._to_cell_data().cell_data["p"]
+
+    def temperature(self) -> np.array:
+        return self._to_cell_data().cell_data["T"]
+
+    def velocity(self) -> np.array:
+        return self._to_cell_data().cell_data["vel"]

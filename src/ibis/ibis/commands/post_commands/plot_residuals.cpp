@@ -2,9 +2,17 @@
 #include <ibis/commands/post_commands/plot_residuals.h>
 #include <runtime_dirs.h>
 #include <spdlog/spdlog.h>
+#include <filesystem>
 
 int plot_residuals() {
-    Py_Initialize();
+    PyConfig config;
+    PyConfig_InitPythonConfig(&config);
+
+    auto venv_dir = std::filesystem::path(IBIS_VENV_PATH);
+    auto venv_exec = (venv_dir / "bin" / "python").wstring();
+    PyConfig_SetString(&config, &config.executable, venv_exec.c_str());
+    Py_InitializeFromConfig(&config);
+    PyConfig_Clear(&config);
 
     PyObject* prep_script_name = PyUnicode_FromString("plot_residuals.py");
     if (prep_script_name == NULL) {

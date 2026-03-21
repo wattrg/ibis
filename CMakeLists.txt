@@ -43,12 +43,23 @@ setup_runtime_dirs()
 INCLUDE(${CMAKE_CURRENT_SOURCE_DIR}/cmake/ibis_version.cmake)
 setup_ibis_version()
 
+INCLUDE(${CMAKE_CURRENT_SOURCE_DIR}/cmake/python_venv.cmake)
+setup_python_venv(
+  NAME         ibis_venv
+  DIR          "${CMAKE_BINARY_DIR}/venv"
+  REQUIREMENTS "${CMAKE_SOURCE_DIR}/requirements.txt"
+  INSTALL_DIR  "lib/venv"            # relative to CMAKE_INSTALL_PREFIX
+  CPP_DEFINE   IBIS_VENV_PATH
+)
+
 # add external dependancies
 add_subdirectory(extern/doctest EXCLUDE_FROM_ALL)
 add_subdirectory(extern/kokkos EXCLUDE_FROM_ALL)
 add_subdirectory(extern/json EXCLUDE_FROM_ALL)
 add_subdirectory(extern/spdlog EXCLUDE_FROM_ALL)
 add_subdirectory(extern/CLI11 EXCLUDE_FROM_ALL)
+
+set(Python_FIND_VIRTUALENV ONLY)
 find_package(Python COMPONENTS Interpreter Development REQUIRED)
 add_subdirectory(extern/pybind11 EXCLUDE_FROM_ALL)
 
@@ -129,3 +140,5 @@ add_subdirectory(share)
 # allow packaging to distribute a pre-compiled 
 # version of the code
 include(CPack)
+
+

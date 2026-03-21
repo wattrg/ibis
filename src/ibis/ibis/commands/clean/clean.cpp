@@ -8,8 +8,17 @@
 int clean(int argc, char* argv[]) {
     (void)argc;
     (void)argv;
-    Py_Initialize();
 
+    PyConfig config;
+    PyConfig_InitPythonConfig(&config);
+
+    auto venv_dir = std::filesystem::path(IBIS_VENV_PATH);
+    auto venv_exec = (venv_dir / "bin" / "python").wstring();
+    PyConfig_SetString(&config, &config.executable, venv_exec.c_str());
+    Py_InitializeFromConfig(&config);
+    PyConfig_Clear(&config);
+
+    
     PyObject* res_dir = PyUnicode_FromString(Ibis::RES_DIR.c_str());
     if (res_dir == NULL) {
         spdlog::error("Failed to set library directory");

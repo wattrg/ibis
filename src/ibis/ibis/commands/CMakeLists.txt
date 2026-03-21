@@ -1,7 +1,7 @@
 find_package(Python COMPONENTS Interpreter Development)
 
 add_library(prep STATIC prep/prep.cpp)
-target_link_libraries(prep PRIVATE Python::Python spdlog::spdlog runtime_dirs CLI11::CLI11)
+target_link_libraries(prep PRIVATE Python::Python spdlog::spdlog runtime_dirs CLI11::CLI11 ibis_venv_venv_iface)
 target_include_directories(
         prep 
         PUBLIC 
@@ -17,6 +17,7 @@ target_link_libraries(
         spdlog::spdlog
         runtime_dirs 
         CLI11::CLI11
+        ibis_venv_venv_iface
 )
 target_include_directories(ibis_clean PUBLIC ../..)
 
@@ -75,6 +76,7 @@ target_link_libraries(
         runtime_dirs
         IO
         CLI11::CLI11
+        ibis_venv_venv_iface
 )
 target_include_directories(post PUBLIC ../..)
 

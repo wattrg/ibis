@@ -23,6 +23,7 @@ target_link_libraries(
 	simulation
 	CLI11::CLI11
 	parallel
+	Python::Python
 )
 
 target_compile_definitions(ibis PRIVATE DOCTEST_CONFIG_DISABLE)

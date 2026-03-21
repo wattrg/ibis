@@ -9,24 +9,24 @@
 using array_layout = Kokkos::DefaultExecutionSpace::array_layout;
 using host_mem_space = Kokkos::DefaultHostExecutionSpace::memory_space;
 
-std::uint8_t vtk_type_from_elem_type(ElemType type) {
-    switch (type) {
-        case ElemType::Tri:
-            return 5;
-        case ElemType::Quad:
-            return 9;
-        case ElemType::Tetra:
-            return 10;
-        case ElemType::Hex:
-            return 12;
-        case ElemType::Wedge:
-            return 13;
-        case ElemType::Pyramid:
-            return 14;
-        default:
-            throw std::runtime_error("Not implemented yet");
-    }
-}
+// std::uint8_t vtk_type_from_elem_type(ElemType type) {
+//     switch (type) {
+//         case ElemType::Tri:
+//             return 5;
+//         case ElemType::Quad:
+//             return 9;
+//         case ElemType::Tetra:
+//             return 10;
+//         case ElemType::Hex:
+//             return 12;
+//         case ElemType::Wedge:
+//             return 13;
+//         case ElemType::Pyramid:
+//             return 14;
+//         default:
+//             throw std::runtime_error("Not implemented yet");
+//     }
+// }
 
 template <typename T>
 void write_vtk_coordinating_file(std::string plot_dir, std::vector<Ibis::real> times,

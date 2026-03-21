@@ -4,6 +4,7 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 #include <util/vector3.h>
+#include "grid/grid_io.h"
 
 #define DOCTEST_CONFIG_IMPLEMENT
 #include <doctest/doctest.h>
@@ -70,13 +71,27 @@ PYBIND11_MODULE(python_api, m) {
         .def("name", &Rusanov<Ibis::real>::name);
 
     // GridIO
+    pybind11::enum_<ElemType>(m, "ElementType")
+        .value("Line", ElemType::Line)
+        .value("Tri", ElemType::Tri)
+        .value("Tetra", ElemType::Tetra)
+        .value("Quad", ElemType::Quad)
+        .value("Hex", ElemType::Hex)
+        .value("Wedge", ElemType::Wedge)
+        .value("Pyramid", ElemType::Pyramid);
+
+    m.def("vtk_type_from_elem_type", &vtk_type_from_elem_type);
+
     pybind11::class_<Vertex<Ibis::real>>(m, "Vertex")
         .def("pos", static_cast<Vector3<Ibis::real>& (Vertex<Ibis::real>::*)()>(
             &Vertex<Ibis::real>::pos));
+
     pybind11::class_<ElemIO>(m, "ElemIO")
+        .def("cell_type", static_cast<ElemType (ElemIO::*)() const>(&ElemIO::cell_type))
         .def("vertex_ids",
              static_cast<std::vector<size_t> (ElemIO::*)() const>(
                 &ElemIO::vertex_ids));
+
     pybind11::class_<GridIO>(m, "GridIO")
         .def(pybind11::init<std::string>())
         .def(pybind11::init<std::string, size_t>())
@@ -85,6 +100,8 @@ PYBIND11_MODULE(python_api, m) {
                  &GridIO::vertices))
         .def("cell_centre", static_cast<Vector3<Ibis::real> (GridIO::*)(size_t) const>(
             &GridIO::cell_centre))
+        .def("id", static_cast<size_t (GridIO::*)() const>(&GridIO::id))
+        .def("dim", static_cast<size_t (GridIO::*)() const>(&GridIO::dim))
         .def("cells",
              static_cast<const std::vector<ElemIO>& (GridIO::*)() const>(
                  &GridIO::cells));

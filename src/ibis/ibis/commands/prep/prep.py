@@ -12,6 +12,7 @@ from ibis_py_utils import (
     read_defaults,
     FlowState,
     GasModel,
+    FlowSolution,
 )
 
 from python_api import (
@@ -427,9 +428,25 @@ class Block:
             grid_io = GridIO(f"{self.base_grid_path}/block_{self._id:04}.su2", self._id)
             for cell_i in range(self.number_cells):
                 cell_centre = grid_io.cell_centre(cell_i)
-                flow_state = self._initial_condition(cell_centre.x, cell_centre.y, cell_centre.z)
+                flow_state = self._initial_condition(
+                    cell_centre.x, cell_centre.y, cell_centre.z
+                )
                 write_flow_state(flow_state, binary)
-                
+        elif isinstance(self._initial_condition, FlowSolution):
+            grid = GridIO(block_ic_directory)
+            flow_solution = FlowSolution.from_grid(grid)
+            flow_solution.interpolate(self._initial_condition)
+            flow_solution.to_cell_data()
+            pressure = flow_solution.pressure()
+            temperature = flow_solution.temperature()
+            vel = flow_solution.velocity()
+            for cell_i in range(self.number_cells):
+                gas_state = GasState()
+                gas_state.p = pressure[cell_i]
+                gas_state.T = temperature[cell_i]
+                vel = Vector3(vel[cell_i, 0], vel[cell_i, 1], vel[cell_i, 2])
+                flow_state = FlowState(gas_state, vel)
+                write_flow_state(flow_state, binary)
 
         temp.close()
         pressure.close()

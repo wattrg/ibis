@@ -651,6 +651,7 @@ std::string InterfaceLookup::hash_vertex_ids(std::vector<size_t> vertex_ids) con
     return hash_value;
 }
 
+#ifndef DOCTEST_CONFIG_DISABLE
 TEST_CASE("trim whitespace") {
     std::string test1 = " hello world    ";
     std::string test2 = "hello world";
@@ -920,3 +921,4 @@ TEST_CASE("interface look up") {
     CHECK(x.id(std::vector<size_t>{3, 7}) == 8);
     CHECK(x.id(std::vector<size_t>{7, 6}) == 9);
 }
+#endif

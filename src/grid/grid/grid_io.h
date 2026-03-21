@@ -25,6 +25,8 @@ enum class ElemType {
     Pyramid,
 };
 
+size_t vtk_type_from_elem_type(const ElemType& elem_type);
+
 enum class FaceOrder {
     Vtk,
 };
