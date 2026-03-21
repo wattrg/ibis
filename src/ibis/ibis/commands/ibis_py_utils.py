@@ -128,16 +128,16 @@ def _grid_to_pyvista(grid: GridIO) -> pv.UnstructuredGrid:
     grid_vertices = grid.vertices()
     vertices = np.zeros((len(grid_vertices), 3))
     for i, grid_vertex in enumerate(grid_vertices):
-        vertices[i, 0] = grid_vertex.x
-        vertices[i, 1] = grid_vertex.y
-        vertices[i, 2] = grid_vertex.z
+        vertices[i, 0] = grid_vertex.pos().x
+        vertices[i, 1] = grid_vertex.pos().y
+        vertices[i, 2] = grid_vertex.pos().z
 
     grid_cells = grid.cells()
     cell_types = []
     cells = []
     for i, cell in enumerate(grid_cells):
         # fill out cell_types and cells
-        cell_types.append(vtk_type_from_elem_type(cell.cell_type))
+        cell_types.append(vtk_type_from_elem_type(cell.cell_type()))
         cell_vertices = cell.vertex_ids()
         cells.append(len(cell_vertices))
         for cell_vertex in cell_vertices:
@@ -163,20 +163,29 @@ class FlowSolution:
         return cls(pv_mesh)
 
     @classmethod
-    def from_directory(cls, base_dir: Path | str, time_index: int) -> Self:
+    def from_directory(cls, base_dir: Path | str, time_index: int = -1) -> Self:
         dir = Path(base_dir)
 
         # read simulation config
         with open(dir / "config" / "config.json") as f:
             config = json.load(f)
 
+        if time_index == -1:
+            with open(dir / "io" / "flow" / "flows", "r") as f:
+                flow_dirs = f.readlines()
+            flow_idxs = [int(flow_dir) for flow_dir in flow_dirs]
+            time_index = flow_idxs[-1]
+
         # read the grid
         if config["grids"][0]["motion"]["enabled"]:
-            grid_dir = dir / "io" / "grid" / f"{time_index:.04}"
+            grid_dir = dir / "io" / "grid" / f"{time_index:04}"
         else:
             grid_dir = dir / "io" / "grid" / "0000"
-        flow_dir = dir / "io" / "flow" / f"{time_index:.04}"
-        grids = [GridIO(grid_dir, i) for i in range(len(config["grids"]))]
+        flow_dir = dir / "io" / "flow" / f"{time_index:04}"
+        grids = [
+            GridIO(str(grid_dir / f"block_{i:04}.su2"), i)
+            for i in range(len(config["grids"]))
+        ]
 
         if config["io"]["flow_format"] == "native_binary":
             binary_flow_data = True
@@ -190,13 +199,13 @@ class FlowSolution:
 
             # read corresponding flow data
             flow_dir_block = flow_dir / f"block_{grid.id():04}"
-            pv_mesh.cell_data["p"] = _read_flow_data(
+            pv_mesh.cell_data["pressure"] = _read_flow_data(
                 flow_dir_block / "p", binary_flow_data
             )
-            pv_mesh.cell_data["T"] = _read_flow_data(
+            pv_mesh.cell_data["temperature"] = _read_flow_data(
                 flow_dir_block / "T", binary_flow_data
             )
-            pv_mesh.cell_data["vel"] = np.zeros((len(grid.cell()), 3))
+            pv_mesh.cell_data["vel"] = np.zeros((len(grid.cells()), 3))
             vx = _read_flow_data(flow_dir_block / "vx", binary_flow_data)
             vy = _read_flow_data(flow_dir_block / "vy", binary_flow_data)
             pv_mesh.cell_data["vel"][:, 0] = vx
@@ -214,7 +223,8 @@ class FlowSolution:
         return cls(flow_solution)
 
     def interpolate(self, other_solution: Self):
-        self._pv_mesh.sample(other_solution._pv_mesh)
+        self._pv_mesh = self._pv_mesh.sample(other_solution._pv_mesh)
+        self._cell_data_cache = None
 
     def _to_cell_data(self):
         if self._cell_data_cache is None:
@@ -222,10 +232,10 @@ class FlowSolution:
         return self._cell_data_cache
 
     def pressure(self) -> np.array:
-        return self._to_cell_data().cell_data["p"]
+        return self._to_cell_data().cell_data["pressure"]
 
     def temperature(self) -> np.array:
-        return self._to_cell_data().cell_data["T"]
+        return self._to_cell_data().cell_data["temperature"]
 
     def velocity(self) -> np.array:
         return self._to_cell_data().cell_data["vel"]

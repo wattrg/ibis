@@ -433,18 +433,21 @@ class Block:
                 )
                 write_flow_state(flow_state, binary)
         elif isinstance(self._initial_condition, FlowSolution):
-            grid = GridIO(block_ic_directory)
+            grid = GridIO(f"{grid_directory}/0000/block_{self.id:04}.su2")
             flow_solution = FlowSolution.from_grid(grid)
             flow_solution.interpolate(self._initial_condition)
-            flow_solution.to_cell_data()
-            pressure = flow_solution.pressure()
-            temperature = flow_solution.temperature()
-            vel = flow_solution.velocity()
+            pressure_array = flow_solution.pressure()
+            temperature_array = flow_solution.temperature()
+            vel_array = flow_solution.velocity()
             for cell_i in range(self.number_cells):
                 gas_state = GasState()
-                gas_state.p = pressure[cell_i]
-                gas_state.T = temperature[cell_i]
-                vel = Vector3(vel[cell_i, 0], vel[cell_i, 1], vel[cell_i, 2])
+                gas_state.p = float(pressure_array[cell_i])
+                gas_state.T = float(temperature_array[cell_i])
+                vel = Vector3(
+                    float(vel_array[cell_i, 0]),
+                    float(vel_array[cell_i, 1]),
+                    float(vel_array[cell_i, 2]),
+                )
                 flow_state = FlowState(gas_state, vel)
                 write_flow_state(flow_state, binary)
 
@@ -1353,6 +1356,7 @@ def main(file_name, res_dir):
         "Block": Block,
         "Solver": Solver,
         "FlowState": FlowState,
+        "FlowSolution": FlowSolution,
         "GasState": GasState,
         "GasModel": GasModel,
         "IdealGas": IdealGas,
