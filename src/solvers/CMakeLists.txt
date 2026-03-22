@@ -4,6 +4,7 @@ add_library(
 	solvers/solver.cpp
 	solvers/solver.h
 	solvers/cfl.cpp
+	solvers/high_order_blending.cpp
 )
 
 

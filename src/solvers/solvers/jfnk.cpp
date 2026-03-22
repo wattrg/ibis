@@ -1,6 +1,7 @@
 #include <finite_volume/primative_conserved_conversion.h>
 #include <linear_algebra/gmres.h>
 #include <solvers/jfnk.h>
+#include "solvers/high_order_blending.h"
 
 #ifdef Ibis_ENABLE_MPI
 #include <ibis_mpi/ibis_mpi_conserved_quantities.h>
@@ -10,6 +11,7 @@
 template <class MemModel>
 Jfnk<MemModel>::Jfnk(std::shared_ptr<PseudoTransientLinearSystem> system,
                      std::unique_ptr<CflSchedule>&& cfl,
+                     std::unique_ptr<HighOrderBlendingSchedule>&& high_order_blending,
                      std::shared_ptr<ConservedQuantities<Ibis::dual>> residuals,
                      json config) {
     max_steps_ = config.at("max_steps");
@@ -26,6 +28,7 @@ Jfnk<MemModel>::Jfnk(std::shared_ptr<PseudoTransientLinearSystem> system,
     gmres_ = make_linear_solver(system, precondition_system_, config.at("linear_solver"));
 
     cfl_ = std::move(cfl);
+    high_order_blending_ = std::move(high_order_blending);
     residual_based_cfl_ = cfl_->residual_based();
     dU_ = Ibis::Vector<Ibis::real>{"dU", system_->num_vars()};
     residuals_ = residuals;
@@ -49,6 +52,14 @@ void Jfnk<MemModel>::set_pseudo_time_step_size(Ibis::real dt_star) {
 }
 
 template <class MemModel>
+void Jfnk<MemModel>::set_global_limiter(Ibis::real global_limiter) {
+    system_->set_global_limiter(global_limiter);
+    if (precondition_system_) {
+        precondition_system_->set_global_limiter(global_limiter);
+    }
+}
+
+template <class MemModel>
 LinearSolveResult Jfnk<MemModel>::step(std::shared_ptr<Sim<Ibis::dual, MemModel>>& sim,
                                        ConservedQuantities<Ibis::dual>& cq,
                                        FlowStates<Ibis::dual>& fs, size_t step) {
@@ -60,6 +71,8 @@ LinearSolveResult Jfnk<MemModel>::step(std::shared_ptr<Sim<Ibis::dual, MemModel>
     stable_dt_ = sim->fv.estimate_dt(fs, sim->grid, sim->gas_model, sim->trans_prop);
     Ibis::real cfl = calculate_cfl(step);
     set_pseudo_time_step_size(cfl * stable_dt_);
+
+    set_global_limiter(calculate_global_limiter());
 
     // solve the linear system of equations
     if (last_gmres_result_.n_iters > gmres_iters_to_recompute_preconditioner_ ||

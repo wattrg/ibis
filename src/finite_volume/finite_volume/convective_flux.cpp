@@ -69,7 +69,7 @@ ConvectiveFlux<T, MemModel>::ConvectiveFlux(const GridBlock<MemModel, T>& grid,
     flux_calculator_ = make_flux_calculator<T>(config.at("flux_calculator"));
 
     // set up reconstruction
-    reconstruction_order_ = config.at("reconstruction_order");
+    reconstruction_order_ = config.at("reconstruction_order").at("order");
     if (reconstruction_order_ > 1) {
         reconstruction_vars_ =
             reconstruction_vars_from_string(config.at("thermo_interpolator"));
@@ -86,7 +86,7 @@ template <typename T, class MemModel>
 void ConvectiveFlux<T, MemModel>::compute_convective_flux(
     const FlowStates<T>& flow_states, GridBlock<MemModel, T>& grid,
     IdealGas<T>& gas_model, Gradients<T>& cell_grad, WLSGradient<T, MemModel>& grad_calc,
-    ConservedQuantities<T>& flux, bool allow_reconstruction) {
+    ConservedQuantities<T>& flux, bool allow_reconstruction, Ibis::real global_limiter) {
     // reconstruct
     int reconstruction_order = (allow_reconstruction) ? reconstruction_order_ : 1;
     switch (reconstruction_order) {
@@ -94,7 +94,7 @@ void ConvectiveFlux<T, MemModel>::compute_convective_flux(
             copy_reconstruct(flow_states, grid);
             break;
         case 2:
-            linear_reconstruct(flow_states, grid, cell_grad, grad_calc, gas_model);
+            linear_reconstruct(flow_states, grid, cell_grad, grad_calc, gas_model, global_limiter);
             break;
         default:
             spdlog::error("Invalid reconstruction order {}", reconstruction_order_);
@@ -259,7 +259,8 @@ void ConvectiveFlux<T, MemModel>::linear_reconstruct(const FlowStates<T>& flow_s
                                                      const GridBlock<MemModel, T>& grid,
                                                      Gradients<T>& cell_grad,
                                                      WLSGradient<T, MemModel>& grad_calc,
-                                                     IdealGas<T>& gas_model) {
+                                                     IdealGas<T>& gas_model,
+                                                     Ibis::real global_limiter) {
     compute_convective_gradient(flow_states, grid, cell_grad, grad_calc);
     if constexpr (std::is_same<MemModel, Mpi>::value) {
         // TODO: gradient communication
@@ -287,11 +288,11 @@ void ConvectiveFlux<T, MemModel>::linear_reconstruct(const FlowStates<T>& flow_s
 
             switch (thermo_interpolator) {
                 case ThermoReconstructionVars::rho_p: {
-                    T p_limit = limit_left ? limiters.p(left_cell) : 1.0;
+                    T p_limit = (limit_left ? limiters.p(left_cell) : 1.0) * global_limiter;
                     left.gas.pressure(i_face) =
                         linear_interpolate(flow_states.gas.pressure(left_cell), grad.p,
                                            dx, dy, dz, left_cell, p_limit, left_valid);
-                    T rho_limit = (limit_left) ? limiters.rho(left_cell) : 1.0;
+                    T rho_limit = ((limit_left) ? limiters.rho(left_cell) : 1.0) * global_limiter;
                     left.gas.rho(i_face) =
                         linear_interpolate(flow_states.gas.rho(left_cell), grad.rho, dx,
                                            dy, dz, left_cell, rho_limit, left_valid);
@@ -299,11 +300,11 @@ void ConvectiveFlux<T, MemModel>::linear_reconstruct(const FlowStates<T>& flow_s
                     break;
                 }
                 case ThermoReconstructionVars::rho_u: {
-                    T rho_limit = limit_left ? limiters.rho(left_cell) : 1.0;
+                    T rho_limit = (limit_left ? limiters.rho(left_cell) : 1.0) * global_limiter;
                     left.gas.rho(i_face) =
                         linear_interpolate(flow_states.gas.rho(left_cell), grad.rho, dx,
                                            dy, dz, left_cell, rho_limit, left_valid);
-                    T u_limit = (limit_left) ? limiters.u(left_cell) : 1.0;
+                    T u_limit = ((limit_left) ? limiters.u(left_cell) : 1.0) * global_limiter;
                     left.gas.energy(i_face) =
                         linear_interpolate(flow_states.gas.energy(left_cell), grad.u, dx,
                                            dy, dz, left_cell, u_limit, left_valid);
@@ -311,11 +312,11 @@ void ConvectiveFlux<T, MemModel>::linear_reconstruct(const FlowStates<T>& flow_s
                     break;
                 }
                 case ThermoReconstructionVars::rho_T: {
-                    T rho_limit = limit_left ? limiters.rho(left_cell) : 1.0;
+                    T rho_limit = (limit_left ? limiters.rho(left_cell) : 1.0) * global_limiter;
                     left.gas.rho(i_face) =
                         linear_interpolate(flow_states.gas.rho(left_cell), grad.rho, dx,
                                            dy, dz, left_cell, rho_limit, left_valid);
-                    T T_limit = (limit_left) ? limiters.temp(left_cell) : 1.0;
+                    T T_limit = ((limit_left) ? limiters.temp(left_cell) : 1.0) * global_limiter;
                     left.gas.temp(i_face) =
                         linear_interpolate(flow_states.gas.temp(left_cell), grad.temp, dx,
                                            dy, dz, left_cell, T_limit, left_valid);
@@ -323,11 +324,11 @@ void ConvectiveFlux<T, MemModel>::linear_reconstruct(const FlowStates<T>& flow_s
                     break;
                 }
                 case ThermoReconstructionVars::p_T: {
-                    T p_limit = limit_left ? limiters.p(left_cell) : 1.0;
+                    T p_limit = (limit_left ? limiters.p(left_cell) : 1.0) * global_limiter;
                     left.gas.pressure(i_face) =
                         linear_interpolate(flow_states.gas.pressure(left_cell), grad.p,
                                            dx, dy, dz, left_cell, p_limit, left_valid);
-                    T T_limit = (limit_left) ? limiters.temp(left_cell) : 1.0;
+                    T T_limit = ((limit_left) ? limiters.temp(left_cell) : 1.0) * global_limiter;
                     left.gas.temp(i_face) =
                         linear_interpolate(flow_states.gas.temp(left_cell), grad.temp, dx,
                                            dy, dz, left_cell, T_limit, left_valid);
@@ -335,15 +336,15 @@ void ConvectiveFlux<T, MemModel>::linear_reconstruct(const FlowStates<T>& flow_s
                     break;
                 }
             }
-            T vx_limit = (limit_left) ? limiters.vx(left_cell) : 1.0;
+            T vx_limit = ((limit_left) ? limiters.vx(left_cell) : 1.0) * global_limiter;
             left.vel.x(i_face) =
                 linear_interpolate(flow_states.vel.x(left_cell), grad.vx, dx, dy, dz,
                                    left_cell, vx_limit, left_valid);
-            T vy_limit = (limit_left) ? limiters.vy(left_cell) : 1.0;
+            T vy_limit = ((limit_left) ? limiters.vy(left_cell) : 1.0) * global_limiter;
             left.vel.y(i_face) =
                 linear_interpolate(flow_states.vel.y(left_cell), grad.vy, dx, dy, dz,
                                    left_cell, vy_limit, left_valid);
-            T vz_limit = (limit_left) ? limiters.vz(left_cell) : 1.0;
+            T vz_limit = ((limit_left) ? limiters.vz(left_cell) : 1.0) * global_limiter;
             left.vel.z(i_face) =
                 linear_interpolate(flow_states.vel.z(left_cell), grad.vz, dx, dy, dz,
                                    left_cell, vz_limit, left_valid);
@@ -359,11 +360,11 @@ void ConvectiveFlux<T, MemModel>::linear_reconstruct(const FlowStates<T>& flow_s
 
             switch (thermo_interpolator) {
                 case ThermoReconstructionVars::rho_p: {
-                    T p_limit = (limit_right) ? limiters.p(right_cell) : 1.0;
+                    T p_limit = ((limit_right) ? limiters.p(right_cell) : 1.0) * global_limiter;
                     right.gas.pressure(i_face) =
                         linear_interpolate(flow_states.gas.pressure(right_cell), grad.p,
                                            dx, dy, dz, right_cell, p_limit, right_valid);
-                    T rho_limit = (limit_right) ? limiters.rho(right_cell) : 1.0;
+                    T rho_limit = ((limit_right) ? limiters.rho(right_cell) : 1.0) * global_limiter;
                     right.gas.rho(i_face) =
                         linear_interpolate(flow_states.gas.rho(right_cell), grad.rho, dx,
                                            dy, dz, right_cell, rho_limit, right_valid);
@@ -371,11 +372,11 @@ void ConvectiveFlux<T, MemModel>::linear_reconstruct(const FlowStates<T>& flow_s
                     break;
                 }
                 case ThermoReconstructionVars::rho_u: {
-                    T u_limit = (limit_right) ? limiters.u(right_cell) : 1.0;
+                    T u_limit = ((limit_right) ? limiters.u(right_cell) : 1.0) * global_limiter;
                     right.gas.energy(i_face) =
                         linear_interpolate(flow_states.gas.energy(right_cell), grad.u, dx,
                                            dy, dz, right_cell, u_limit, right_valid);
-                    T rho_limit = (limit_right) ? limiters.rho(right_cell) : 1.0;
+                    T rho_limit = ((limit_right) ? limiters.rho(right_cell) : 1.0) * global_limiter;
                     right.gas.rho(i_face) =
                         linear_interpolate(flow_states.gas.rho(right_cell), grad.rho, dx,
                                            dy, dz, right_cell, rho_limit, right_valid);
@@ -383,11 +384,11 @@ void ConvectiveFlux<T, MemModel>::linear_reconstruct(const FlowStates<T>& flow_s
                     break;
                 }
                 case ThermoReconstructionVars::rho_T: {
-                    T T_limit = (limit_right) ? limiters.temp(right_cell) : 1.0;
+                    T T_limit = ((limit_right) ? limiters.temp(right_cell) : 1.0) * global_limiter;
                     right.gas.temp(i_face) =
                         linear_interpolate(flow_states.gas.temp(right_cell), grad.temp,
                                            dx, dy, dz, right_cell, T_limit, right_valid);
-                    T rho_limit = (limit_right) ? limiters.rho(right_cell) : 1.0;
+                    T rho_limit = ((limit_right) ? limiters.rho(right_cell) : 1.0) * global_limiter;
                     right.gas.rho(i_face) =
                         linear_interpolate(flow_states.gas.rho(right_cell), grad.rho, dx,
                                            dy, dz, right_cell, rho_limit, right_valid);
@@ -395,11 +396,11 @@ void ConvectiveFlux<T, MemModel>::linear_reconstruct(const FlowStates<T>& flow_s
                     break;
                 }
                 case ThermoReconstructionVars::p_T: {
-                    T T_limit = (limit_right) ? limiters.temp(right_cell) : 1.0;
+                    T T_limit = ((limit_right) ? limiters.temp(right_cell) : 1.0) * global_limiter;
                     right.gas.temp(i_face) =
                         linear_interpolate(flow_states.gas.temp(right_cell), grad.temp,
                                            dx, dy, dz, right_cell, T_limit, right_valid);
-                    T p_limit = (limit_right) ? limiters.p(right_cell) : 1.0;
+                    T p_limit = ((limit_right) ? limiters.p(right_cell) : 1.0) * global_limiter;
                     right.gas.pressure(i_face) =
                         linear_interpolate(flow_states.gas.pressure(right_cell), grad.p,
                                            dx, dy, dz, right_cell, p_limit, right_valid);
@@ -407,15 +408,15 @@ void ConvectiveFlux<T, MemModel>::linear_reconstruct(const FlowStates<T>& flow_s
                     break;
                 }
             }
-            vx_limit = limit_right ? limiters.vx(right_cell) : 1.0;
+            vx_limit = (limit_right ? limiters.vx(right_cell) : 1.0) * global_limiter;
             right.vel.x(i_face) =
                 linear_interpolate(flow_states.vel.x(right_cell), grad.vx, dx, dy, dz,
                                    right_cell, vx_limit, right_valid);
-            vy_limit = (limit_right) ? limiters.vy(right_cell) : 1.0;
+            vy_limit = ((limit_right) ? limiters.vy(right_cell) : 1.0) * global_limiter;
             right.vel.y(i_face) =
                 linear_interpolate(flow_states.vel.y(right_cell), grad.vy, dx, dy, dz,
                                    right_cell, vy_limit, right_valid);
-            vz_limit = (limit_right) ? limiters.vz(right_cell) : 1.0;
+            vz_limit = ((limit_right) ? limiters.vz(right_cell) : 1.0) * global_limiter;
             right.vel.z(i_face) =
                 linear_interpolate(flow_states.vel.z(right_cell), grad.vz, dx, dy, dz,
                                    right_cell, vz_limit, right_valid);

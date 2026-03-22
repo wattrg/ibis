@@ -41,7 +41,8 @@ public:
                                  GridBlock<MemModel, T>& grid, IdealGas<T>& gas_model,
                                  Gradients<T>& cell_grad,
                                  WLSGradient<T, MemModel>& grad_calc,
-                                 ConservedQuantities<T>& flux, bool allow_reconstruction);
+                                 ConservedQuantities<T>& flux, bool allow_reconstruction,
+                                 Ibis::real global_limiter=1.0);
 
     // Compute the convective gradients. This could be private,
     // except for the fact that we might want to compute
@@ -57,7 +58,8 @@ public:
 
     void linear_reconstruct(const FlowStates<T>& flow_states,
                             const GridBlock<MemModel, T>& grid, Gradients<T>& cell_grad,
-                            WLSGradient<T, MemModel>& grad_calc, IdealGas<T>& gas_model);
+                            WLSGradient<T, MemModel>& grad_calc, IdealGas<T>& gas_model,
+                            Ibis::real global_limiter);
 
     void compute_limiters(const FlowStates<T>& flow_states,
                           const GridBlock<MemModel, T>& grid, Gradients<T>& cell_grad);

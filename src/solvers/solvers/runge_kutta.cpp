@@ -137,11 +137,14 @@ template <class MemModel>
 void RungeKutta<MemModel>::function_eval_(FlowStates<Ibis::real> fs,
                                           ConservedQuantities<Ibis::real>& cq,
                                           size_t index) {
+    bool allow_reconstruction = true;
+    Ibis::real global_limiter = 1.0;
     if (grid_.moving()) {
         fv_.compute_dudt(fs, vertex_vel_[index], cq, grid_, k_[index], gas_model_,
-                         trans_prop_);
+                         trans_prop_, allow_reconstruction, global_limiter);
     } else {
-        fv_.compute_dudt(fs, grid_, k_[index], gas_model_, trans_prop_);
+        fv_.compute_dudt(fs, grid_, k_[index], gas_model_, trans_prop_,
+                         allow_reconstruction, global_limiter);
     }
 }
 

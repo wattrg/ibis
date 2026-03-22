@@ -54,10 +54,12 @@ public:
 public:
     // some specific methods
     void set_pseudo_time_step(Ibis::real dt_star);
+    void set_global_limiter(Ibis::real global_reconstruction_order);
 
 private:
     Ibis::real dt_star_;
     bool allow_reconstruction_;
+    Ibis::real global_limiter_ = 1.0;
     int jacobian_stencil_size_ = 1;
 
     // memory

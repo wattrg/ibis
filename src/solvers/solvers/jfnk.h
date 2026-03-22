@@ -7,6 +7,7 @@
 #include <linear_algebra/gmres.h>
 #include <linear_algebra/linear_system.h>
 #include <solvers/cfl.h>
+#include <solvers/high_order_blending.h>
 #include <solvers/transient_linear_system.h>
 #include <util/conserved_quantities.h>
 #include <util/numeric_types.h>
@@ -22,7 +23,8 @@ public:
     Jfnk() {}
 
     Jfnk(std::shared_ptr<PseudoTransientLinearSystem> system,
-         std::unique_ptr<CflSchedule>&&,
+         std::unique_ptr<CflSchedule>&& cfl,
+         std::unique_ptr<HighOrderBlendingSchedule>&& high_order_blending,
          std::shared_ptr<ConservedQuantities<Ibis::dual>> resiudals, json config);
 
     int initialise();
@@ -47,6 +49,14 @@ public:
         return cfl;
     }
 
+    Ibis::real calculate_global_limiter() const {
+        if (auto* high_order_blending =
+            dynamic_cast<LinearResidualBasedHighOrderBlending*>(high_order_blending_.get())) {
+            high_order_blending->set_residual(Ibis::real_part(relative_residual_norms().global()));
+        }
+        return high_order_blending_->eval_global_limiter();
+    }
+
     ConservedQuantitiesNorm<Ibis::dual> residual_norms() const { return residual_norms_; }
 
     ConservedQuantitiesNorm<Ibis::dual> relative_residual_norms() const {
@@ -62,6 +72,7 @@ private:
     std::unique_ptr<IterativeLinearSolver> gmres_;
     std::shared_ptr<PseudoTransientLinearSystem> precondition_system_;
     std::unique_ptr<CflSchedule> cfl_;
+    std::unique_ptr<HighOrderBlendingSchedule> high_order_blending_;
     Ibis::Vector<Ibis::real> dU_;
 
     size_t max_steps_;
@@ -76,6 +87,7 @@ private:
     bool residual_based_cfl_;
 
     void set_pseudo_time_step_size(Ibis::real dt_star);
+    void set_global_limiter(Ibis::real global_limiter);
 
 public:  // this is public to appease NVCC
     void apply_update_(std::shared_ptr<Sim<Ibis::dual, MemModel>>& sim,

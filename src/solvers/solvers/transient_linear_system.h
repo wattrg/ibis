@@ -13,6 +13,8 @@ public:
     virtual ~PseudoTransientLinearSystem() {}
 
     virtual void set_pseudo_time_step(Ibis::real dt_star) = 0;
+
+    virtual void set_global_limiter(Ibis::real global_limiter) = 0;
 };
 
 #endif

@@ -190,7 +190,48 @@ def string_to_thermo_interp(name):
 def ensure_custom_type(value, conversion_func):
     if type(value) is str:
         return conversion_func(value)
+    if type(value) is float or type(value) is int:
+        return conversion_func(value)
     return value
+
+
+class ReconstructionOrder:
+    def as_dict(self):
+        pass
+
+
+class ConstantOrder(ReconstructionOrder):
+    _type = "constant"
+
+    def __init__(self, order):
+        if order < 1.0 or order > 2.0:
+            validation_errors.append(
+                ValidationException(f"Reconstruction order {order} not supported")
+            )
+        self._order = order
+
+    def as_dict(self):
+        return {"type": self._type, "order": self._order}
+
+
+class LinearResidualBasedHighOrderBlending(ReconstructionOrder):
+    _type = "linear_residual_based_blending"
+
+    def __init__(self, start_blending_residual, stop_blending_residual):
+        self._start_blending_residual = start_blending_residual
+        self._stop_blending_residual = stop_blending_residual
+
+    def as_dict(self):
+        return {
+            "type": self._type,
+            "start_blending_residual": self._start_blending_residual,
+            "stop_blending_residual": self._stop_blending_residual,
+            "order": 2.0,
+        }
+
+
+def float_to_reconstruction_order(order):
+    return ConstantOrder(order)
 
 
 class ConvectiveFlux:
@@ -204,6 +245,7 @@ class ConvectiveFlux:
         "flux_calculator": string_to_flux_calc,
         "limiter": string_to_limiter,
         "thermo_interpolator": string_to_thermo_interp,
+        "reconstruction_order": float_to_reconstruction_order,
     }
     __slots__ = _json_values
     _defaults_file = "convective_flux.json"
@@ -229,12 +271,7 @@ class ConvectiveFlux:
                 setattr(self, key, kwargs[key])
 
     def validate(self):
-        if self.reconstruction_order not in (1, 2):
-            validation_errors.append(
-                ValidationException(
-                    f"reconstruction order {self.reconstruction_order} not supported"
-                )
-            )
+        pass
 
     def as_dict(self):
         dictionary = {}
@@ -248,6 +285,8 @@ class ConvectiveFlux:
                 if type(interp) is str:
                     self.thermo_interpolator = string_to_thermo_interp(interp)
                 dictionary[key] = self.thermo_interpolator.value
+            elif key == "reconstruction_order":
+                dictionary[key] = self.reconstruction_order.as_dict()
             else:
                 dictionary[key] = getattr(self, key)
         return dictionary
@@ -1362,6 +1401,8 @@ def main(file_name, res_dir):
         "IdealGas": IdealGas,
         "LinearInterpolateCfl": LinearInterpolateCfl,
         "ResidualBasedCfl": ResidualBasedCfl,
+        "ConstantOrder": ConstantOrder,
+        "LinearResidualBasedHighOrderBlending": LinearResidualBasedHighOrderBlending,
         "RungeKutta": RungeKutta,
         "SteadyState": SteadyState,
         "Gmres": Gmres,

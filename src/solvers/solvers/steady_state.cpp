@@ -8,6 +8,7 @@
 #include <solvers/cfl.h>
 #include <solvers/steady_state.h>
 #include <solvers/transient_linear_system.h>
+#include "solvers/high_order_blending.h"
 
 #ifdef Ibis_ENABLE_MPI
 #include <ibis_mpi/ibis_mpi_dual.h>
@@ -100,10 +101,10 @@ void SteadyStateLinearisation<MemModel>::matrix_vector_product(
     // evaluate the residuals
     if (sim_->grid.moving()) {
         sim_->fv.compute_dudt(fs_tmp_, *vertex_vel_, *cq_, sim_->grid, residuals,
-                              sim_->gas_model, sim_->trans_prop, allow_reconstruction_);
+                              sim_->gas_model, sim_->trans_prop, allow_reconstruction_, global_limiter_);
     } else {
         sim_->fv.compute_dudt(fs_tmp_, sim_->grid, residuals, sim_->gas_model,
-                              sim_->trans_prop, allow_reconstruction_);
+                              sim_->trans_prop, allow_reconstruction_, global_limiter_);
     }
 
     // set the components of vec to the dual component of dudt
@@ -293,10 +294,10 @@ template <class MemModel>
 void SteadyStateLinearisation<MemModel>::eval_rhs() {
     if (sim_->grid.moving()) {
         sim_->fv.compute_dudt(*fs_, *vertex_vel_, *cq_, sim_->grid, *residuals_,
-                              sim_->gas_model, sim_->trans_prop, allow_reconstruction_);
+                              sim_->gas_model, sim_->trans_prop, allow_reconstruction_, global_limiter_);
     } else {
         sim_->fv.compute_dudt(*fs_, sim_->grid, *residuals_, sim_->gas_model,
-                              sim_->trans_prop, allow_reconstruction_);
+                              sim_->trans_prop, allow_reconstruction_, global_limiter_);
     }
 
     size_t n_cons = n_cons_;
@@ -338,6 +339,11 @@ void SteadyStateLinearisation<MemModel>::set_pseudo_time_step(Ibis::real dt_star
     dt_star_ = dt_star;
 }
 
+template <class MemModel>
+void SteadyStateLinearisation<MemModel>::set_global_limiter(Ibis::real global_limiter) {
+    global_limiter_ = global_limiter;
+}
+
 template class SteadyStateLinearisation<SharedMem>;
 template class SteadyStateLinearisation<Mpi>;
 
@@ -374,11 +380,14 @@ SteadyState<MemModel>::SteadyState(json config, GridBlock<MemModel, Ibis::dual> 
 
     // set up the linear system and non-linear solver
     auto cfl = make_cfl_schedule(solver_config.at("cfl"));
+    auto high_order_blending = make_high_order_blending_schedule(
+         config.at("convective_flux").at("reconstruction_order"));
     std::unique_ptr<PseudoTransientLinearSystem> system =
         std::unique_ptr<PseudoTransientLinearSystem>(
             new SteadyStateLinearisation<MemModel>(sim_, residuals_, cq_, fs_,
                                                    vertex_vel_));
-    jfnk_ = Jfnk<MemModel>(std::move(system), std::move(cfl), residuals_, solver_config);
+    jfnk_ = Jfnk<MemModel>(std::move(system), std::move(cfl), std::move(high_order_blending),
+                           residuals_, solver_config);
 
     // configuration
     print_frequency_ = solver_config.at("print_frequency");

@@ -72,7 +72,7 @@ template <typename T, class MemModel>
 size_t FiniteVolume<T, MemModel>::compute_dudt(
     FlowStates<T>& flow_state, Vector3s<T> vertex_vel, const ConservedQuantities<T>& cq,
     GridBlock<MemModel, T>& grid, ConservedQuantities<T>& dudt, IdealGas<T>& gas_model,
-    TransportProperties<T>& trans_prop, bool allow_reconstruction) {
+    TransportProperties<T>& trans_prop, bool allow_reconstruction, Ibis::real global_limiter) {
     if constexpr (std::is_same<MemModel, Mpi>::value) {
         transfer_internal_flowstates(flow_state, grid, gas_model);
     }
@@ -83,7 +83,7 @@ size_t FiniteVolume<T, MemModel>::compute_dudt(
 
     convective_flux_.compute_convective_flux(flow_state, grid, gas_model, cell_grad_,
                                              grid.grad_calc(), flux_,
-                                             allow_reconstruction);
+                                             allow_reconstruction, global_limiter);
 
     apply_post_convective_flux_bc(flow_state, grid, gas_model, trans_prop);
 
@@ -332,11 +332,12 @@ size_t FiniteVolume<T, MemModel>::compute_dudt(FlowStates<T>& flow_state,
                                                ConservedQuantities<T>& dudt,
                                                IdealGas<T>& gas_model,
                                                TransportProperties<T>& trans_prop,
-                                               bool allow_reconstruction) {
+                                               bool allow_reconstruction,
+                                               Ibis::real global_limiter) {
     Vector3s<T> vertex_vel_temp;
     const ConservedQuantities<T> cq_temp;
     return compute_dudt(flow_state, vertex_vel_temp, cq_temp, grid, dudt, gas_model,
-                        trans_prop, allow_reconstruction);
+                        trans_prop, allow_reconstruction, global_limiter);
 }
 
 template <typename T, class MemModel>

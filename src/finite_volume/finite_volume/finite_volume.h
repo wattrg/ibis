@@ -45,13 +45,13 @@ public:
     size_t compute_dudt(FlowStates<T>& flow_state, GridBlock<MemModel, T>& grid,
                         ConservedQuantities<T>& dudt, IdealGas<T>& gas_model,
                         TransportProperties<T>& trans_prop,
-                        bool allow_reconstruction = true);
+                        bool allow_reconstruction, Ibis::real global_limiter);
 
     size_t compute_dudt(FlowStates<T>& flow_state, Vector3s<T> vertex_vel,
                         const ConservedQuantities<T>& cq, GridBlock<MemModel, T>& grid,
                         ConservedQuantities<T>& dudt, IdealGas<T>& gas_model,
                         TransportProperties<T>& trans_prop,
-                        bool allow_reconstruction = true);
+                        bool allow_reconstruction, Ibis::real global_limiter);
 
     /**
      * Estimate the allowable global time step for a given flow
