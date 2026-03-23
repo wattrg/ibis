@@ -34,7 +34,8 @@ public:
     LinearResidualBasedHighOrderBlending() {}
 
     LinearResidualBasedHighOrderBlending(Ibis::real start_blending_residual,
-                                         Ibis::real stop_blending_residual);
+                                         Ibis::real stop_blending_residual,
+                                         Ibis::real maximum_decrease);
 
     LinearResidualBasedHighOrderBlending(json config);
 
