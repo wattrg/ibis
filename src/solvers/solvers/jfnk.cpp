@@ -19,11 +19,15 @@ Jfnk<MemModel>::Jfnk(std::shared_ptr<PseudoTransientLinearSystem> system,
 
     system_ = system;
     precondition_system_ = nullptr;
-    if (config.at("linear_solver").at("preconditioner").at("type") != "none") {
+    if (config.at("linear_solver").at("preconditioner").at("type") == "ilu") {
         std::shared_ptr<LinearSystem> precondition_system = system_->preconditioner();
         precondition_system_ =
             std::dynamic_pointer_cast<PseudoTransientLinearSystem>(precondition_system);
         gmres_iters_to_recompute_preconditioner_ = config.at("linear_solver").at("preconditioner").at("gmres_iters_before_recompute");
+    } else if (config.at("linear_solver").at("type") == "fgmres") {
+        std::shared_ptr<LinearSystem> precondition_system = system_->preconditioner();
+        precondition_system_ =
+            std::dynamic_pointer_cast<PseudoTransientLinearSystem>(precondition_system);
     }
     gmres_ = make_linear_solver(system, precondition_system_, config.at("linear_solver"));
 

@@ -1086,6 +1086,7 @@ class FGmres:
 
     def as_dict(self):
         dictionary = {"type": self._type}
+        dictionary["preconditioner"] = {"type": "none"}
         for key in self._json_values:
             dictionary[key] = getattr(self, key)
         return dictionary
