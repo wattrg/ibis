@@ -2,6 +2,7 @@
 #include <ibis/commands/post_commands/plot_residuals.h>
 #include <runtime_dirs.h>
 #include <spdlog/spdlog.h>
+
 #include <filesystem>
 
 int plot_residuals() {

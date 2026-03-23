@@ -2,6 +2,7 @@
 #define HIGH_ORDER_BLENDING
 
 #include <util/numeric_types.h>
+
 #include <memory>
 #include <nlohmann/json.hpp>
 
@@ -33,7 +34,7 @@ public:
     LinearResidualBasedHighOrderBlending() {}
 
     LinearResidualBasedHighOrderBlending(Ibis::real start_blending_residual,
-                                   Ibis::real stop_blending_residual);
+                                         Ibis::real stop_blending_residual);
 
     LinearResidualBasedHighOrderBlending(json config);
 
@@ -48,7 +49,7 @@ private:
     Ibis::real ln_residual_;
     Ibis::real maximum_decrease_;
 
-    // 
+    //
     Ibis::real previous_limiter_;
 };
 

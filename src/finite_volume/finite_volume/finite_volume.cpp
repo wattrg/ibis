@@ -72,7 +72,8 @@ template <typename T, class MemModel>
 size_t FiniteVolume<T, MemModel>::compute_dudt(
     FlowStates<T>& flow_state, Vector3s<T> vertex_vel, const ConservedQuantities<T>& cq,
     GridBlock<MemModel, T>& grid, ConservedQuantities<T>& dudt, IdealGas<T>& gas_model,
-    TransportProperties<T>& trans_prop, bool allow_reconstruction, Ibis::real global_limiter) {
+    TransportProperties<T>& trans_prop, bool allow_reconstruction,
+    Ibis::real global_limiter) {
     if constexpr (std::is_same<MemModel, Mpi>::value) {
         transfer_internal_flowstates(flow_state, grid, gas_model);
     }
@@ -327,13 +328,10 @@ void FiniteVolume<T, MemModel>::transfer_flow_gradients(
 }
 
 template <typename T, class MemModel>
-size_t FiniteVolume<T, MemModel>::compute_dudt(FlowStates<T>& flow_state,
-                                               GridBlock<MemModel, T>& grid,
-                                               ConservedQuantities<T>& dudt,
-                                               IdealGas<T>& gas_model,
-                                               TransportProperties<T>& trans_prop,
-                                               bool allow_reconstruction,
-                                               Ibis::real global_limiter) {
+size_t FiniteVolume<T, MemModel>::compute_dudt(
+    FlowStates<T>& flow_state, GridBlock<MemModel, T>& grid, ConservedQuantities<T>& dudt,
+    IdealGas<T>& gas_model, TransportProperties<T>& trans_prop, bool allow_reconstruction,
+    Ibis::real global_limiter) {
     Vector3s<T> vertex_vel_temp;
     const ConservedQuantities<T> cq_temp;
     return compute_dudt(flow_state, vertex_vel_temp, cq_temp, grid, dudt, gas_model,

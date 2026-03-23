@@ -904,9 +904,9 @@ public:
                     }
                 }
             }
-            serial_row_map.push_back(serial_entries.size());   
-            std::sort(serial_entries.begin() + serial_row_map[cell_i], 
-                      serial_entries.begin() + serial_row_map[cell_i + 1]);         
+            serial_row_map.push_back(serial_entries.size());
+            std::sort(serial_entries.begin() + serial_row_map[cell_i],
+                      serial_entries.begin() + serial_row_map[cell_i + 1]);
         }
 
         Ibis::Array1D<int, array_layout, memory_space> row_map("CrsGraph::row_map",

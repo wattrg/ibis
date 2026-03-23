@@ -18,7 +18,6 @@ int clean(int argc, char* argv[]) {
     Py_InitializeFromConfig(&config);
     PyConfig_Clear(&config);
 
-    
     PyObject* res_dir = PyUnicode_FromString(Ibis::RES_DIR.c_str());
     if (res_dir == NULL) {
         spdlog::error("Failed to set library directory");

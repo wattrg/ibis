@@ -13,7 +13,7 @@ initial = FlowState(gas=gas_state, vx=v * math.cos(aoa), vy=v * math.sin(aoa), v
 config.convective_flux = ConvectiveFlux(
     flux_calculator=Hanel(),
     reconstruction_order=LinearResidualBasedHighOrderBlending(
-        start_blending_residual=0.5, stop_blending_residual=0.1
+        start_blending_residual=0.2, stop_blending_residual=0.01
     ),
     # limiter = Unlimited(),
 )

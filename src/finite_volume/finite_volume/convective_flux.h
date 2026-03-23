@@ -42,7 +42,7 @@ public:
                                  Gradients<T>& cell_grad,
                                  WLSGradient<T, MemModel>& grad_calc,
                                  ConservedQuantities<T>& flux, bool allow_reconstruction,
-                                 Ibis::real global_limiter=1.0);
+                                 Ibis::real global_limiter = 1.0);
 
     // Compute the convective gradients. This could be private,
     // except for the fact that we might want to compute

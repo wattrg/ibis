@@ -3,8 +3,9 @@
 #include <ibis/commands/prep/prep.h>
 #include <runtime_dirs.h>
 #include <spdlog/spdlog.h>
-#include <filesystem>
+
 #include <cstdlib>
+#include <filesystem>
 
 int prep(int argc, char* argv[]) {
     (void)argc;
@@ -12,13 +13,12 @@ int prep(int argc, char* argv[]) {
 
     PyConfig config;
     PyConfig_InitPythonConfig(&config);
-   
+
     auto venv_dir = std::filesystem::path(IBIS_VENV_PATH);
     auto venv_exec = (venv_dir / "bin" / "python").wstring();
     PyConfig_SetString(&config, &config.executable, venv_exec.c_str());
     Py_InitializeFromConfig(&config);
     PyConfig_Clear(&config);
-
 
     PyObject* prep_script_name = PyUnicode_FromString("job.py");
     if (prep_script_name == NULL) {

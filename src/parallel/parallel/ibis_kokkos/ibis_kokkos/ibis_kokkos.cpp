@@ -35,4 +35,4 @@ TEST_CASE("shared_parallel_reduction") {
 
     CHECK(result == 5);
 }
-#endif // DOCTEST_CONFIG_DISABLE
+#endif  // DOCTEST_CONFIG_DISABLE

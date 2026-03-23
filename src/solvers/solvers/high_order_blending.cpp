@@ -1,5 +1,6 @@
 #include <solvers/high_order_blending.h>
 #include <spdlog/spdlog.h>
+
 #include <stdexcept>
 
 ConstantOrder::ConstantOrder(Ibis::real order) {
@@ -10,12 +11,10 @@ ConstantOrder::ConstantOrder(Ibis::real order) {
     }
 }
 
-Ibis::real ConstantOrder::eval_global_limiter() {
-    return limiter_value_;
-}
+Ibis::real ConstantOrder::eval_global_limiter() { return limiter_value_; }
 
-LinearResidualBasedHighOrderBlending::LinearResidualBasedHighOrderBlending(Ibis::real start_blending_residual,
-                                                               Ibis::real stop_blending_residual) {
+LinearResidualBasedHighOrderBlending::LinearResidualBasedHighOrderBlending(
+    Ibis::real start_blending_residual, Ibis::real stop_blending_residual) {
     ln_start_blending_residual_ = log(start_blending_residual);
     ln_stop_blending_residual_ = log(stop_blending_residual);
     ln_residual_ = 0.0;
@@ -36,9 +35,9 @@ void LinearResidualBasedHighOrderBlending::set_residual(Ibis::real residual) {
 Ibis::real LinearResidualBasedHighOrderBlending::eval_global_limiter() {
     if (ln_residual_ > ln_start_blending_residual_) {
         previous_limiter_ = 0.0;
-    }
-    else if (ln_residual_ > ln_stop_blending_residual_) {
-        Ibis::real limiter = (ln_residual_ - ln_start_blending_residual_ ) / (ln_stop_blending_residual_ - ln_start_blending_residual_);
+    } else if (ln_residual_ > ln_stop_blending_residual_) {
+        Ibis::real limiter = (ln_residual_ - ln_start_blending_residual_) /
+                             (ln_stop_blending_residual_ - ln_start_blending_residual_);
         previous_limiter_ = std::max(previous_limiter_ / maximum_decrease_, limiter);
     } else {
         previous_limiter_ = 1.0;
@@ -46,7 +45,8 @@ Ibis::real LinearResidualBasedHighOrderBlending::eval_global_limiter() {
     return previous_limiter_;
 }
 
-std::unique_ptr<HighOrderBlendingSchedule> make_high_order_blending_schedule(json config) {
+std::unique_ptr<HighOrderBlendingSchedule> make_high_order_blending_schedule(
+    json config) {
     std::string type = config.at("type");
     if (type == "constant") {
         Ibis::real order = config.at("order");
@@ -58,4 +58,3 @@ std::unique_ptr<HighOrderBlendingSchedule> make_high_order_blending_schedule(jso
     spdlog::error("Invalid high order blending type {}", type);
     throw new std::runtime_error("Invalid order blending type");
 }
-

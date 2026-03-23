@@ -51,8 +51,10 @@ public:
 
     Ibis::real calculate_global_limiter() const {
         if (auto* high_order_blending =
-            dynamic_cast<LinearResidualBasedHighOrderBlending*>(high_order_blending_.get())) {
-            high_order_blending->set_residual(Ibis::real_part(relative_residual_norms().global()));
+                dynamic_cast<LinearResidualBasedHighOrderBlending*>(
+                    high_order_blending_.get())) {
+            high_order_blending->set_residual(
+                Ibis::real_part(relative_residual_norms().global()));
         }
         return high_order_blending_->eval_global_limiter();
     }

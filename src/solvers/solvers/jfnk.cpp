@@ -1,6 +1,7 @@
 #include <finite_volume/primative_conserved_conversion.h>
 #include <linear_algebra/gmres.h>
 #include <solvers/jfnk.h>
+
 #include "solvers/high_order_blending.h"
 
 #ifdef Ibis_ENABLE_MPI
@@ -23,7 +24,10 @@ Jfnk<MemModel>::Jfnk(std::shared_ptr<PseudoTransientLinearSystem> system,
         std::shared_ptr<LinearSystem> precondition_system = system_->preconditioner();
         precondition_system_ =
             std::dynamic_pointer_cast<PseudoTransientLinearSystem>(precondition_system);
-        gmres_iters_to_recompute_preconditioner_ = config.at("linear_solver").at("preconditioner").at("gmres_iters_before_recompute");
+        gmres_iters_to_recompute_preconditioner_ =
+            config.at("linear_solver")
+                .at("preconditioner")
+                .at("gmres_iters_before_recompute");
     } else if (config.at("linear_solver").at("type") == "fgmres") {
         std::shared_ptr<LinearSystem> precondition_system = system_->preconditioner();
         precondition_system_ =

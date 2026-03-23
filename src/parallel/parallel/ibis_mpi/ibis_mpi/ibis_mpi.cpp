@@ -403,5 +403,5 @@ MPI_TEST_CASE("MPI_sum_conserved_quantities_norm_real", 2) {
     CHECK(result.energy() == 180.0);
 }
 
-#endif // DOCTEST_CONFIG_DISABLE
+#endif  // DOCTEST_CONFIG_DISABLE
 #endif

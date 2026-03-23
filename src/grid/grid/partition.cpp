@@ -329,5 +329,5 @@ TEST_CASE("partition_metis_mapped_cell_locations") {
     }
 }
 
-#endif // DOCTEST_CONFIG_DISABLE
+#endif  // DOCTEST_CONFIG_DISABLE
 #endif  // Ibis_ENABLE_METIS

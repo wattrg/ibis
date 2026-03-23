@@ -96,4 +96,4 @@ TEST_CASE("Interface centres") {
         CHECK(Kokkos::abs(centre_mirror.z(i) - 0.0) < 1e-14);
     }
 }
-#endif // DOCTEST_CONFIG_DISABLE
+#endif  // DOCTEST_CONFIG_DISABLE

@@ -98,4 +98,4 @@ TEST_CASE("cell_centre") {
         CHECK(Kokkos::fabs(cells_mirror.centroids().y(i) - y_values[i]) < 1e-14);
     }
 }
-#endif // DOCTEST_CONFIG_DISABLE
+#endif  // DOCTEST_CONFIG_DISABLE
