@@ -32,11 +32,15 @@ void BarthJespersen<T>::calculate_limiters(const Ibis::SubArray2D<T> values,
             T Ui = values(cell_i);
             T U_min = Ui;
             T U_max = Ui;
-            for (size_t j = 0; j < cells.neighbour_cells(cell_i).size(); j++) {
+            T U_avg = T(0.0);
+            size_t num_neighbours = cells.neighbour_cells(cell_i).size();
+            for (size_t j = 0; j < num_neighbours; j++) {
                 size_t neighbour_cell = cells.neighbour_cells(cell_i, j);
                 U_min = Ibis::min(U_min, values(neighbour_cell));
                 U_max = Ibis::max(U_max, values(neighbour_cell));
+                U_avg += values(neighbour_cell);
             }
+            U_avg /= (num_neighbours + 1);
 
             T phi = 1.0;
             T x = cells.centroids().x(cell_i);
@@ -51,7 +55,7 @@ void BarthJespersen<T>::calculate_limiters(const Ibis::SubArray2D<T> values,
                 T delta_2 =
                     grad.x(cell_i) * dx + grad.y(cell_i) * dy + grad.z(cell_i) * dz;
                 int sign_delta_2 = (delta_2 > 0) - (delta_2 < 0);
-                delta_2 = sign_delta_2 * (Ibis::abs(delta_2) + epsilon);
+                delta_2 = sign_delta_2 * (Ibis::abs(delta_2) + epsilon * U_avg);
                 if (sign_delta_2 > 0) {
                     phi = Ibis::min(phi, (U_max - Ui) / delta_2);
                 } else if (sign_delta_2 < 0) {
