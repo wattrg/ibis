@@ -216,18 +216,27 @@ class ConstantOrder(ReconstructionOrder):
 
 class LinearResidualBasedHighOrderBlending(ReconstructionOrder):
     _type = "linear_residual_based_blending"
+    _json_values = [
+        "start_blending_residual",
+        "stop_blending_residual",
+        "maximum_decrease",
+    ]
+    __slots__ = _json_values
+    _defaults_file = "linear_residual_based_high_order_blending.json"
 
-    def __init__(self, start_blending_residual, stop_blending_residual):
-        self._start_blending_residual = start_blending_residual
-        self._stop_blending_residual = stop_blending_residual
+    def __init__(self, **kwargs):
+        json_data = read_defaults(DEFAULTS_DIRECTORY, self._defaults_file)
+        for key in self._json_values:
+            setattr(self, key, json_data[key])
+        for key in kwargs:
+            setattr(self, key, kwargs[key])
 
     def as_dict(self):
-        return {
-            "type": self._type,
-            "start_blending_residual": self._start_blending_residual,
-            "stop_blending_residual": self._stop_blending_residual,
-            "order": 2.0,
-        }
+        dictionary = {"type": self._type, "order": 2.0}
+        for key in self.__slots__:
+            dictionary[key] = getattr(self, key)
+
+        return dictionary
 
 
 def float_to_reconstruction_order(order):

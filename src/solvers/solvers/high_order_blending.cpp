@@ -35,12 +35,15 @@ void LinearResidualBasedHighOrderBlending::set_residual(Ibis::real residual) {
 
 Ibis::real LinearResidualBasedHighOrderBlending::eval_global_limiter() {
     if (ln_residual_ > ln_start_blending_residual_) {
-        return 0.0;
+        previous_limiter_ = 0.0;
     }
-    if (ln_residual_ > ln_stop_blending_residual_) {
-        return (ln_residual_ - ln_start_blending_residual_ ) / (ln_stop_blending_residual_ - ln_start_blending_residual_);
+    else if (ln_residual_ > ln_stop_blending_residual_) {
+        Ibis::real limiter = (ln_residual_ - ln_start_blending_residual_ ) / (ln_stop_blending_residual_ - ln_start_blending_residual_);
+        previous_limiter_ = std::max(previous_limiter_ / maximum_decrease_, limiter);
+    } else {
+        previous_limiter_ = 1.0;
     }
-    return 1.0;
+    return previous_limiter_;
 }
 
 std::unique_ptr<HighOrderBlendingSchedule> make_high_order_blending_schedule(json config) {

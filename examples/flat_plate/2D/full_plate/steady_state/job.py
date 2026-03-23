@@ -9,10 +9,11 @@ initial = FlowState(gas=gas_state, vx=vx)
 
 config.convective_flux = ConvectiveFlux(
     flux_calculator=Ausmdv(),
-    reconstruction_order=1,
+    reconstruction_order=2
+    limiter=BarthJespersen(epsilon=1),
 )
 
-config.viscous_flux = ViscousFlux(enabled = True)
+config.viscous_flux = ViscousFlux(enabled=True)
 
 config.gas_model = gas_model
 
@@ -25,21 +26,15 @@ config.solver = SteadyState(
     plot_frequency=500,
     diagnostics_frequency=1,
     tolerance=1e-10,
-    linear_solver=FGmres(
-        tolerance=0.5,
-        max_iters=15,
-        preconditioner_tolerance=1e-2,
-        max_preconditioner_iters=4
-    )
-    # linear_solver=Gmres(tol=1e-2, max_iters=60)
+    linear_solver=Gmres(tol=1e-2, max_iters=40, preconditioner=Ilu()),
 )
 
 config.grid = Block(
     file_name="grid.su2",
     initial_condition=inflow,
-    boundaries = {
+    boundaries={
         "inflow": supersonic_inflow(inflow),
         "outflow": supersonic_outflow(),
-        "wall": fixed_temperature_no_slip_wall(temperature = 300),
-    }
+        "wall": fixed_temperature_no_slip_wall(temperature=300),
+    },
 )

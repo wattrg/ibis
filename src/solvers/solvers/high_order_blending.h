@@ -42,9 +42,14 @@ public:
     Ibis::real eval_global_limiter();
 
 private:
+    // config
     Ibis::real ln_start_blending_residual_;
     Ibis::real ln_stop_blending_residual_;
     Ibis::real ln_residual_;
+    Ibis::real maximum_decrease_;
+
+    // 
+    Ibis::real previous_limiter_;
 };
 
 std::unique_ptr<HighOrderBlendingSchedule> make_high_order_blending_schedule(json config);

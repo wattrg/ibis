@@ -1,0 +1,5 @@
+{
+    "start_blending_residual": 1.0,
+    "stop_blending_residual": 0.1,
+    "maximum_decrease": 1.0
+}
