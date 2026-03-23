@@ -9,7 +9,7 @@ initial = FlowState(gas=gas_state, vx=vx)
 
 config.convective_flux = ConvectiveFlux(
     flux_calculator=Ausmdv(),
-    reconstruction_order=2
+    reconstruction_order=2,
     limiter=BarthJespersen(epsilon=1),
 )
 
