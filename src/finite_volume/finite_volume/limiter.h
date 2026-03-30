@@ -84,10 +84,24 @@ public:
 
     void calculate_limiters(const Ibis::SubArray2D<T> values, Field<T>& limits,
                             const Cells<T>& cells, const Interfaces<T>& faces,
-                            Vector3s<T>& grid);
+                            Vector3s<T>& grad);
 
 private:
     Ibis::real epsilon_;
+};
+
+template <typename T>
+class Venkat : public Limiter<T> {
+public:
+    ~Venkat() {}
+
+    Venkat(Ibis::real K) : Limiter<T>(true), K_(K) {}
+
+    void calculate_limiters(const Ibis::SubArray2D<T> values, Field<T>& limits,
+                            const Cells<T>& cells, const Interfaces<T>& faces,
+                            Vector3s<T>& grad);
+private:
+    Ibis::real K_;
 };
 
 template <typename T>

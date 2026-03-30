@@ -234,6 +234,13 @@ KOKKOS_INLINE_FUNCTION Dual<T> sqrt(const Dual<T>& d) {
 }
 
 template <typename T>
+KOKKOS_INLINE_FUNCTION Dual<T> cbrt(const Dual<T>& d) {
+    T real = Kokkos::cbrt(d.real());
+    T dual = d.dual() / (T(3.0) * real);
+    return Dual<T>{real, dual};
+}
+
+template <typename T>
 KOKKOS_INLINE_FUNCTION Dual<T> abs(const Dual<T>& d) {
     return d.abs();
 }

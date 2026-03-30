@@ -94,10 +94,32 @@ class BarthJespersen(Limiter):
             dictionary[key] = getattr(self, key)
         return dictionary
 
+class Venkat(Limiter):
+    _defaults_file = "venkat.json"
+    _json_values = ["K"]
+    __slots__ = _json_values
+
+    def __init__(self, **kwargs):
+        self._read_defaults()
+        self._name = "venkat"
+
+        for key in kwargs:
+            setattr(self, key, kwargs[key])
+
+    def as_dict(self):
+        dictionary = {
+            "type": self._name,
+        }
+        for key in self._json_values:
+            dictionary[key] = getattr(self, key)
+        return dictionary
+
 
 def string_to_limiter(string):
     if string == "barth_jespersen":
         return BarthJespersen()
+    if string == "venkat":
+        return Venkat()
     if string == "unlimited":
         return Unlimited()
     validation_errors.append(ValidationException(f"Unknown limiter {string}"))
@@ -1430,6 +1452,7 @@ def main(file_name, res_dir):
         "subsonic_inflow": subsonic_inflow,
         "subsonic_outflow": subsonic_outflow,
         "BarthJespersen": BarthJespersen,
+        "Venkat": Venkat,
         "Unlimited": Unlimited,
         "ThermoInterp": ThermoInterp,
         "ShockFitting": ShockFitting,

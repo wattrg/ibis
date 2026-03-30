@@ -18,6 +18,11 @@ KOKKOS_INLINE_FUNCTION T sqrt(const T& x) {
 }
 
 template <typename T>
+KOKKOS_INLINE_FUNCTION T cbrt(const T& x) {
+    return Kokkos::cbrt(x);
+}
+
+template <typename T>
 KOKKOS_INLINE_FUNCTION T pow(const T& base, const T& power) {
     return Kokkos::pow(base, power);
 }
