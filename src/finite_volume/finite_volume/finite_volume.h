@@ -68,8 +68,8 @@ public:
                            IdealGas<T>& gas_model, TransportProperties<T>& trans_prop);
 
     void estimate_dt(Ibis::Array1D<Ibis::real>& dt, const FlowStates<T>& flow_state,
-                           GridBlock<MemModel, T>& grid, IdealGas<T>& gas_model,
-                           TransportProperties<T>& trans_prop, Ibis::real cfl);
+                     GridBlock<MemModel, T>& grid, IdealGas<T>& gas_model,
+                     TransportProperties<T>& trans_prop, Ibis::real cfl);
 
     // methods
     // these have to be public for NVCC, but they shouldn't really need to

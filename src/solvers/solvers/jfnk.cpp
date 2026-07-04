@@ -62,7 +62,8 @@ void Jfnk<MemModel>::set_pseudo_time_step_size(Ibis::real dt_star) {
 }
 
 template <class MemModel>
-void Jfnk<MemModel>::set_local_pseudo_time_step_size(Ibis::Array1D<Ibis::real>& local_dt_star) {
+void Jfnk<MemModel>::set_local_pseudo_time_step_size(
+    Ibis::Array1D<Ibis::real>& local_dt_star) {
     local_pseudo_dt_ = local_dt_star;
     system_->set_local_pseudo_time_step(local_dt_star);
     if (precondition_system_) {
@@ -90,10 +91,10 @@ LinearSolveResult Jfnk<MemModel>::step(std::shared_ptr<Sim<Ibis::dual, MemModel>
 
     // set the time step
     if (local_time_stepping_) {
-        sim->fv.estimate_dt(local_pseudo_dt_, fs, sim->grid, sim->gas_model, sim->trans_prop, cfl);
+        sim->fv.estimate_dt(local_pseudo_dt_, fs, sim->grid, sim->gas_model,
+                            sim->trans_prop, cfl);
         set_local_pseudo_time_step_size(local_pseudo_dt_);
-    }
-    else {
+    } else {
         stable_dt_ = sim->fv.estimate_dt(fs, sim->grid, sim->gas_model, sim->trans_prop);
         set_pseudo_time_step_size(cfl * stable_dt_);
     }

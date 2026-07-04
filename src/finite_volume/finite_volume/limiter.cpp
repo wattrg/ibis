@@ -72,14 +72,12 @@ template class BarthJespersen<Ibis::real>;
 template class BarthJespersen<Ibis::dual>;
 
 template <typename T>
-void Venkat<T>::calculate_limiters(const Ibis::SubArray2D<T> values,
-                                   Field<T>& limits, const Cells<T>& cells,
-                                   const Interfaces<T>& faces,
+void Venkat<T>::calculate_limiters(const Ibis::SubArray2D<T> values, Field<T>& limits,
+                                   const Cells<T>& cells, const Interfaces<T>& faces,
                                    Vector3s<T>& grad) {
     Ibis::real K = K_;
     Kokkos::parallel_for(
-        "Limiter::venkat", cells.num_valid_cells(),
-        KOKKOS_LAMBDA(const size_t cell_i) {
+        "Limiter::venkat", cells.num_valid_cells(), KOKKOS_LAMBDA(const size_t cell_i) {
             T Ui = values(cell_i);
             T U_min = Ui;
             T U_max = Ui;

@@ -372,13 +372,12 @@ void FiniteVolume<T, MemModel>::apply_geometric_conservation_law(
 
 template <typename T, class MemModel>
 KOKKOS_INLINE_FUNCTION T estimate_dt_(const FlowStates<T>& flow_state,
-                                              const FlowStates<T>& face_fs,
-                                              const GridBlock<MemModel, T>& grid,
-                                              const IdealGas<T>& gas_model,
-                                              const TransportProperties<T>& trans_prop,
-                                              bool viscous, Ibis::real viscous_signal_factor,
-                                              const size_t cell_i) {
-    
+                                      const FlowStates<T>& face_fs,
+                                      const GridBlock<MemModel, T>& grid,
+                                      const IdealGas<T>& gas_model,
+                                      const TransportProperties<T>& trans_prop,
+                                      bool viscous, Ibis::real viscous_signal_factor,
+                                      const size_t cell_i) {
     CellFaces<T> cell_interfaces = grid.cells().faces();
     Interfaces<T> interfaces = grid.interfaces();
     Cells<T> cells = grid.cells();
@@ -396,11 +395,9 @@ KOKKOS_INLINE_FUNCTION T estimate_dt_(const FlowStates<T>& flow_state,
     for (size_t face_idx = 0; face_idx < cell_face_ids.size(); face_idx++) {
         size_t i_face = cell_face_ids(face_idx);
         T area = interfaces.area(i_face);
-        T dot = vx * interfaces.norm().x(i_face) +
-                vy * interfaces.norm().y(i_face) +
+        T dot = vx * interfaces.norm().x(i_face) + vy * interfaces.norm().y(i_face) +
                 vz * interfaces.norm().z(i_face);
-        T sig_vel =
-            Ibis::abs(dot) + gas_model.speed_of_sound(flow_state.gas, cell_i);
+        T sig_vel = Ibis::abs(dot) + gas_model.speed_of_sound(flow_state.gas, cell_i);
         spectral_radii_c += sig_vel * area;
 
         if (viscous) {
@@ -433,18 +430,18 @@ Ibis::real FiniteVolume<T, MemModel>::estimate_dt(const FlowStates<T>& flow_stat
         "FV::signal_frequency", num_cells,
         KOKKOS_LAMBDA(const size_t cell_i, Ibis::real& dt_utd) {
             T local_dt = estimate_dt_(flow_state, face_fs, grid, gas_model, trans_prop,
-                                             viscous, viscous_signal_factor, cell_i);
+                                      viscous, viscous_signal_factor, cell_i);
             dt_utd = Ibis::min(Ibis::real_part(local_dt), dt_utd);
         });
 }
 
 template <typename T, class MemModel>
 void FiniteVolume<T, MemModel>::estimate_dt(Ibis::Array1D<Ibis::real>& dt,
-                                                  const FlowStates<T>& flow_state,
-                                                  GridBlock<MemModel, T>& grid,
-                                                  IdealGas<T>& gas_model,
-                                                  TransportProperties<T>& trans_prop,
-                                                  Ibis::real cfl) {
+                                            const FlowStates<T>& flow_state,
+                                            GridBlock<MemModel, T>& grid,
+                                            IdealGas<T>& gas_model,
+                                            TransportProperties<T>& trans_prop,
+                                            Ibis::real cfl) {
     size_t num_cells = grid.num_cells();
     CellFaces<T> cell_interfaces = grid.cells().faces();
     Interfaces<T> interfaces = grid.interfaces();
@@ -454,10 +451,9 @@ void FiniteVolume<T, MemModel>::estimate_dt(Ibis::Array1D<Ibis::real>& dt,
     Ibis::real viscous_signal_factor = viscous_flux_.signal_factor();
 
     return Ibis::parallel_for(
-        "FV::signal_frequency", num_cells,
-        KOKKOS_LAMBDA(const size_t cell_i) {
+        "FV::signal_frequency", num_cells, KOKKOS_LAMBDA(const size_t cell_i) {
             T local_dt = estimate_dt_(flow_state, face_fs, grid, gas_model, trans_prop,
-                                             viscous, viscous_signal_factor, cell_i);
+                                      viscous, viscous_signal_factor, cell_i);
             dt(cell_i) = cfl * Ibis::real_part(local_dt);
         });
 }

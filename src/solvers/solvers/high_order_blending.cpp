@@ -1,7 +1,7 @@
 #include <solvers/high_order_blending.h>
 #include <spdlog/spdlog.h>
-#include <iostream>
 
+#include <iostream>
 #include <stdexcept>
 
 ConstantOrder::ConstantOrder(Ibis::real order) {
@@ -15,7 +15,8 @@ ConstantOrder::ConstantOrder(Ibis::real order) {
 Ibis::real ConstantOrder::eval_global_limiter() { return limiter_value_; }
 
 LinearResidualBasedHighOrderBlending::LinearResidualBasedHighOrderBlending(
-    Ibis::real start_blending_residual, Ibis::real stop_blending_residual, Ibis::real maximum_decrease) {
+    Ibis::real start_blending_residual, Ibis::real stop_blending_residual,
+    Ibis::real maximum_decrease) {
     ln_start_blending_residual_ = log(start_blending_residual);
     ln_stop_blending_residual_ = log(stop_blending_residual);
     maximum_decrease_ = maximum_decrease;

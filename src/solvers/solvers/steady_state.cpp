@@ -121,8 +121,7 @@ void SteadyStateLinearisation<MemModel>::matrix_vector_product(
             Ibis::real dt_star;
             if (local_time_stepping) {
                 dt_star = local_dt_star(cell_i);
-            }
-            else {
+            } else {
                 dt_star = global_dt_star;
             }
             for (size_t cons_i = 0; cons_i < n_cons; cons_i++) {
@@ -355,7 +354,8 @@ void SteadyStateLinearisation<MemModel>::set_pseudo_time_step(Ibis::real dt_star
 }
 
 template <class MemModel>
-void SteadyStateLinearisation<MemModel>::set_local_pseudo_time_step(Ibis::Array1D<Ibis::real>& local_dt_star) {
+void SteadyStateLinearisation<MemModel>::set_local_pseudo_time_step(
+    Ibis::Array1D<Ibis::real>& local_dt_star) {
     local_dt_star_ = local_dt_star;
 }
 
@@ -411,7 +411,8 @@ SteadyState<MemModel>::SteadyState(json config, GridBlock<MemModel, Ibis::dual> 
 
     bool local_time_stepping = solver_config.at("local_time_stepping");
     if (local_time_stepping) {
-        local_pseudo_time_step_ = Ibis::Array1D<Ibis::real> {"local_dt", sim_->grid.num_cells()};
+        local_pseudo_time_step_ =
+            Ibis::Array1D<Ibis::real>{"local_dt", sim_->grid.num_cells()};
         jfnk_.set_local_pseudo_time_step_size(local_pseudo_time_step_);
     }
 

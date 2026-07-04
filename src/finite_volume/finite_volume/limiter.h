@@ -100,6 +100,7 @@ public:
     void calculate_limiters(const Ibis::SubArray2D<T> values, Field<T>& limits,
                             const Cells<T>& cells, const Interfaces<T>& faces,
                             Vector3s<T>& grad);
+
 private:
     Ibis::real K_;
 };

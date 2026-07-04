@@ -20,8 +20,7 @@ public:
                              std::shared_ptr<ConservedQuantities<Ibis::dual>> cq,
                              std::shared_ptr<FlowStates<Ibis::dual>> fs,
                              std::shared_ptr<Vector3s<Ibis::dual>> vertex_vel,
-                             bool local_time_stepping,
-                             bool allow_reconstruction = true,
+                             bool local_time_stepping, bool allow_reconstruction = true,
                              int jacobian_stencil_size = 1);
 
     ~SteadyStateLinearisation() {}
