@@ -13,14 +13,14 @@ config.convective_flux = ConvectiveFlux(flux_calculator=Hanel(), reconstruction_
 config.gas_model = gas_model
 
 config.solver = SteadyState(
-    cfl=10.0,
+    cfl=ResidualBasedCfl(growth_threshold=1, power=1.0, start_cfl=1.0),
     max_steps=1000,
     print_frequency=100,
     plot_frequency=100,
     diagnostics_frequency=1,
     tolerance=1e-10,
     linear_solver=Gmres(
-        tol=1e-1, max_iters=10, preconditioner=Ilu(gmres_iters_before_recompute=5)
+        tol=1e-2, max_iters=20, preconditioner=Ilu(gmres_iters_before_recompute=5)
     ),
 )
 

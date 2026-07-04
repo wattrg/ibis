@@ -69,6 +69,9 @@ public:
 
     const LinearSolveResult& last_gmres_result() const { return last_gmres_result_; }
 
+    void set_pseudo_time_step_size(Ibis::real dt_star);
+    void set_local_pseudo_time_step_size(Ibis::Array1D<Ibis::real>& local_dt_star_);
+
 private:
     std::shared_ptr<PseudoTransientLinearSystem> system_;
     std::unique_ptr<IterativeLinearSolver> gmres_;
@@ -77,9 +80,12 @@ private:
     std::unique_ptr<HighOrderBlendingSchedule> high_order_blending_;
     Ibis::Vector<Ibis::real> dU_;
 
+    bool local_time_stepping_;
+    Ibis::real stable_dt_;
+    Ibis::Array1D<Ibis::real> local_pseudo_dt_;
+
     size_t max_steps_;
     Ibis::real tolerance_;
-    Ibis::real stable_dt_;
     size_t gmres_iters_to_recompute_preconditioner_ = 20;
 
     std::shared_ptr<ConservedQuantities<Ibis::dual>> residuals_;
@@ -88,7 +94,6 @@ private:
     LinearSolveResult last_gmres_result_;
     bool residual_based_cfl_;
 
-    void set_pseudo_time_step_size(Ibis::real dt_star);
     void set_global_limiter(Ibis::real global_limiter);
 
 public:  // this is public to appease NVCC

@@ -35,6 +35,8 @@ Jfnk<MemModel>::Jfnk(std::shared_ptr<PseudoTransientLinearSystem> system,
     }
     gmres_ = make_linear_solver(system, precondition_system_, config.at("linear_solver"));
 
+    local_time_stepping_ = config.at("local_time_stepping");
+
     cfl_ = std::move(cfl);
     high_order_blending_ = std::move(high_order_blending);
     residual_based_cfl_ = cfl_->residual_based();
@@ -60,6 +62,15 @@ void Jfnk<MemModel>::set_pseudo_time_step_size(Ibis::real dt_star) {
 }
 
 template <class MemModel>
+void Jfnk<MemModel>::set_local_pseudo_time_step_size(Ibis::Array1D<Ibis::real>& local_dt_star) {
+    local_pseudo_dt_ = local_dt_star;
+    system_->set_local_pseudo_time_step(local_dt_star);
+    if (precondition_system_) {
+        precondition_system_->set_local_pseudo_time_step(local_dt_star);
+    }
+}
+
+template <class MemModel>
 void Jfnk<MemModel>::set_global_limiter(Ibis::real global_limiter) {
     system_->set_global_limiter(global_limiter);
     if (precondition_system_) {
@@ -75,10 +86,17 @@ LinearSolveResult Jfnk<MemModel>::step(std::shared_ptr<Sim<Ibis::dual, MemModel>
     // our initial guess for it is zero
     dU_.zero();
 
-    // set the time step
-    stable_dt_ = sim->fv.estimate_dt(fs, sim->grid, sim->gas_model, sim->trans_prop);
     Ibis::real cfl = calculate_cfl(step);
-    set_pseudo_time_step_size(cfl * stable_dt_);
+
+    // set the time step
+    if (local_time_stepping_) {
+        sim->fv.estimate_dt(local_pseudo_dt_, fs, sim->grid, sim->gas_model, sim->trans_prop, cfl);
+        set_local_pseudo_time_step_size(local_pseudo_dt_);
+    }
+    else {
+        stable_dt_ = sim->fv.estimate_dt(fs, sim->grid, sim->gas_model, sim->trans_prop);
+        set_pseudo_time_step_size(cfl * stable_dt_);
+    }
 
     set_global_limiter(calculate_global_limiter());
 

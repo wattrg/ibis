@@ -94,6 +94,7 @@ class BarthJespersen(Limiter):
             dictionary[key] = getattr(self, key)
         return dictionary
 
+
 class Venkat(Limiter):
     _defaults_file = "venkat.json"
     _json_values = ["K"]
@@ -1134,6 +1135,7 @@ class SteadyState:
         "plot_frequency",
         "diagnostics_frequency",
         "tolerance",
+        "local_time_stepping",
     ]
     _defaults_file = "steady_state.json"
     _name = Solver.SteadyState.value
@@ -1343,6 +1345,14 @@ class Config:
                             "Grid motion only compatible with single block"
                         )
                     )
+                if grid_motion:
+                    if isinstance(self.solver, SteadyState):
+                        if self.solver.local_timestepping:
+                            validation_errors.append(
+                                ValidationException(
+                                    "Local time stepping not compatible with grid motion"
+                                )
+                            )
             else:
                 getattr(self, setting).validate()
         if validation_errors:

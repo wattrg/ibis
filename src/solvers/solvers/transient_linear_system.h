@@ -14,6 +14,8 @@ public:
 
     virtual void set_pseudo_time_step(Ibis::real dt_star) = 0;
 
+    virtual void set_local_pseudo_time_step(Ibis::Array1D<Ibis::real>& dt_star) = 0;
+
     virtual void set_global_limiter(Ibis::real global_limiter) = 0;
 };
 

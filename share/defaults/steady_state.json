@@ -4,5 +4,6 @@
   "print_frequency": 10,
   "plot_frequency": 10,
   "diagnostics_frequency": 1,
-  "tolerance": 1e-5
+  "tolerance": 1e-5,
+  "local_time_stepping": true
 }

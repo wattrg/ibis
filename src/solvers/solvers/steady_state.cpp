@@ -22,7 +22,7 @@ SteadyStateLinearisation<MemModel>::SteadyStateLinearisation(
     std::shared_ptr<ConservedQuantities<Ibis::dual>> cq,
     std::shared_ptr<FlowStates<Ibis::dual>> fs,
     std::shared_ptr<Vector3s<Ibis::dual>> vertex_vel, bool allow_reconstruction,
-    int jacobian_stencil_size) {
+    bool local_time_stepping, int jacobian_stencil_size) {
     sim_ = sim;
     cq_ = cq;
     fs_ = fs;
@@ -46,6 +46,8 @@ SteadyStateLinearisation<MemModel>::SteadyStateLinearisation(
     residuals_ = residuals;
     vertex_vel_ = vertex_vel;
 
+    local_time_stepping_ = local_time_stepping;
+
     if (sim_->grid.moving()) {
         vertex_pos_tmp_ = Vector3s<Ibis::dual>{"SteadyStateLinearisation::vertex_vel",
                                                sim_->grid.num_vertices()};
@@ -64,9 +66,11 @@ void SteadyStateLinearisation<MemModel>::matrix_vector_product(
     // set the dual components of the conserved quantities
     size_t n_cons = n_cons_;
     auto residuals = *residuals_;
-    Ibis::real dt_star = dt_star_;
+    Ibis::real global_dt_star = dt_star_;
+    Ibis::Array1D<Ibis::real> local_dt_star = local_dt_star_;
     auto cq_tmp = cq_tmp_;
     auto cq = *cq_;
+    bool local_time_stepping = local_time_stepping_;
     Ibis::parallel_for(
         "SteadyStateLinearisation::set_dual", n_cells_,
         KOKKOS_LAMBDA(const size_t cell_i) {
@@ -114,6 +118,13 @@ void SteadyStateLinearisation<MemModel>::matrix_vector_product(
         "SteadyStateLinearisation::set_vector", n_cells_,
         KOKKOS_LAMBDA(const size_t cell_i) {
             const size_t vector_idx = cell_i * n_cons;
+            Ibis::real dt_star;
+            if (local_time_stepping) {
+                dt_star = local_dt_star(cell_i);
+            }
+            else {
+                dt_star = global_dt_star;
+            }
             for (size_t cons_i = 0; cons_i < n_cons; cons_i++) {
                 result(vector_idx + cons_i) = 1 / dt_star * vec(vector_idx + cons_i) -
                                               Ibis::dual_part(residuals(cell_i, cons_i));
@@ -129,6 +140,7 @@ void SteadyStateLinearisation<MemModel>::matrix_vector_product(
             "SteadyStateLinearisation::set_vector::grid", num_vertices,
             KOKKOS_LAMBDA(const size_t vertex_i) {
                 const size_t vector_idx = n_cells * n_cons + vertex_i * dim;
+                Ibis::real dt_star = global_dt_star;
                 for (int dim_i = 0; dim_i < dim; dim_i++) {
                     result(vector_idx + dim_i) =
                         1 / dt_star * vec(vector_idx + dim_i) -
@@ -343,6 +355,11 @@ void SteadyStateLinearisation<MemModel>::set_pseudo_time_step(Ibis::real dt_star
 }
 
 template <class MemModel>
+void SteadyStateLinearisation<MemModel>::set_local_pseudo_time_step(Ibis::Array1D<Ibis::real>& local_dt_star) {
+    local_dt_star_ = local_dt_star;
+}
+
+template <class MemModel>
 void SteadyStateLinearisation<MemModel>::set_global_limiter(Ibis::real global_limiter) {
     global_limiter_ = global_limiter;
 }
@@ -388,9 +405,15 @@ SteadyState<MemModel>::SteadyState(json config, GridBlock<MemModel, Ibis::dual> 
     std::unique_ptr<PseudoTransientLinearSystem> system =
         std::unique_ptr<PseudoTransientLinearSystem>(
             new SteadyStateLinearisation<MemModel>(sim_, residuals_, cq_, fs_,
-                                                   vertex_vel_));
+                                                   vertex_vel_, local_time_stepping_));
     jfnk_ = Jfnk<MemModel>(std::move(system), std::move(cfl),
                            std::move(high_order_blending), residuals_, solver_config);
+
+    bool local_time_stepping = solver_config.at("local_time_stepping");
+    if (local_time_stepping) {
+        local_pseudo_time_step_ = Ibis::Array1D<Ibis::real> {"local_dt", sim_->grid.num_cells()};
+        jfnk_.set_local_pseudo_time_step_size(local_pseudo_time_step_);
+    }
 
     // configuration
     print_frequency_ = solver_config.at("print_frequency");
