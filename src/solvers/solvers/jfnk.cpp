@@ -39,6 +39,7 @@ Jfnk<MemModel>::Jfnk(std::shared_ptr<PseudoTransientLinearSystem> system,
     min_relaxation_factor_ = config.at("min_relaxation_factor");
     physicality_check_under_relaxation_factor_ = config.at("physicality_check_under_relaxation_factor");
     cfl_reduction_factor_ = config.at("cfl_reduction_factor");
+    preconditioner_update_interval_ = config.at("preconditioner_update_interval");
 
     cfl_ = std::move(cfl);
     high_order_blending_ = std::move(high_order_blending);
@@ -50,9 +51,10 @@ Jfnk<MemModel>::Jfnk(std::shared_ptr<PseudoTransientLinearSystem> system,
 template <class MemModel>
 int Jfnk<MemModel>::initialise() {
     system_->eval_rhs();
+    update_cfl(0);
     residual_norms_ = residuals_->L2_norms<MemModel>();
     initial_residual_norms_ = residual_norms_;
-    gmres_->update_preconditioner();
+    // gmres_->update_preconditioner();
     return 0;
 }
 
@@ -90,23 +92,26 @@ Jfnk<MemModel>::StepResult Jfnk<MemModel>::step(std::shared_ptr<Sim<Ibis::dual, 
     // our initial guess for it is zero
     dU_.zero();
 
-    Ibis::real cfl = update_cfl(step);
+    if (last_step_result_.linear_solver_result.success) {
+        update_cfl(step);
+    }
 
     // set the time step
     if (local_time_stepping_) {
         sim->fv.estimate_dt(local_pseudo_dt_, fs, sim->grid, sim->gas_model,
-                            sim->trans_prop, cfl);
+                            sim->trans_prop, cfl_value_);
         set_local_pseudo_time_step_size(local_pseudo_dt_);
     } else {
         stable_dt_ = sim->fv.estimate_dt(fs, sim->grid, sim->gas_model, sim->trans_prop);
-        set_pseudo_time_step_size(cfl * stable_dt_);
+        set_pseudo_time_step_size(cfl_value_ * stable_dt_);
     }
 
     set_global_limiter(calculate_global_limiter());
-
     // solve the linear system of equations
     if (last_step_result_.linear_solver_result.n_iters > gmres_iters_to_recompute_preconditioner_ ||
-        !last_step_result_.linear_solver_result.success) {
+        !last_step_result_.linear_solver_result.success ||
+        step % preconditioner_update_interval_ == 0) {
+        spdlog::debug("Updating preconditioner step {}", step);
         gmres_->update_preconditioner();
     }
     LinearSolveResult last_gmres_result = gmres_->solve(dU_);

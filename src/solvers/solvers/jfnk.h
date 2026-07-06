@@ -49,7 +49,7 @@ public:
         return cfl_value_;
     }
 
-    Ibis::real update_cfl(size_t step) {
+    void update_cfl(size_t step) {
         Ibis::real cfl;
         if (auto* residual_based_cfl = dynamic_cast<ResidualBasedCfl*>(cfl_.get())) {
             // If the last step failed, reduce the CFL
@@ -61,7 +61,6 @@ public:
             cfl = cfl_->eval((Ibis::real)step);
         }
         cfl_value_ = cfl;
-        return cfl;
     }
 
     Ibis::real calculate_global_limiter() const {
@@ -104,6 +103,7 @@ private:
     size_t max_steps_;
     Ibis::real tolerance_;
     size_t gmres_iters_to_recompute_preconditioner_ = 20;
+    size_t preconditioner_update_interval_;
 
     Ibis::real min_relaxation_factor_;
     Ibis::real physicality_check_under_relaxation_factor_;

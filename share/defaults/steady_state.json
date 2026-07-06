@@ -8,5 +8,6 @@
   "local_time_stepping": true,
   "min_relaxation_factor": 1e-2,
   "physicality_check_under_relaxation_factor": 0.5,
-  "cfl_reduction_factor": 0.5
+  "cfl_reduction_factor": 0.5,
+  "preconditioner_update_interval": 25
 }

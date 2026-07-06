@@ -1139,6 +1139,7 @@ class SteadyState:
         "min_relaxation_factor",
         "physicality_check_under_relaxation_factor",
         "cfl_reduction_factor",
+        "preconditioner_update_interval",
     ]
     _defaults_file = "steady_state.json"
     _name = Solver.SteadyState.value
