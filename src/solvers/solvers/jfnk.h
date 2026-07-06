@@ -47,16 +47,16 @@ public:
 
     Ibis::real calculate_cfl(size_t step) const {
         Ibis::real cfl;
-        if (residual_based_cfl_) {
+        if (auto* residual_based_cfl = dynamic_cast<ResidualBasedCfl*>(cfl_.get())) {
+            // If the last step failed, reduce the CFL
+            if (last_step_result_.num_bad_cells > 0) {
+                residual_based_cfl->reduce_cfl(cfl_reduction_factor_);
+            }
             cfl = cfl_->eval(Ibis::real_part(relative_residual_norms().global()));
         } else {
             cfl = cfl_->eval((Ibis::real)step);
         }
 
-        // If the last step failed, reduce the CFL
-        if (last_step_result_.num_bad_cells > 0) {
-            cfl *= cfl_reduction_factor_;
-        }
         return cfl;
     }
 

@@ -544,7 +544,7 @@ bool SteadyState<MemModel>::write_residuals(unsigned int step, Ibis::real wc) {
     rel_norms.write_to_file(relative_residual_file, wc, (Ibis::real)step, step);
 
     const typename Jfnk<MemModel>::StepResult& step_result = jfnk_.last_step_result();
-    std::ofstream gmres_diagnostics("log/gmres_diagnostics.dat", std::ios_base::app);
+    std::ofstream gmres_diagnostics("log/solver_diagnostics.dat", std::ios_base::app);
     gmres_diagnostics << step << " " << step_result.linear_solver_result.success << " "
                       << step_result.linear_solver_result.residual << " " << step_result.linear_solver_result.tol << " "
                       << step_result.linear_solver_result.n_iters << " "

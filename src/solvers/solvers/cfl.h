@@ -55,6 +55,8 @@ public:
 
     Ibis::real eval(Ibis::real t);
 
+    void reduce_cfl(Ibis::real factor) { previous_cfl_ *= factor; }
+
     bool residual_based() const { return true; }
 
 private:
