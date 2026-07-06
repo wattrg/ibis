@@ -443,19 +443,19 @@ int SteadyState<MemModel>::initialise() {
     if (diagnostics_frequency_ > 0) {
         // absolute residuals
         std::ofstream abs_residual_file("log/absolute_residuals.dat", std::ios_base::out);
-        abs_residual_file << "step step wall_clock global mass momentum_x momentum_y "
+        abs_residual_file << "step sim_time wall_clock global mass momentum_x momentum_y "
                              "momentum_z energy\n";
 
         // relative residuals
         std::ofstream rel_residual_file("log/relative_residuals.dat", std::ios_base::out);
-        rel_residual_file << "step step wall_clock global mass momentum_x momentum_y "
+        rel_residual_file << "step sim_time wall_clock global mass momentum_x momentum_y "
                              "momentum_z energy\n";
 
         write_residuals(0, 0.0);
 
-        // gmres diagnostics
-        std::ofstream gmres_diagnostics("log/gmres_diagnostics.dat", std::ios_base::out);
-        gmres_diagnostics << "step converged residual tolerance n_iters\n";
+        // solver diagnostics
+        std::ofstream gmres_diagnostics("log/solver_diagnostics.dat", std::ios_base::out);
+        gmres_diagnostics << "step converged linear_residual tolerance n_iters relaxation_factor\n";
     }
 
     return ic_result + conversion_result + jfnk_init;
@@ -543,11 +543,12 @@ bool SteadyState<MemModel>::write_residuals(unsigned int step, Ibis::real wc) {
                                          std::ios_base::app);
     rel_norms.write_to_file(relative_residual_file, wc, (Ibis::real)step, step);
 
-    const LinearSolveResult& gmres_result = jfnk_.last_gmres_result();
+    const typename Jfnk<MemModel>::StepResult& step_result = jfnk_.last_step_result();
     std::ofstream gmres_diagnostics("log/gmres_diagnostics.dat", std::ios_base::app);
-    gmres_diagnostics << step << " " << gmres_result.success << " "
-                      << gmres_result.residual << " " << gmres_result.tol << " "
-                      << gmres_result.n_iters << std::endl;
+    gmres_diagnostics << step << " " << step_result.linear_solver_result.success << " "
+                      << step_result.linear_solver_result.residual << " " << step_result.linear_solver_result.tol << " "
+                      << step_result.linear_solver_result.n_iters << " "
+                      << step_result.relaxation_factor << std::endl;
     return true;
 }
 

@@ -1136,6 +1136,9 @@ class SteadyState:
         "diagnostics_frequency",
         "tolerance",
         "local_time_stepping",
+        "min_relaxation_factor",
+        "physicality_check_under_relaxation_factor",
+        "cfl_reduction_factor",
     ]
     _defaults_file = "steady_state.json"
     _name = Solver.SteadyState.value

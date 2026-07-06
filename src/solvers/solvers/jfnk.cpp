@@ -36,6 +36,9 @@ Jfnk<MemModel>::Jfnk(std::shared_ptr<PseudoTransientLinearSystem> system,
     gmres_ = make_linear_solver(system, precondition_system_, config.at("linear_solver"));
 
     local_time_stepping_ = config.at("local_time_stepping");
+    min_relaxation_factor_ = config.at("min_relaxation_factor");
+    physicality_check_under_relaxation_factor_ = config.at("physicality_check_under_relaxation_factor");
+    cfl_reduction_factor_ = config.at("cfl_reduction_factor");
 
     cfl_ = std::move(cfl);
     high_order_blending_ = std::move(high_order_blending);
@@ -80,7 +83,7 @@ void Jfnk<MemModel>::set_global_limiter(Ibis::real global_limiter) {
 }
 
 template <class MemModel>
-LinearSolveResult Jfnk<MemModel>::step(std::shared_ptr<Sim<Ibis::dual, MemModel>>& sim,
+Jfnk<MemModel>::StepResult Jfnk<MemModel>::step(std::shared_ptr<Sim<Ibis::dual, MemModel>>& sim,
                                        ConservedQuantities<Ibis::dual>& cq,
                                        FlowStates<Ibis::dual>& fs, size_t step) {
     // dU is the change in the solution for the step,
@@ -102,25 +105,37 @@ LinearSolveResult Jfnk<MemModel>::step(std::shared_ptr<Sim<Ibis::dual, MemModel>
     set_global_limiter(calculate_global_limiter());
 
     // solve the linear system of equations
-    if (last_gmres_result_.n_iters > gmres_iters_to_recompute_preconditioner_ ||
-        !last_gmres_result_.success) {
+    if (last_step_result_.linear_solver_result.n_iters > gmres_iters_to_recompute_preconditioner_ ||
+        !last_step_result_.linear_solver_result.success) {
         gmres_->update_preconditioner();
     }
-    last_gmres_result_ = gmres_->solve(dU_);
+    LinearSolveResult last_gmres_result = gmres_->solve(dU_);
 
-    // apply the update and calculate the new residuals
-    // so we can check non-linear convergence.
+
+    Ibis::real relaxation_factor = 1.0;
+    size_t num_bad_cells = 0;
+    while (relaxation_factor > min_relaxation_factor_) {
+        apply_update_(sim, cq, fs, relaxation_factor);
+        num_bad_cells = sim->fv.count_bad_cells(fs, sim->grid.num_cells());
+        if (num_bad_cells == 0) {
+            break;
+        }
+        apply_update_(sim, cq, fs, -relaxation_factor);
+        relaxation_factor *= physicality_check_under_relaxation_factor_;
+    }
+    last_step_result_ = StepResult{last_gmres_result, relaxation_factor, num_bad_cells};
+
+    // calculate the new residuals so we can check non-linear convergence.
     // These residuals get re-used for the next step if we haven't converged.
-    apply_update_(sim, cq, fs);
     system_->eval_rhs();
     residual_norms_ = residuals_->L2_norms<MemModel>();
-    return last_gmres_result_;
+    return last_step_result_;
 }
 
 template <class MemModel>
 void Jfnk<MemModel>::apply_update_(std::shared_ptr<Sim<Ibis::dual, MemModel>>& sim,
                                    ConservedQuantities<Ibis::dual>& cq,
-                                   FlowStates<Ibis::dual>& fs) {
+                                   FlowStates<Ibis::dual>& fs, Ibis::real factor) {
     auto dU = dU_;
     size_t n_cells = sim->grid.num_cells();
     size_t n_cons = cq.n_conserved();
@@ -128,7 +143,7 @@ void Jfnk<MemModel>::apply_update_(std::shared_ptr<Sim<Ibis::dual, MemModel>>& s
         "Jfnk::apply_update", n_cells, KOKKOS_LAMBDA(const size_t cell_i) {
             const size_t vector_idx = cell_i * n_cons;
             for (size_t cons_i = 0; cons_i < n_cons; cons_i++) {
-                cq(cell_i, cons_i).real() += dU(vector_idx + cons_i);
+                cq(cell_i, cons_i).real() += factor * dU(vector_idx + cons_i);
                 cq(cell_i, cons_i).dual() = 0.0;
             }
         });
@@ -140,7 +155,7 @@ void Jfnk<MemModel>::apply_update_(std::shared_ptr<Sim<Ibis::dual, MemModel>>& s
             "Jfnk::apply_update::grid", n_vertices, KOKKOS_LAMBDA(const size_t vertex_i) {
                 const size_t vector_idx = n_cells * n_cons + vertex_i * dim;
                 for (int dim_i = 0; dim_i < dim; dim_i++) {
-                    vertex_pos(vertex_i, dim_i).real() += dU(vector_idx + dim_i);
+                    vertex_pos(vertex_i, dim_i).real() += factor * dU(vector_idx + dim_i);
                     vertex_pos(vertex_i, dim_i).dual() = 0.0;
                 }
             });

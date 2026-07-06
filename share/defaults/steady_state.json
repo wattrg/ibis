@@ -5,5 +5,8 @@
   "plot_frequency": 10,
   "diagnostics_frequency": 1,
   "tolerance": 1e-5,
-  "local_time_stepping": true
+  "local_time_stepping": true,
+  "min_relaxation_factor": 1e-2,
+  "physicality_check_under_relaxation_factor": 0.5,
+  "cfl_reduction_factor": 0.5
 }

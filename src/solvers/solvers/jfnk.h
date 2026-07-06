@@ -29,9 +29,15 @@ public:
 
     int initialise();
 
-    LinearSolveResult step(std::shared_ptr<Sim<Ibis::dual, MemModel>>& sim,
-                           ConservedQuantities<Ibis::dual>& cq,
-                           FlowStates<Ibis::dual>& fs, size_t step);
+    struct StepResult {
+        LinearSolveResult linear_solver_result;
+        Ibis::real relaxation_factor = 1.0;
+        size_t num_bad_cells = 0;  
+    };
+
+    StepResult step(std::shared_ptr<Sim<Ibis::dual, MemModel>>& sim,
+                    ConservedQuantities<Ibis::dual>& cq,
+                    FlowStates<Ibis::dual>& fs, size_t step);
 
     void solve(std::shared_ptr<Sim<Ibis::dual, MemModel>>& sim);
 
@@ -45,6 +51,11 @@ public:
             cfl = cfl_->eval(Ibis::real_part(relative_residual_norms().global()));
         } else {
             cfl = cfl_->eval((Ibis::real)step);
+        }
+
+        // If the last step failed, reduce the CFL
+        if (last_step_result_.num_bad_cells > 0) {
+            cfl *= cfl_reduction_factor_;
         }
         return cfl;
     }
@@ -67,10 +78,11 @@ public:
 
     Ibis::real target_residual() const { return tolerance_; }
 
-    const LinearSolveResult& last_gmres_result() const { return last_gmres_result_; }
+    const StepResult& last_step_result() const { return last_step_result_; }
 
     void set_pseudo_time_step_size(Ibis::real dt_star);
     void set_local_pseudo_time_step_size(Ibis::Array1D<Ibis::real>& local_dt_star_);
+
 
 private:
     std::shared_ptr<PseudoTransientLinearSystem> system_;
@@ -88,17 +100,22 @@ private:
     Ibis::real tolerance_;
     size_t gmres_iters_to_recompute_preconditioner_ = 20;
 
+    Ibis::real min_relaxation_factor_;
+    Ibis::real physicality_check_under_relaxation_factor_;
+    Ibis::real cfl_reduction_factor_;
+
     std::shared_ptr<ConservedQuantities<Ibis::dual>> residuals_;
     ConservedQuantitiesNorm<Ibis::dual> residual_norms_;
     ConservedQuantitiesNorm<Ibis::dual> initial_residual_norms_;
-    LinearSolveResult last_gmres_result_;
+    StepResult last_step_result_;
     bool residual_based_cfl_;
 
     void set_global_limiter(Ibis::real global_limiter);
 
 public:  // this is public to appease NVCC
     void apply_update_(std::shared_ptr<Sim<Ibis::dual, MemModel>>& sim,
-                       ConservedQuantities<Ibis::dual>& cq, FlowStates<Ibis::dual>& fs);
+                       ConservedQuantities<Ibis::dual>& cq, FlowStates<Ibis::dual>& fs,
+                       Ibis::real factor);
 };
 
 #endif
