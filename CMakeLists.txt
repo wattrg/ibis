@@ -68,18 +68,22 @@ add_subdirectory(extern/pybind11 EXCLUDE_FROM_ALL)
 set(KokkosKernels_ENABLE_ALL_COMPONENTS OFF CACHE BOOL "" FORCE)
 
 
-set(KokkosKernels_INST_LAYOUTRIGHT ON CACHE BOOL "" FORCE)
-set(KokkosKernels_INST_LAYOUTLEFT ON CACHE BOOL "" FORCE)
+# set(KokkosKernels_INST_LAYOUTRIGHT ON CACHE BOOL "" FORCE)
+# set(KokkosKernels_INST_LAYOUTLEFT ON CACHE BOOL "" FORCE)
 
 # Enable only graph algorithms
-set(KokkosKernels_ENABLE_COMPONENT_GRAPH ON CACHE BOOL "" FORCE)
-set(KokkosKernels_ENABLE_COMPONENT_SPARSE ON CACHE BOOL "" FORCE)
-
-# Disable others explicitly
 set(KokkosKernels_ENABLE_COMPONENT_BLAS OFF CACHE BOOL "" FORCE)
 set(KokkosKernels_ENABLE_COMPONENT_LAPACK OFF CACHE BOOL "" FORCE)
 set(KokkosKernels_ENABLE_COMPONENT_ODE OFF CACHE BOOL "" FORCE)
 set(KokkosKernels_ENABLE_COMPONENT_BATCHED OFF CACHE BOOL "" FORCE)
+set(KokkosKernels_ENABLE_ETI OFF CACHE BOOL "" FORCE)
+set(KokkosKernels_ADD_DEFAULT_ETI OFF CACHE BOOL "" FORCE)
+set(KokkosKernels_ENABLE_COMPONENT_GRAPH ON CACHE BOOL "" FORCE)
+set(KokkosKernels_ENABLE_COMPONENT_SPARSE ON CACHE BOOL "" FORCE)
+
+# Disable others explicitly
+
+
 add_subdirectory(extern/kokkos-kernels EXCLUDE_FROM_ALL)
 
 # Find METIS
