@@ -13,9 +13,9 @@ initial = FlowState(gas=gas_state, vx=v * math.cos(aoa), vy=v * math.sin(aoa), v
 config.convective_flux = ConvectiveFlux(
     flux_calculator=Hanel(),
     reconstruction_order=LinearResidualBasedHighOrderBlending(
-        start_blending_residual=0.2, stop_blending_residual=0.01
+        start_blending_residual=0.1, stop_blending_residual=0.01
     ),
-    # limiter = Unlimited(),
+    limiter=Venkat(),
 )
 
 config.viscous_flux = ViscousFlux(enabled=True)
@@ -23,10 +23,10 @@ config.viscous_flux = ViscousFlux(enabled=True)
 config.gas_model = gas_model
 
 config.solver = SteadyState(
-    cfl=ResidualBasedCfl(growth_threshold=0.99, power=1.0, start_cfl=1.0),
+    cfl=ResidualBasedCfl(growth_threshold=0.1, power=1.0, start_cfl=1.0),
     max_steps=10000,
-    plot_frequency=1000,
-    print_frequency=100,
+    plot_frequency=100,
+    print_frequency=10,
     diagnostics_frequency=1,
     tolerance=1e-6,
     linear_solver=Gmres(
