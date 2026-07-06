@@ -21,8 +21,8 @@ SteadyStateLinearisation<MemModel>::SteadyStateLinearisation(
     std::shared_ptr<ConservedQuantities<Ibis::dual>> residuals,
     std::shared_ptr<ConservedQuantities<Ibis::dual>> cq,
     std::shared_ptr<FlowStates<Ibis::dual>> fs,
-    std::shared_ptr<Vector3s<Ibis::dual>> vertex_vel, bool allow_reconstruction,
-    bool local_time_stepping, int jacobian_stencil_size) {
+    std::shared_ptr<Vector3s<Ibis::dual>> vertex_vel, bool local_time_stepping,
+    bool allow_reconstruction, int jacobian_stencil_size) {
     sim_ = sim;
     cq_ = cq;
     fs_ = fs;
@@ -57,7 +57,7 @@ SteadyStateLinearisation<MemModel>::SteadyStateLinearisation(
 template <class MemModel>
 std::unique_ptr<LinearSystem> SteadyStateLinearisation<MemModel>::preconditioner() {
     return std::unique_ptr<LinearSystem>(new SteadyStateLinearisation<MemModel>(
-        sim_, residuals_, cq_, fs_, vertex_vel_, false));
+        sim_, residuals_, cq_, fs_, vertex_vel_, local_time_stepping_, false));
 }
 
 template <class MemModel>
@@ -398,6 +398,8 @@ SteadyState<MemModel>::SteadyState(json config, GridBlock<MemModel, Ibis::dual> 
             new Vector3s<Ibis::dual>(grid.num_vertices()));
     }
 
+    bool local_time_stepping_ = solver_config.at("local_time_stepping");
+
     // set up the linear system and non-linear solver
     auto cfl = make_cfl_schedule(solver_config.at("cfl"));
     auto high_order_blending = make_high_order_blending_schedule(
@@ -409,8 +411,7 @@ SteadyState<MemModel>::SteadyState(json config, GridBlock<MemModel, Ibis::dual> 
     jfnk_ = Jfnk<MemModel>(std::move(system), std::move(cfl),
                            std::move(high_order_blending), residuals_, solver_config);
 
-    bool local_time_stepping = solver_config.at("local_time_stepping");
-    if (local_time_stepping) {
+    if (local_time_stepping_) {
         local_pseudo_time_step_ =
             Ibis::Array1D<Ibis::real>{"local_dt", sim_->grid.num_cells()};
         jfnk_.set_local_pseudo_time_step_size(local_pseudo_time_step_);
@@ -455,7 +456,7 @@ int SteadyState<MemModel>::initialise() {
 
         // solver diagnostics
         std::ofstream gmres_diagnostics("log/solver_diagnostics.dat", std::ios_base::out);
-        gmres_diagnostics << "step converged linear_residual tolerance n_iters relaxation_factor\n";
+        gmres_diagnostics << "step converged linear_residual tolerance n_iters relaxation_factor cfl\n";
     }
 
     return ic_result + conversion_result + jfnk_init;
@@ -506,7 +507,7 @@ int SteadyState<MemModel>::plot_solution(unsigned int step) {
 template <class MemModel>
 void SteadyState<MemModel>::print_progress(unsigned int step, Ibis::real wc) {
     Ibis::real relative_global_residual = jfnk_.relative_residual_norms().global().real();
-    Ibis::real cfl = jfnk_.calculate_cfl(step);
+    Ibis::real cfl = jfnk_.cfl();
     spdlog::info(
         "  step: {:>8}, relative global residual {:.2e}, cfl = {:.1f}, wc = {:.1f}s",
         step, relative_global_residual, cfl, wc);
@@ -544,11 +545,12 @@ bool SteadyState<MemModel>::write_residuals(unsigned int step, Ibis::real wc) {
     rel_norms.write_to_file(relative_residual_file, wc, (Ibis::real)step, step);
 
     const typename Jfnk<MemModel>::StepResult& step_result = jfnk_.last_step_result();
+    Ibis::real cfl = jfnk_.cfl();
     std::ofstream gmres_diagnostics("log/solver_diagnostics.dat", std::ios_base::app);
     gmres_diagnostics << step << " " << step_result.linear_solver_result.success << " "
                       << step_result.linear_solver_result.residual << " " << step_result.linear_solver_result.tol << " "
                       << step_result.linear_solver_result.n_iters << " "
-                      << step_result.relaxation_factor << std::endl;
+                      << step_result.relaxation_factor << " " << cfl << std::endl;
     return true;
 }
 

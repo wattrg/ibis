@@ -90,7 +90,7 @@ Jfnk<MemModel>::StepResult Jfnk<MemModel>::step(std::shared_ptr<Sim<Ibis::dual, 
     // our initial guess for it is zero
     dU_.zero();
 
-    Ibis::real cfl = calculate_cfl(step);
+    Ibis::real cfl = update_cfl(step);
 
     // set the time step
     if (local_time_stepping_) {

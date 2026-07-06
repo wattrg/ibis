@@ -45,18 +45,22 @@ public:
 
     Ibis::real pseudo_time_step_size() const { return stable_dt_; }
 
-    Ibis::real calculate_cfl(size_t step) const {
+    Ibis::real cfl() const {
+        return cfl_value_;
+    }
+
+    Ibis::real update_cfl(size_t step) {
         Ibis::real cfl;
         if (auto* residual_based_cfl = dynamic_cast<ResidualBasedCfl*>(cfl_.get())) {
             // If the last step failed, reduce the CFL
-            if (last_step_result_.num_bad_cells > 0) {
-                residual_based_cfl->reduce_cfl(cfl_reduction_factor_);
-            }
+            // if (last_step_result_.num_bad_cells > 0) {
+            residual_based_cfl->reduce_cfl(last_step_result_.relaxation_factor);
+            // }
             cfl = cfl_->eval(Ibis::real_part(relative_residual_norms().global()));
         } else {
             cfl = cfl_->eval((Ibis::real)step);
         }
-
+        cfl_value_ = cfl;
         return cfl;
     }
 
@@ -95,6 +99,7 @@ private:
     bool local_time_stepping_;
     Ibis::real stable_dt_;
     Ibis::Array1D<Ibis::real> local_pseudo_dt_;
+    Ibis::real cfl_value_;
 
     size_t max_steps_;
     Ibis::real tolerance_;
