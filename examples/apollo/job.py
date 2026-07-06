@@ -15,7 +15,7 @@ config.convective_flux = ConvectiveFlux(
     reconstruction_order=LinearResidualBasedHighOrderBlending(
         start_blending_residual=0.1, stop_blending_residual=0.01
     ),
-    limiter=Venkat(),
+    limiter=Venkat(K=10),
 )
 
 config.viscous_flux = ViscousFlux(enabled=False)
@@ -23,12 +23,12 @@ config.viscous_flux = ViscousFlux(enabled=False)
 config.gas_model = gas_model
 
 config.solver = SteadyState(
-    cfl=ResidualBasedCfl(growth_threshold=0.1, power=1.0, start_cfl=0.5),
+    cfl=ResidualBasedCfl(growth_threshold=0.3, power=0.6, start_cfl=1.0),
     max_steps=10000,
     plot_frequency=100,
     print_frequency=10,
     diagnostics_frequency=1,
-    tolerance=1e-6,
+    tolerance=1e-8,
     min_relaxation_factor=1e-4,
     linear_solver=Gmres(
         tol=1e-2,
@@ -40,8 +40,8 @@ config.grid = Block(
     file_name="grid.su2",
     initial_condition=initial,
     boundaries={
-        # "capsule": slip_wall(), # wall
-        "capsule": fixed_temperature_no_slip_wall(temperature=1000),
+        "capsule": slip_wall(),  # wall
+        # "capsule": fixed_temperature_no_slip_wall(temperature=1000),
         "inflow": supersonic_inflow(inflow),  # inflow,
         "outflow": supersonic_outflow(),
     },
