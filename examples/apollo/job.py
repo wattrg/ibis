@@ -15,7 +15,7 @@ config.convective_flux = ConvectiveFlux(
     reconstruction_order=LinearResidualBasedHighOrderBlending(
         start_blending_residual=0.1, stop_blending_residual=0.01
     ),
-    limiter=Venkat(K=10),
+    limiter=Venkat(),
 )
 
 config.viscous_flux = ViscousFlux(enabled=False)
@@ -23,16 +23,17 @@ config.viscous_flux = ViscousFlux(enabled=False)
 config.gas_model = gas_model
 
 config.solver = SteadyState(
-    cfl=ResidualBasedCfl(growth_threshold=0.3, power=0.6, start_cfl=1.0),
+    cfl=ResidualBasedCfl(growth_threshold=0.01, power=0.5, start_cfl=1),
     max_steps=10000,
     plot_frequency=100,
     print_frequency=10,
     diagnostics_frequency=1,
     tolerance=1e-8,
-    min_relaxation_factor=1e-4,
+    local_time_stepping=True,
+    min_relaxation_factor=1e-2,
     linear_solver=Gmres(
         tol=1e-2,
-        max_iters=50,
+        max_iters=80,
     ),
 )
 

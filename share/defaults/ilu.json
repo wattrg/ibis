@@ -1,4 +1,4 @@
 {
   "fill_in": 0,
-  "gmres_iters_before_recompute": 30,
+  "gmres_iters_before_recompute": 30
 }
