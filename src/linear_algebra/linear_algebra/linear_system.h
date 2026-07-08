@@ -15,7 +15,7 @@ public:
     virtual void matrix_vector_product(Ibis::Vector<Ibis::real>& vec,
                                        Ibis::Vector<Ibis::real>& result) = 0;
 
-    virtual Ibis::CrsGraph<int, int> compute_matrix_graph(int stencil_distance) = 0;
+    virtual Ibis::CrsGraph<int, int> compute_matrix_graph() = 0;
 
     virtual void compute_matrix(Ibis::CrsMatrix<int, int, Ibis::real>& matrix) = 0;
 

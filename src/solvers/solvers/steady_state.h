@@ -29,7 +29,7 @@ public:
     void matrix_vector_product(Ibis::Vector<Ibis::real>& vec,
                                Ibis::Vector<Ibis::real>& result);
 
-    Ibis::CrsGraph<int, int> compute_matrix_graph(int stencil_distance);
+    Ibis::CrsGraph<int, int> compute_matrix_graph();
 
     void compute_matrix(Ibis::CrsMatrix<int, int, Ibis::real>& matrix);
 

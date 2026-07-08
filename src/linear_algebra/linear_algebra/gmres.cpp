@@ -388,8 +388,7 @@ TEST_CASE("GMRES") {
 
         ~TestLinearSystem() {}
 
-        Ibis::CrsGraph<int, int> compute_matrix_graph(int stencil_distance) {
-            (void)stencil_distance;
+        Ibis::CrsGraph<int, int> compute_matrix_graph() {
             throw std::runtime_error("Not implemented");
         }
         void compute_matrix(Ibis::CrsMatrix<int, int, Ibis::real>&) {}
@@ -477,8 +476,7 @@ TEST_CASE("RPGMRES") {
 
         ~TestLinearSystem() {}
 
-        Ibis::CrsGraph<int, int> compute_matrix_graph(int stencil_distance) {
-            (void)stencil_distance;
+        Ibis::CrsGraph<int, int> compute_matrix_graph() {
             std::vector<int> row_map{0, 2, 5, 8, 11, 13};
             std::vector<int> entries{0, 1, 0, 1, 2, 1, 2, 3, 2, 3, 4, 3, 4};
 
@@ -599,8 +597,7 @@ TEST_CASE("FGMRES") {
             Ibis::gemv(matrix_, vec, res);
         }
 
-        Ibis::CrsGraph<int, int> compute_matrix_graph(int stencil_distance) {
-            (void)stencil_distance;
+        Ibis::CrsGraph<int, int> compute_matrix_graph() {
             throw std::runtime_error("Not implemented");
         }
 

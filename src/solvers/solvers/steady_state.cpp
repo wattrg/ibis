@@ -155,12 +155,11 @@ void SteadyStateLinearisation<MemModel>::matrix_vector_product(
 }
 
 template <class MemModel>
-Ibis::CrsGraph<int, int> SteadyStateLinearisation<MemModel>::compute_matrix_graph(
-    int stencil_distance) {
+Ibis::CrsGraph<int, int> SteadyStateLinearisation<MemModel>::compute_matrix_graph() {
     // get the graph of the grid
     auto grid = sim_->grid;
-    grid.compute_graph(stencil_distance);
-    auto grid_graph = grid.graph(stencil_distance);
+    grid.compute_graph(jacobian_stencil_size_);
+    auto grid_graph = grid.graph(jacobian_stencil_size_);
     auto grid_graph_h = grid_graph.host_mirror();
     grid_graph_h.deep_copy(grid_graph);
 
@@ -402,12 +401,15 @@ SteadyState<MemModel>::SteadyState(json config, GridBlock<MemModel, Ibis::dual> 
     }
 
     bool local_time_stepping_ = solver_config.at("local_time_stepping");
+    int reconstruction_order = config.at("convective_flux").at("reconstruction_order").at("order");
+    int allow_reconstruction = reconstruction_order > 1.0;
 
     // set up the linear system and non-linear solver
     std::unique_ptr<PseudoTransientLinearSystem> system =
         std::unique_ptr<PseudoTransientLinearSystem>(
             new SteadyStateLinearisation<MemModel>(sim_, residuals_, cq_, fs_,
-                                                   vertex_vel_, local_time_stepping_));
+                                                   vertex_vel_, local_time_stepping_,
+                                                   allow_reconstruction, 1));
 
     auto cfl = make_cfl_schedule(solver_config.at("cfl"));
     auto high_order_blending = make_high_order_blending_schedule(
@@ -590,7 +592,7 @@ TEST_CASE("steady_state coloured jacobian") {
     system_alt.set_pseudo_time_step(1);
 
     // compute the matrix
-    auto matrix_graph = system.compute_matrix_graph(2);
+    auto matrix_graph = system.compute_matrix_graph();
     Ibis::CrsMatrix<int, int, Ibis::real> matrix(matrix_graph);
     system.compute_matrix(matrix);
 
