@@ -866,7 +866,7 @@ public:
 
     void compute_graph(int distance) {
         if (!(distance == 1 || distance == 2)) {
-            std::runtime_error("Grid graph distance should be 1 or 2");
+            throw std::runtime_error("Grid graph distance should be 1 or 2");
         }
 
         if (distance == 1 && distance_1_graph_.row_map.size() == num_cells() + 1) {
@@ -883,13 +883,14 @@ public:
         std::vector<int> serial_entries;
         auto neighbours = grid_host.cells().neighbour_cells();
         for (size_t cell_i = 0; cell_i < grid_host.num_cells(); cell_i++) {
-            serial_entries.push_back(cell_i);
+            std::vector<int> row_entries;
+            row_entries.push_back(cell_i);
             auto neighbour_cells = neighbours(cell_i);
             for (size_t neighbour_i = 0; neighbour_i < neighbour_cells.size();
                  neighbour_i++) {
                 size_t neighbour_cell = neighbour_cells(neighbour_i);
                 if (neighbour_cell < grid_host.num_cells()) {
-                    serial_entries.push_back(neighbour_cell);
+                    row_entries.push_back(neighbour_cell);
                 }
 
                 if (distance == 2 && neighbour_cell < grid_host.num_cells()) {
@@ -899,14 +900,15 @@ public:
                         size_t ngbr_ngbr_cell = neighbour_neighbours(ngbr_ngbr_i);
                         if (ngbr_ngbr_cell != cell_i &&
                             ngbr_ngbr_cell < grid_host.num_cells()) {
-                            serial_entries.push_back(ngbr_ngbr_cell);
+                            row_entries.push_back(ngbr_ngbr_cell);
                         }
                     }
                 }
             }
+            std::sort(row_entries.begin(), row_entries.end());
+            row_entries.erase(std::unique(row_entries.begin(), row_entries.end()), row_entries.end());
+            serial_entries.insert(serial_entries.end(), row_entries.begin(), row_entries.end());
             serial_row_map.push_back(serial_entries.size());
-            std::sort(serial_entries.begin() + serial_row_map[cell_i],
-                      serial_entries.begin() + serial_row_map[cell_i + 1]);
         }
 
         Ibis::Array1D<int, array_layout, memory_space> row_map("CrsGraph::row_map",
@@ -951,7 +953,7 @@ public:
     }
 
     void compute_colours() {
-        compute_graph(1);
+        compute_graph(2);
         using Colourer_type = GridColourer<GridBlock_type>;
         std::unique_ptr<Colourer_type> colourer = make_grid_colourer<GridBlock_type>();
         colourer->compute_colouring(*this);

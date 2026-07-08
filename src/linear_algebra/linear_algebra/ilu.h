@@ -22,7 +22,7 @@ class ILU : public DirectPreconditioner {
 public:
     ~ILU(){};
 
-    ILU(std::shared_ptr<LinearSystem> system, size_t k = 0, int stencil_distance = 1);
+    ILU(std::shared_ptr<LinearSystem> system, size_t k = 0, int stencil_distance = 2);
 
     void solve(Ibis::Vector<Ibis::real>& rhs, Ibis::Vector<Ibis::real>& x);
 
@@ -54,7 +54,7 @@ std::shared_ptr<DirectPreconditioner> make_direct_preconditioner(
     std::string preconditioner_type = config.at("type");
     if (preconditioner_type == "ilu") {
         size_t fill_in = config.at("fill_in");
-        return std::make_shared<ILU<MemModel>>(system, fill_in);
+        return std::make_shared<ILU<MemModel>>(system, fill_in, 2);
     } else if (preconditioner_type == "none") {
         return std::shared_ptr<DirectPreconditioner>(nullptr);
     } else {

@@ -1,0 +1,141 @@
+{
+    "convective_flux": {
+        "flux_calculator": {
+            "type": "hanel"
+        },
+        "reconstruction_order": {
+            "type": "constant",
+            "order": 2.0
+        },
+        "limiter": {
+            "type": "venkat",
+            "K": 1e-12
+        },
+        "thermo_interpolator": "rho_u"
+    },
+    "viscous_flux": {
+        "enabled": true,
+        "signal_factor": 4.0
+    },
+    "solver": {
+        "name": "steady_state",
+        "cfl": {
+            "type": "residual_based",
+            "growth_threshold": 0.5,
+            "power": 0.85,
+            "start_cfl": 1,
+            "max_cfl": 100000000.0
+        },
+        "max_steps": 10000,
+        "print_frequency": 20,
+        "plot_frequency": 100,
+        "diagnostics_frequency": 1,
+        "tolerance": 1e-10,
+        "local_time_stepping": false,
+        "min_relaxation_factor": 0.001,
+        "physicality_check_under_relaxation_factor": 0.5,
+        "cfl_reduction_factor": 0.5,
+        "preconditioner_update_interval": 10,
+        "linear_solver": {
+            "type": "gmres",
+            "max_iters": 80,
+            "tol": 0.01,
+            "preconditioner": {
+                "type": "ilu",
+                "fill_in": 0,
+                "gmres_iters_before_recompute": 30
+            }
+        }
+    },
+    "gas_model": {
+        "type": "ideal_gas",
+        "R": 297.0,
+        "Cv": 742.5,
+        "Cp": 1039.5,
+        "gamma": 1.4
+    },
+    "transport_properties": {
+        "viscosity": {
+            "type": "sutherland",
+            "mu_0": 1.716e-05,
+            "T_0": 273.0,
+            "T_s": 110.0
+        },
+        "thermal_conductivity": {
+            "type": "constant_prandtl_number",
+            "Pr": 0.72
+        }
+    },
+    "io": {
+        "flow_format": "native_binary"
+    },
+    "grids": [
+        {
+            "boundaries": {
+                "inflow": {
+                    "pre_reconstruction": [
+                        {
+                            "type": "flow_state_copy",
+                            "flow_state": {
+                                "p": 1220.0,
+                                "T": 62.5,
+                                "rho": 0.06572390572390573,
+                                "energy": 46406.25,
+                                "vx": 806.0319472576754,
+                                "vy": 0.0,
+                                "vz": 0.0
+                            }
+                        }
+                    ],
+                    "post_convective_flux": [],
+                    "pre_viscous_grad": [],
+                    "ghost_cells": true
+                },
+                "outflow": {
+                    "pre_reconstruction": [
+                        {
+                            "type": "internal_copy"
+                        }
+                    ],
+                    "post_convective_flux": [],
+                    "pre_viscous_grad": [],
+                    "ghost_cells": true
+                },
+                "wall": {
+                    "pre_reconstruction": [
+                        {
+                            "type": "internal_copy_reflect_normal"
+                        }
+                    ],
+                    "post_convective_flux": [],
+                    "pre_viscous_grad": [
+                        {
+                            "type": "internal_vel_copy_reflect"
+                        },
+                        {
+                            "type": "fix_temperature",
+                            "temperature": 300
+                        }
+                    ],
+                    "ghost_cells": true
+                },
+                "symmetry": {
+                    "pre_reconstruction": [
+                        {
+                            "type": "internal_copy_reflect_normal"
+                        }
+                    ],
+                    "post_convective_flux": [],
+                    "pre_viscous_grad": [],
+                    "ghost_cells": true
+                }
+            },
+            "dimensions": 2,
+            "grid_file_name": "grid.su2",
+            "motion": {
+                "enabled": false
+            },
+            "id": 0
+        }
+    ]
+}

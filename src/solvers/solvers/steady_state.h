@@ -21,7 +21,7 @@ public:
                              std::shared_ptr<FlowStates<Ibis::dual>> fs,
                              std::shared_ptr<Vector3s<Ibis::dual>> vertex_vel,
                              bool local_time_stepping, bool allow_reconstruction = true,
-                             int jacobian_stencil_size = 1);
+                             int jacobian_stencil_size = 2);
 
     ~SteadyStateLinearisation() {}
 
@@ -65,7 +65,7 @@ private:
 
     bool allow_reconstruction_;
     Ibis::real global_limiter_ = 1.0;
-    int jacobian_stencil_size_ = 1;
+    int jacobian_stencil_size_ = 2;
 
     // memory
     size_t n_cells_;        // excluding ghost cells

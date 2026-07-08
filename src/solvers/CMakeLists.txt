@@ -74,6 +74,7 @@ if (Ibis_BUILD_TESTS)
 	add_executable(
 		solver_unittest
 		test/unittest.cpp
+		solvers/steady_state.cpp
 		solvers/cfl.cpp
 	)
 	target_link_libraries(
@@ -84,6 +85,7 @@ if (Ibis_BUILD_TESTS)
 		gas
 		spdlog::spdlog
 		IO
+		solver
 	)
 	add_test(NAME solver_unittest COMMAND solver_unittest)
 endif(Ibis_BUILD_TESTS)

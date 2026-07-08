@@ -10,6 +10,8 @@
 #include <solvers/transient_linear_system.h>
 
 #include "solvers/high_order_blending.h"
+#include <doctest/doctest.h>
+#include <fstream>
 
 #ifdef Ibis_ENABLE_MPI
 #include <ibis_mpi/ibis_mpi_dual.h>
@@ -219,7 +221,7 @@ void SteadyStateLinearisation<MemModel>::compute_matrix(
     auto colours = grid.colours();
     auto neighbours = grid.cells().neighbour_cells();
     Kokkos::deep_copy(matrix.values, 0.0);
-    for (int colour = 0; colour < num_colours; colour++) {
+    for (int colour = 1; colour < num_colours + 1; colour++) {
         for (size_t perturbed_conserved_i = 0; perturbed_conserved_i < n_cons_;
              perturbed_conserved_i++) {
             // set values in the perturbation vector
@@ -229,10 +231,8 @@ void SteadyStateLinearisation<MemModel>::compute_matrix(
                     for (size_t cons_i = 0; cons_i < n_cons; cons_i++) {
                         size_t vector_idx = cell_i * n_cons + cons_i;
                         int cell_colour = colours(cell_i);
-                        pert_vec(vector_idx) =
-                            (cell_colour == colour && cons_i == perturbed_conserved_i)
-                                ? 1.0
-                                : 0.0;
+                        bool perturb_entry = (cell_colour == colour) && (cons_i == perturbed_conserved_i);
+                        pert_vec(vector_idx) = (perturb_entry) ? 1.0 : 0.0;
                     }
                 });
 
@@ -401,13 +401,14 @@ SteadyState<MemModel>::SteadyState(json config, GridBlock<MemModel, Ibis::dual> 
     bool local_time_stepping_ = solver_config.at("local_time_stepping");
 
     // set up the linear system and non-linear solver
-    auto cfl = make_cfl_schedule(solver_config.at("cfl"));
-    auto high_order_blending = make_high_order_blending_schedule(
-        config.at("convective_flux").at("reconstruction_order"));
     std::unique_ptr<PseudoTransientLinearSystem> system =
         std::unique_ptr<PseudoTransientLinearSystem>(
             new SteadyStateLinearisation<MemModel>(sim_, residuals_, cq_, fs_,
                                                    vertex_vel_, local_time_stepping_));
+
+    auto cfl = make_cfl_schedule(solver_config.at("cfl"));
+    auto high_order_blending = make_high_order_blending_schedule(
+        config.at("convective_flux").at("reconstruction_order"));
     jfnk_ = Jfnk<MemModel>(std::move(system), std::move(cfl),
                            std::move(high_order_blending), residuals_, solver_config);
 
@@ -556,3 +557,65 @@ bool SteadyState<MemModel>::write_residuals(unsigned int step, Ibis::real wc) {
 
 template class SteadyState<SharedMem>;
 template class SteadyState<Mpi>;
+
+
+TEST_CASE("steady_state coloured jacobian") {
+    std::ifstream f("../../../src/solvers/test/config.json");
+    json config = json::parse(f);
+    config["grid_file_name"] = "grid.su2";
+    GridBlock<SharedMem, Ibis::dual> grid("../../../src/solvers/test", config.at("grids")[0]);
+    auto sim = std::make_shared<Sim<Ibis::dual, SharedMem>>(grid, config);
+    auto residuals = std::make_shared<ConservedQuantities<Ibis::dual>>(grid.num_cells(), grid.dim());
+    auto cq = std::make_shared<ConservedQuantities<Ibis::dual>>(grid.num_total_cells(), grid.dim());
+    auto fs = std::make_shared<FlowStates<Ibis::dual>>(grid.num_total_cells());
+    
+    // set flow states
+    for (size_t cell_i = 0; cell_i < grid.num_total_cells(); cell_i++) {
+        fs->gas.rho(cell_i) = 0.01;
+        fs->gas.temp(cell_i) = 300;
+        fs->vel.x(cell_i) = 100.0;
+        fs->vel.y(cell_i) = 0.0;
+        fs->vel.z(cell_i) = 0.0;
+    }
+    sim->gas_model.update_thermo_from_rhoT(fs->gas);
+    primatives_to_conserved(*cq, *fs, sim->gas_model);
+
+    // set up the linear system
+    SteadyStateLinearisation<SharedMem> system(sim, residuals, cq, fs, nullptr, false, true, 2);
+    SteadyStateLinearisation<SharedMem> system_alt(sim, residuals, cq, fs, nullptr, false, true, 2);
+    system.set_pseudo_time_step(1);
+    system_alt.set_pseudo_time_step(1);
+
+    // compute the matrix
+    auto matrix_graph = system.compute_matrix_graph(2);
+    Ibis::CrsMatrix<int, int, Ibis::real> matrix(matrix_graph);
+    system.compute_matrix(matrix);
+
+    // check the entries one by perturbing one primative at a time
+    size_t n_cons = grid.dim() + 2;
+    size_t n_vars = n_cons * grid.num_cells();
+    Ibis::Vector<Ibis::real> pert_vec = Ibis::Vector<Ibis::real>("purt_vec", n_vars);
+    Ibis::Vector<Ibis::real> res_vec = Ibis::Vector<Ibis::real>("purt_vec", n_vars);
+    for (size_t cell_i = 0; cell_i < grid.num_cells(); cell_i++) {
+        for (size_t perturbed_cons_i = 0; perturbed_cons_i < n_cons; perturbed_cons_i++) {
+            // compute contributions of perturbing one variable at a time
+            size_t vector_idx = cell_i * n_cons + perturbed_cons_i;
+            res_vec.zero();
+            pert_vec.zero();
+            pert_vec(vector_idx) = 1.0;
+            system_alt.matrix_vector_product(pert_vec, res_vec);
+
+            // check the column of the jacobian matrix against the single column
+            size_t col_i = cell_i * n_cons + perturbed_cons_i;
+            for (size_t row_i = 0; row_i < n_vars; row_i++) {
+                size_t affected_cons_i = row_i % n_cons;
+                INFO("row_i = ", row_i, " col_i = ", col_i, " cell_i = ", cell_i, " perturbed_cons_i = ", perturbed_cons_i, " affected_cons_i = ", affected_cons_i);
+                if (matrix.graph.contains_entry(row_i, col_i)) {
+                    CHECK(matrix(row_i, col_i) == doctest::Approx(res_vec(row_i)));
+                } else {
+                    CHECK(0 == doctest::Approx(res_vec(row_i)));
+                }
+            }
+        }
+    }
+}

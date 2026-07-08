@@ -34,7 +34,7 @@ public:
         kernel_handle.create_distance2_graph_coloring_handle(
             KokkosGraph::COLORING_D2_DEFAULT);
 
-        auto graph = grid.graph(1);
+        auto graph = grid.graph(2);
         KokkosGraph::Experimental::graph_color_distance2(&kernel_handle, graph.num_rows(),
                                                          graph.row_map, graph.entries);
         auto colours =

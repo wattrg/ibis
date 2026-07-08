@@ -41,8 +41,21 @@ public:
                 return row_start_idx + col_idx;
             }
         }
+        printf("%d %d\n", row, col);
         assert(false && "row and col is not present in CrsMatrix");
         UNREACHABLE("row and col is not present in CrsMatrx");
+    }
+
+    KOKKOS_INLINE_FUNCTION
+    bool contains_entry(OffsetType row, OffsetType col) const {
+        OffsetType row_start_idx = row_map(row);
+        OffsetType num_entries_in_row = row_map(row + 1) - row_start_idx;
+        for (OffsetType col_idx = 0; col_idx < num_entries_in_row; col_idx++) {
+            if (entries(row_start_idx + col_idx) == col) {
+                return true;
+            }
+        }
+        return false;
     }
 
     KOKKOS_INLINE_FUNCTION
@@ -89,6 +102,11 @@ public:
         graph =
             CrsGraph<OffsetType, OrdinalType, Layout, MemSpace>(num_rows, num_entries);
         values = Array1D<ScalarType, Layout, MemSpace>("CrsMatrix::values", num_entries);
+    }
+
+    CrsMatrix(CrsGraph<OffsetType, OrdinalType, Layout, MemSpace> graph_) {
+        graph = graph_;
+        values = Array1D<ScalarType, Layout, MemSpace>("CrsMatrix::values", graph.num_entries());
     }
 
     KOKKOS_INLINE_FUNCTION
