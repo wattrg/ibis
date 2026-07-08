@@ -108,7 +108,8 @@ public:
 
     CrsMatrix(CrsGraph<OffsetType, OrdinalType, Layout, MemSpace> graph_) {
         graph = graph_;
-        values = Array1D<ScalarType, Layout, MemSpace>("CrsMatrix::values", graph.num_entries());
+        values = Array1D<ScalarType, Layout, MemSpace>("CrsMatrix::values",
+                                                       graph.num_entries());
     }
 
     KOKKOS_INLINE_FUNCTION

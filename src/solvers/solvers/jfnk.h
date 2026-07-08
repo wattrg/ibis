@@ -32,12 +32,12 @@ public:
     struct StepResult {
         LinearSolveResult linear_solver_result;
         Ibis::real relaxation_factor = 1.0;
-        size_t num_bad_cells = 0;  
+        size_t num_bad_cells = 0;
     };
 
     StepResult step(std::shared_ptr<Sim<Ibis::dual, MemModel>>& sim,
-                    ConservedQuantities<Ibis::dual>& cq,
-                    FlowStates<Ibis::dual>& fs, size_t step);
+                    ConservedQuantities<Ibis::dual>& cq, FlowStates<Ibis::dual>& fs,
+                    size_t step);
 
     void solve(std::shared_ptr<Sim<Ibis::dual, MemModel>>& sim);
 
@@ -45,9 +45,7 @@ public:
 
     Ibis::real pseudo_time_step_size() const { return stable_dt_; }
 
-    Ibis::real cfl() const {
-        return cfl_value_;
-    }
+    Ibis::real cfl() const { return cfl_value_; }
 
     void update_cfl(size_t step) {
         Ibis::real cfl;
@@ -85,7 +83,6 @@ public:
 
     void set_pseudo_time_step_size(Ibis::real dt_star);
     void set_local_pseudo_time_step_size(Ibis::Array1D<Ibis::real>& local_dt_star_);
-
 
 private:
     std::shared_ptr<PseudoTransientLinearSystem> system_;

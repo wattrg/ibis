@@ -1,3 +1,4 @@
+#include <doctest/doctest.h>
 #include <finite_volume/finite_volume.h>
 #include <finite_volume/grid_motion_driver.h>
 #include <finite_volume/primative_conserved_conversion.h>
@@ -9,9 +10,9 @@
 #include <solvers/steady_state.h>
 #include <solvers/transient_linear_system.h>
 
-#include "solvers/high_order_blending.h"
-#include <doctest/doctest.h>
 #include <fstream>
+
+#include "solvers/high_order_blending.h"
 
 #ifdef Ibis_ENABLE_MPI
 #include <ibis_mpi/ibis_mpi_dual.h>
@@ -233,7 +234,8 @@ void SteadyStateLinearisation<MemModel>::compute_matrix(
                     for (size_t cons_i = 0; cons_i < n_cons; cons_i++) {
                         size_t vector_idx = cell_i * n_cons + cons_i;
                         int cell_colour = colours(cell_i);
-                        bool perturb_entry = (cell_colour == colour) && (cons_i == perturbed_conserved_i);
+                        bool perturb_entry =
+                            (cell_colour == colour) && (cons_i == perturbed_conserved_i);
                         pert_vec(vector_idx) = (perturb_entry) ? 1.0 : 0.0;
                     }
                 });
@@ -401,7 +403,8 @@ SteadyState<MemModel>::SteadyState(json config, GridBlock<MemModel, Ibis::dual> 
     }
 
     bool local_time_stepping_ = solver_config.at("local_time_stepping");
-    int reconstruction_order = config.at("convective_flux").at("reconstruction_order").at("order");
+    int reconstruction_order =
+        config.at("convective_flux").at("reconstruction_order").at("order");
     int allow_reconstruction = reconstruction_order > 1.0;
 
     // set up the linear system and non-linear solver
@@ -462,7 +465,8 @@ int SteadyState<MemModel>::initialise() {
 
         // solver diagnostics
         std::ofstream gmres_diagnostics("log/solver_diagnostics.dat", std::ios_base::out);
-        gmres_diagnostics << "step converged linear_residual tolerance n_iters relaxation_factor cfl\n";
+        gmres_diagnostics
+            << "step converged linear_residual tolerance n_iters relaxation_factor cfl\n";
     }
 
     return ic_result + conversion_result + jfnk_init;
@@ -554,7 +558,8 @@ bool SteadyState<MemModel>::write_residuals(unsigned int step, Ibis::real wc) {
     Ibis::real cfl = jfnk_.cfl();
     std::ofstream gmres_diagnostics("log/solver_diagnostics.dat", std::ios_base::app);
     gmres_diagnostics << step << " " << step_result.linear_solver_result.success << " "
-                      << step_result.linear_solver_result.residual << " " << step_result.linear_solver_result.tol << " "
+                      << step_result.linear_solver_result.residual << " "
+                      << step_result.linear_solver_result.tol << " "
                       << step_result.linear_solver_result.n_iters << " "
                       << step_result.relaxation_factor << " " << cfl << std::endl;
     return true;
@@ -563,17 +568,19 @@ bool SteadyState<MemModel>::write_residuals(unsigned int step, Ibis::real wc) {
 template class SteadyState<SharedMem>;
 template class SteadyState<Mpi>;
 
-
 TEST_CASE("steady_state coloured jacobian") {
     std::ifstream f("../../../src/solvers/test/config.json");
     json config = json::parse(f);
     config["grid_file_name"] = "grid.su2";
-    GridBlock<SharedMem, Ibis::dual> grid("../../../src/solvers/test", config.at("grids")[0]);
+    GridBlock<SharedMem, Ibis::dual> grid("../../../src/solvers/test",
+                                          config.at("grids")[0]);
     auto sim = std::make_shared<Sim<Ibis::dual, SharedMem>>(grid, config);
-    auto residuals = std::make_shared<ConservedQuantities<Ibis::dual>>(grid.num_cells(), grid.dim());
-    auto cq = std::make_shared<ConservedQuantities<Ibis::dual>>(grid.num_total_cells(), grid.dim());
+    auto residuals =
+        std::make_shared<ConservedQuantities<Ibis::dual>>(grid.num_cells(), grid.dim());
+    auto cq = std::make_shared<ConservedQuantities<Ibis::dual>>(grid.num_total_cells(),
+                                                                grid.dim());
     auto fs = std::make_shared<FlowStates<Ibis::dual>>(grid.num_total_cells());
-    
+
     // set flow states
     for (size_t cell_i = 0; cell_i < grid.num_total_cells(); cell_i++) {
         fs->gas.rho(cell_i) = 0.01;
@@ -586,8 +593,10 @@ TEST_CASE("steady_state coloured jacobian") {
     primatives_to_conserved(*cq, *fs, sim->gas_model);
 
     // set up the linear system
-    SteadyStateLinearisation<SharedMem> system(sim, residuals, cq, fs, nullptr, false, true, 2);
-    SteadyStateLinearisation<SharedMem> system_alt(sim, residuals, cq, fs, nullptr, false, true, 2);
+    SteadyStateLinearisation<SharedMem> system(sim, residuals, cq, fs, nullptr, false,
+                                               true, 2);
+    SteadyStateLinearisation<SharedMem> system_alt(sim, residuals, cq, fs, nullptr, false,
+                                                   true, 2);
     system.set_pseudo_time_step(1);
     system_alt.set_pseudo_time_step(1);
 
@@ -614,7 +623,9 @@ TEST_CASE("steady_state coloured jacobian") {
             size_t col_i = cell_i * n_cons + perturbed_cons_i;
             for (size_t row_i = 0; row_i < n_vars; row_i++) {
                 size_t affected_cons_i = row_i % n_cons;
-                INFO("row_i = ", row_i, " col_i = ", col_i, " cell_i = ", cell_i, " perturbed_cons_i = ", perturbed_cons_i, " affected_cons_i = ", affected_cons_i);
+                INFO("row_i = ", row_i, " col_i = ", col_i, " cell_i = ", cell_i,
+                     " perturbed_cons_i = ", perturbed_cons_i,
+                     " affected_cons_i = ", affected_cons_i);
                 if (matrix.graph.contains_entry(row_i, col_i)) {
                     CHECK(matrix(row_i, col_i) == doctest::Approx(res_vec(row_i)));
                 } else {

@@ -907,8 +907,10 @@ public:
                 }
             }
             std::sort(row_entries.begin(), row_entries.end());
-            row_entries.erase(std::unique(row_entries.begin(), row_entries.end()), row_entries.end());
-            serial_entries.insert(serial_entries.end(), row_entries.begin(), row_entries.end());
+            row_entries.erase(std::unique(row_entries.begin(), row_entries.end()),
+                              row_entries.end());
+            serial_entries.insert(serial_entries.end(), row_entries.begin(),
+                                  row_entries.end());
             serial_row_map.push_back(serial_entries.size());
         }
 

@@ -37,7 +37,8 @@ Jfnk<MemModel>::Jfnk(std::shared_ptr<PseudoTransientLinearSystem> system,
 
     local_time_stepping_ = config.at("local_time_stepping");
     min_relaxation_factor_ = config.at("min_relaxation_factor");
-    physicality_check_under_relaxation_factor_ = config.at("physicality_check_under_relaxation_factor");
+    physicality_check_under_relaxation_factor_ =
+        config.at("physicality_check_under_relaxation_factor");
     cfl_reduction_factor_ = config.at("cfl_reduction_factor");
     preconditioner_update_interval_ = config.at("preconditioner_update_interval");
 
@@ -85,9 +86,9 @@ void Jfnk<MemModel>::set_global_limiter(Ibis::real global_limiter) {
 }
 
 template <class MemModel>
-Jfnk<MemModel>::StepResult Jfnk<MemModel>::step(std::shared_ptr<Sim<Ibis::dual, MemModel>>& sim,
-                                       ConservedQuantities<Ibis::dual>& cq,
-                                       FlowStates<Ibis::dual>& fs, size_t step) {
+Jfnk<MemModel>::StepResult Jfnk<MemModel>::step(
+    std::shared_ptr<Sim<Ibis::dual, MemModel>>& sim, ConservedQuantities<Ibis::dual>& cq,
+    FlowStates<Ibis::dual>& fs, size_t step) {
     // dU is the change in the solution for the step,
     // our initial guess for it is zero
     dU_.zero();
@@ -108,14 +109,14 @@ Jfnk<MemModel>::StepResult Jfnk<MemModel>::step(std::shared_ptr<Sim<Ibis::dual, 
 
     set_global_limiter(calculate_global_limiter());
     // solve the linear system of equations
-    if (last_step_result_.linear_solver_result.n_iters > gmres_iters_to_recompute_preconditioner_ ||
+    if (last_step_result_.linear_solver_result.n_iters >
+            gmres_iters_to_recompute_preconditioner_ ||
         !last_step_result_.linear_solver_result.success ||
         step % preconditioner_update_interval_ == 0) {
         spdlog::debug("Updating preconditioner step {}", step);
         gmres_->update_preconditioner();
     }
     LinearSolveResult last_gmres_result = gmres_->solve(dU_);
-
 
     Ibis::real relaxation_factor = 1.0;
     size_t num_bad_cells = 0;
