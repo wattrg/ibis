@@ -14,10 +14,12 @@ public:
     using offset = OffsetType;
     using ordinal = OrdinalType;
     using mem_space = MemSpace;
+    using memory_space = MemSpace;
     using rowmap_type = Array1D<OffsetType, Layout, MemSpace>;
     using entries_type = Array1D<OrdinalType, Layout, MemSpace>;
     using host_mirror_type =
         CrsGraph<OffsetType, OrdinalType, Layout, Ibis::DefaultHostMemSpace>;
+    using execution_space = MemSpace::execution_space;
 
     CrsGraph() {}
 

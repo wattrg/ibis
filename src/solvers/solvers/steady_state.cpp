@@ -58,8 +58,11 @@ SteadyStateLinearisation<MemModel>::SteadyStateLinearisation(
 
 template <class MemModel>
 std::unique_ptr<LinearSystem> SteadyStateLinearisation<MemModel>::preconditioner() {
+    bool local_time_stepping = false;
+    int jacobian_stencil_size = 1;
     return std::unique_ptr<LinearSystem>(new SteadyStateLinearisation<MemModel>(
-        sim_, residuals_, cq_, fs_, vertex_vel_, local_time_stepping_, false));
+        sim_, residuals_, cq_, fs_, vertex_vel_, local_time_stepping_,
+        local_time_stepping, jacobian_stencil_size));
 }
 
 template <class MemModel>

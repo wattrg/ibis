@@ -3,12 +3,12 @@
 
 #include <util/types.h>
 
-template <class GridBlock_type>
-class GridColourer {
+template <class CrsGraphType>
+class GraphColourer {
 public:
-    virtual ~GridColourer() = default;
+    virtual ~GraphColourer() = default;
 
-    virtual void compute_colouring(const GridBlock_type& grid) = 0;
+    virtual void compute_colouring(const CrsGraphType& graph) = 0;
 
     virtual Ibis::Array1D<int> colours() const = 0;
 

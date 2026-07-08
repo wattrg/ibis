@@ -42,6 +42,7 @@ public:
     using host_mirror_mem_space = host_execution_space::memory_space;
     using mirror_type = GridBlock<MemModel, T, host_execution_space, array_layout>;
     using GridBlock_type = GridBlock<MemModel, T, ExecSpace, Layout>;
+    using CrsGraphType = Ibis::CrsGraph<int, int, array_layout, memory_space>;
 
 public:
     GridBlock() {}
@@ -953,10 +954,14 @@ public:
     }
 
     void compute_colours() {
+        // Compute distance-2 colouring on a distance-2 graph so we get
+        // distance-4 colouring of the grid. This is required when any gradient
+        // in included in the residual stencil, to ensure any cell is only affected
+        // by one cell.
         compute_graph(2);
-        using Colourer_type = GridColourer<GridBlock_type>;
-        std::unique_ptr<Colourer_type> colourer = make_grid_colourer<GridBlock_type>();
-        colourer->compute_colouring(*this);
+        using Colourer_type = GraphColourer<CrsGraphType>;
+        std::unique_ptr<Colourer_type> colourer = make_grid_colourer<CrsGraphType>();
+        colourer->compute_colouring(distance_2_graph_);
         colours_ = colourer->colours();
         num_colours_ = colourer->num_colours();
     }

@@ -41,8 +41,8 @@ TEST_CASE("grid colouring") {
     auto block_host = block.host_mirror();
     block_host.deep_copy(block);
 
-    KokkosKernels_GridColourer<GridBlock_type> colourer;
-    colourer.compute_colouring(block);
+    KokkosKernels_GraphColourer<GridBlock_type::CrsGraphType> colourer;
+    colourer.compute_colouring(block.graph(2));
     Ibis::Array1D<int> colours = colourer.colours();
 
     auto colours_host = Kokkos::create_mirror(colours);
