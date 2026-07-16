@@ -1,7 +1,9 @@
 #include <finite_volume/primative_conserved_conversion.h>
 #include <linear_algebra/gmres.h>
 #include <solvers/jfnk.h>
+#include <memory>
 
+#include "linear_algebra/ilu.h"
 #include "solvers/high_order_blending.h"
 
 #ifdef Ibis_ENABLE_MPI
@@ -19,22 +21,9 @@ Jfnk<MemModel>::Jfnk(std::shared_ptr<PseudoTransientLinearSystem> system,
     tolerance_ = config.at("tolerance");
 
     system_ = system;
-    precondition_system_ = nullptr;
-    if (config.at("linear_solver").at("preconditioner").at("type") == "ilu") {
-        std::shared_ptr<LinearSystem> precondition_system = system_->preconditioner();
-        precondition_system_ =
-            std::dynamic_pointer_cast<PseudoTransientLinearSystem>(precondition_system);
-        gmres_iters_to_recompute_preconditioner_ =
-            config.at("linear_solver")
-                .at("preconditioner")
-                .at("gmres_iters_before_recompute");
-    } else if (config.at("linear_solver").at("type") == "fgmres") {
-        std::shared_ptr<LinearSystem> precondition_system = system_->preconditioner();
-        precondition_system_ =
-            std::dynamic_pointer_cast<PseudoTransientLinearSystem>(precondition_system);
-    }
-    gmres_ = make_linear_solver(system, precondition_system_, config.at("linear_solver"));
+    init_linear_solver(config);
 
+    // Init some other settings
     local_time_stepping_ = config.at("local_time_stepping");
     min_relaxation_factor_ = config.at("min_relaxation_factor");
     physicality_check_under_relaxation_factor_ =
@@ -47,6 +36,43 @@ Jfnk<MemModel>::Jfnk(std::shared_ptr<PseudoTransientLinearSystem> system,
     residual_based_cfl_ = cfl_->residual_based();
     dU_ = Ibis::Vector<Ibis::real>{"dU", system_->num_vars()};
     residuals_ = residuals;
+}
+
+template <class MemModel>
+void Jfnk<MemModel>::init_linear_solver(json config) {
+    // Init the linear solver
+    precondition_system_ = nullptr;
+    precondition_solver_ = nullptr;
+    if (config.at("linear_solver").at("type") == "gmres") {
+        json preconditioner_config = config.at("linear_solver").at("preconditioner");
+        if (preconditioner_config.at("type") == "ilu") {
+            std::shared_ptr<LinearSystem> precondition_system = system_->preconditioner();
+            precondition_system_ =
+                std::dynamic_pointer_cast<PseudoTransientLinearSystem>(precondition_system);
+            gmres_iters_to_recompute_preconditioner_ =
+                config.at("linear_solver")
+                    .at("preconditioner")
+                    .at("gmres_iters_before_recompute");
+            size_t fill_in = preconditioner_config.at("fill_in");
+            precondition_solver_ = std::make_shared<ILU<MemModel>>(precondition_system_, fill_in);
+        } else {
+            std::string unknown_preconditioner = preconditioner_config.at("type");
+            spdlog::error("Unknown preconditioner: {}", unknown_preconditioner);
+            throw new std::runtime_error("Unknown preconditioner");
+        }
+        gmres_ = std::make_unique<Gmres>(system_, precondition_system_, precondition_solver_,
+                                        config.at("linear_solver"));
+    } else if (config.at("linear_solver").at("type") == "fgmres") {
+        std::shared_ptr<LinearSystem> precondition_system = system_->preconditioner();
+        precondition_system_ =
+            std::dynamic_pointer_cast<PseudoTransientLinearSystem>(precondition_system);
+        gmres_ = std::make_unique<FGmres>(system_, precondition_system_,
+                                          config.at("linear_solver"));
+    } else {
+        std::string unknown_linear_solver = config.at("linear_solver").at("type");
+        spdlog::error("Unknown linear solver: {}", unknown_linear_solver);
+        throw new std::runtime_error("Unknown linear solver");
+    }
 }
 
 template <class MemModel>
@@ -86,6 +112,20 @@ void Jfnk<MemModel>::set_global_limiter(Ibis::real global_limiter) {
 }
 
 template <class MemModel>
+void Jfnk<MemModel>::update_preconditioner(size_t step) {
+    if (std::dynamic_pointer_cast<ILU<MemModel>>(precondition_solver_)) {
+        auto ilu = std::dynamic_pointer_cast<ILU<MemModel>>(precondition_solver_);
+        if ((last_step_result_.linear_solver_result.n_iters >
+                gmres_iters_to_recompute_preconditioner_) ||
+            (!last_step_result_.linear_solver_result.success) ||
+            (step % preconditioner_update_interval_ == 0)) {
+            spdlog::debug("Updating ILU decomposition at step {}", step);
+            ilu->update_decomposition();
+        }    
+    }
+}
+
+template <class MemModel>
 Jfnk<MemModel>::StepResult Jfnk<MemModel>::step(
     std::shared_ptr<Sim<Ibis::dual, MemModel>>& sim, ConservedQuantities<Ibis::dual>& cq,
     FlowStates<Ibis::dual>& fs, size_t step) {
@@ -108,14 +148,8 @@ Jfnk<MemModel>::StepResult Jfnk<MemModel>::step(
     }
 
     set_global_limiter(calculate_global_limiter());
+    update_preconditioner(step);
     // solve the linear system of equations
-    if (last_step_result_.linear_solver_result.n_iters >
-            gmres_iters_to_recompute_preconditioner_ ||
-        !last_step_result_.linear_solver_result.success ||
-        step % preconditioner_update_interval_ == 0) {
-        spdlog::debug("Updating preconditioner step {}", step);
-        gmres_->update_preconditioner();
-    }
     LinearSolveResult last_gmres_result = gmres_->solve(dU_);
 
     Ibis::real relaxation_factor = 1.0;

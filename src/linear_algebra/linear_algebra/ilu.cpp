@@ -23,7 +23,7 @@ ILU<MemModel>::ILU(std::shared_ptr<LinearSystem> system, size_t k) : system_(sys
 }
 
 template <class MemModel>
-void ILU<MemModel>::update_preconditioner() {
+void ILU<MemModel>::update_decomposition() {
     // evaluate the matrix again
     system_->compute_matrix(matrix_);
 
@@ -38,3 +38,4 @@ void ILU<MemModel>::solve(Ibis::Vector<Ibis::real>& rhs, Ibis::Vector<Ibis::real
 }
 
 template class ILU<SharedMem>;
+template class ILU<Mpi>;

@@ -8,17 +8,9 @@
 #include <triangular_solver_kokkos_kernels/triangular_solver_kokkos_kernels.h>
 #include <util/types.h>
 
-class DirectPreconditioner : public DirectLinearSolver {
-public:
-    virtual ~DirectPreconditioner() = default;
-
-    virtual void solve(Ibis::Vector<Ibis::real>& rhs, Ibis::Vector<Ibis::real>& x) = 0;
-
-    virtual void update_preconditioner() = 0;
-};
 
 template <class MemModel>
-class ILU : public DirectPreconditioner {
+class ILU : public DirectLinearSolver {
 public:
     ~ILU(){};
 
@@ -26,7 +18,7 @@ public:
 
     void solve(Ibis::Vector<Ibis::real>& rhs, Ibis::Vector<Ibis::real>& x);
 
-    void update_preconditioner();
+    void update_decomposition();
 
 private:
     std::shared_ptr<LinearSystem> system_;
@@ -48,19 +40,19 @@ private:
     Ibis::Vector<Ibis::real> temp_vec_;
 };
 
-template <class MemModel>
-std::shared_ptr<DirectPreconditioner> make_direct_preconditioner(
-    std::shared_ptr<LinearSystem> system, json config) {
-    std::string preconditioner_type = config.at("type");
-    if (preconditioner_type == "ilu") {
-        size_t fill_in = config.at("fill_in");
-        return std::make_shared<ILU<MemModel>>(system, fill_in);
-    } else if (preconditioner_type == "none") {
-        return std::shared_ptr<DirectPreconditioner>(nullptr);
-    } else {
-        spdlog::error("Unknown preconditioner {}", preconditioner_type);
-        throw new std::runtime_error("Unknown preconditioner");
-    }
-}
+// template <class MemModel>
+// std::shared_ptr<DirectLinearSolver> make_direct_preconditioner(
+//     std::shared_ptr<LinearSystem> system, json config) {
+//     std::string preconditioner_type = config.at("type");
+//     if (preconditioner_type == "ilu") {
+//         size_t fill_in = config.at("fill_in");
+//         return std::make_shared<ILU<MemModel>>(system, fill_in);
+//     } else if (preconditioner_type == "none") {
+//         return std::shared_ptr<DirectLinearSolver>(nullptr);
+//     } else {
+//         spdlog::error("Unknown preconditioner {}", preconditioner_type);
+//         throw new std::runtime_error("Unknown preconditioner");
+//     }
+// }
 
 #endif

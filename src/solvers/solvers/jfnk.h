@@ -14,6 +14,7 @@
 
 #include <memory>
 #include <nlohmann/json.hpp>
+#include "linear_algebra/linear_solver.h"
 
 using json = nlohmann::json;
 
@@ -85,9 +86,16 @@ public:
     void set_local_pseudo_time_step_size(Ibis::Array1D<Ibis::real>& local_dt_star_);
 
 private:
+    // linear solver
+    // The JFNK object owns the precondition system and solver, because it has the
+    // full view of the health of the non-linear solver, and whether the preconditoner
+    // needs to be updated, and it has access to the solution for the reduce basis
+    // preconditioner
     std::shared_ptr<PseudoTransientLinearSystem> system_;
     std::unique_ptr<IterativeLinearSolver> gmres_;
     std::shared_ptr<PseudoTransientLinearSystem> precondition_system_;
+    std::shared_ptr<DirectLinearSolver> precondition_solver_;
+
     std::unique_ptr<CflSchedule> cfl_;
     std::unique_ptr<HighOrderBlendingSchedule> high_order_blending_;
     Ibis::Vector<Ibis::real> dU_;
@@ -113,6 +121,9 @@ private:
     bool residual_based_cfl_;
 
     void set_global_limiter(Ibis::real global_limiter);
+
+    void init_linear_solver(json config);
+    void update_preconditioner(size_t step);
 
 public:  // this is public to appease NVCC
     void apply_update_(std::shared_ptr<Sim<Ibis::dual, MemModel>>& sim,

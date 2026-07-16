@@ -30,7 +30,7 @@ public:
 
     virtual LinearSolveResult solve(Ibis::Vector<Ibis::real>& x) = 0;
 
-    virtual void update_preconditioner() = 0;
+    // virtual void update_preconditioner() = 0;
 };
 
 class Gmres : public IterativeLinearSolver {
@@ -48,11 +48,13 @@ public:
 
     Gmres(std::shared_ptr<LinearSystem> system,
           std::shared_ptr<LinearSystem> preconditioner_system,
-          std::shared_ptr<DirectPreconditioner> preconditioner, const size_t max_iters,
+          std::shared_ptr<DirectLinearSolver> preconditioner, const size_t max_iters,
           Ibis::real tol);
 
     Gmres(std::shared_ptr<LinearSystem> system,
-          std::shared_ptr<LinearSystem> precondition_system, json config);
+          std::shared_ptr<LinearSystem> precondition_system,
+          std::shared_ptr<DirectLinearSolver> precondition_solver,
+          json config);
 
     LinearSolveResult solve(Ibis::Vector<Ibis::real>& x0);
 
@@ -65,7 +67,7 @@ private:
     Ibis::real tol_;
     std::shared_ptr<LinearSystem> system_;
     std::shared_ptr<LinearSystem> precondition_system_;
-    std::shared_ptr<DirectPreconditioner> precondition_solver_;
+    std::shared_ptr<DirectLinearSolver> precondition_solver_;
 
 public:  // this has to be public to access from inside kernels
     // memory
