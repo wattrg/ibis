@@ -348,3 +348,73 @@ TEST_CASE("Ibis::Matrix::columns") {
     CHECK(columns.n_cols() == 2);
     // CHECK(columns(0, 0) == 1.0);
 }
+
+TEST_CASE("Ibis::transpose_matmul_small_output") {
+    Ibis::Matrix<Ibis::real> A("A", 4, 2);
+    Ibis::Matrix<Ibis::real> B("B", 2, 2);
+
+    auto A_host = A.host_mirror();
+
+    A_host(0, 0) = 1.0;
+    A_host(1, 0) = 2.0;
+    A_host(2, 0) = 3.0;
+    A_host(3, 0) = 4.0;
+    A_host(0, 1) = 5.0;
+    A_host(1, 1) = 6.0;
+    A_host(2, 1) = 7.0;
+    A_host(3, 1) = 8.0;
+    A.deep_copy_space(A_host);
+
+    transpose_matmul_small_output(A, A, B);
+    auto B_host = B.host_mirror();
+    B_host.deep_copy_space(B);
+    CHECK(B_host(0, 0) == 30);
+    CHECK(B_host(0, 1) == 70);
+    CHECK(B_host(1, 0) == 70);
+    CHECK(B_host(1, 1) == 174);
+}
+
+TEST_CASE("Ibis::invert_square_matrix") {
+    Ibis::Matrix<Ibis::real> A("A", 4, 4);
+    Ibis::Matrix<Ibis::real> A_inv("A", 4, 4);
+    auto A_host = A.host_mirror();
+
+    A_host(0, 0) = 1.0;
+    A_host(0, 1) = 2.0;
+    A_host(0, 2) = 3.0;
+    A_host(0, 3) = 4.0;
+    A_host(1, 0) = 2.0;
+    A_host(1, 1) = 3.0;
+    A_host(1, 2) = -2.0;
+    A_host(1, 3) = 10.0;
+    A_host(2, 0) = 3.0;
+    A_host(2, 1) = 15.0;
+    A_host(2, 2) = 5.0;
+    A_host(2, 3) = 1.0;
+    A_host(3, 0) = -1.0;
+    A_host(3, 1) = 5.0;
+    A_host(3, 2) = 6.0;
+    A_host(3, 3) = 8.0;
+    A.deep_copy_space(A_host);
+
+    invert_square_matrix(A, A_inv);
+    auto A_inv_host = A_inv.host_mirror();
+    A_inv_host.deep_copy_space(A_inv);
+
+    CHECK(A_inv_host(0, 0) == doctest::Approx(0.59623558));
+    CHECK(A_inv_host(0, 1) == doctest::Approx(0.0103218));
+    CHECK(A_inv_host(0, 2) == doctest::Approx(0.02307225));
+    CHECK(A_inv_host(0, 3) == doctest::Approx(-0.31390407));
+    CHECK(A_inv_host(1, 0) == doctest::Approx(-0.21129326));
+    CHECK(A_inv_host(1, 1) == doctest::Approx(0.03096539));
+    CHECK(A_inv_host(1, 2) == doctest::Approx(0.06921676));
+    CHECK(A_inv_host(1, 3) == doctest::Approx(0.0582878));
+    CHECK(A_inv_host(2, 0) == doctest::Approx(0.27625987));
+    CHECK(A_inv_host(2, 1) == doctest::Approx(-0.11232544));
+    CHECK(A_inv_host(2, 2) == doctest::Approx(-0.01578628));
+    CHECK(A_inv_host(2, 3) == doctest::Approx(0.00425015));
+    CHECK(A_inv_host(3, 0) == doctest::Approx(-0.00060716));
+    CHECK(A_inv_host(3, 1) == doctest::Approx(0.06618094));
+    CHECK(A_inv_host(3, 2) == doctest::Approx(-0.02853673));
+    CHECK(A_inv_host(3, 3) == doctest::Approx(0.04614451));
+}

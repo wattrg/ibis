@@ -34,6 +34,10 @@ public:
     virtual Ibis::Vector<Ibis::real>& rhs() = 0;
 
     virtual size_t num_vars() const = 0;
+
+    virtual size_t block_size() const = 0;
+
+    virtual void leading_diagonal_term(Ibis::Vector<Ibis::real>&) const = 0;
 };
 
 #endif

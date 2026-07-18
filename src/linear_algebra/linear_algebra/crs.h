@@ -137,6 +137,32 @@ public:
         Kokkos::deep_copy(values, other.values);
     }
 
+    static CrsMatrix<OffsetType, OrdinalType, ScalarType, Layout, MemSpace> identity(OrdinalType n)
+    {
+        Array1D<OffsetType, Layout, MemSpace> row_map("row_map", n + 1);
+        Array1D<OrdinalType, Layout, MemSpace> entries("entries", n);
+        Array1D<ScalarType, Layout, MemSpace> values("values", n);
+
+        Kokkos::parallel_for("Crs::fill_identity",
+            n + 1,
+            KOKKOS_LAMBDA(const int i) {
+                row_map(i) = i;
+                if (i < n) {
+                    entries(i) = i;
+                    values(i) = ScalarType(1.0);
+                }
+            });
+
+        Kokkos::parallel_for("Crs::fill_diagonal",
+            n,
+            KOKKOS_LAMBDA(const int i) {
+                entries(i) = i;
+                values(i)  = ScalarType(1.0);
+            });
+        auto graph = CrsGraph<OffsetType, OrdinalType, Layout, MemSpace>(row_map, entries);
+        return CrsMatrix(graph, values);
+    }
+
 public:
     CrsGraph<OffsetType, OrdinalType, Layout, MemSpace> graph;
     Array1D<ScalarType, Layout, MemSpace> values;

@@ -404,6 +404,10 @@ TEST_CASE("GMRES") {
 
         size_t num_vars() const { return 5; }
 
+        void leading_diagonal_term(Ibis::Vector<Ibis::real>& diag) const {}
+
+        size_t block_size() const {return 1;}
+
     private:
         Ibis::Matrix<Ibis::real, ExecSpace> matrix_;
         Ibis::Vector<Ibis::real, ExecSpace> rhs_;
@@ -511,6 +515,10 @@ TEST_CASE("RPGMRES") {
             return std::make_unique<TestLinearSystem>();
         }
 
+        void leading_diagonal_term(Ibis::Vector<Ibis::real>& diag) const {}
+
+        size_t block_size() const {return 1;}
+
         KOKKOS_INLINE_FUNCTION
         Ibis::real& rhs(const size_t i) const { return rhs_(i); }
 
@@ -603,6 +611,10 @@ TEST_CASE("FGMRES") {
             (void)j;
             return rhs_(i);
         }
+
+        void leading_diagonal_term(Ibis::Vector<Ibis::real>& diag) const {}
+
+        size_t block_size() const {return 1;}
 
         Ibis::Vector<Ibis::real>& rhs() { return rhs_; }
 

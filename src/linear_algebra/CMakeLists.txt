@@ -4,6 +4,7 @@ add_library(
     linear_algebra/gmres.cpp 
     linear_algebra/dense_linear_algebra.cpp
     linear_algebra/ilu.cpp
+    linear_algebra/reduced_basis_preconditioner.cpp
 )
 target_link_libraries(
     linear_algebra 

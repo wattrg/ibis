@@ -38,7 +38,7 @@ public:
 
     StepResult step(std::shared_ptr<Sim<Ibis::dual, MemModel>>& sim,
                     ConservedQuantities<Ibis::dual>& cq, FlowStates<Ibis::dual>& fs,
-                    size_t step);
+                    size_t step_n);
 
     void solve(std::shared_ptr<Sim<Ibis::dual, MemModel>>& sim);
 

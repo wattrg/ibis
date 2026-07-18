@@ -169,6 +169,10 @@ public:
         Kokkos::deep_copy(data_, other.data());
     }
 
+    void deep_copy(T value) {
+        Kokkos::deep_copy(data_, value);
+    }
+
     Matrix<T, Kokkos::DefaultHostExecutionSpace, Layout> host_mirror() {
         return Matrix<T, Kokkos::DefaultHostExecutionSpace, Layout>(
             Kokkos::create_mirror_view(data_));
@@ -257,6 +261,36 @@ void gemv(const Matrix<T, ExecSpace, MatrixLayout, MemSpace>& matrix,
         });
 }
 
+template <typename T, typename ExecSpace, typename MatrixLayout, typename VecLayout, typename ResLayout, class MemSpace>
+void mat_transpose_vec_small_output(const Matrix<T, ExecSpace, MatrixLayout, MemSpace>& A,
+                                    const Vector<T, ExecSpace, VecLayout, MemSpace>& x,
+                                    const Vector<T, ExecSpace, ResLayout, MemSpace>& y) {
+ 
+    using TeamPolicy = Kokkos::TeamPolicy<ExecSpace>;
+    using TeamMember = typename TeamPolicy::member_type;
+ 
+    const int M = A.n_cols();
+    const int N = A.n_rows();
+ 
+    TeamPolicy policy(M, Kokkos::AUTO);
+ 
+    Kokkos::parallel_for(
+          "matvec", policy, KOKKOS_LAMBDA(const TeamMember& team) {
+          const int i = team.league_rank();
+
+          T acc = 0.0;
+          Kokkos::parallel_reduce(
+              Kokkos::TeamThreadRange(team, N),
+              [&](const int j, T& local_sum) {
+                local_sum += A(j, i) * x(j);
+              },
+              acc);
+
+          Kokkos::single(Kokkos::PerTeam(team), [&]() { y(i) = acc; });
+        });
+}
+
+
 template <typename T, class ExecSpace, class LhsLayout, class RhsLayout, class ResLayout,
           class MemSpace>
 void gemm(const Matrix<T, ExecSpace, LhsLayout, MemSpace> lhs,
@@ -279,6 +313,74 @@ void gemm(const Matrix<T, ExecSpace, LhsLayout, MemSpace> lhs,
             }
         });
 }
+
+// One team per output element (i, j). Each team reduces over K in
+// parallel across its threads, rather than one thread looping over K alone.
+template <typename T, class ExecSpace, class ALayout, class BLayout, class CLayout, class MemSpace>
+void matmul_small_output(const Matrix<T, ExecSpace, ALayout, MemSpace> A,
+                         const Matrix<T, ExecSpace, BLayout, MemSpace>& B,
+                         Matrix<T, ExecSpace, CLayout, MemSpace>& C) {
+  const int M = A.n_rows();
+  const int K = A.n_cols();
+  const int N = B.n_cols();
+ 
+  using TeamPolicy = Kokkos::TeamPolicy<ExecSpace>;
+  using TeamMember = typename TeamPolicy::member_type;
+  TeamPolicy policy(M * N, Kokkos::AUTO);
+ 
+  Kokkos::parallel_for(
+      "matmul_small_output", policy, KOKKOS_LAMBDA(const TeamMember& team) {
+        const int idx = team.league_rank();
+        const int i = idx / N;
+        const int j = idx % N;
+ 
+        T acc = 0.0;
+        Kokkos::parallel_reduce(
+            Kokkos::TeamThreadRange(team, K),
+            [&](const int k, T& local_sum) {
+                local_sum += A(i, k) * B(k, j);
+            },
+            acc);
+ 
+            // Only one thread per team needs to write the result.
+            Kokkos::single(Kokkos::PerTeam(team), [&]() { C(i, j) = acc; });
+        });
+}
+
+// One team per output element (i, j). Each team reduces over K in
+// parallel across its threads, rather than one thread looping over K alone.
+// C = A^T @ B
+template <typename T, class ExecSpace, class ALayout, class BLayout, class CLayout, class MemSpace>
+void transpose_matmul_small_output(const Matrix<T, ExecSpace, ALayout, MemSpace> A,
+                         const Matrix<T, ExecSpace, BLayout, MemSpace>& B,
+                         Matrix<T, ExecSpace, CLayout, MemSpace>& C) {
+  const int M = A.n_cols();
+  const int K = A.n_rows();
+  const int N = B.n_cols();
+ 
+  using TeamPolicy = Kokkos::TeamPolicy<ExecSpace>;
+  using TeamMember = typename TeamPolicy::member_type;
+  TeamPolicy policy(M * N, Kokkos::AUTO);
+ 
+  Kokkos::parallel_for(
+    "matmul_small_output", policy, KOKKOS_LAMBDA(const TeamMember& team) {
+    const int idx = team.league_rank();
+    const int i = idx / N;
+    const int j = idx % N;
+ 
+    T acc = 0.0;
+    Kokkos::parallel_reduce(
+        Kokkos::TeamThreadRange(team, K),
+        [&](const int k, T& local_sum) {
+            local_sum += A(k, i) * B(k, j);
+        },
+        acc);
+
+        // Only one thread per team needs to write the result.
+        Kokkos::single(Kokkos::PerTeam(team), [&]() { C(i, j) = acc; });
+    });
+}
+
 
 template <typename T, class ExecSpace, class MatrixLayout, class SolLayout,
           class RhsLayout, class MemSpace>
@@ -312,6 +414,94 @@ T dot(const Vector<T, ExecSpace, Layout1, MemSpace>& vec1,
         Kokkos::Sum<T>(dot_product));
     return dot_product;
 }
+
+// Invert A (N x N) into Ainv (N x N) via Gauss-Jordan with partial pivoting.
+// Uses a single team; the whole computation happens in team scratch memory.
+// The matrix should be fairly small.
+template <typename T, class ExecSpace, class Layout, class MemSpace>
+void invert_square_matrix(const Matrix<T, ExecSpace, Layout, MemSpace>& A,
+                   const Matrix<T, ExecSpace, Layout, MemSpace>& Ainv) {
+    const int N = A.n_cols();
+    using TeamPolicy = Kokkos::TeamPolicy<ExecSpace>;
+    using TeamMember = typename TeamPolicy::member_type;
+    using scratch_space = typename ExecSpace::scratch_memory_space;
+    TeamPolicy policy(1, Kokkos::AUTO);
+ 
+    // Scratch: augmented matrix [A | I], N rows x 2N columns.
+    using ScratchMat = Kokkos::View<T**, Kokkos::LayoutRight,
+                                   scratch_space,
+                                   Kokkos::MemoryUnmanaged>;
+    size_t scratch_bytes = ScratchMat::shmem_size(N, 2 * N);
+    policy.set_scratch_size(0, Kokkos::PerTeam(scratch_bytes));
+ 
+    Kokkos::parallel_for(
+        "invert_matrix", policy, KOKKOS_LAMBDA(const TeamMember& team) {
+            ScratchMat aug(team.team_scratch(0), N, 2 * N);
+ 
+            // Build the augmented matrix [A | I].
+            Kokkos::parallel_for(
+                Kokkos::TeamThreadRange(team, N), [&](const int r) {
+                  for (int c = 0; c < N; ++c) aug(r, c) = A(r, c);
+                  for (int c = 0; c < N; ++c) aug(r, N + c) = (r == c) ? 1.0 : 0.0;
+                });
+            team.team_barrier();
+ 
+            // Gauss-Jordan elimination, one pivot column at a time.
+            for (int p = 0; p < N; ++p) {
+ 
+            // --- Partial pivoting: find the row (>= p) with the largest
+            // --- |value| in column p, to improve numerical stability. The
+            // --- search itself is tiny (at most N-p elements) so a single
+            // --- thread does it directly rather than paying reduction
+            // --- overhead for a handful of comparisons.
+            Kokkos::single(Kokkos::PerTeam(team), [&]() {
+                int pivot_row = p;
+                T best = Kokkos::fabs(aug(p, p));
+                for (int r = p + 1; r < N; ++r) {
+                    T val = Kokkos::fabs(aug(r, p));
+                    if (val > best) {
+                        best = val;
+                        pivot_row = r;
+                    }
+                }
+                if (pivot_row != p) {
+                    for (int c = 0; c < 2 * N; ++c) {
+                        T tmp = aug(p, c);
+                        aug(p, c) = aug(pivot_row, c);
+                        aug(pivot_row, c) = tmp;
+                    }
+                }
+                });
+                team.team_barrier();
+ 
+                // Normalize the pivot row so aug(p, p) becomes 1.
+                T pivot_val = aug(p, p);
+                Kokkos::parallel_for(
+                    Kokkos::TeamThreadRange(team, 2 * N),
+                    [&](const int c) { aug(p, c) /= pivot_val; });
+                team.team_barrier();
+ 
+                // Eliminate column p from every other row.
+                Kokkos::parallel_for(
+                  Kokkos::TeamThreadRange(team, N), [&](const int r) {
+                    if (r == p) return;
+                        T factor = aug(r, p);
+                        if (factor == 0.0) return;
+                        for (int c = 0; c < 2 * N; ++c) {
+                          aug(r, c) -= factor * aug(p, c);
+                        }
+                    });
+                team.team_barrier();
+            }
+ 
+            // Copy the right half (now A^-1) out to the result view.
+            Kokkos::parallel_for(
+                Kokkos::TeamThreadRange(team, N), [&](const int r) {
+                  for (int c = 0; c < N; ++c) Ainv(r, c) = aug(r, N + c);
+                });
+        });
+}
+
 
 }  // namespace Ibis
 

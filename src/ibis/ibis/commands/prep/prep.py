@@ -1026,15 +1026,6 @@ class RungeKutta:
 
 
 class DirectPreconditioner:
-    pass
-
-
-class Ilu(DirectPreconditioner):
-    _json_values = ["fill_in", "gmres_iters_before_recompute"]
-    _type = "ilu"
-    __slots__ = _json_values
-    _defaults_file = "ilu.json"
-
     def __init__(self, **kwargs):
         json_data = read_defaults(DEFAULTS_DIRECTORY, self._defaults_file)
 
@@ -1054,9 +1045,27 @@ class Ilu(DirectPreconditioner):
         return
 
 
+class Ilu(DirectPreconditioner):
+    _json_values = ["fill_in", "gmres_iters_before_recompute"]
+    _type = "ilu"
+    __slots__ = _json_values
+    _defaults_file = "ilu.json"
+    pass
+
+
+class ReducedBasis(DirectPreconditioner):
+    _json_values = ["basis_rank"]
+    _type = "reduced_basis"
+    __slots__ = _json_values
+    _defaults_file = "reduced_basis.json"
+    pass
+
+
 def get_preconditioner(name):
     if name == "ilu":
         return Ilu()
+    elif name == "reduced_basis":
+        return ReducedBasis()
     elif name == "none":
         return None
     else:
@@ -1454,6 +1463,7 @@ def main(file_name, res_dir):
         "Gmres": Gmres,
         "FGmres": FGmres,
         "Ilu": Ilu,
+        "ReducedBasis": ReducedBasis,
         "IO": IO,
         "IOFormat": IOFormat,
         "supersonic_inflow": supersonic_inflow,

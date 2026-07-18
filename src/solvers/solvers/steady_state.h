@@ -51,10 +51,16 @@ public:
 
     size_t num_vars() const { return n_vars_; };
 
+    size_t block_size() const { return n_cons_; }
+
+    void leading_diagonal_term(Ibis::Vector<Ibis::real>&) const;
+
 public:
     // some specific methods
     void set_pseudo_time_step(Ibis::real dt_star);
     void set_local_pseudo_time_step(Ibis::Array1D<Ibis::real>& dt_star);
+    const Ibis::Array1D<Ibis::real>& local_pseudo_time_step() const { return local_dt_star_; }
+    const Ibis::real pseudo_time_step() const { return dt_star_; }
 
     void set_global_limiter(Ibis::real global_reconstruction_order);
 

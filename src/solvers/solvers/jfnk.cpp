@@ -3,8 +3,9 @@
 #include <solvers/jfnk.h>
 #include <memory>
 
-#include "linear_algebra/ilu.h"
-#include "solvers/high_order_blending.h"
+#include <linear_algebra/ilu.h>
+#include <linear_algebra/reduced_basis_preconditioner.h>
+#include <solvers/high_order_blending.h>
 
 #ifdef Ibis_ENABLE_MPI
 #include <ibis_mpi/ibis_mpi_conserved_quantities.h>
@@ -55,6 +56,14 @@ void Jfnk<MemModel>::init_linear_solver(json config) {
                     .at("gmres_iters_before_recompute");
             size_t fill_in = preconditioner_config.at("fill_in");
             precondition_solver_ = std::make_shared<ILU<MemModel>>(precondition_system_, fill_in);
+        } else if (preconditioner_config.at("type") == "reduced_basis") {
+            std::shared_ptr<LinearSystem> precondition_system = system_->preconditioner();
+            precondition_system_ =
+                std::dynamic_pointer_cast<PseudoTransientLinearSystem>(precondition_system);
+            size_t num_bases = preconditioner_config.at("basis_rank");
+            precondition_solver_ = std::make_shared<ReducedBasisPreconditioner<MemModel>>(precondition_system_, num_bases);
+        } else if (preconditioner_config.at("type") == "none") {
+            // nothing to do
         } else {
             std::string unknown_preconditioner = preconditioner_config.at("type");
             spdlog::error("Unknown preconditioner: {}", unknown_preconditioner);
@@ -81,6 +90,7 @@ int Jfnk<MemModel>::initialise() {
     update_cfl(0);
     residual_norms_ = residuals_->L2_norms<MemModel>();
     initial_residual_norms_ = residual_norms_;
+
     // gmres_->update_preconditioner();
     return 0;
 }
@@ -122,22 +132,21 @@ void Jfnk<MemModel>::update_preconditioner(size_t step) {
             spdlog::debug("Updating ILU decomposition at step {}", step);
             ilu->update_decomposition();
         }    
+    } else if (std::dynamic_pointer_cast<ReducedBasisPreconditioner<MemModel>>(precondition_solver_)) {
+        auto rb = std::dynamic_pointer_cast<ReducedBasisPreconditioner<MemModel>>(precondition_solver_);
+        rb->update_basis(dU_);
     }
 }
 
 template <class MemModel>
 Jfnk<MemModel>::StepResult Jfnk<MemModel>::step(
     std::shared_ptr<Sim<Ibis::dual, MemModel>>& sim, ConservedQuantities<Ibis::dual>& cq,
-    FlowStates<Ibis::dual>& fs, size_t step) {
-    // dU is the change in the solution for the step,
-    // our initial guess for it is zero
-    dU_.zero();
-
-    if (last_step_result_.linear_solver_result.success) {
-        update_cfl(step);
-    }
+    FlowStates<Ibis::dual>& fs, size_t step_n) {
 
     // set the time step
+    if (last_step_result_.linear_solver_result.success) {
+        update_cfl(step_n);
+    }
     if (local_time_stepping_) {
         sim->fv.estimate_dt(local_pseudo_dt_, fs, sim->grid, sim->gas_model,
                             sim->trans_prop, cfl_value_);
@@ -148,8 +157,12 @@ Jfnk<MemModel>::StepResult Jfnk<MemModel>::step(
     }
 
     set_global_limiter(calculate_global_limiter());
-    update_preconditioner(step);
+    update_preconditioner(step_n);
+
     // solve the linear system of equations
+    // dU is the change in the solution for the step,
+    // our initial guess for it is zero
+    dU_.zero();
     LinearSolveResult last_gmres_result = gmres_->solve(dU_);
 
     Ibis::real relaxation_factor = 1.0;

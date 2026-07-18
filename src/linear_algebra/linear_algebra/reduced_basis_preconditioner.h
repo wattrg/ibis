@@ -17,26 +17,34 @@ public:
 public:
     ~ReducedBasisPreconditioner() {};
 
-    ReducedBasisPreconditioner(std::shared_ptr<LinearSystem> system, size_t nb = 2);
+    ReducedBasisPreconditioner(std::shared_ptr<LinearSystem> system, int nb);
 
     void solve(Ibis::Vector<Ibis::real>& rhs, Ibis::Vector<Ibis::real>& x);
 
-    void update_basis(ConservedQuantities<Ibis::dual>& sol);
+    void initialise(ConservedQuantities<Ibis::dual>& sol);
+
+    void update_basis(Ibis::Vector<Ibis::real>& sol);
 
 private:
+    int nb_;
+    int nb_max_;
+    size_t n_vars_;
     std::shared_ptr<LinearSystem> system_;
-    Ibis::Matrix<Ibis::real> W_; // device
-    Ibis::Matrix<Ibis::real, HostExecSpace> D_; // host
-    Ibis::Matrix<Ibis::real> V_; // device
-    Ibis::Matrix<Ibis::real, HostExecSpace> H_; // host
-    Ibis::Vector<Ibis::real> z_; // device
-    Ibis::Vector<Ibis::real> w_dev_; // device
-    Ibis::Vector<Ibis::real, HostExecSpace> w_host_; // host
-    Ibis::Vector<Ibis::real> p_dev_; // device
-    Ibis::Vector<Ibis::real, HostExecSpace> p_host_; // host
-    Ibis::Vector<Ibis::real> d_; // device
-    Ibis::Vector<Ibis::real> s_; // device
-    
+    Ibis::Matrix<Ibis::real> W_;
+    Ibis::Matrix<Ibis::real> D_dev_;
+    Ibis::Matrix<Ibis::real> V_;
+    Ibis::Matrix<Ibis::real> H_;
+    Ibis::Matrix<Ibis::real> H_inv_;
+    Ibis::Vector<Ibis::real> z_;
+    Ibis::Vector<Ibis::real> w_;
+    Ibis::Vector<Ibis::real> p_;
+    Ibis::Vector<Ibis::real> d_;
+    Ibis::Vector<Ibis::real> s_;
+    Ibis::Vector<Ibis::real> vec_tmp_;
+    Ibis::Vector<Ibis::real> res_tmp_;
+    Ibis::Vector<Ibis::real> M_;
+
+    // bool initialised_;
 };
 
 #endif

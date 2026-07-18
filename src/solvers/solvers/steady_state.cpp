@@ -368,6 +368,35 @@ void SteadyStateLinearisation<MemModel>::set_global_limiter(Ibis::real global_li
     global_limiter_ = global_limiter;
 }
 
+template <class MemModel>
+void SteadyStateLinearisation<MemModel>::leading_diagonal_term(Ibis::Vector<Ibis::real>& A_lo) const {
+    auto n_cons = n_cons_;
+    if (local_time_stepping_) {
+        auto local_dt_star = local_dt_star_;
+        Ibis::parallel_for(
+            "SteadyStateLinearisation::leading_order_term",
+            n_cells_,
+            KOKKOS_LAMBDA(const int cell_i){
+            for (size_t cons_i = 0; cons_i < n_cons; cons_i++) {
+                size_t vec_idx = cell_i * n_cons + cons_i;
+                A_lo(vec_idx) = 1.0 / local_dt_star(cell_i);      
+            }                       
+        });                 
+    } else {
+        auto dt_star = dt_star_;
+        Ibis::parallel_for(
+            "SteadyStateLinearisation::leading_order_term",
+            n_cells_,
+            KOKKOS_LAMBDA(const int cell_i){
+            for (size_t cons_i = 0; cons_i < n_cons; cons_i++) {
+                size_t vec_idx = cell_i * n_cons + cons_i;
+                A_lo(vec_idx) = 1.0 / dt_star;      
+            }                       
+        });                         
+    }
+                                               
+}
+
 template class SteadyStateLinearisation<SharedMem>;
 template class SteadyStateLinearisation<Mpi>;
 
