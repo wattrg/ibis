@@ -56,7 +56,7 @@ public:
 
         KokkosSparse::spiluk_symbolic(&handle_, fill_level_, A.row_map, A.entries,
                                       L.graph.row_map, L.graph.entries, U.graph.row_map,
-                                      U.graph.entries, ExecSpace{}.concurrency());
+                                      U.graph.entries);
 
         Kokkos::resize(L.graph.entries, spiluk_handle->get_nnzL());
         Kokkos::resize(L.values, spiluk_handle->get_nnzL());
